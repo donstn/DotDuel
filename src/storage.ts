@@ -1,3 +1,4 @@
+import { DIFFICULTY_LABELS } from './types';
 import type { Difficulty, Progress, ShapeId } from './types';
 
 const KEY = 'dotduel:progress:v3';
@@ -152,7 +153,7 @@ export function saveSettings(s: Settings): void {
   }
 }
 
-// ---------------- Per-name local stats (v2) ----------------
+// ---------------- Per-name local stats (v4) ----------------
 //
 // Keyed by lowercased + trimmed name to avoid "Alice" vs "alice " duplicates.
 // Display name (last-used casing) preserved separately.
@@ -161,10 +162,34 @@ export function saveSettings(s: Settings): void {
 // Renaming "Alice" → "Alicia" creates a new player; old stats remain under "alice".
 //
 // Breakdowns:
-//   vsAI:    by difficulty AND by shape (each game increments both)
-//   hotseat: by shape only (no difficulty in hot-seat)
+//   vsAI:       by difficulty AND by shape (each game increments both)
+//   hotseat:    by shape only (no difficulty in hot-seat)
+//   byOpponent: per-opponent W/D/L for head-to-head views; opponent key is
+//               normKey(human name) or aiOpponentKey(difficulty).
 
-const STATS_KEY = 'dotduel:stats:v3';
+const STATS_KEY = 'dotduel:stats:v4';
+const STATS_KEY_V3 = 'dotduel:stats:v3';
+
+export const AI_OPPONENT_KEY_PREFIX = 'ai:';
+
+export function aiOpponentKey(diff: Difficulty): string {
+  return `${AI_OPPONENT_KEY_PREFIX}${diff}`;
+}
+
+export function aiOpponentDisplayName(diff: Difficulty): string {
+  return `AI · ${DIFFICULTY_LABELS[diff]}`;
+}
+
+export function parseAiOpponentKey(key: string): Difficulty | null {
+  if (!key.startsWith(AI_OPPONENT_KEY_PREFIX)) return null;
+  const n = Number(key.slice(AI_OPPONENT_KEY_PREFIX.length));
+  if (!Number.isInteger(n) || n < 1 || n > 5) return null;
+  return n as Difficulty;
+}
+
+export function isAiOpponentKey(key: string): boolean {
+  return parseAiOpponentKey(key) !== null;
+}
 
 export interface ModeStats {
   wins: number;
@@ -185,6 +210,7 @@ export interface PlayerRow {
     pointsScored: number;
     pointsGiven: number;
   };
+  byOpponent: Record<string, ModeStats>;
 }
 
 export interface StatsStore {
@@ -201,10 +227,11 @@ function emptyRow(name: string): PlayerRow {
     name,
     vsAI: { byDifficulty: {}, byShape: {}, pointsScored: 0, pointsGiven: 0 },
     hotseat: { byShape: {}, pointsScored: 0, pointsGiven: 0 },
+    byOpponent: {},
   };
 }
 
-function normKey(name: string): string {
+export function normKey(name: string): string {
   return name.trim().toLowerCase();
 }
 
@@ -220,15 +247,61 @@ function bumpBucket(
   buckets[key] = cur;
 }
 
+type LegacyV3Row = Omit<PlayerRow, 'byOpponent'> & { byOpponent?: Record<string, ModeStats> };
+
+function backfillOpponentBuckets(row: LegacyV3Row): PlayerRow {
+  const byOpponent: Record<string, ModeStats> = { ...(row.byOpponent ?? {}) };
+  for (const [diffStr, bucket] of Object.entries(row.vsAI.byDifficulty)) {
+    if (!bucket) continue;
+    const diff = Number(diffStr);
+    if (!Number.isInteger(diff) || diff < 1 || diff > 5) continue;
+    const key = aiOpponentKey(diff as Difficulty);
+    if (byOpponent[key]) continue;
+    byOpponent[key] = { wins: bucket.wins, draws: bucket.draws, losses: bucket.losses };
+  }
+  return { ...row, byOpponent } as PlayerRow;
+}
+
+function migrateV3IfPresent(): StatsStore | null {
+  try {
+    const raw = localStorage.getItem(STATS_KEY_V3);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { players?: Record<string, LegacyV3Row> };
+    const players = parsed.players ?? {};
+    const migrated: Record<string, PlayerRow> = {};
+    for (const [key, row] of Object.entries(players)) {
+      migrated[key] = backfillOpponentBuckets(row);
+    }
+    const store: StatsStore = { players: migrated };
+    saveStats(store);
+    return store;
+  } catch {
+    return null;
+  }
+}
+
 export function loadStats(): StatsStore {
   try {
     const raw = localStorage.getItem(STATS_KEY);
-    if (!raw) return { players: {} };
-    const parsed = JSON.parse(raw) as StatsStore;
-    return { players: parsed.players ?? {} };
+    if (raw) {
+      const parsed = JSON.parse(raw) as { players?: Record<string, LegacyV3Row> };
+      const players = parsed.players ?? {};
+      const normalized: Record<string, PlayerRow> = {};
+      for (const [key, row] of Object.entries(players)) {
+        normalized[key] = row.byOpponent ? (row as PlayerRow) : backfillOpponentBuckets(row);
+      }
+      return { players: normalized };
+    }
+    const fromV3 = migrateV3IfPresent();
+    if (fromV3) return fromV3;
+    return { players: {} };
   } catch {
     return { players: {} };
   }
+}
+
+export function loadAllPlayerRows(): PlayerRow[] {
+  return Object.values(loadStats().players);
 }
 
 export function saveStats(s: StatsStore): void {
@@ -253,13 +326,15 @@ export function recordGameResult(
   shape: ShapeId,
   myScore: number,
   oppScore: number,
-  difficulty?: Difficulty
+  difficulty?: Difficulty,
+  opponentKey?: string
 ): void {
   if (!name || !name.trim()) return;
   const key = normKey(name);
   const store = loadStats();
   const existing = store.players[key] ?? emptyRow(name);
   existing.name = name;
+  if (!existing.byOpponent) existing.byOpponent = {};
   if (mode === 'ai') {
     if (difficulty !== undefined) {
       bumpBucket(existing.vsAI.byDifficulty, String(difficulty), outcome);
@@ -271,6 +346,9 @@ export function recordGameResult(
     bumpBucket(existing.hotseat.byShape, shape, outcome);
     existing.hotseat.pointsScored += myScore;
     existing.hotseat.pointsGiven += oppScore;
+  }
+  if (opponentKey && opponentKey !== key) {
+    bumpBucket(existing.byOpponent, opponentKey, outcome);
   }
   store.players[key] = existing;
   saveStats(store);

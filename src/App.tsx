@@ -3,6 +3,7 @@ import { AppFooter } from './components/AppFooter';
 import { Board } from './components/Board';
 import { GameOver } from './components/GameOver';
 import { Menu } from './components/Menu';
+import { RankingsPopover } from './components/RankingsPopover';
 import { RulesPopover } from './components/RulesPopover';
 import { SettingsPopover } from './components/SettingsPopover';
 import { SidePanel } from './components/SidePanel';
@@ -11,9 +12,11 @@ import { pickAIAction } from './ai';
 import { applyAction, applyClaim, applyMove, createGame } from './game';
 import { getBoard } from './geometry';
 import {
+  aiOpponentKey,
   getPlayerRow,
   loadProgress,
   loadSettings,
+  normKey,
   recordGameResult,
   recordWin,
   resetProgress,
@@ -50,6 +53,7 @@ export default function App() {
   }>({ shape: null, difficulty: null });
   const [rulesOpen, setRulesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [rankingsOpen, setRankingsOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(() => !loadSettings().tutorialSeen);
   const aiTimer = useRef<number | null>(null);
   const winRecorded = useRef(false);
@@ -158,13 +162,16 @@ export default function App() {
     const s2 = state.scores[2];
     if (config.mode === 'ai') {
       const name = settings.playerName || 'Player 1';
-      recordGameResult(name, 'ai', outcomeFor(1), config.shape, s1, s2, config.difficulty);
+      const oppKey = config.difficulty ? aiOpponentKey(config.difficulty) : undefined;
+      recordGameResult(name, 'ai', outcomeFor(1), config.shape, s1, s2, config.difficulty, oppKey);
     } else if (config.mode === 'hotseat') {
       const p1 = settings.playerName || 'Player 1';
       const p2 = settings.opponentName || 'Player 2';
-      recordGameResult(p1, 'hotseat', outcomeFor(1), config.shape, s1, s2);
-      if (p1.trim().toLowerCase() !== p2.trim().toLowerCase()) {
-        recordGameResult(p2, 'hotseat', outcomeFor(2), config.shape, s2, s1);
+      const k1 = normKey(p1);
+      const k2 = normKey(p2);
+      recordGameResult(p1, 'hotseat', outcomeFor(1), config.shape, s1, s2, undefined, k2);
+      if (k1 !== k2) {
+        recordGameResult(p2, 'hotseat', outcomeFor(2), config.shape, s2, s1, undefined, k1);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -237,6 +244,7 @@ export default function App() {
           settings={settings}
           onStart={startGame}
           onSettingsUpdate={updateSettings}
+          onOpenRankings={() => setRankingsOpen(true)}
         />
         <AppFooter
           onOpenRules={() => setRulesOpen(true)}
@@ -251,6 +259,7 @@ export default function App() {
             onClose={() => setSettingsOpen(false)}
           />
         )}
+        {rankingsOpen && <RankingsPopover onClose={() => setRankingsOpen(false)} />}
         {tutorialOpen && <TutorialPopover onDismiss={dismissTutorial} />}
       </>
     );

@@ -9,9 +9,10 @@ interface Props {
   settings: Settings;
   onStart: (mode: GameMode, shape: ShapeId, difficulty?: Difficulty) => void;
   onSettingsUpdate: (next: Settings) => void;
+  onOpenRankings: () => void;
 }
 
-export function Menu({ progress, settings, onStart, onSettingsUpdate }: Props) {
+export function Menu({ progress, settings, onStart, onSettingsUpdate, onOpenRankings }: Props) {
   const [mode, setMode] = useState<GameMode | null>(null);
   const [shape, setShape] = useState<ShapeId | null>(null);
   const [aiDifficulty, setAiDifficulty] = useState<Difficulty | null>(null);
@@ -46,6 +47,10 @@ export function Menu({ progress, settings, onStart, onSettingsUpdate }: Props) {
               <span>Coming soon.</span>
             </button>
           </div>
+          <button className="menu-card menu-card-rank" onClick={onOpenRankings}>
+            <strong>Rankings</strong>
+            <span>See profile records and head-to-head on this device.</span>
+          </button>
         </div>
       </div>
     );

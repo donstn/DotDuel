@@ -1,0 +1,606 @@
+DotDuel — First-Time User Experience Report (age-banded)
+==========================================================
+Test date: 2026-05-17
+Build: v22 · rhombus expanded to 36 dots
+Target audience: Ages 5 through 50
+
+Methodology
+-----------
+Simulated first-time user testing through five distinct age bands.
+Each band was profiled, then walked through three play stages:
+  1. First game ever — opens the app cold
+  2. After 5-10 games — basic understanding
+  3. After ~50 games — climbed difficulty / shape progression
+
+Bands were chosen at points where behavior, vocabulary,
+expectations, and physical interaction (finger size, vision)
+shift meaningfully. They are NOT marketing segments.
+
+Age bands (5 used):
+  Band A: 5-7    pre-literate / early reader
+  Band B: 8-11   literate, basic strategy
+  Band C: 12-17  strategic, mobile-native
+  Band D: 18-30  digital-native casual
+  Band E: 31-50  casual / nostalgic
+
+For each band: observations, direct quotes, blockers, lessons
+learned over time, and what they'd ask for after 50 games.
+
+The same game (build v22) was used for all bands. No tutorial
+exists today, so observations include "what did they miss"
+specifically because nothing was taught up front.
+
+========================================================
+BAND A — Ages 5-7
+========================================================
+
+Profile
+-------
+Pre-literate or early reader. Recognizes simple words ("Play",
+"You") but full sentences in the Rules popover are inaccessible.
+Counts confidently to 10, struggles past 20. Plays with a parent
+or older sibling — hot-seat mode is the primary use case.
+Finger taps are larger and less precise.
+
+First game
+----------
+"I want the green balls."
+"Why did it go dark? I wanted the lighter one."
+
+The child taps Vs AI by accident, picks Triangle because it's
+the only shape that isn't grey, then taps "Beginner" because
+it's first. They don't know what "Beginner" means — they pick
+left-to-right.
+
+In-game the dots are immediately understood as "press a ball".
+The pop animation gets giggling. They tap rapidly.
+
+CONFUSION moments:
+  - After the AI moves, the child taps "their" cream dot trying
+    to "take it back". Cream dot doesn't react. Frustration.
+  - When their move closes a line, the strike appears — they
+    light up. When it closes TWO lines (one strikes, one doesn't
+    because it's pending), the child cannot see the difference:
+      "But I made it! Where's the line?"
+    They tap the would-be line repeatedly, then a dot on it,
+    which DOES claim. By accident they learn the mechanic.
+  - Score numbers are abstract. "Am I winning?" "I don't know.
+    Whose colour is bigger?"
+  - Side panel avatars are LOVED. The L1 robot makes them laugh.
+
+After 5-10 games
+----------------
+Mostly hot-seat with a parent. Has internalized "click dot makes
+colour". Does NOT yet grasp lines as scoring units. Plays for
+the satisfaction of filling dots, not for points.
+
+The Beginner AI's pure-random moves feel like a "friend" — the
+child often wins, which keeps them coming back. No frustration
+with Beginner.
+
+Easy unlocks. Child picks it because it's "next". Easy AI
+suddenly grabs corners. Child loses. Confusion:
+  "Why is it cheating?"
+
+Returns to Beginner happily.
+
+After ~50 games
+---------------
+Still 90% Beginner level. Has stopped touching the difficulty
+list. Plays Triangle exclusively (Square is "too big"). Cannot
+read "Impossible" so it's not aspirational.
+
+Notices "pending" lines after dozens of plays — finally connects
+that tapping coloured balls counts. Doesn't articulate the rule,
+but uses it.
+
+Specific to this band — top three blockers
+------------------------------------------
+  1. The Rules popover is wholly inaccessible (text-heavy).
+  2. "Pending" lines have ZERO visual cue. The child literally
+     cannot see the rule they need to learn. Discovered only by
+     accidental dot-tapping.
+  3. Numbers and English labels (Beginner, Easy, etc.) are
+     opaque. Difficulty selection is left-to-right.
+
+Quote of the band
+-----------------
+  "Mama, why does the robot win sometimes? I made the line!"
+
+========================================================
+BAND B — Ages 8-11
+========================================================
+
+Profile
+-------
+Reads short sentences confidently. Counts to 100. Can grasp
+basic strategy ("place where it scores"). Mobile-native; thumb
+taps precise. Will read the Rules popover ONCE if the first game
+is confusing — otherwise skims and moves on.
+
+First game
+----------
+Opens app. Recognises "DotDuel" as a game name. Sees the green
+glass title and "v22 · rhombus expanded to 36 dots" badge.
+Ignores the version badge.
+
+Picks Vs AI > Triangle > Beginner.
+
+In-game: places dots, sees the AI's cream dots. Notices the
+strike appear after their move. "Cool. So that's the point."
+
+Closes the first multi-line move. ONE strike draws. Pauses.
+  "Hold on. That should be two."
+
+Opens the Rules popover (notices the "?" icon in topbar).
+Reads "The catch — one move, one score". Closes popover.
+
+  "Oh. Sneaky."
+
+The child IMMEDIATELY understands the pending mechanic from the
+written explanation — but doesn't yet know how to claim. Returns
+to game. Sees nothing visually marked as "pending". Closes app.
+
+After 5-10 games
+----------------
+Returns. Tries claiming by tapping ON the would-be line. Nothing
+happens (line click area is gone — only dots claim). Eventually
+taps a dot belonging to a pending line — strike appears.
+
+  "OH. You tap the BALL, not the line. That's weird."
+
+Now using both place + claim moves. Beats Beginner consistently.
+Unlocks Easy. Beats Easy after a few losses. Unlocks Square.
+
+Easy unlock triggers the "Easy unlocked!" CTA on game-over.
+Child taps it directly. Skips menu. Loves the flow.
+
+After ~50 games
+---------------
+Working through Triangle Medium. Has cleared Triangle Easy on
+Square. Discovered Hot-seat with a sibling — favourite mode now.
+
+Comments about UI:
+  - Loves the glass aesthetic ("looks like ice")
+  - Wishes for sound effects
+  - Doesn't understand "rating" placeholder slot — asks "what's the
+    dash mean?". Once told it's for online, accepts it.
+  - Active-player glow border subtle — they sometimes lose track
+    of whose turn it is and tap when AI is thinking. Tap registers
+    nothing (correctly blocked) but no feedback that "it's not
+    your turn yet".
+
+Specific blockers
+-----------------
+  1. Claim-by-tap on a dot is non-obvious. They expected to tap
+     the line. (Universal blocker, but this band figures it out
+     within 3-5 games.)
+  2. "Whose turn?" — active panel glow is too subtle. They want
+     explicit text or a brighter halo.
+  3. AI "thinking" delay (450 ms) is fine the first time but
+     feels slow on game 20+.
+
+Quote of the band
+-----------------
+  "Wait — you have to TAP THE BALL not the line. That's the
+  whole game right there."
+
+========================================================
+BAND C — Ages 12-17
+========================================================
+
+Profile
+-------
+Mobile-native, fast learner, low patience for tutorials.
+Skips Rules popover entirely on first open. Strong strategic
+brain. Wants to win fast and climb to Impossible.
+
+First game
+----------
+Opens app. Skips everything. Hammers Vs AI > Triangle > Beginner.
+"Easy, this is dot game."
+
+Beats Beginner without reading rules. Wins by random luck. Sees
+"Easy unlocked, try Easy" CTA. Taps it.
+
+Loses Easy. Annoyed.
+  "I scored more! Why did the AI win?"
+
+Re-checks the score. They DID score more — they're remembering
+wrong. AI scored a bigger final line. They didn't see it because
+it was a pending claim by AI.
+
+Opens Rules popover (finally). Reads the highlight section
+about "one move, one score". Closes it.
+
+  "Wait that's actually clever."
+
+After 5-10 games
+----------------
+Now playing strategically. Avoids multi-line completions. Notices
+that the AI sometimes "leaves" pending lines for them.
+
+Climbs through Easy → Medium → Hard on Triangle. Hard is a real
+fight. Cleared after several attempts.
+
+Tries Impossible. Loses badly first 3 games. Score gap small but
+loses on close-game tiebreak.
+  "Yo this AI is actually nuts."
+
+Refreshes the page expecting a "rematch" button — finds it on the
+game-over screen ("Play again"). Fine.
+
+After ~50 games
+---------------
+Beat Triangle Impossible. Sees the "Impossible — defeated" gold
+title and the suggestion to try Square. Taps "Try Square". Loves
+the flow.
+
+Works through Square, Rectangle, Rhombus. Beats Rhombus Impossible.
+Sees "DotDuel champion" gold title. Reads suggestion: "Multiplayer
+coming soon". DISAPPOINTED.
+
+  "Wait, that's it? No leaderboard? Where do my friends play?"
+
+Comments about UI:
+  - Wants leaderboard or rating to actually work (it shows '—'
+    in side panel — feels like a TODO)
+  - 450 ms AI delay too slow for late-game grinding — wants a
+    fast mode
+  - Multiplayer absence is the single biggest letdown after
+    completing single-player
+  - Aesthetic is great. Glass orbs, gold strike on champion screen
+    — "polish like a real game"
+
+Specific blockers
+-----------------
+  1. Rating slot shows "—" — they want it to mean something.
+  2. AI delay too long for repeat plays.
+  3. No multiplayer is a hard stop — they have nothing left after
+     finishing single-player.
+
+Quote of the band
+-----------------
+  "Where's the online mode?"
+
+========================================================
+BAND D — Ages 18-30
+========================================================
+
+Profile
+-------
+Adult digital native. Plays casually on phone (commute, lunch
+break). Compares to similar games (Dots & Boxes, Threes!,
+2048). Reads rules quickly. Appreciates polish.
+
+First game
+----------
+Opens app, reads tagline ("Take turns. Complete lines. Get the
+most points."). Briefly scans Rules popover. Got the gist.
+
+  "OK, it's Dots & Boxes with a twist."
+
+Picks Vs AI > Triangle > Beginner. Plays one game to feel the
+mechanic. Notices the pending claim immediately because the
+rules said so. Tries tapping the strike line — doesn't work.
+Tries tapping a coloured ball — works. Files away.
+
+  "Tap-the-dot to claim is awkward. Took me three tries."
+
+After 5-10 games
+----------------
+Climbs through Beginner → Medium fast. Hard takes a few rounds.
+Notices balance: "this feels actually fair, the AI doesn't
+cheat".
+
+Reads version badge ("v22 · rhombus expanded to 36 dots"). Reacts
+positively to active development feel.
+
+Plays Hot-seat once with a friend. Friend (also adult) gets
+confused at first move, asks "wait, what just happened" when
+the multi-line catch fires. Explains, friend gets it instantly.
+
+After ~50 games
+---------------
+Has cleared at least Hard on all four shapes. Working on
+Impossible. Comments:
+
+  - Glass aesthetic is excellent. Looks like a paid app.
+  - Triangle expansion (36 dots) feels better-paced than
+    smaller boards would.
+  - 450 ms AI delay is fine. Doesn't bug them.
+  - Wants statistics — total games played, win streaks, time
+    spent. Power-user instinct.
+  - Wants account / cross-device sync. localStorage erasing
+    on browser-clear is concerning.
+  - Multiplayer "coming soon" — patient about it, but it's
+    where they'd spend most of their playtime.
+  - Footer says "Privacy" and "Contact" — both don't do
+    anything. Concerning for a public app.
+
+Specific blockers
+-----------------
+  1. Privacy / Contact links broken — looks unprofessional.
+  2. Footer Rating slot ('—') and stub links signal "not finished".
+  3. No multiplayer, no leaderboard — limits replay value
+     after climbing the unlock chain.
+  4. No statistics tracking — adult casuals want completion %
+     and win records.
+
+Quote of the band
+-----------------
+  "It looks polished, but the Privacy link goes nowhere. That
+  immediately worries me about my data."
+
+========================================================
+BAND E — Ages 31-50
+========================================================
+
+Profile
+-------
+Adult casual. May have kids of their own. Memory of similar
+paper-and-pen games (the user explicitly noted playing with
+their mother from age 5 — this is the band that connects to
+that nostalgia). Patience varies. Mobile fluency varies — some
+are sub-par on tiny touch targets and small fonts.
+
+First game
+----------
+Opens app on phone. First thing noticed: text. Small. Squints.
+
+  "OK what is this. Oh, dots on paper. We used to play this."
+
+Reads Rules popover word-for-word. Takes ~60 seconds. Closes it.
+Feels prepared. Picks Vs AI > Triangle > Beginner.
+
+In-game: makes a placement. Pop animation appreciated. AI moves.
+Player notices the AI uses light cream — wonders momentarily if
+THEY are the light cream (no — they're the dark green, since
+they went first and the colour matches their first dot). Side
+panel confirms "You" is on the left with the human avatar.
+
+  "OK I'm on the left. Got it."
+
+Closes one multi-line. Sees only one strike.
+  "Hmm. Thought that should be two lines."
+
+Recalls the rules. Tries to claim by tapping the would-be line.
+Nothing happens. Tries tapping the dots — works.
+  "Oh, the rule said tap the dot. Yeah."
+
+Slow first game but completes it.
+
+After 5-10 games
+----------------
+Comfortable with the loop. Plays at a relaxed pace. Notices
+small UX nags:
+
+  - Active-player highlight subtle. They lose track of whose
+    turn after looking away mid-game.
+  - "thinking…" pulse dots on AI panel are clear but tiny.
+  - Score numbers in side panel are readable, but the rating
+    placeholder ("—") confuses. "Is something supposed to be
+    there?"
+  - Game-over CTAs are great. The direct "Try Easy" button
+    means they don't have to navigate back. Appreciated.
+
+Wins Beginner. Tries Easy. Loses several times. Realizes Easy
+takes free corners aggressively. Adapts.
+
+Discovers Hot-seat. Plays with kid (age 8). Kid loves the
+robots. Adult enjoys explaining strategy. Hot-seat is the
+primary mode for this player.
+
+After ~50 games
+---------------
+Mostly hot-seat with the kid. Vs AI is for solo commute time —
+they prefer Medium difficulty as a "thinking game" without too
+much frustration.
+
+Comments:
+
+  - "When can I play with my friend online?" — multiplayer
+    expectation.
+  - "I love the robot avatars. The L1 one looks like one of
+    my kid's toys."
+  - Hot-seat with kid: would love a way to swap which colour
+    each player is (no current way). The 5-year-old always
+    wants the cream colour but the system always assigns it
+    to whoever plays second.
+  - Small touch targets occasionally — when they're tired or
+    on a smaller phone, they double-tap accidentally.
+  - Footer text small. They read it once. After that, ignore.
+
+Specific blockers
+-----------------
+  1. Colour assignment is fixed by turn order. Player 1 = dark,
+     Player 2 = cream. Kids fight over this in Hot-seat.
+  2. Active-player glow too subtle for "look away then back"
+     casual play.
+  3. Touch targets borderline-small on smaller phones — the
+     larger dots in Triangle/Rhombus are fine, but small Square
+     dots are tight.
+  4. Footer "Privacy" and "Contact" don't work — same as Band D.
+
+Quote of the band
+-----------------
+  "My daughter and I play this on the couch. She's five. The
+  little smiling robot makes her happy. But she always wants
+  the white balls and the game won't let her have them."
+
+========================================================
+UNIVERSAL FINDINGS (across all bands)
+========================================================
+
+#1 — Pending claim mechanic is the single biggest UX gap
+---------------------------------------------------------
+The "biggest line scores, others go pending" rule is the most
+unique mechanic in DotDuel. Today there is ZERO visual signal
+for pending lines. Each age band rediscovers the mechanic by
+accident (Band A) or through the rules (Bands B-E). Once they
+get it, they like it — but the discovery cost is steep.
+
+Across all 5 bands, the average "time-to-first-claim" was
+~6 games. That is too long. Recommended fixes:
+
+  - First-time user only: subtle pulse on a dot belonging to
+    a pending line, fading away after they make their first
+    claim. Once they've claimed once, the hint disappears.
+  - OR: brief floating tooltip after the first multi-line
+    completion explaining "tap a coloured ball to claim".
+  - OR: a "show hints" toggle in settings (off by default for
+    expert UX, on by default for first 10 games).
+
+#2 — Active player indicator too subtle
+-----------------------------------------
+Bands B, C, E all flagged that the colored glow around the active
+panel doesn't grab attention when looking away. Recommended fix:
+add a tiny breathing animation (slow opacity pulse on the panel
+border) when it's your turn AND it's been more than ~3 seconds
+since the last action. Don't pulse constantly — only after a
+visual pause.
+
+#3 — Footer stub links erode trust
+----------------------------------
+Privacy / Contact links in the footer don't do anything (return
+preventDefault). Adult bands (D, E) noticed and lost trust. Either
+remove the stub links until they work, or wire them to dummy
+content pages explaining the project is in development.
+
+#4 — Color/role assignment is fixed
+------------------------------------
+In Hot-seat mode there is no way to pick which colour you are.
+Band E specifically called out: kid wants cream, system assigns
+dark green. Recommended fix: a swap button in the menu before
+starting Hot-seat.
+
+#5 — Audio is absent
+--------------------
+All bands either noticed the silence or weren't bothered. Band B
+(kids) explicitly wanted "boop" sounds on dot placement and a
+victory jingle. Adult bands didn't notice or appreciate the
+silence (good for commute). Recommended: subtle SFX with a clear
+master mute toggle.
+
+#6 — Statistics are absent
+---------------------------
+Bands C and D want win records, streaks, time spent. Current
+localStorage only tracks unlocks. Recommended: add a small
+statistics block (in menu or game-over) showing total games,
+wins, draws.
+
+#7 — "Rating" placeholder confuses non-tech users
+--------------------------------------------------
+The "—" rating slot in side panels reads as "broken" to Bands A
+and E. Either hide it until multiplayer ships, or show "Local"
+or "Offline" as the placeholder text.
+
+#8 — No tutorial overlay on first launch
+-----------------------------------------
+Every band would have benefited from a 3-step overlay:
+  1. "Tap a dot to colour it."
+  2. "Fill a line to score its length."
+  3. "If your move completes two lines, only the longest
+     scores. Tap a coloured ball later to claim the rest."
+
+Skippable, shown once.
+
+========================================================
+AGE-BAND PRIORITY RANKING — top 3 fixes per band
+========================================================
+
+Band A (5-7):
+  1. Tutorial overlay (no-text version, animations only)
+  2. Pending-line visual hint (first-time toggle)
+  3. Larger touch targets / louder feedback
+
+Band B (8-11):
+  1. Active-turn breathing animation
+  2. Pending-line hint (first 10 games)
+  3. Sound effects toggle
+
+Band C (12-17):
+  1. Multiplayer
+  2. Fast-mode toggle (reduce AI delay)
+  3. Functional rating slot or hide it
+
+Band D (18-30):
+  1. Functional Privacy / Contact links
+  2. Statistics tracking
+  3. Cross-device sync (Google auth)
+
+Band E (31-50):
+  1. Hot-seat colour-swap (huge for parent + kid play)
+  2. Brighter active-player indicator
+  3. Functional footer links
+
+========================================================
+TWO BANDS WHERE THE LINE IS SHARP
+========================================================
+
+The most pronounced age boundary is between Band A and Band B:
+literacy. Below 8, the Rules popover is non-existent, the
+"Impossible" label is opaque, and the entire UX is icon-driven
++ caregiver-mediated. Above 8, they can self-learn and self-
+correct.
+
+The second-sharpest boundary is between Band C and Band D:
+patience for missing features. Teens loudly want multiplayer
+and call out the absence; adults patient-shrug and play what's
+there.
+
+========================================================
+WHAT IS WORKING WELL (don't break these)
+========================================================
+
+  - Glass aesthetic is universally praised. Premium feel.
+  - Robot avatars (L1-L5) — especially L1 — are charming.
+    Loved by kids, appreciated by adults.
+  - The "Try Square" / "Try Hard" direct CTAs on game-over
+    are excellent. Every band praised them.
+  - Side-panel layout (avatar/name/rating/score) is clean and
+    readable.
+  - Difficulty progression and unlock chain creates a clear
+    "campaign" feeling.
+  - The "DotDuel champion" gold styling for full completion is
+    a strong emotional payoff.
+  - Hot-seat mode is appreciated by Bands A and E — the
+    multi-generational play is a real use case.
+
+========================================================
+SUGGESTED PRIORITY ORDER FOR NEXT SPRINT
+========================================================
+
+P0 — must fix before public launch
+  1. Wire or hide Privacy / Contact stub links.
+  2. Add a first-time-user tutorial overlay (skippable).
+
+P1 — improve discoverability
+  3. Pending-line subtle hint for first ~10 games.
+  4. Brighter active-player indicator (breathing pulse after pause).
+  5. Hot-seat colour-swap button.
+
+P2 — depth & retention
+  6. Sound effects with master mute.
+  7. Statistics tracking (local).
+  8. Fast-mode toggle (configurable AI delay).
+
+P3 — feature work (separately planned)
+  9. Multiplayer with Google auth (currently in roadmap).
+ 10. Cross-device sync.
+
+========================================================
+END OF REPORT
+========================================================
+
+Notes on methodology limitations:
+  - This is simulated user testing, not real observation. Numbers
+    like "average time-to-first-claim ~6 games" are educated guesses
+    based on the mechanic's invisibility, not measured.
+  - Each band represents a composite user, not a single person.
+  - No A/B testing was done — recommendations are based on
+    interaction-design heuristics and prior research in casual game
+    UX (e.g., the standard "tutorial overlay" pattern dominant in
+    mobile games since ~2014).
+  - Real user testing with at least 3 participants per band would
+    be the next validation step before shipping P0/P1 fixes.

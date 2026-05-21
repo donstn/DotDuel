@@ -417,8 +417,15 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
   min-width: 0;
+  min-height: 44px;
+}
+
+.pending-indicator-hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .pending-indicator {
@@ -871,23 +878,13 @@ button {
   to { opacity: 1; }
 }
 
+/* Static yellow ring on colored dots that belong to a pending line.
+   Shown only during the learning-hint window for new players. No
+   animation — kept calm so a busy board never strobes. */
 .dot-hint-ring {
   stroke: #ffd680;
-  animation: hintRingPulse 3s ease-in-out infinite;
-}
-
-/* Rings rest dim most of the cycle, then briefly pulse. Each dot gets a
-   negative animation-delay set inline (Board.tsx) so peaks fan out across
-   the board instead of strobing in unison. */
-@keyframes hintRingPulse {
-  0%, 60%, 100% {
-    stroke-width: 0.04;
-    opacity: 0.18;
-  }
-  30% {
-    stroke-width: 0.11;
-    opacity: 0.7;
-  }
+  stroke-width: 0.08;
+  opacity: 0.55;
 }
 
 @keyframes pop {
@@ -2056,8 +2053,13 @@ button {
   }
 
   .thinking-dots {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
     margin: 0;
     font-size: 0.9rem;
+    pointer-events: none;
   }
 }
 

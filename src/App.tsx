@@ -303,15 +303,17 @@ export default function App() {
             <span className="remaining-value">{remaining}</span>
             <span className="remaining-label">pts left</span>
           </div>
-          {state.pending.length > 0 && (
-            <div className="pending-indicator" title="Lines waiting to be claimed — tap a coloured dot on one to claim it.">
-              <span className="pending-icon" aria-hidden="true">◌</span>
-              <span className="pending-value">{state.pending.length}</span>
-              <span className="pending-label">
-                {state.pending.length === 1 ? 'line to claim' : 'lines to claim'}
-              </span>
-            </div>
-          )}
+          <div
+            className={`pending-indicator${state.pending.length === 0 ? ' pending-indicator-hidden' : ''}`}
+            title={state.pending.length > 0 ? 'Lines waiting to be claimed — tap a coloured dot on one to claim it.' : undefined}
+            aria-hidden={state.pending.length === 0}
+          >
+            <span className="pending-icon" aria-hidden="true">◌</span>
+            <span className="pending-value">{Math.max(state.pending.length, 1)}</span>
+            <span className="pending-label">
+              {state.pending.length === 1 ? 'line to claim' : 'lines to claim'}
+            </span>
+          </div>
         </div>
         <button
           className="btn-rules"

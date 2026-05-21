@@ -32,10 +32,16 @@ All notable changes to DotDuel will be documented in this file. Format follows
   GitHub Pages; dev still serves from `/`.
 - Mobile board area now has top/bottom padding so the dot-pop animation
   has visual buffer instead of sitting flush against the player cards.
-- Hint-ring pulse calmed: cycle 1.4 s -> 3 s, softer peak, plus a
-  deterministic per-dot phase offset so rings shimmer across the board
-  instead of strobing in unison (fixes the "discoteque" effect on the
-  square endgame when many pending lines exist).
+- Hint ring is now fully static — no animation. New players still see
+  a soft yellow ring around colored dots that belong to pending lines
+  (during the learning window), but the board never strobes.
+- Topbar reserves vertical space for the "lines to claim" badge instead
+  of growing when it appears, so the board no longer shifts as pending
+  lines come and go.
+- On mobile, the AI thinking indicator (`···`) is now absolutely
+  positioned inside the side card rather than flowing as a 4th flex
+  item, so the player name and score don't reflow when the AI starts
+  or finishes thinking.
 
 ## [0.1.0] - 2026-05-20
 

@@ -1985,3 +1985,141 @@ button {
     padding: 0 16px 8px;
   }
 }
+
+/* ====================== Mobile UX overrides ======================
+   Phone-sized viewports only. Goals:
+   1. Game: stack player cards above the board so dots get the full width.
+   2. Landscape phone: shrink player cards ~30% so the board gets more height.
+   3. Menu: fit mode cards on one line in landscape; clean 1-column stacking
+      on narrow portrait (avoids the awkward 2+1 wrap with 3 mode cards).
+*/
+
+@media (max-width: 720px), (orientation: landscape) and (max-height: 500px) {
+  .game-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "p1 p2"
+      "board board";
+    gap: 6px;
+    padding: 6px;
+    align-items: stretch;
+  }
+
+  .side-panel-left { grid-area: p1; }
+  .side-panel-right { grid-area: p2; }
+  .board-wrap {
+    grid-area: board;
+    padding: 0;
+  }
+
+  .side-panel,
+  .side-panel-left,
+  .side-panel-right {
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    margin: 0;
+    border: 1px solid var(--glass-border);
+  }
+
+  .avatar-frame {
+    width: clamp(40px, 11vw, 56px);
+    flex-shrink: 0;
+  }
+
+  .player-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.88rem;
+    text-align: left;
+  }
+
+  .player-score {
+    font-size: 1.5rem;
+    margin: 0;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .player-stats,
+  .player-points-totals,
+  .player-rating {
+    display: none;
+  }
+
+  .thinking-dots {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-body {
+    gap: 4px;
+    padding: 4px 6px 6px;
+  }
+  .side-panel,
+  .side-panel-left,
+  .side-panel-right {
+    padding: 4px 10px;
+    gap: 8px;
+  }
+  .avatar-frame {
+    width: clamp(28px, 8.5vh, 40px);
+  }
+  .player-name {
+    font-size: 0.74rem;
+  }
+  .player-score {
+    font-size: 1.15rem;
+  }
+
+  .menu {
+    padding: 6px 14px 6px;
+    gap: 8px;
+  }
+  .menu-section {
+    min-height: 0;
+    gap: 8px;
+  }
+  .menu-grid {
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+  }
+  .menu-card {
+    padding: 10px 12px;
+  }
+  .menu-card strong {
+    font-size: 0.92rem;
+  }
+  .menu-card span {
+    font-size: 0.72rem;
+  }
+  .title {
+    font-size: clamp(1.5rem, 4.5vh, 2.1rem);
+    gap: 8px;
+  }
+  .subtitle {
+    font-size: 0.78rem;
+    max-width: 480px;
+  }
+  .version-badge {
+    font-size: 0.6rem;
+    padding: 3px 10px;
+  }
+}
+
+@media (orientation: portrait) and (max-width: 480px) {
+  .menu-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .menu-card {
+    padding: 14px 16px;
+  }
+}

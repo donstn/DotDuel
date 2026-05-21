@@ -873,17 +873,20 @@ button {
 
 .dot-hint-ring {
   stroke: #ffd680;
-  animation: hintRingPulse 1.4s ease-in-out infinite;
+  animation: hintRingPulse 3s ease-in-out infinite;
 }
 
+/* Rings rest dim most of the cycle, then briefly pulse. Each dot gets a
+   negative animation-delay set inline (Board.tsx) so peaks fan out across
+   the board instead of strobing in unison. */
 @keyframes hintRingPulse {
-  0%, 100% {
+  0%, 60%, 100% {
     stroke-width: 0.04;
-    opacity: 0.25;
+    opacity: 0.18;
   }
-  50% {
-    stroke-width: 0.14;
-    opacity: 0.95;
+  30% {
+    stroke-width: 0.11;
+    opacity: 0.7;
   }
 }
 

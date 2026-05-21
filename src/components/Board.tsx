@@ -181,7 +181,10 @@ export function Board({
                   r={dotRadius * 1.35}
                   className="dot-hint-ring"
                   fill="none"
-                  style={{ pointerEvents: 'none' }}
+                  style={{
+                    pointerEvents: 'none',
+                    animationDelay: `-${((d.id * 0.37) % 3).toFixed(2)}s`,
+                  }}
                 />
               )}
               <circle

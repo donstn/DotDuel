@@ -1894,6 +1894,82 @@ button {
   color: var(--accent);
 }
 
+.rankings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: -2px;
+}
+
+.rankings-confirm-overlay {
+  z-index: 110;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px) saturate(1.1);
+  -webkit-backdrop-filter: blur(6px) saturate(1.1);
+}
+
+.rankings-confirm-card {
+  max-width: 440px;
+  border-color: rgba(217, 117, 101, 0.35);
+}
+
+.rankings-confirm-card .rules-header {
+  padding-bottom: 8px;
+}
+
+.rankings-confirm-card .rules-header h2 {
+  background: linear-gradient(180deg, #ffcec6, var(--danger));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.rankings-confirm-name {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.rankings-confirm-body {
+  padding: 0 22px 8px;
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.rankings-confirm-body p {
+  margin: 0;
+}
+
+.rankings-confirm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.rankings-confirm-cancel {
+  padding: 9px 16px;
+  border-radius: 10px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: background 140ms, border-color 140ms;
+}
+
+.rankings-confirm-cancel:hover {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border-strong);
+}
+
+.rankings-confirm-delete {
+  background: linear-gradient(180deg, rgba(217, 117, 101, 0.22), rgba(217, 117, 101, 0.12));
+}
+
+.rankings-confirm-delete:hover {
+  background: linear-gradient(180deg, rgba(217, 117, 101, 0.32), rgba(217, 117, 101, 0.18));
+}
+
 @media (max-width: 560px) {
   .rankings-body {
     padding: 8px 12px 12px;
@@ -1904,5 +1980,8 @@ button {
   .rankings-table thead th,
   .rankings-table tbody td {
     padding: 8px 7px;
+  }
+  .rankings-confirm-body {
+    padding: 0 16px 8px;
   }
 }

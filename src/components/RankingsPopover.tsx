@@ -7,6 +7,7 @@ import {
   loadAllPlayerRows,
   normKey,
   parseAiOpponentKey,
+  purgePlayer,
   vsAITotal,
   type ModeStats,
   type PlayerRow,
@@ -204,10 +205,16 @@ export function RankingsPopover({ onClose }: Props) {
     key: 'games',
     dir: 'desc',
   });
+  const [confirmDelete, setConfirmDelete] = useState<{ key: string; name: string } | null>(null);
+  const [dataVersion, setDataVersion] = useState(0);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
+      if (confirmDelete) {
+        setConfirmDelete(null);
+        return;
+      }
       if (stack.length > 0) {
         setStack((s) => s.slice(0, -1));
       } else {
@@ -216,10 +223,14 @@ export function RankingsPopover({ onClose }: Props) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [stack.length, onClose]);
+  }, [stack.length, onClose, confirmDelete]);
 
   const onBackdrop = (e: React.MouseEvent) => {
     if (e.target !== e.currentTarget) return;
+    if (confirmDelete) {
+      setConfirmDelete(null);
+      return;
+    }
     if (stack.length > 0) {
       setStack((s) => s.slice(0, -1));
     } else {
@@ -227,7 +238,10 @@ export function RankingsPopover({ onClose }: Props) {
     }
   };
 
-  const playerRows = useMemo(() => loadAllPlayerRows(), [stack, shape, lbSort, h2hSort]);
+  const playerRows = useMemo(
+    () => loadAllPlayerRows(),
+    [stack, shape, lbSort, h2hSort, dataVersion]
+  );
 
   const leaderRows = useMemo<LeaderRow[]>(() => {
     const rows: LeaderRow[] = [];
@@ -268,6 +282,14 @@ export function RankingsPopover({ onClose }: Props) {
 
   const goBack = () => setStack((s) => s.slice(0, -1));
 
+  const doDelete = () => {
+    if (!confirmDelete) return;
+    purgePlayer(confirmDelete.name);
+    setConfirmDelete(null);
+    setStack([]);
+    setDataVersion((v) => v + 1);
+  };
+
   const toggleLbSort = (key: LeaderSortKey) => {
     setLbSort((cur) => {
       if (cur.key === key) {
@@ -293,6 +315,7 @@ export function RankingsPopover({ onClose }: Props) {
   };
 
   return (
+    <>
     <div
       className="rules-overlay"
       onClick={onBackdrop}
@@ -416,6 +439,18 @@ export function RankingsPopover({ onClose }: Props) {
           {current && (
             <>
               <H2HSummary rows={h2hRows} />
+              {current.kind === 'player' && (
+                <div className="rankings-actions">
+                  <button
+                    className="settings-danger-btn"
+                    onClick={() =>
+                      setConfirmDelete({ key: current.key, name: current.name })
+                    }
+                  >
+                    Delete profile
+                  </button>
+                </div>
+              )}
               {h2hRows.length === 0 ? (
                 <p className="rankings-empty">No head-to-head games recorded.</p>
               ) : (
@@ -514,6 +549,39 @@ export function RankingsPopover({ onClose }: Props) {
         </footer>
       </div>
     </div>
+    {confirmDelete && (
+      <div
+        className="rules-overlay rankings-confirm-overlay"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setConfirmDelete(null);
+        }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Confirm delete profile"
+      >
+        <div className="rules-card rankings-confirm-card">
+          <header className="rules-header">
+            <h2>Delete profile?</h2>
+            <p className="rules-tagline">
+              <strong className="rankings-confirm-name">{confirmDelete.name}</strong> will be
+              removed from the rankings and from every head-to-head record on this device.
+            </p>
+          </header>
+          <div className="rankings-confirm-body">
+            <p>Do you really want to delete this? Data will be unrecoverable.</p>
+          </div>
+          <footer className="rules-footer-bar rankings-confirm-footer">
+            <button className="rankings-confirm-cancel" onClick={() => setConfirmDelete(null)}>
+              Cancel
+            </button>
+            <button className="settings-danger-btn rankings-confirm-delete" onClick={doDelete}>
+              Delete profile
+            </button>
+          </footer>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 

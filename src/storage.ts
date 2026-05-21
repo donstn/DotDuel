@@ -418,3 +418,20 @@ export function deletePlayerStats(name: string): void {
   delete store.players[key];
   saveStats(store);
 }
+
+// Fully remove a player from the local stats store. Their row is dropped AND
+// their key is scrubbed from every other player's byOpponent, so they vanish
+// from leaderboards and head-to-head views. Other players' aggregate W/D/L
+// totals are left untouched — those reflect games they actually played.
+export function purgePlayer(name: string): void {
+  if (!name || !name.trim()) return;
+  const key = normKey(name);
+  const store = loadStats();
+  delete store.players[key];
+  for (const row of Object.values(store.players)) {
+    if (row.byOpponent && row.byOpponent[key]) {
+      delete row.byOpponent[key];
+    }
+  }
+  saveStats(store);
+}

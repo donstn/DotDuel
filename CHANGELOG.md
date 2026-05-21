@@ -18,6 +18,9 @@ All notable changes to DotDuel will be documented in this file. Format follows
 - Rankings popover from the main menu — per-player stats and
   head-to-head records across vs-AI and hot-seat games.
 - Delete-profile action in Rankings, gated by a confirmation dialog.
+- Square-board stress simulation: `npm run simulate:square` runs 50
+  games of L5 vs L5 on the square, reporting scoring integrity,
+  double-turn anomalies, peak pending-line count, and per-game runtime.
 
 ### Changed
 
@@ -27,6 +30,12 @@ All notable changes to DotDuel will be documented in this file. Format follows
   mobile player cards (still available via the Rankings popover).
 - Vite build sets `base: '/DotDuel/'` so production assets resolve on
   GitHub Pages; dev still serves from `/`.
+- Mobile board area now has top/bottom padding so the dot-pop animation
+  has visual buffer instead of sitting flush against the player cards.
+- Hint-ring pulse calmed: cycle 1.4 s -> 3 s, softer peak, plus a
+  deterministic per-dot phase offset so rings shimmer across the board
+  instead of strobing in unison (fixes the "discoteque" effect on the
+  square endgame when many pending lines exist).
 
 ## [0.1.0] - 2026-05-20
 

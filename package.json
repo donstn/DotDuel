@@ -10,7 +10,8 @@
     "simulate": "tsx scripts/simulate.ts",
     "simulate:l4": "tsx scripts/simulate-l4.ts",
     "simulate:f": "tsx scripts/simulate-variant-f.ts",
-    "simulate:tri8": "tsx scripts/simulate-triangle8.ts"
+    "simulate:tri8": "tsx scripts/simulate-triangle8.ts",
+    "simulate:square": "tsx scripts/simulate-square.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

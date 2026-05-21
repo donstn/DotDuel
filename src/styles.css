@@ -2011,7 +2011,7 @@ button {
   .side-panel-right { grid-area: p2; }
   .board-wrap {
     grid-area: board;
-    padding: 0;
+    padding: 14px 0 10px;
   }
 
   .side-panel,

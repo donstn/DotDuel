@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "dotduel",
+    "staging": "dotduel"
+  },
+  "targets": {},
+  "etags": {}
+}

@@ -2,7 +2,9 @@
 
 A two-player dot-coloring strategy game. Players take turns coloring dots on a geometric board; lines (horizontal / vertical / diagonal runs of dots) score points when all their dots are filled, but the scoring rule is **biggest-only with pending claims** (see Game Rules below). Game ends when every dot is colored AND every completed line has been claimed; higher total score wins.
 
-Domain (not yet deployed): **www.dotduel.com**.
+Live staging: **https://donstn.github.io/DotDuel/** (auto-deployed from `main` via `.github/workflows/deploy.yml`). Production domain **www.dotduel.com** is pending.
+
+Notable changes are tracked in `CHANGELOG.md` at the repo root.
 
 ---
 
@@ -18,15 +20,19 @@ Domain (not yet deployed): **www.dotduel.com**.
 
 ```powershell
 npm install
-npm run dev          # http://localhost:5173
-npm run build        # production bundle in ./dist
-npm run preview      # serve the production build
-npm run simulate     # 4×4 AI matrix on triangle (research)
-npm run simulate:l4  # L4 vs L4 on all shapes
-npm run simulate:f   # Standalone Variant F balance check
+npm run dev              # http://localhost:5173
+npm run build            # production bundle in ./dist
+npm run preview          # serve the production build
+npm run simulate         # 4×4 AI matrix on triangle (research)
+npm run simulate:l4      # L5 vs L5 on all shapes (N=1000)
+npm run simulate:f       # Standalone Variant F balance check
+npm run simulate:square  # 50-game L5 vs L5 square integrity check
+npm run simulate:tri8    # Triangle-8 prototype
 ```
 
 TypeScript is checked as part of `npm run build` (`tsc -b`).
+
+**Deploy.** Every `git push origin main` triggers the GitHub Pages workflow (`.github/workflows/deploy.yml`): `npm ci` → `npm run build` → publish `dist/` to Pages. Vite's `base` is set to `/DotDuel/` for builds only so production asset paths resolve under the `donstn.github.io/DotDuel/` subpath; dev still serves from `/`.
 
 ---
 
@@ -34,25 +40,33 @@ TypeScript is checked as part of `npm run build` (`tsc -b`).
 
 ```
 src/
-  main.tsx               React entry
-  App.tsx                Screen state machine (menu ↔ game), AI scheduler, win recording, popover state
-  types.ts               Shared types: GameState, GameAction, ShapeId, Difficulty, DIFFICULTY_LABELS
-  geometry.ts            Board generation: dot coordinates + line buckets per shape
-  game.ts                Pure game logic: applyMove, applyClaim, applyAction, pointsIfPlayed
-  ai.ts                  5-tier AI: pickAIAction returns a dot or claim action
-  storage.ts             localStorage progression + unlock rules
-  styles.css             Glass theme, side panels, board, animations, responsive layout
+  main.tsx                  React entry
+  App.tsx                   Screen state machine (menu ↔ game), AI scheduler, win recording, popover state
+  types.ts                  Shared types: GameState, GameAction, ShapeId, Difficulty, DIFFICULTY_LABELS
+  geometry.ts               Board generation: dot coordinates + line buckets per shape
+  game.ts                   Pure game logic: applyMove, applyClaim, applyAction, pointsIfPlayed
+  ai.ts                     5-tier AI: pickAIAction returns a dot or claim action
+  storage.ts                localStorage: progression + settings + per-name W/D/L stats
+  styles.css                Glass theme, side panels, board, animations, responsive layout
   components/
-    Menu.tsx             Mode/shape/difficulty pickers + footer with Rules link
-    Board.tsx            SVG defs (gradients/filters) + 3D dots + strike rendering + click handling
-    SidePanel.tsx        Avatar + name + rating + score (left/right vertical panels). Includes AI robot SVGs.
-    GameOver.tsx         Final scores, unlock banner, play-again
-    RulesPopover.tsx     Glass-card popover with player-facing rules; overlay closes on outside-click / X / ESC
+    Menu.tsx                Mode/shape/difficulty pickers, name inputs, Rankings entry
+    Board.tsx               SVG defs (gradients/filters) + 3D dots + strike rendering + click handling
+    SidePanel.tsx           Avatar + name + rating + score (horizontal cards on mobile, side columns on desktop). Includes AI robot SVGs.
+    GameOver.tsx            Final scores, unlock banner, play-again
+    AppFooter.tsx           Frosted footer bar (Rules / Settings shortcuts; menu screens only)
+    RulesPopover.tsx        Glass-card popover with player-facing rules
+    SettingsPopover.tsx     Name editing, hot-seat color swap, reset progress, etc.
+    RankingsPopover.tsx     Per-player stats + head-to-head + profile-delete confirm
+    TutorialPopover.tsx     First-time onboarding card (gated by settings.tutorialSeen)
 scripts/
-  simulate.ts            4×4 AI matrix simulation
-  simulate-l4.ts         L4 vs L4 across shapes
-  simulate-variant-f.ts  Standalone rule-variant prototype (kept for reference)
-simulation-results.md    Accumulated balance data (committed)
+  simulate.ts               4×4 AI matrix simulation
+  simulate-l4.ts            L5 vs L5 across shapes (N=1000)
+  simulate-variant-f.ts     Standalone rule-variant prototype (kept for reference)
+  simulate-square.ts        50-game L5 vs L5 square integrity check
+  simulate-triangle8.ts     Triangle-8 prototype balance check
+simulation-results.md       Accumulated balance data (committed)
+CHANGELOG.md                Notable changes since 0.1.0 (Keep a Changelog format)
+.github/workflows/deploy.yml  GitHub Pages deploy on push to main
 ```
 
 `geometry.ts` is the single source of truth for what counts as a "line." Everywhere else iterates over `board.lines`.
@@ -131,11 +145,13 @@ P1 vs P2 are distinguishable by **luminance** alone (deep green vs near-white), 
 
 ### Layout — game screen
 
-- **Top bar (slim)**: back-arrow, "X pts left on board" indicator centered, optional `?` icon for rules popover.
-- **Body — 3 columns**: left side panel (P1) · board · right side panel (P2). Side panel width is `clamp(86px, 22vw, 150px)`.
-- **Side panel** contains, top-to-bottom: glass-framed avatar circle, player name, rating slot (`—` until multiplayer ships), score (large bold).
-- The **active player's panel** has a colored glow border + inner shadow.
-- The **AI's panel shows pulsing `···`** when it's thinking (450 ms `AI_DELAY_MS` between AI moves).
+- **Top bar (slim)**: back-arrow, "X pts left" indicator centered with the "N lines to claim" badge directly below (always rendered — `visibility: hidden` when empty so the topbar height never shifts), `?` rules button on the right.
+- **Body — responsive**:
+  - **Desktop / wide viewports**: three columns — left side panel (P1) · board · right side panel (P2). Side panel width `clamp(86px, 22vw, 150px)`, vertical layout (avatar → name → stats → score → per-game points).
+  - **Phone viewports (`max-width: 720px` or `(orientation: landscape) and (max-height: 500px)`)**: CSS grid stacks the two players as compact horizontal cards above the board so the board uses the full viewport width. Per-card stats / points-totals / rating are hidden in this layout (they remain in the Rankings popover). Landscape phones shrink the cards a further ~30%.
+- **Side panel** content order: glass-framed avatar circle → player name → stats panel (per-difficulty AI W/D/L + hot-seat row) → rating slot (`—` until multiplayer) → score (large bold) → points-totals (scored / given averages).
+- The **active player's panel** has a coloured glow border + inner shadow + a subtle 2.2 s `panelBreathe` filter pulse (brightness/saturation).
+- The **AI's thinking indicator** (`···`) shows in the panel when `thinking` is true (450 ms `AI_DELAY_MS` before each AI move). On mobile the indicator is absolutely-positioned inside the card so it doesn't reflow the name/score when it appears.
 
 ### Dot rendering — 3D glass orbs
 
@@ -157,11 +173,10 @@ Lines are rendered **after** dots (so they sit on top, pen-on-paper style) with 
 
 Lines **overshoot** the first/last dot by 1/3 of dot diameter (push from center = `5R/3`). Length-1 corner lines are drawn as short strokes through the lone dot, oriented by the line's natural direction (sampled from another 2+ dot line of the same kind on the board).
 
-### Pending lines — invisible by design
+### Pending lines — invisible by design (except for new-player hints)
 
-- **No visual indicator** for pending lines. No dashed line, no glowing dot border.
-- Pending dots look identical to ordinary colored dots.
-- Observant players notice silent completions and grab them.
+- **No persistent visual indicator** for pending lines once the player is past the learning window. Pending dots look identical to ordinary colored dots.
+- **Learning hints** (`showLearningHints = settings.gamesPlayed < 10 || settings.claimsMade < 3`): colored dots that belong to a pending line get a static soft yellow ring (`.dot-hint-ring`, `stroke-width: 0.08`, `opacity: 0.55`). **No animation** — the ring is intentionally flat so a busy board (e.g., the square at endgame with ~9 pending lines) never strobes. Once the player has played 10 games AND claimed 3 lines, hints disappear and the design returns to pure observation.
 
 ### Claiming pending lines
 
@@ -170,10 +185,11 @@ Lines **overshoot** the first/last dot by 1/3 of dot diameter (push from center 
 
 ### Animations
 
-- Dot pop on placement: scale 0.5 → 1.08 → 1.0 over 380 ms (cubic-bezier overshoot).
-- Strike appear: group scale-fade in over ~360 ms.
-- Active-panel glow: static (no pulse) so it doesn't distract.
-- Thinking dots in AI panel: 1.4 s pulse.
+- Dot pop on placement: scale 0.5 → 1.08 → 1.0 over 380 ms (cubic-bezier overshoot). Origin is the dot's own centre (`transform-box: fill-box`).
+- Strike appear: crossline group scale-fade-in over ~360 ms.
+- Active-panel glow: subtle 2.2 s `panelBreathe` filter pulse (brightness/saturation).
+- Thinking dots in AI panel: 1.4 s `dotsPulse`.
+- **No infinite animations on board content** (hint ring is static, see above). Layout-shift sources are reserved away — `topbar-center` has `min-height: 44px` to absorb the pending badge, and mobile `thinking-dots` is `position: absolute` so the side card doesn't reflow.
 
 ### Rules popover
 
@@ -185,7 +201,7 @@ Lines **overshoot** the first/last dot by 1/3 of dot diameter (push from center 
 
 ### Menu footer
 
-`<footer className="app-footer">` is a frosted glass bar at the bottom of menu screens (not visible during gameplay). Currently holds: © year + Rules (live) + Privacy + Contact (stub links — will become GDPR / contacts / etc. content when prepared).
+`AppFooter.tsx` renders a frosted glass bar shown on menu screens (and also during gameplay — its `onOpenRules` / `onOpenSettings` callbacks are the only way to reach Settings mid-game). Currently holds: `DotDuel © 2026` · **Rules** · **Settings**. Privacy / Contact links will be added when GDPR copy is ready (see *Deferred → Legal footer*).
 
 ---
 
@@ -249,50 +265,43 @@ Each level has a distinct robot SVG portrait rendered in the AI's side panel:
 
 ---
 
-## Progression (`storage.ts`)
+## Storage (`storage.ts`)
 
-Stored under localStorage key `dotduel:progress:v3`:
+Three independent localStorage keys, each versioned with a `:vN` suffix. **Bump the suffix when the shape semantics change** so old data is silently re-defaulted instead of crashing the parser.
+
+### `dotduel:progress:v3` — unlock ladder
 
 ```ts
 {
-  unlocked: {
-    triangle: 1..5,        // current max unlocked level for triangle
-    square: 0|1..5,        // 0 = locked; otherwise max unlocked level
-    rectangle: 0|1..5,
-    rhombus: 0|1..5,
-  },
-  wins: { "shape:diff": true, ... }
+  unlocked: { triangle: 1..5, square: 0|1..5, rectangle: 0|1..5, rhombus: 0|1..5 },
+  wins:     { "shape:diff": true, ... }
 }
 ```
 
 **Unlock rules:**
 
-1. Triangle Beginner (L1) is unlocked at start. Square / Rectangle / Rhombus start locked.
-2. **Within a shape:** beating level N unlocks level N+1 on the same shape (capped at 5).
-3. **Across shapes:** beating **Easy (L2) or higher** on the current shape unlocks the **next shape** at Beginner (L1). Shape order is Triangle → Square → Rectangle → Rhombus.
+1. Triangle L1 is unlocked at start. Square / Rectangle / Rhombus start locked.
+2. **Within a shape:** beating level N unlocks level N+1 (capped at 5).
+3. **Across shapes:** beating **L2 or higher** on the current shape unlocks the **next** shape at L1. Order: Triangle → Square → Rectangle → Rhombus.
 
-Concretely:
+So the cross-shape unlocks happen at: Triangle L2 → Square L1, Square L2 → Rectangle L1, Rectangle L2 → Rhombus L1. Hot-seat mode never touches progression. "Reset progress" in Settings calls `resetProgress()` → wipes the progress key.
 
-- Beat Triangle L1 → Triangle L2 unlocked.
-- **Beat Triangle L2 → Triangle L3 unlocked AND Square L1 unlocked.**
-- Beat Triangle L3 → Triangle L4 unlocked.
-- Beat Triangle L4 → Triangle L5 unlocked.
-- Beat Triangle L5 → no extra unlock (top of ladder for that shape).
-- **Beat Square L2 → Square L3 unlocked AND Rectangle L1 unlocked.**
-- **Beat Rectangle L2 → Rectangle L3 unlocked AND Rhombus L1 unlocked.**
-- Beat Rhombus L5 → endgame.
+### `dotduel:settings:v1` — preferences + counters
 
-All shapes have the full 5-level progression once unlocked.
+`{ playerName, opponentName, hotseatColorSwap, tutorialSeen, gamesPlayed, claimsMade }`. `gamesPlayed` / `claimsMade` drive the learning-hint window (see Pending lines).
 
-Hot-seat mode does not modify progression. "Reset progress" lives on the menu (calls `resetProgress()` → wipes localStorage entry).
+### `dotduel:stats:v4` — per-name W/D/L
+
+Keyed by `normKey(name)` (lowercased + trimmed). Each player row holds vs-AI stats split by difficulty AND shape, hot-seat stats split by shape, plus a `byOpponent` map (other player's key, or `ai:<diff>` for AI) for the head-to-head view in `RankingsPopover.tsx`. Totals and percentages are derived on read — never stored — so they can't drift.
 
 ---
 
-## Modes available
+## Modes & menu entry points
 
 - **Vs AI** — single player vs the bot. Drives the unlock progression.
 - **Hot-seat** — two humans, one device, alternating taps. All shapes available immediately. No progression.
 - **Multiplayer** — placeholder menu card, currently disabled. See *Deferred* below.
+- **Rankings** — a full-width menu card below the mode grid. Opens `RankingsPopover.tsx`, which shows a leaderboard (per-player row) and a head-to-head view; entries include AI difficulty levels as opponents. Profile delete is gated behind a confirm dialog inside the popover.
 
 ---
 
@@ -352,10 +361,10 @@ Runtime resources: only browser APIs (`localStorage`, SVG, DOM). No external net
 
 - The menu footer reserves space for Privacy / Terms / Contact. When GDPR/compliance content is written, replace the stub anchors in `Menu.tsx` with real navigation (could open similar popovers, or dedicated routes).
 
-### Deployment to www.dotduel.com
+### Production domain (www.dotduel.com)
 
-- Hold until the user signs off on overall polish.
-- Static hosting (Cloudflare Pages / Netlify / Vercel free tier) is sufficient for the current single-page app.
+- GitHub Pages serves the staging build at `https://donstn.github.io/DotDuel/` already (auto-deployed on push to `main`).
+- Cutover to `www.dotduel.com` is on hold until the user signs off on overall polish. Either keep GH Pages with a custom domain CNAME, or migrate to Cloudflare Pages / Netlify / Vercel free tier — all within the zero-cost rule.
 
 ---
 
@@ -373,12 +382,15 @@ Runtime resources: only browser APIs (`localStorage`, SVG, DOM). No external net
 
 ## Sanity checklist before shipping changes
 
-1. `npm run build` succeeds (TS + Vite bundle).
-2. Triangle L1 vs-AI win unlocks L2. Triangle L2 win unlocks Square. (Sanity-check the progression chain end-to-end.)
-3. Hot-seat mode does not modify localStorage progression.
+1. `npm run build` succeeds (TS strict + Vite bundle).
+2. Triangle L1 vs-AI win unlocks L2; Triangle L2 win unlocks Square. (Spot-check the progression chain end-to-end.)
+3. Hot-seat mode does not modify `dotduel:progress:v3`. (Per-name stats in `dotduel:stats:v4` DO update for hot-seat — that's intended.)
 4. Placing a corner dot scores its 1-point line immediately and the corner strike renders.
-5. A move completing two lines: longest scores (crossline draws); shorter becomes pending (no visual). Clicking any dot on the pending line on a later turn claims it.
+5. A move completing two lines: longest scores (crossline draws); shorter becomes pending (no visual unless within the learning-hint window). Clicking any dot on the pending line on a later turn claims it.
 6. Endgame phase: when all dots are colored, both players continue claiming pending lines until the pool is empty before the game-over screen appears.
-7. Board fits in landscape phone viewport (~640×360) without scroll.
-8. Rules popover opens from menu footer "Rules" link AND from in-game `?` button; closes on backdrop click, ✕, or ESC.
-9. Run `npm run simulate:l4` after any AI change — average scores across L5 vs L5 should stay within ~3 points per shape.
+7. Mobile layout: in DevTools device toolbar, the iPhone-SE portrait stacks player cards above the board (no horizontal side panels); iPhone-SE landscape fits the three mode cards on one line on the menu.
+8. Topbar / board don't shift vertically when pending lines appear or the AI starts thinking (pending badge slot + absolute thinking-dots).
+9. Rules popover opens from menu footer "Rules" link AND from in-game `?` button; closes on backdrop click, ✕, or ESC.
+10. After AI changes: `npm run simulate:l4` — average scores across L5 vs L5 should stay within ~3 points per shape.
+11. After square / pending-flow changes: `npm run simulate:square` — must report 50/50 clean games with integrity OK and no double-turn anomalies.
+12. After pushing to `main`: confirm the `Deploy to GitHub Pages` workflow goes green (`gh run list --limit 1`) and the staging URL loads.

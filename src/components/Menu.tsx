@@ -26,7 +26,7 @@ export function Menu({ progress, settings, onStart, onSettingsUpdate, onOpenRank
           <span className="title-dot title-dot-2">●</span>
         </h1>
         <p className="subtitle">Take turns coloring dots. Complete a line — score its length.</p>
-        <p className="version-badge">v29 · total points scored/given</p>
+        <p className="version-badge">v30 · mobile UX + rankings</p>
         <div className="menu-section">
           <h2>Choose mode</h2>
           <div className="menu-grid">

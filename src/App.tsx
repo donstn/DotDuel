@@ -8,6 +8,8 @@ import { RulesPopover } from './components/RulesPopover';
 import { SettingsPopover } from './components/SettingsPopover';
 import { SidePanel } from './components/SidePanel';
 import { TutorialPopover } from './components/TutorialPopover';
+import { SignInPopover } from './auth/SignInPopover';
+import { useAuth } from './auth/useAuth';
 import { pickAIAction } from './ai';
 import { applyAction, applyClaim, applyMove, createGame } from './game';
 import { getBoard } from './geometry';
@@ -54,7 +56,9 @@ export default function App() {
   const [rulesOpen, setRulesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rankingsOpen, setRankingsOpen] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(() => !loadSettings().tutorialSeen);
+  const { user, signOut } = useAuth();
   const aiTimer = useRef<number | null>(null);
   const winRecorded = useRef(false);
   const gameEndCounted = useRef(false);
@@ -249,6 +253,9 @@ export default function App() {
         <AppFooter
           onOpenRules={() => setRulesOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
+          user={user}
+          onOpenSignIn={() => setSignInOpen(true)}
+          onSignOut={() => void signOut()}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
         {settingsOpen && (
@@ -260,6 +267,7 @@ export default function App() {
           />
         )}
         {rankingsOpen && <RankingsPopover onClose={() => setRankingsOpen(false)} />}
+        {signInOpen && <SignInPopover onClose={() => setSignInOpen(false)} />}
         {tutorialOpen && <TutorialPopover onDismiss={dismissTutorial} />}
       </>
     );
@@ -373,6 +381,9 @@ export default function App() {
       <AppFooter
         onOpenRules={() => setRulesOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
+        user={user}
+        onOpenSignIn={() => setSignInOpen(true)}
+        onSignOut={() => void signOut()}
       />
       {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
       {settingsOpen && (
@@ -383,6 +394,7 @@ export default function App() {
           onClose={() => setSettingsOpen(false)}
         />
       )}
+      {signInOpen && <SignInPopover onClose={() => setSignInOpen(false)} />}
     </div>
   );
 }

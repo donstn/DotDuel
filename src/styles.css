@@ -2128,3 +2128,139 @@ button {
     padding: 14px 16px;
   }
 }
+
+/* ---------------- Auth (sign-in popover + footer chip) ---------------- */
+
+.auth-card {
+  max-width: 380px;
+}
+
+.auth-body {
+  padding: 6px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #202124;
+  font-weight: 600;
+  font-size: 0.92rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+  transition: transform 140ms, box-shadow 140ms;
+}
+
+.auth-google:hover:not(:disabled) {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.32);
+}
+
+.auth-google:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.auth-google:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-google-g {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: conic-gradient(from 0deg, #ea4335, #fbbc05, #34a853, #4285f4, #ea4335);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.78rem;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-mute);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--glass-border);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auth-submit {
+  margin-top: 4px;
+  align-self: stretch;
+  text-align: center;
+}
+
+.auth-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-error {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(220, 80, 80, 0.18);
+  border: 1px solid rgba(220, 80, 80, 0.38);
+  color: #ffd6d6;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.auth-info {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(123, 219, 149, 0.16);
+  border: 1px solid rgba(123, 219, 149, 0.38);
+  color: #d8f6e3;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.auth-toggle {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-mute);
+}
+
+.auth-toggle a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.auth-toggle a:hover {
+  text-decoration: underline;
+}
+
+.app-footer-account {
+  color: var(--text-dim);
+  font-weight: 500;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

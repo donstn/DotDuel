@@ -419,6 +419,60 @@ export function deletePlayerStats(name: string): void {
   saveStats(store);
 }
 
+// Move a player's stats row from oldName to newName so stats survive a rename.
+// If there's already a row at the new key, the old row's W/D/L and points are
+// added on top of it. If oldName has no row, this is a no-op.
+export function migrateStatsKey(oldName: string, newName: string): void {
+  if (!oldName?.trim() || !newName?.trim()) return;
+  const oldKey = normKey(oldName);
+  const newKey = normKey(newName);
+  if (oldKey === newKey) return;
+  const store = loadStats();
+  const oldRow = store.players[oldKey];
+  if (!oldRow) return;
+  const existing = store.players[newKey];
+  if (!existing) {
+    store.players[newKey] = { ...oldRow, name: newName };
+  } else {
+    existing.name = newName;
+    mergeModeBuckets(existing.vsAI.byDifficulty, oldRow.vsAI.byDifficulty);
+    mergeModeBuckets(existing.vsAI.byShape, oldRow.vsAI.byShape);
+    existing.vsAI.pointsScored += oldRow.vsAI.pointsScored;
+    existing.vsAI.pointsGiven += oldRow.vsAI.pointsGiven;
+    mergeModeBuckets(existing.hotseat.byShape, oldRow.hotseat.byShape);
+    existing.hotseat.pointsScored += oldRow.hotseat.pointsScored;
+    existing.hotseat.pointsGiven += oldRow.hotseat.pointsGiven;
+    mergeModeBuckets(existing.byOpponent, oldRow.byOpponent);
+  }
+  delete store.players[oldKey];
+  for (const row of Object.values(store.players)) {
+    if (row.byOpponent?.[oldKey]) {
+      const incoming = row.byOpponent[oldKey];
+      const cur = row.byOpponent[newKey] ?? { ...EMPTY_MODE };
+      cur.wins += incoming.wins;
+      cur.draws += incoming.draws;
+      cur.losses += incoming.losses;
+      row.byOpponent[newKey] = cur;
+      delete row.byOpponent[oldKey];
+    }
+  }
+  saveStats(store);
+}
+
+function mergeModeBuckets(
+  target: Partial<Record<string, ModeStats>>,
+  source: Partial<Record<string, ModeStats>>,
+): void {
+  for (const [k, v] of Object.entries(source)) {
+    if (!v) continue;
+    const cur = target[k] ?? { ...EMPTY_MODE };
+    cur.wins += v.wins;
+    cur.draws += v.draws;
+    cur.losses += v.losses;
+    target[k] = cur;
+  }
+}
+
 // Fully remove a player from the local stats store. Their row is dropped AND
 // their key is scrubbed from every other player's byOpponent, so they vanish
 // from leaderboards and head-to-head views. Other players' aggregate W/D/L

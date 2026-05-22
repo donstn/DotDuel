@@ -7,12 +7,20 @@ import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
 interface Props {
   progress: Progress;
   settings: Settings;
+  gameName: string | null;
   onStart: (mode: GameMode, shape: ShapeId, difficulty?: Difficulty) => void;
   onSettingsUpdate: (next: Settings) => void;
   onOpenRankings: () => void;
 }
 
-export function Menu({ progress, settings, onStart, onSettingsUpdate, onOpenRankings }: Props) {
+export function Menu({
+  progress,
+  settings,
+  gameName,
+  onStart,
+  onSettingsUpdate,
+  onOpenRankings,
+}: Props) {
   const [mode, setMode] = useState<GameMode | null>(null);
   const [shape, setShape] = useState<ShapeId | null>(null);
   const [aiDifficulty, setAiDifficulty] = useState<Difficulty | null>(null);
@@ -26,7 +34,7 @@ export function Menu({ progress, settings, onStart, onSettingsUpdate, onOpenRank
           <span className="title-dot title-dot-2">●</span>
         </h1>
         <p className="subtitle">Take turns coloring dots. Complete a line — score its length.</p>
-        <p className="version-badge">v34 · account picker + verify redirect</p>
+        <p className="version-badge">v38 · skip name step when signed in</p>
         <div className="menu-section">
           <h2>Choose mode</h2>
           <div className="menu-grid">
@@ -82,14 +90,16 @@ export function Menu({ progress, settings, onStart, onSettingsUpdate, onOpenRank
       <HotseatSetup
         shape={shape}
         settings={settings}
+        lockedP1Name={gameName}
         onBack={() => setShape(null)}
         onStart={(p1, p2, swap) => {
-          onSettingsUpdate({
+          const nextSettings: Settings = {
             ...settings,
-            playerName: p1,
             opponentName: p2,
             hotseatColorSwap: swap,
-          });
+          };
+          if (!gameName) nextSettings.playerName = p1;
+          onSettingsUpdate(nextSettings);
           onStart('hotseat', shape);
         }}
       />
@@ -138,7 +148,13 @@ export function Menu({ progress, settings, onStart, onSettingsUpdate, onOpenRank
                 key={d}
                 className={`menu-card ${unlocked ? '' : 'disabled'}`}
                 disabled={!unlocked}
-                onClick={() => setAiDifficulty(d)}
+                onClick={() => {
+                  if (gameName) {
+                    onStart('ai', shape, d);
+                  } else {
+                    setAiDifficulty(d);
+                  }
+                }}
               >
                 <strong>{DIFFICULTY_LABELS[d]}</strong>
                 <span>{unlocked ? `Level ${d}` : 'Locked'}</span>
@@ -156,9 +172,12 @@ export function Menu({ progress, settings, onStart, onSettingsUpdate, onOpenRank
         shape={shape}
         difficulty={aiDifficulty}
         settings={settings}
+        lockedName={gameName}
         onBack={() => setAiDifficulty(null)}
         onStart={(name) => {
-          onSettingsUpdate({ ...settings, playerName: name });
+          if (!gameName) {
+            onSettingsUpdate({ ...settings, playerName: name });
+          }
           onStart('ai', shape, aiDifficulty);
         }}
       />
@@ -172,16 +191,26 @@ interface VsAISetupProps {
   shape: ShapeId;
   difficulty: Difficulty;
   settings: Settings;
+  lockedName: string | null;
   onBack: () => void;
   onStart: (name: string) => void;
 }
 
-function VsAISetup({ shape, difficulty, settings, onBack, onStart }: VsAISetupProps) {
-  const [name, setName] = useState(settings.playerName || 'Player 1');
+function VsAISetup({
+  shape,
+  difficulty,
+  settings,
+  lockedName,
+  onBack,
+  onStart,
+}: VsAISetupProps) {
+  const [name, setName] = useState(
+    lockedName ?? (settings.playerName || 'Player 1'),
+  );
   const meta = SHAPE_META.find((s) => s.id === shape)!;
 
   const start = () => {
-    onStart(name.trim() || 'Player 1');
+    onStart((lockedName ?? name).trim() || 'Player 1');
   };
 
   const onKey = (e: React.KeyboardEvent) => {
@@ -204,14 +233,21 @@ function VsAISetup({ shape, difficulty, settings, onBack, onStart }: VsAISetupPr
           <input
             type="text"
             className="settings-input"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={lockedName ?? name}
+            onChange={(e) => !lockedName && setName(e.target.value)}
             onKeyDown={onKey}
             maxLength={20}
             placeholder="Player 1"
-            autoFocus
+            autoFocus={!lockedName}
+            readOnly={!!lockedName}
+            aria-readonly={!!lockedName}
           />
         </label>
+        {lockedName && (
+          <p className="settings-hint">
+            Signed in as {lockedName}. Change in <strong>Profile</strong>.
+          </p>
+        )}
         <button className="hotseat-start" onClick={start}>
           Start game
         </button>
@@ -223,19 +259,29 @@ function VsAISetup({ shape, difficulty, settings, onBack, onStart }: VsAISetupPr
 interface HotseatSetupProps {
   shape: ShapeId;
   settings: Settings;
+  lockedP1Name: string | null;
   onBack: () => void;
   onStart: (p1Name: string, p2Name: string, colorSwap: boolean) => void;
 }
 
-function HotseatSetup({ shape, settings, onBack, onStart }: HotseatSetupProps) {
-  const [p1, setP1] = useState(settings.playerName || 'Player 1');
+function HotseatSetup({
+  shape,
+  settings,
+  lockedP1Name,
+  onBack,
+  onStart,
+}: HotseatSetupProps) {
+  const [p1, setP1] = useState(
+    lockedP1Name ?? (settings.playerName || 'Player 1'),
+  );
   const [p2, setP2] = useState(settings.opponentName || 'Player 2');
   const [swap, setSwap] = useState(settings.hotseatColorSwap);
 
   const meta = SHAPE_META.find((s) => s.id === shape)!;
 
   const start = () => {
-    onStart(p1.trim() || 'Player 1', p2.trim() || 'Player 2', swap);
+    const p1Final = (lockedP1Name ?? p1).trim() || 'Player 1';
+    onStart(p1Final, p2.trim() || 'Player 2', swap);
   };
 
   const onKey = (e: React.KeyboardEvent) => {
@@ -256,12 +302,14 @@ function HotseatSetup({ shape, settings, onBack, onStart }: HotseatSetupProps) {
           <input
             type="text"
             className="settings-input"
-            value={p1}
-            onChange={(e) => setP1(e.target.value)}
+            value={lockedP1Name ?? p1}
+            onChange={(e) => !lockedP1Name && setP1(e.target.value)}
             onKeyDown={onKey}
             maxLength={20}
             placeholder="Player 1"
-            autoFocus
+            autoFocus={!lockedP1Name}
+            readOnly={!!lockedP1Name}
+            aria-readonly={!!lockedP1Name}
           />
         </label>
         <label className="hotseat-name">

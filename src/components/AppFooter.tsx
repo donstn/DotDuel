@@ -5,7 +5,7 @@ interface Props {
   onOpenSettings: () => void;
   user: User | null;
   onOpenSignIn: () => void;
-  onSignOut: () => void;
+  onOpenProfile: () => void;
 }
 
 export function AppFooter({
@@ -13,7 +13,7 @@ export function AppFooter({
   onOpenSettings,
   user,
   onOpenSignIn,
-  onSignOut,
+  onOpenProfile,
 }: Props) {
   const displayName =
     user?.displayName?.trim() || user?.email?.split('@')[0] || 'Account';
@@ -44,21 +44,17 @@ export function AppFooter({
         </a>
         <span className="sep">·</span>
         {user ? (
-          <>
-            <span className="app-footer-account" title={user.email ?? ''}>
-              {displayName}
-            </span>
-            <span className="sep">·</span>
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                onSignOut();
-              }}
-            >
-              Sign out
-            </a>
-          </>
+          <a
+            href="#"
+            className="app-footer-account"
+            title={user.email ?? ''}
+            onClick={(e) => {
+              e.preventDefault();
+              onOpenProfile();
+            }}
+          >
+            {displayName}
+          </a>
         ) : (
           <a
             href="#"

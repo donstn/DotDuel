@@ -2264,3 +2264,141 @@ button {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ---------------- Profile popover ---------------- */
+
+.profile-card {
+  max-width: 440px;
+}
+
+.profile-body {
+  padding: 6px 22px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-section h3 {
+  margin: 0 0 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.profile-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 0.88rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.profile-row:last-child {
+  border-bottom: none;
+}
+
+.profile-row span {
+  color: var(--text-dim);
+}
+
+.profile-row strong {
+  color: var(--text-bright);
+  font-weight: 600;
+  text-align: right;
+}
+
+.profile-row em {
+  font-style: normal;
+  color: var(--text-mute);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.profile-email {
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+  white-space: nowrap;
+}
+
+.profile-footer-bar {
+  justify-content: space-between;
+}
+
+.profile-name-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-rename-btn {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 140ms, color 140ms;
+}
+
+.profile-rename-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--accent);
+}
+
+/* ---------------- Username picker ---------------- */
+
+.username-card {
+  max-width: 380px;
+}
+
+.username-body {
+  padding: 6px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.username-status-row {
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+}
+
+.username-status {
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+.username-status.hint {
+  color: var(--text-mute);
+}
+
+.username-status.checking {
+  color: var(--text-dim);
+}
+
+.username-status.available {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.username-status.taken,
+.username-status.invalid {
+  color: #ffb4b4;
+}

@@ -4,12 +4,19 @@ import type { Settings } from '../storage';
 
 interface Props {
   settings: Settings;
+  cloudDisplayName: string | null;
   onChange: (next: Settings) => void;
   onResetProgress: () => void;
   onClose: () => void;
 }
 
-export function SettingsPopover({ settings, onChange, onResetProgress, onClose }: Props) {
+export function SettingsPopover({
+  settings,
+  cloudDisplayName,
+  onChange,
+  onResetProgress,
+  onClose,
+}: Props) {
   const [local, setLocal] = useState<Settings>(settings);
 
   useEffect(() => {
@@ -65,16 +72,21 @@ export function SettingsPopover({ settings, onChange, onResetProgress, onClose }
               <input
                 type="text"
                 className="settings-input"
-                value={local.playerName}
+                value={cloudDisplayName ?? local.playerName}
                 maxLength={20}
                 onChange={(e) =>
+                  !cloudDisplayName &&
                   setLocal((s) => ({ ...s, playerName: e.target.value }))
                 }
                 placeholder="Player 1"
+                readOnly={!!cloudDisplayName}
+                aria-readonly={!!cloudDisplayName}
               />
             </label>
             <p className="settings-hint">
-              Used in Vs-AI mode AND as Player 1 in Hot-seat.
+              {cloudDisplayName
+                ? `Signed in as ${cloudDisplayName}. Rename in Profile.`
+                : 'Used in Vs-AI mode AND as Player 1 in Hot-seat.'}
             </p>
           </section>
 

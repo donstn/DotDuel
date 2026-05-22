@@ -3,6 +3,7 @@ import { AppFooter } from './components/AppFooter';
 import { Board } from './components/Board';
 import { GameOver } from './components/GameOver';
 import { Menu } from './components/Menu';
+import { ProfilePopover } from './components/ProfilePopover';
 import { RankingsPopover } from './components/RankingsPopover';
 import { RulesPopover } from './components/RulesPopover';
 import { SettingsPopover } from './components/SettingsPopover';
@@ -10,6 +11,13 @@ import { SidePanel } from './components/SidePanel';
 import { TutorialPopover } from './components/TutorialPopover';
 import { SignInPopover } from './auth/SignInPopover';
 import { useAuth } from './auth/useAuth';
+import { saveCloudProgress, syncOnSignIn } from './cloud/progressSync';
+import {
+  suggestUsername,
+  watchProfile,
+  type CloudProfile,
+} from './cloud/usernames';
+import { UsernamePicker } from './components/UsernamePicker';
 import { pickAIAction } from './ai';
 import { applyAction, applyClaim, applyMove, createGame } from './game';
 import { getBoard } from './geometry';
@@ -18,6 +26,7 @@ import {
   getPlayerRow,
   loadProgress,
   loadSettings,
+  migrateStatsKey,
   normKey,
   recordGameResult,
   recordWin,
@@ -57,6 +66,10 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rankingsOpen, setRankingsOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [cloudProfile, setCloudProfile] = useState<CloudProfile | null>(null);
+  const [cloudProfileLoaded, setCloudProfileLoaded] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(() => !loadSettings().tutorialSeen);
   const { user, signOut } = useAuth();
   const aiTimer = useRef<number | null>(null);
@@ -164,12 +177,15 @@ export default function App() {
     };
     const s1 = state.scores[1];
     const s2 = state.scores[2];
+    const liveGameName =
+      user && cloudProfile?.displayName
+        ? cloudProfile.displayName
+        : settings.playerName || 'Player 1';
     if (config.mode === 'ai') {
-      const name = settings.playerName || 'Player 1';
       const oppKey = config.difficulty ? aiOpponentKey(config.difficulty) : undefined;
-      recordGameResult(name, 'ai', outcomeFor(1), config.shape, s1, s2, config.difficulty, oppKey);
+      recordGameResult(liveGameName, 'ai', outcomeFor(1), config.shape, s1, s2, config.difficulty, oppKey);
     } else if (config.mode === 'hotseat') {
-      const p1 = settings.playerName || 'Player 1';
+      const p1 = liveGameName;
       const p2 = settings.opponentName || 'Player 2';
       const k1 = normKey(p1);
       const k2 = normKey(p2);
@@ -206,7 +222,36 @@ export default function App() {
     setUnlockInfo({ shape: newShape, difficulty: newDifficulty });
     setProgress(next);
     saveProgress(next);
-  }, [state, config, progress]);
+    if (user) void saveCloudProgress(user.uid, next);
+  }, [state, config, progress, user]);
+
+  // On sign-in: merge cloud progress with local (max-union), save back.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    void syncOnSignIn(user.uid).then((merged) => {
+      if (cancelled || !merged) return;
+      setProgress(merged);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid]);
+
+  // Live subscription to users/{uid} — auto-updates display name across tabs.
+  useEffect(() => {
+    if (!user) {
+      setCloudProfile(null);
+      setCloudProfileLoaded(false);
+      return;
+    }
+    setCloudProfileLoaded(false);
+    const unsub = watchProfile(user.uid, (p) => {
+      setCloudProfile(p);
+      setCloudProfileLoaded(true);
+    });
+    return unsub;
+  }, [user?.uid]);
 
   const handleDotClick = (dotId: number) => {
     if (!state || !config || state.finished) return;
@@ -240,12 +285,16 @@ export default function App() {
     setProgress(resetProgress());
   };
 
+  const effectiveGameName =
+    user && cloudProfile?.displayName ? cloudProfile.displayName : null;
+
   if (screen === 'menu' || !state || !config) {
     return (
       <>
         <Menu
           progress={progress}
           settings={settings}
+          gameName={effectiveGameName}
           onStart={startGame}
           onSettingsUpdate={updateSettings}
           onOpenRankings={() => setRankingsOpen(true)}
@@ -255,12 +304,13 @@ export default function App() {
           onOpenSettings={() => setSettingsOpen(true)}
           user={user}
           onOpenSignIn={() => setSignInOpen(true)}
-          onSignOut={() => void signOut()}
+          onOpenProfile={() => setProfileOpen(true)}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
         {settingsOpen && (
           <SettingsPopover
             settings={settings}
+            cloudDisplayName={effectiveGameName}
             onChange={updateSettings}
             onResetProgress={onProgressResetWiped}
             onClose={() => setSettingsOpen(false)}
@@ -268,6 +318,57 @@ export default function App() {
         )}
         {rankingsOpen && <RankingsPopover onClose={() => setRankingsOpen(false)} />}
         {signInOpen && <SignInPopover onClose={() => setSignInOpen(false)} />}
+        {profileOpen && user && (
+          <ProfilePopover
+            user={user}
+            settings={settings}
+            cloudDisplayName={cloudProfile?.displayName ?? null}
+            onSignOut={() => void signOut()}
+            onRename={() => {
+              setProfileOpen(false);
+              setRenameOpen(true);
+            }}
+            onClose={() => setProfileOpen(false)}
+          />
+        )}
+        {user && cloudProfileLoaded && !cloudProfile?.displayName && (
+          <UsernamePicker
+            mode="claim"
+            uid={user.uid}
+            initialName={suggestUsername(user.displayName, user.email)}
+            seed={{
+              email: user.email,
+              authProvider: user.providerData[0]?.providerId ?? null,
+            }}
+            onSuccess={(newName) => {
+              setCloudProfile((prev) => ({
+                email: prev?.email ?? user.email,
+                authProvider:
+                  prev?.authProvider ?? user.providerData[0]?.providerId ?? null,
+                createdAt: prev?.createdAt ?? null,
+                displayName: newName,
+              }));
+            }}
+          />
+        )}
+        {renameOpen && user && cloudProfile?.displayName && (
+          <UsernamePicker
+            mode="rename"
+            uid={user.uid}
+            initialName={cloudProfile.displayName}
+            onSuccess={(newName) => {
+              const oldName = cloudProfile.displayName ?? '';
+              if (oldName && oldName !== newName) {
+                migrateStatsKey(oldName, newName);
+              }
+              setCloudProfile((prev) =>
+                prev ? { ...prev, displayName: newName } : prev,
+              );
+              setRenameOpen(false);
+            }}
+            onCancel={() => setRenameOpen(false)}
+          />
+        )}
         {tutorialOpen && <TutorialPopover onDismiss={dismissTutorial} />}
       </>
     );
@@ -276,7 +377,10 @@ export default function App() {
   const hotseat = config.mode === 'hotseat';
   const colorSwap = hotseat && settings.hotseatColorSwap;
 
-  const p1Name = settings.playerName || 'Player 1';
+  const p1Name =
+    user && cloudProfile?.displayName
+      ? cloudProfile.displayName
+      : settings.playerName || 'Player 1';
   const p2Name =
     config.mode === 'ai'
       ? `AI · ${DIFFICULTY_LABELS[config.difficulty ?? 1]}`
@@ -383,18 +487,70 @@ export default function App() {
         onOpenSettings={() => setSettingsOpen(true)}
         user={user}
         onOpenSignIn={() => setSignInOpen(true)}
-        onSignOut={() => void signOut()}
+        onOpenProfile={() => setProfileOpen(true)}
       />
       {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
       {settingsOpen && (
         <SettingsPopover
           settings={settings}
+          cloudDisplayName={effectiveGameName}
           onChange={updateSettings}
           onResetProgress={onProgressResetWiped}
           onClose={() => setSettingsOpen(false)}
         />
       )}
       {signInOpen && <SignInPopover onClose={() => setSignInOpen(false)} />}
+      {profileOpen && user && (
+        <ProfilePopover
+          user={user}
+          settings={settings}
+          cloudDisplayName={cloudProfile?.displayName ?? null}
+          onSignOut={() => void signOut()}
+          onRename={() => {
+            setProfileOpen(false);
+            setRenameOpen(true);
+          }}
+          onClose={() => setProfileOpen(false)}
+        />
+      )}
+      {user && cloudProfileLoaded && !cloudProfile?.displayName && (
+        <UsernamePicker
+          mode="claim"
+          uid={user.uid}
+          initialName={suggestUsername(user.displayName, user.email)}
+          seed={{
+            email: user.email,
+            authProvider: user.providerData[0]?.providerId ?? null,
+          }}
+          onSuccess={(newName) => {
+            setCloudProfile((prev) => ({
+              email: prev?.email ?? user.email,
+              authProvider:
+                prev?.authProvider ?? user.providerData[0]?.providerId ?? null,
+              createdAt: prev?.createdAt ?? null,
+              displayName: newName,
+            }));
+          }}
+        />
+      )}
+      {renameOpen && user && cloudProfile?.displayName && (
+        <UsernamePicker
+          mode="rename"
+          uid={user.uid}
+          initialName={cloudProfile.displayName}
+          onSuccess={(newName) => {
+            const oldName = cloudProfile.displayName ?? '';
+            if (oldName && oldName !== newName) {
+              migrateStatsKey(oldName, newName);
+            }
+            setCloudProfile((prev) =>
+              prev ? { ...prev, displayName: newName } : prev,
+            );
+            setRenameOpen(false);
+          }}
+          onCancel={() => setRenameOpen(false)}
+        />
+      )}
     </div>
   );
 }

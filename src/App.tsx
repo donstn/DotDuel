@@ -17,6 +17,17 @@ import {
   watchProfile,
   type CloudProfile,
 } from './cloud/usernames';
+import {
+  cancelQueue,
+  clearPairing,
+  joinQueue,
+  watchPairing,
+  type PairingDoc,
+  type TimeControl,
+} from './cloud/matchmaking';
+import { MatchFoundScreen } from './components/MatchFoundScreen';
+import { MatchmakingWaiting } from './components/MatchmakingWaiting';
+import { MultiplayerLobby } from './components/MultiplayerLobby';
 import { UsernamePicker } from './components/UsernamePicker';
 import { pickAIAction } from './ai';
 import { applyAction, applyClaim, applyMove, createGame } from './game';
@@ -39,7 +50,7 @@ import { DIFFICULTY_LABELS } from './types';
 import type { Difficulty, GameMode, GameState, Progress, ShapeId } from './types';
 import { APP_VERSION } from './version';
 
-type Screen = 'menu' | 'game';
+type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound';
 
 interface SessionConfig {
   mode: GameMode;
@@ -71,6 +82,8 @@ export default function App() {
   const [renameOpen, setRenameOpen] = useState(false);
   const [cloudProfile, setCloudProfile] = useState<CloudProfile | null>(null);
   const [cloudProfileLoaded, setCloudProfileLoaded] = useState(false);
+  const [pairing, setPairing] = useState<PairingDoc | null>(null);
+  const [queueTimeControl, setQueueTimeControl] = useState<TimeControl | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(() => !loadSettings().tutorialSeen);
   const { user, signOut } = useAuth();
   const aiTimer = useRef<number | null>(null);
@@ -254,6 +267,55 @@ export default function App() {
     return unsub;
   }, [user?.uid]);
 
+  // Live subscription to pairings/{uid} — drives matchmaking → matchFound transition.
+  useEffect(() => {
+    if (!user) {
+      setPairing(null);
+      return;
+    }
+    return watchPairing(user.uid, (p) => setPairing(p));
+  }, [user?.uid]);
+
+  // When a pairing arrives while waiting (or even while on the menu — handles
+  // reconnect mid-search), jump to matchFound.
+  useEffect(() => {
+    if (!pairing) return;
+    if (screen === 'matchmaking' || screen === 'menu' || screen === 'lobby') {
+      setScreen('matchFound');
+    }
+  }, [pairing, screen]);
+
+  const openMultiplayer = () => {
+    setScreen('lobby');
+  };
+
+  const onFindMatch = async (tc: TimeControl) => {
+    if (!user) return;
+    const rating = cloudProfile?.rating ?? 1000;
+    setQueueTimeControl(tc);
+    setScreen('matchmaking');
+    try {
+      await joinQueue(user.uid, rating, tc);
+    } catch (e) {
+      console.warn('joinQueue failed:', e);
+      setQueueTimeControl(null);
+      setScreen('lobby');
+    }
+  };
+
+  const onCancelMatch = async () => {
+    if (user) await cancelQueue(user.uid);
+    setQueueTimeControl(null);
+    setScreen('lobby');
+  };
+
+  const onLeaveMatch = async () => {
+    if (user) await clearPairing(user.uid);
+    setPairing(null);
+    setQueueTimeControl(null);
+    setScreen('menu');
+  };
+
   const handleDotClick = (dotId: number) => {
     if (!state || !config || state.finished) return;
     if (thinking) return;
@@ -289,9 +351,42 @@ export default function App() {
   const effectiveGameName =
     user && cloudProfile?.displayName ? cloudProfile.displayName : null;
 
-  if (screen === 'menu' || !state || !config) {
-    return (
-      <>
+  const isMenuScreen =
+    screen === 'menu' ||
+    screen === 'lobby' ||
+    screen === 'matchmaking' ||
+    screen === 'matchFound' ||
+    !state ||
+    !config;
+
+  if (isMenuScreen) {
+    let mainContent;
+    if (screen === 'lobby') {
+      mainContent = (
+        <MultiplayerLobby
+          rating={cloudProfile?.rating ?? 1000}
+          onBack={() => setScreen('menu')}
+          onFindMatch={onFindMatch}
+        />
+      );
+    } else if (screen === 'matchmaking' && queueTimeControl) {
+      mainContent = (
+        <MatchmakingWaiting
+          timeControl={queueTimeControl}
+          onCancel={onCancelMatch}
+        />
+      );
+    } else if (screen === 'matchFound' && pairing) {
+      mainContent = (
+        <MatchFoundScreen
+          pairing={pairing}
+          myDisplayName={effectiveGameName ?? 'You'}
+          myRating={cloudProfile?.rating ?? 1000}
+          onContinue={onLeaveMatch}
+        />
+      );
+    } else {
+      mainContent = (
         <Menu
           progress={progress}
           settings={settings}
@@ -303,7 +398,13 @@ export default function App() {
           onOpenSignIn={() => setSignInOpen(true)}
           onOpenProfile={() => setProfileOpen(true)}
           onSignOut={() => void signOut()}
+          onOpenMultiplayer={openMultiplayer}
         />
+      );
+    }
+    return (
+      <>
+        {mainContent}
         <AppFooter
           onOpenRules={() => setRulesOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -350,6 +451,7 @@ export default function App() {
                   prev?.authProvider ?? user.providerData[0]?.providerId ?? null,
                 createdAt: prev?.createdAt ?? null,
                 displayName: newName,
+                rating: prev?.rating ?? 1000,
               }));
             }}
           />
@@ -530,6 +632,7 @@ export default function App() {
                 prev?.authProvider ?? user.providerData[0]?.providerId ?? null,
               createdAt: prev?.createdAt ?? null,
               displayName: newName,
+              rating: prev?.rating ?? 1000,
             }));
           }}
         />

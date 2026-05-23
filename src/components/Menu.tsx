@@ -16,6 +16,7 @@ interface Props {
   onOpenSignIn: () => void;
   onOpenProfile: () => void;
   onSignOut: () => void;
+  onOpenMultiplayer: () => void;
 }
 
 export function Menu({
@@ -29,6 +30,7 @@ export function Menu({
   onOpenSignIn,
   onOpenProfile,
   onSignOut,
+  onOpenMultiplayer,
 }: Props) {
   const [mode, setMode] = useState<GameMode | null>(null);
   const [shape, setShape] = useState<ShapeId | null>(null);
@@ -89,14 +91,24 @@ export function Menu({
               <strong>Hot-seat</strong>
               <span>Two players, one device.</span>
             </button>
-            <button
-              className="menu-card disabled"
-              disabled
-              title="Coming soon"
-            >
-              <strong>Multiplayer</strong>
-              <span>Coming soon.</span>
-            </button>
+            {user ? (
+              <button
+                className="menu-card"
+                onClick={onOpenMultiplayer}
+              >
+                <strong>Multiplayer</strong>
+                <span>Find a ranked match.</span>
+              </button>
+            ) : (
+              <button
+                className="menu-card disabled"
+                disabled
+                title="Sign in to play multiplayer"
+              >
+                <strong>Multiplayer</strong>
+                <span>Sign in to play.</span>
+              </button>
+            )}
           </div>
           <button className="menu-card menu-card-rank" onClick={onOpenRankings}>
             <strong>Rankings</strong>

@@ -1,1 +1,1 @@
-export const APP_VERSION = 'v40 · auth pills + welcome';
+export const APP_VERSION = 'v41 · multiplayer lobby';

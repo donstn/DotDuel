@@ -5,6 +5,7 @@ import {
   onSnapshot,
   runTransaction,
   serverTimestamp,
+  type DocumentData,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -12,6 +13,7 @@ export interface CloudProfile {
   displayName: string | null;
   email: string | null;
   authProvider: string | null;
+  rating: number;
   createdAt: unknown;
 }
 
@@ -59,17 +61,21 @@ function usernameDoc(lower: string) {
   return doc(db, 'usernames', lower);
 }
 
+function shapeProfile(data: DocumentData | undefined): CloudProfile {
+  return {
+    displayName: data?.displayName ?? null,
+    email: data?.email ?? null,
+    authProvider: data?.authProvider ?? null,
+    rating: typeof data?.rating === 'number' ? data.rating : 1000,
+    createdAt: data?.createdAt ?? null,
+  };
+}
+
 export async function loadProfile(uid: string): Promise<CloudProfile | null> {
   try {
     const snap = await getDoc(userDoc(uid));
     if (!snap.exists()) return null;
-    const data = snap.data();
-    return {
-      displayName: data.displayName ?? null,
-      email: data.email ?? null,
-      authProvider: data.authProvider ?? null,
-      createdAt: data.createdAt ?? null,
-    };
+    return shapeProfile(snap.data());
   } catch (e) {
     console.warn('loadProfile failed:', e);
     return null;
@@ -87,13 +93,7 @@ export function watchProfile(
         onChange(null);
         return;
       }
-      const data = snap.data();
-      onChange({
-        displayName: data.displayName ?? null,
-        email: data.email ?? null,
-        authProvider: data.authProvider ?? null,
-        createdAt: data.createdAt ?? null,
-      });
+      onChange(shapeProfile(snap.data()));
     },
     (err) => {
       console.warn('watchProfile error:', err);

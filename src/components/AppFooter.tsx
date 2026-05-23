@@ -1,23 +1,10 @@
-import type { User } from 'firebase/auth';
-
 interface Props {
   onOpenRules: () => void;
   onOpenSettings: () => void;
-  user: User | null;
-  onOpenSignIn: () => void;
-  onOpenProfile: () => void;
+  version: string;
 }
 
-export function AppFooter({
-  onOpenRules,
-  onOpenSettings,
-  user,
-  onOpenSignIn,
-  onOpenProfile,
-}: Props) {
-  const displayName =
-    user?.displayName?.trim() || user?.email?.split('@')[0] || 'Account';
-
+export function AppFooter({ onOpenRules, onOpenSettings, version }: Props) {
   return (
     <footer className="app-footer">
       <div className="app-footer-inner">
@@ -43,29 +30,7 @@ export function AppFooter({
           Settings
         </a>
         <span className="sep">·</span>
-        {user ? (
-          <a
-            href="#"
-            className="app-footer-account"
-            title={user.email ?? ''}
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenProfile();
-            }}
-          >
-            {displayName}
-          </a>
-        ) : (
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenSignIn();
-            }}
-          >
-            Sign in
-          </a>
-        )}
+        <span className="app-footer-version">{version}</span>
       </div>
     </footer>
   );

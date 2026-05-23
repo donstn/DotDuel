@@ -37,6 +37,7 @@ import {
 } from './storage';
 import { DIFFICULTY_LABELS } from './types';
 import type { Difficulty, GameMode, GameState, Progress, ShapeId } from './types';
+import { APP_VERSION } from './version';
 
 type Screen = 'menu' | 'game';
 
@@ -295,16 +296,18 @@ export default function App() {
           progress={progress}
           settings={settings}
           gameName={effectiveGameName}
+          user={user}
           onStart={startGame}
           onSettingsUpdate={updateSettings}
           onOpenRankings={() => setRankingsOpen(true)}
+          onOpenSignIn={() => setSignInOpen(true)}
+          onOpenProfile={() => setProfileOpen(true)}
+          onSignOut={() => void signOut()}
         />
         <AppFooter
           onOpenRules={() => setRulesOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
-          user={user}
-          onOpenSignIn={() => setSignInOpen(true)}
-          onOpenProfile={() => setProfileOpen(true)}
+          version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
         {settingsOpen && (
@@ -485,9 +488,7 @@ export default function App() {
       <AppFooter
         onOpenRules={() => setRulesOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
-        user={user}
-        onOpenSignIn={() => setSignInOpen(true)}
-        onOpenProfile={() => setProfileOpen(true)}
+        version={APP_VERSION}
       />
       {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
       {settingsOpen && (

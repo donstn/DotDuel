@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { User } from 'firebase/auth';
 import { availableDifficulties, isUnlocked } from '../storage';
 import type { Settings } from '../storage';
 import { DIFFICULTY_LABELS, SHAPE_META } from '../types';
@@ -8,24 +9,33 @@ interface Props {
   progress: Progress;
   settings: Settings;
   gameName: string | null;
+  user: User | null;
   onStart: (mode: GameMode, shape: ShapeId, difficulty?: Difficulty) => void;
   onSettingsUpdate: (next: Settings) => void;
   onOpenRankings: () => void;
+  onOpenSignIn: () => void;
+  onOpenProfile: () => void;
+  onSignOut: () => void;
 }
 
 export function Menu({
   progress,
   settings,
   gameName,
+  user,
   onStart,
   onSettingsUpdate,
   onOpenRankings,
+  onOpenSignIn,
+  onOpenProfile,
+  onSignOut,
 }: Props) {
   const [mode, setMode] = useState<GameMode | null>(null);
   const [shape, setShape] = useState<ShapeId | null>(null);
   const [aiDifficulty, setAiDifficulty] = useState<Difficulty | null>(null);
 
   if (!mode) {
+    const welcomeName = gameName ?? user?.email?.split('@')[0] ?? null;
     return (
       <div className="menu">
         <h1 className="title">
@@ -33,10 +43,43 @@ export function Menu({
           <span className="title-text">DotDuel</span>
           <span className="title-dot title-dot-2">●</span>
         </h1>
-        <p className="subtitle">Take turns coloring dots. Complete a line — score its length.</p>
-        <p className="version-badge">v38 · skip name step when signed in</p>
+        <p className="subtitle">
+          {user && welcomeName ? (
+            <>
+              Welcome, <strong className="menu-welcome-name">{welcomeName}</strong> —{' '}
+            </>
+          ) : null}
+          take turns coloring dots. Complete a line — score its length.
+        </p>
+        <div className="menu-auth-row">
+          {user ? (
+            <>
+              <button
+                type="button"
+                className="menu-auth-btn"
+                onClick={onOpenProfile}
+              >
+                Profile
+              </button>
+              <button
+                type="button"
+                className="menu-auth-btn"
+                onClick={onSignOut}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="menu-auth-btn menu-auth-btn-cta"
+              onClick={onOpenSignIn}
+            >
+              Sign in
+            </button>
+          )}
+        </div>
         <div className="menu-section">
-          <h2>Choose mode</h2>
           <div className="menu-grid">
             <button className="menu-card" onClick={() => setMode('ai')}>
               <strong>Vs AI</strong>

@@ -39,6 +39,25 @@ function sanitize<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj)) as T;
 }
 
+// RTDB strips empty objects + arrays on write, so reads can come back with
+// missing colored / completed / pending fields. Restore them before handing
+// to the pure engine (applyAction).
+function normalizeState(raw: Partial<GameState> & Record<string, unknown>): GameState {
+  return {
+    shape: raw.shape as GameState['shape'],
+    mode: (raw.mode ?? 'multiplayer') as GameState['mode'],
+    difficulty: raw.difficulty as GameState['difficulty'],
+    current: (raw.current ?? 1) as GameState['current'],
+    turn: (raw.turn ?? 1) as number,
+    colored: (raw.colored ?? {}) as GameState['colored'],
+    completed: (raw.completed ?? []) as GameState['completed'],
+    pending: (raw.pending ?? []) as GameState['pending'],
+    scores: (raw.scores ?? { 1: 0, 2: 0 }) as GameState['scores'],
+    finished: (raw.finished ?? false) as boolean,
+    winner: (raw.winner ?? null) as GameState['winner'],
+  };
+}
+
 export const matchmake = onDocumentCreated(
   'matchmakingQueue/{uid}',
   async (event) => {
@@ -158,6 +177,7 @@ export const matchmake = onDocumentCreated(
         status: 'active',
         shape,
         timeControl: newEntry.timeControl,
+        ready: { '1': false, '2': false },
         createdAt: Date.now(),
       });
       logger.info(`matchmake: RTDB game node ${matchId} created`);
@@ -185,7 +205,7 @@ export const validateMove = onValueWritten(
       return;
     }
 
-    const state = game.state as GameState;
+    const state = normalizeState(game.state ?? {});
     const playerUids = game.playerUids as { '1': string; '2': string };
 
     let playerNum: 1 | 2 | 0 = 0;

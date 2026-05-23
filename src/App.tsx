@@ -25,6 +25,15 @@ import {
   type PairingDoc,
   type TimeControl,
 } from './cloud/matchmaking';
+import {
+  markReady,
+  playerNumFor,
+  sendMove,
+  watchError,
+  watchGame,
+  type OnlineError,
+  type OnlineGame,
+} from './cloud/onlineGame';
 import { MatchFoundScreen } from './components/MatchFoundScreen';
 import { MatchmakingWaiting } from './components/MatchmakingWaiting';
 import { MultiplayerLobby } from './components/MultiplayerLobby';
@@ -50,7 +59,7 @@ import { DIFFICULTY_LABELS } from './types';
 import type { Difficulty, GameMode, GameState, Progress, ShapeId } from './types';
 import { APP_VERSION } from './version';
 
-type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound';
+type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound' | 'mpgame';
 
 interface SessionConfig {
   mode: GameMode;
@@ -84,6 +93,10 @@ export default function App() {
   const [cloudProfileLoaded, setCloudProfileLoaded] = useState(false);
   const [pairing, setPairing] = useState<PairingDoc | null>(null);
   const [queueTimeControl, setQueueTimeControl] = useState<TimeControl | null>(null);
+  const [onlineGameId, setOnlineGameId] = useState<string | null>(null);
+  const [onlineGame, setOnlineGame] = useState<OnlineGame | null>(null);
+  const [, setOnlineError] = useState<OnlineError | null>(null);
+  const [moveInFlight, setMoveInFlight] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(() => !loadSettings().tutorialSeen);
   const { user, signOut } = useAuth();
   const aiTimer = useRef<number | null>(null);
@@ -316,6 +329,91 @@ export default function App() {
     setScreen('menu');
   };
 
+  const onStartPlaying = () => {
+    setMoveInFlight(false);
+    setScreen('mpgame');
+  };
+
+  const onMarkReady = async () => {
+    if (!pairing || !onlineGameId) return;
+    try {
+      await markReady(onlineGameId, pairing.player, true);
+    } catch (e) {
+      console.warn('markReady failed:', e);
+    }
+  };
+
+  const onLeaveMpGame = async () => {
+    if (user) await clearPairing(user.uid);
+    setPairing(null);
+    setOnlineGameId(null);
+    setOnlineGame(null);
+    setOnlineError(null);
+    setMoveInFlight(false);
+    setQueueTimeControl(null);
+    setScreen('menu');
+  };
+
+  // Mirror pairing.matchId into onlineGameId so the RTDB subscription
+  // is active during both matchFound and mpgame screens.
+  useEffect(() => {
+    if (!pairing) {
+      setOnlineGameId(null);
+      setOnlineGame(null);
+      return;
+    }
+    setOnlineGameId(pairing.matchId);
+  }, [pairing?.matchId]);
+
+  // Subscribe to the RTDB game node whenever we have a matchId.
+  useEffect(() => {
+    if (!onlineGameId) return;
+    const unsubGame = watchGame(onlineGameId, setOnlineGame);
+    const unsubErr = watchError(onlineGameId, setOnlineError);
+    return () => {
+      unsubGame();
+      unsubErr();
+    };
+  }, [onlineGameId]);
+
+  // Server-confirmed state advance clears the in-flight flag.
+  useEffect(() => {
+    setMoveInFlight(false);
+  }, [onlineGame?.state.turn]);
+
+  const handleMpDotClick = async (dotId: number) => {
+    if (!user || !onlineGameId || !onlineGame) return;
+    const myNum = playerNumFor(onlineGame, user.uid);
+    if (!myNum) return;
+    if (onlineGame.state.current !== myNum) return;
+    if (moveInFlight) return;
+    if (onlineGame.state.colored[dotId]) return;
+    setMoveInFlight(true);
+    setLastDot(dotId);
+    try {
+      await sendMove(onlineGameId, user.uid, { kind: 'dot', dotId });
+    } catch (e) {
+      console.warn('sendMove failed:', e);
+      setMoveInFlight(false);
+    }
+  };
+
+  const handleMpClaimClick = async (lineId: string) => {
+    if (!user || !onlineGameId || !onlineGame) return;
+    const myNum = playerNumFor(onlineGame, user.uid);
+    if (!myNum) return;
+    if (onlineGame.state.current !== myNum) return;
+    if (moveInFlight) return;
+    if (!onlineGame.state.pending.includes(lineId)) return;
+    setMoveInFlight(true);
+    try {
+      await sendMove(onlineGameId, user.uid, { kind: 'claim', lineId });
+    } catch (e) {
+      console.warn('sendMove failed:', e);
+      setMoveInFlight(false);
+    }
+  };
+
   const handleDotClick = (dotId: number) => {
     if (!state || !config || state.finished) return;
     if (thinking) return;
@@ -351,6 +449,128 @@ export default function App() {
   const effectiveGameName =
     user && cloudProfile?.displayName ? cloudProfile.displayName : null;
 
+  if (screen === 'mpgame') {
+    if (!onlineGame || !onlineGameId || !user || !pairing) {
+      console.warn('mpgame loading guard hit:', {
+        hasOnlineGame: !!onlineGame,
+        hasOnlineGameId: !!onlineGameId,
+        hasUser: !!user,
+        hasPairing: !!pairing,
+        onlineGameId,
+        pairingMatchId: pairing?.matchId,
+      });
+      return (
+        <div className="menu">
+          <h2>Connecting to match…</h2>
+          <p className="hint">
+            Linking up with the game server. If this hangs for more than ~10
+            seconds, something's wrong — back out and try again.
+          </p>
+          <button
+            type="button"
+            className="menu-auth-btn"
+            onClick={onLeaveMpGame}
+          >
+            Back to menu
+          </button>
+        </div>
+      );
+    }
+    const myNum = playerNumFor(onlineGame, user.uid);
+    const mpState = onlineGame.state;
+    const mpShape = onlineGame.shape;
+    const myName = effectiveGameName ?? 'You';
+    const oppName = pairing.opponentDisplayName;
+    const mpP1Name = pairing.player === 1 ? oppName : myName;
+    const mpP2Name = pairing.player === 1 ? myName : oppName;
+    const mpTotalPoints = getBoard(mpShape).lines.reduce((sum, l) => sum + l.length, 0);
+    const mpRemaining = mpTotalPoints - mpState.scores[1] - mpState.scores[2];
+    const mpShowOver = mpState.finished;
+    const mpDisabled =
+      mpState.finished || moveInFlight || (myNum !== null && mpState.current !== myNum);
+
+    return (
+      <div className="game-screen">
+        <div className="game-topbar">
+          <button className="btn-back" onClick={onLeaveMpGame} aria-label="Leave match">
+            ‹
+          </button>
+          <div className="topbar-center">
+            <div className="remaining-points">
+              <span className="remaining-value">{mpRemaining}</span>
+              <span className="remaining-label">pts left</span>
+            </div>
+            <div
+              className={`pending-indicator${mpState.pending.length === 0 ? ' pending-indicator-hidden' : ''}`}
+              aria-hidden={mpState.pending.length === 0}
+            >
+              <span className="pending-icon" aria-hidden="true">◌</span>
+              <span className="pending-value">{Math.max(mpState.pending.length, 1)}</span>
+              <span className="pending-label">
+                {mpState.pending.length === 1 ? 'line to claim' : 'lines to claim'}
+              </span>
+            </div>
+          </div>
+          <button
+            className="btn-rules"
+            onClick={() => setRulesOpen(true)}
+            aria-label="Show rules"
+            title="How to play"
+          >
+            ?
+          </button>
+        </div>
+        <div className="game-body">
+          <SidePanel
+            side="left"
+            player={1}
+            active={!mpState.finished && mpState.current === 1}
+            name={mpP1Name}
+            score={mpState.scores[1]}
+            avatar="human"
+            stats={null}
+          />
+          <Board
+            state={mpState}
+            onDotClick={handleMpDotClick}
+            onClaimClick={handleMpClaimClick}
+            disabled={mpDisabled}
+            lastDot={lastDot}
+            showHints={false}
+          />
+          <SidePanel
+            side="right"
+            player={2}
+            active={!mpState.finished && mpState.current === 2}
+            name={mpP2Name}
+            score={mpState.scores[2]}
+            avatar="human"
+            stats={null}
+          />
+        </div>
+        {mpShowOver && (
+          <GameOver
+            state={mpState}
+            mode="multiplayer"
+            shape={mpShape}
+            p1Name={mpP1Name}
+            p2Name={mpP2Name}
+            unlock={{ shape: null, difficulty: null }}
+            onPlayAgain={onLeaveMpGame}
+            onMenu={onLeaveMpGame}
+            onStartShape={() => onLeaveMpGame()}
+          />
+        )}
+        <AppFooter
+          onOpenRules={() => setRulesOpen(true)}
+          onOpenSettings={() => setSettingsOpen(true)}
+          version={APP_VERSION}
+        />
+        {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
+      </div>
+    );
+  }
+
   const isMenuScreen =
     screen === 'menu' ||
     screen === 'lobby' ||
@@ -382,7 +602,17 @@ export default function App() {
           pairing={pairing}
           myDisplayName={effectiveGameName ?? 'You'}
           myRating={cloudProfile?.rating ?? 1000}
-          onContinue={onLeaveMatch}
+          myReady={
+            onlineGame?.ready?.[String(pairing.player) as '1' | '2'] === true
+          }
+          oppReady={
+            onlineGame?.ready?.[
+              String(pairing.player === 1 ? 2 : 1) as '1' | '2'
+            ] === true
+          }
+          onMarkReady={onMarkReady}
+          onStartPlaying={onStartPlaying}
+          onLeave={onLeaveMatch}
         />
       );
     } else {

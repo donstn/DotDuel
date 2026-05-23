@@ -7,6 +7,16 @@ All notable changes to DotDuel will be documented in this file. Format follows
 
 ### Added
 
+- **Phase D — multiplayer is playable end-to-end.** After matchmaking
+  pairs two players, the new "Start playing →" button on the
+  Opponent-found screen transitions both clients into a synced board
+  driven by Realtime Database. Every move is validated server-side
+  via the `validateMove` Cloud Function using the shared engine
+  (`functions/src/engine/` is auto-copied from `src/` on every
+  functions build, so client and server run the exact same scoring
+  logic — no drift possible). Out-of-turn submissions and invalid
+  moves are rejected at the server. Game-over screen appears when
+  both boards reach the same finished state.
 - **Multiplayer lobby + matchmaking** (Phase C). New Multiplayer card on
   the menu (enabled when signed in) opens a lobby with three time
   controls: Bullet (1 min/player), Blitz (3 min/player), Rapid
@@ -52,6 +62,24 @@ All notable changes to DotDuel will be documented in this file. Format follows
   Firebase stack, Elo system (50→10 placement K then 32 steady-state),
   matchmaking, chess-clock model, cost model (~$0.40/mo at 2k
   games/day), and the six-phase rollout.
+
+### Added
+
+- Match-found screen now shows a 5-second countdown plus a **Ready!**
+  button on each side. The game auto-starts when both players are
+  ready *or* when the countdown expires. Ready state syncs in real
+  time via the RTDB game node so both players see the other's
+  ready/not-ready chip.
+
+### Fixed
+
+- Multiplayer game screen rendered as a blank/black page on first
+  load. Firebase RTDB strips empty objects and arrays on write, so
+  the freshly-created game state's `colored: {}`, `completed: []`,
+  and `pending: []` came back as `undefined` and the Board crashed
+  trying to index into them. State is now normalized at the RTDB
+  boundary in both the client (`watchGame`) and the server
+  (`validateMove`).
 
 ### Changed
 

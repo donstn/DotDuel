@@ -6,6 +6,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import type { ShapeId } from '../types';
 
 export type TimeControl = '1min' | '3min' | '5min';
 
@@ -17,6 +18,7 @@ export const TIME_CONTROLS: { id: TimeControl; label: string; per: string; sub: 
 
 export interface PairingDoc {
   matchId: string;
+  shape: ShapeId | null;
   opponentUid: string;
   opponentDisplayName: string;
   opponentRating: number;
@@ -67,6 +69,7 @@ export function watchPairing(
       const data = snap.data();
       onPair({
         matchId: data.matchId,
+        shape: (data.shape ?? null) as ShapeId | null,
         opponentUid: data.opponentUid,
         opponentDisplayName: data.opponentDisplayName ?? 'Opponent',
         opponentRating: data.opponentRating ?? 1000,

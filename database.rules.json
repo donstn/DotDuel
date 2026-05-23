@@ -14,6 +14,11 @@
         "playerUids": { ".write": false },
         "status": { ".write": false },
         "winner": { ".write": false },
+        "ready": {
+          "$slot": {
+            ".write": "auth != null && root.child('games').child($gameId).child('playerUids').child($slot).val() === auth.uid && (newData.val() === true || newData.val() === false)"
+          }
+        },
         "$other": { ".write": false }
       }
     }

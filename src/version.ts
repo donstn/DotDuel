@@ -1,1 +1,1 @@
-export const APP_VERSION = 'v42 · cancel button inline';
+export const APP_VERSION = 'v45 · ready + countdown';

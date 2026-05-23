@@ -1,0 +1,118 @@
+import { onValue, ref, set } from 'firebase/database';
+import { rtdb } from '../firebase';
+import type { GameAction, GameMode, GameState, Player, ShapeId } from '../types';
+import type { TimeControl } from './matchmaking';
+
+export interface OnlineGame {
+  state: GameState;
+  playerUids: { '1': string; '2': string };
+  status: 'active' | 'finished';
+  shape: ShapeId;
+  timeControl: TimeControl;
+  ready?: { '1'?: boolean; '2'?: boolean };
+  winner?: Player | 'draw' | null;
+  finishedAt?: number;
+}
+
+// Firebase RTDB drops empty objects and empty arrays on write — anything that
+// would serialize to {} or [] is treated as null and not stored. When the
+// client reads the game back, colored / completed / pending may be undefined
+// even though the GameState type says they're always present. Restore them
+// here so downstream components can rely on the GameState contract.
+function normalizeState(raw: Partial<GameState> & Record<string, unknown>): GameState {
+  return {
+    shape: (raw.shape ?? 'square') as ShapeId,
+    mode: (raw.mode ?? 'multiplayer') as GameMode,
+    difficulty: raw.difficulty as GameState['difficulty'],
+    current: (raw.current ?? 1) as Player,
+    turn: (raw.turn ?? 1) as number,
+    colored: (raw.colored ?? {}) as GameState['colored'],
+    completed: (raw.completed ?? []) as GameState['completed'],
+    pending: (raw.pending ?? []) as GameState['pending'],
+    scores: (raw.scores ?? { 1: 0, 2: 0 }) as GameState['scores'],
+    finished: (raw.finished ?? false) as boolean,
+    winner: (raw.winner ?? null) as GameState['winner'],
+  };
+}
+
+export interface OnlineError {
+  code: string;
+  message: string;
+  forUid: string;
+  ts: number;
+}
+
+export function watchGame(
+  gameId: string,
+  onChange: (game: OnlineGame | null) => void,
+): () => void {
+  const r = ref(rtdb, `games/${gameId}`);
+  return onValue(
+    r,
+    (snap) => {
+      const v = snap.val();
+      if (!v) {
+        onChange(null);
+        return;
+      }
+      const game: OnlineGame = {
+        ...(v as OnlineGame),
+        state: normalizeState(v.state ?? {}),
+      };
+      onChange(game);
+    },
+    (err) => {
+      console.warn('watchGame error:', err);
+      onChange(null);
+    },
+  );
+}
+
+export function watchError(
+  gameId: string,
+  onChange: (err: OnlineError | null) => void,
+): () => void {
+  const r = ref(rtdb, `games/${gameId}/error`);
+  return onValue(
+    r,
+    (snap) => {
+      const v = snap.val();
+      if (!v) {
+        onChange(null);
+        return;
+      }
+      onChange(v as OnlineError);
+    },
+    (err) => {
+      console.warn('watchError error:', err);
+    },
+  );
+}
+
+export async function sendMove(
+  gameId: string,
+  uid: string,
+  action: GameAction,
+): Promise<void> {
+  const r = ref(rtdb, `games/${gameId}/pendingMove`);
+  await set(r, {
+    from: uid,
+    action,
+    clientTime: Date.now(),
+  });
+}
+
+export async function markReady(
+  gameId: string,
+  slot: 1 | 2,
+  value: boolean,
+): Promise<void> {
+  const r = ref(rtdb, `games/${gameId}/ready/${slot}`);
+  await set(r, value);
+}
+
+export function playerNumFor(game: OnlineGame, uid: string): Player | null {
+  if (game.playerUids['1'] === uid) return 1;
+  if (game.playerUids['2'] === uid) return 2;
+  return null;
+}

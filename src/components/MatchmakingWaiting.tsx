@@ -30,13 +30,17 @@ export function MatchmakingWaiting({ timeControl, onCancel }: Props) {
           <span>·</span>
         </div>
         <p className="matchmaking-status">Waiting for a player at your rating ({seconds}s)</p>
+        <button
+          type="button"
+          className="menu-auth-btn matchmaking-cancel-btn"
+          onClick={onCancel}
+        >
+          Cancel search
+        </button>
         <p className="settings-hint">
           Match range expands by ~25 Elo per second. We'll pair you with the closest opponent.
         </p>
       </div>
-      <button type="button" className="link-btn back-link" onClick={onCancel}>
-        Cancel search
-      </button>
     </div>
   );
 }

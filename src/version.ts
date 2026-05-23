@@ -1,1 +1,1 @@
-export const APP_VERSION = 'v41 · multiplayer lobby';
+export const APP_VERSION = 'v42 · cancel button inline';

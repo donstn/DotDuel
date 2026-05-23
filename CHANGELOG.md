@@ -55,6 +55,9 @@ All notable changes to DotDuel will be documented in this file. Format follows
 
 ### Changed
 
+- Matchmaking waiting screen: "Cancel search" is now a glass-pill
+  button centered inside the matchmaking card directly under the
+  status line, instead of a small text link floating below the card.
 - The menu welcome line is now integrated into the subtitle when
   signed in ("Welcome, *gameName* — take turns coloring dots…") and
   followed by small glass-pill Profile + Sign out buttons. Signed-out

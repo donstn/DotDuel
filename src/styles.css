@@ -2250,7 +2250,11 @@ button {
 .matchmaking-status {
   color: var(--text-bright);
   font-weight: 500;
-  margin: 0 0 8px;
+  margin: 0 0 12px;
+}
+
+.matchmaking-cancel-btn {
+  margin: 0 auto 14px;
 }
 
 .match-found-card {

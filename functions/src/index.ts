@@ -1,7 +1,9 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { onValueWritten } from 'firebase-functions/v2/database';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { setGlobalOptions, logger } from 'firebase-functions/v2';
 import { initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import {
   getFirestore,
   FieldValue,
@@ -10,6 +12,7 @@ import {
 import { getDatabase } from 'firebase-admin/database';
 import { applyAction, createGame } from './engine/game';
 import type { GameAction, GameState, ShapeId } from './engine/types';
+import { createHash } from 'crypto';
 
 initializeApp();
 setGlobalOptions({ region: 'europe-west1', maxInstances: 10 });
@@ -787,5 +790,199 @@ export const rematchGame = onValueWritten(
     logger.info(
       `rematchGame: ${gameId} → ${newMatchId} (rematch of ${prevP1Uid} vs ${prevP2Uid}, slots swapped)`,
     );
+  },
+);
+
+// ===========================================================================
+// GDPR Article 17 — right to erasure ("right to be forgotten")
+// ===========================================================================
+//
+// deleteAccount is the user-callable Cloud Function that wipes the
+// caller's account. Sequence:
+//   1. Forfeit any active multiplayer game (synthetic resign so the
+//      opponent gets their Elo and the match record persists).
+//   2. Delete the user's own per-user docs (users, leaderboard, pairings,
+//      matchmakingQueue, usernames, gameSessions).
+//   3. Scrub the user's UID and displayName from every matches/{id}
+//      doc they're a participant of — replace with the sentinel.
+//      DO NOT touch ratings/scores/deltas; opponents keep their Elo
+//      history intact ("rankings stay the same" — user decision).
+//   4. Delete the Firebase Auth user.
+//   5. Write a deletionLog/{shortHash} audit row.
+//
+// Idempotency: callable function; if called twice for the same uid,
+// step 4 returns NOT_FOUND on the second call. Steps 2-3 are no-ops on
+// the second call (writes to non-existent docs are a noop in admin SDK
+// when using update; we use delete which is also safe to repeat).
+
+function deletedSentinelFor(uid: string): string {
+  const hash = createHash('sha256').update(uid).digest('hex').slice(0, 8);
+  return `deleted-${hash}`;
+}
+
+const DELETED_DISPLAY = 'Deleted player';
+
+function normNameForUsername(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+export const deleteAccount = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError(
+        'unauthenticated',
+        'Sign in required to delete your account.',
+      );
+    }
+    // We don't accept a target uid argument — you can only delete yourself.
+    // Future admin-purge path would be a separate function with claim check.
+
+    const db = getFirestore();
+    const rtdb = getDatabase();
+    const sentinelUid = deletedSentinelFor(uid);
+    let oldDisplayName: string | null = null;
+
+    // --- Step 1: forfeit any active MP game ---
+    try {
+      const pairingSnap = await db.doc(`pairings/${uid}`).get();
+      if (pairingSnap.exists) {
+        const pairing = pairingSnap.data();
+        const matchId = pairing?.matchId as string | undefined;
+        if (matchId) {
+          const gameRef = rtdb.ref(`games/${matchId}`);
+          const gameSnap = await gameRef.get();
+          const game = gameSnap.val();
+          if (game && game.status === 'active') {
+            // Submit a synthetic resign action through pendingMove. The
+            // existing validateMove trigger will accept it, finalizeGame
+            // will fire on status='finished', the opponent gets their
+            // Elo gain via the standard resign code path.
+            await rtdb.ref(`games/${matchId}/pendingMove`).set({
+              from: uid,
+              action: { kind: 'resign' },
+              clientTime: Date.now(),
+            });
+            // Give the trigger a beat to settle.
+            await new Promise((r) => setTimeout(r, 1500));
+          }
+        }
+      }
+    } catch (e) {
+      logger.warn(`deleteAccount: pre-forfeit failed for ${uid}`, e);
+      // Continue regardless — erasure must complete.
+    }
+
+    // --- Step 2: scrub direct child docs ---
+    try {
+      const userSnap = await db.doc(`users/${uid}`).get();
+      oldDisplayName = (userSnap.data()?.displayName as string) ?? null;
+
+      const batch = db.batch();
+      batch.delete(db.doc(`users/${uid}`));
+      batch.delete(db.doc(`leaderboard/${uid}`));
+      batch.delete(db.doc(`pairings/${uid}`));
+      batch.delete(db.doc(`matchmakingQueue/${uid}`));
+      if (oldDisplayName) {
+        batch.delete(
+          db.doc(`usernames/${normNameForUsername(oldDisplayName)}`),
+        );
+      }
+      await batch.commit();
+
+      // RTDB session lock
+      await rtdb.ref(`gameSessions/${uid}`).remove();
+    } catch (e) {
+      logger.error(`deleteAccount: scrub direct docs failed for ${uid}`, e);
+      throw new HttpsError('internal', 'Failed to delete account data.');
+    }
+
+    // --- Step 3: anonymise match references ---
+    // Paginated query — most users have <100 matches; cap at 1000 for
+    // safety. If anyone exceeds that we'd add cursor pagination, but
+    // 1000 ranked games is more than current production traffic.
+    try {
+      const matchesSnap = await db
+        .collection('matches')
+        .where('playerUids', 'array-contains', uid)
+        .limit(1000)
+        .get();
+
+      if (!matchesSnap.empty) {
+        // Firestore batched write supports up to 500 ops. Chunk.
+        const docs = matchesSnap.docs;
+        for (let i = 0; i < docs.length; i += 400) {
+          const chunk = docs.slice(i, i + 400);
+          const batch = db.batch();
+          for (const doc of chunk) {
+            const data = doc.data();
+            const updates: Record<string, unknown> = {};
+            if (data.p1Uid === uid) {
+              updates.p1Uid = sentinelUid;
+              updates.p1Display = DELETED_DISPLAY;
+            }
+            if (data.p2Uid === uid) {
+              updates.p2Uid = sentinelUid;
+              updates.p2Display = DELETED_DISPLAY;
+            }
+            // Rebuild playerUids array to reflect the swap. Don't trust
+            // existing array contents — derive from the (possibly just
+            // updated) p1Uid/p2Uid.
+            const newP1 =
+              updates.p1Uid !== undefined
+                ? (updates.p1Uid as string)
+                : (data.p1Uid as string);
+            const newP2 =
+              updates.p2Uid !== undefined
+                ? (updates.p2Uid as string)
+                : (data.p2Uid as string);
+            updates.playerUids = [newP1, newP2];
+            batch.update(doc.ref, updates);
+          }
+          await batch.commit();
+        }
+        logger.info(
+          `deleteAccount: anonymised ${docs.length} match records for ${uid}`,
+        );
+      }
+    } catch (e) {
+      logger.error(`deleteAccount: anonymise matches failed for ${uid}`, e);
+      // Don't throw — Auth user removal in step 4 is the highest-stakes
+      // step; partial completion is better than rolling back step 2.
+    }
+
+    // --- Step 4: delete the Firebase Auth user ---
+    try {
+      await getAuth().deleteUser(uid);
+    } catch (e) {
+      const code = (e as { code?: string })?.code ?? '';
+      if (code === 'auth/user-not-found') {
+        // Already gone — fine.
+      } else {
+        logger.error(`deleteAccount: Auth delete failed for ${uid}`, e);
+        throw new HttpsError(
+          'internal',
+          'Failed to remove your sign-in credentials.',
+        );
+      }
+    }
+
+    // --- Step 5: audit log ---
+    try {
+      await db.doc(`deletionLog/${sentinelUid}`).set({
+        originalUidHashed: sentinelUid,
+        deletedAt: Timestamp.now(),
+        reason: 'user-request',
+      });
+    } catch (e) {
+      logger.warn(`deleteAccount: audit log write failed for ${uid}`, e);
+    }
+
+    logger.info(
+      `deleteAccount: completed for uid=${uid} (sentinel=${sentinelUid})`,
+    );
+
+    return { ok: true, sentinel: sentinelUid };
   },
 );

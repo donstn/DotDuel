@@ -576,3 +576,15 @@ you can read"). Half a day of work.
 Same source. Bullet is unplayable for 60+ and chosen by 0% of 65+ testers.
 A simple `age >= 50` heuristic (or just always default to Blitz) would
 prevent first-time elder users from trying Bullet, panicking, and bouncing.
+
+### 17.10 Match retention sweep (GDPR + cost)
+
+Privacy Policy promises matches/{matchId} are deleted 24 months after
+`finishedAt`. v62 declared the policy but didn't build the sweep.
+Need a scheduled Cloud Function (Cloud Scheduler → Pub/Sub →
+function) that runs nightly, queries
+`where('finishedAt', '<', Date.now() - 24*30*24*60*60*1000) limit 500`,
+and batch-deletes. Also useful for cost — at high traffic the
+matches collection grows unboundedly otherwise. Cron + composite
+index `finishedAt ASC, status ASC` are the build. Track here so
+we deliver on the privacy commitment in time.

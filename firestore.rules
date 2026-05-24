@@ -50,6 +50,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // GDPR Article 17 audit log — records that an account was deleted
+    // (hashed sentinel only, no PII). Written by the deleteAccount
+    // Cloud Function. No client access at all.
+    match /deletionLog/{sentinel} {
+      allow read, write: if false;
+    }
+
     // Invite codes for private games. Anyone signed-in can read to look up
     // a code; functions create + delete. (Phase C.2 will populate these.)
     match /inviteCodes/{code} {

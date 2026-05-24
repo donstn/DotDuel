@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppFooter } from './components/AppFooter';
 import { Board } from './components/Board';
+import { ConsentBanner } from './components/ConsentBanner';
 import { GameOver } from './components/GameOver';
 import { Menu } from './components/Menu';
+import { PrivacyPopover } from './components/PrivacyPopover';
 import { ProfilePopover } from './components/ProfilePopover';
 import { RankingsPopover } from './components/RankingsPopover';
 import { RulesPopover } from './components/RulesPopover';
@@ -56,6 +58,12 @@ import { MultiplayerLobby } from './components/MultiplayerLobby';
 import { ThemePopover } from './components/ThemePopover';
 import { UsernamePicker } from './components/UsernamePicker';
 import { loadTheme, saveTheme, type ThemeId } from './theme';
+import {
+  applyConsent,
+  loadConsent,
+  saveConsent,
+  type Consent,
+} from './consent';
 import { pickAIAction } from './ai';
 import { applyAction, applyClaim, applyMove, createGame } from './game';
 import { getBoard } from './geometry';
@@ -127,6 +135,8 @@ export default function App() {
   const [resignConfirmOpen, setResignConfirmOpen] = useState(false);
   const [theme, setThemeState] = useState<ThemeId>(loadTheme);
   const [themeOpen, setThemeOpen] = useState(false);
+  const [consent, setConsentState] = useState<Consent | null>(loadConsent);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const { user, signOut } = useAuth();
   const aiTimer = useRef<number | null>(null);
   const winRecorded = useRef(false);
@@ -316,6 +326,28 @@ export default function App() {
   }, [theme]);
 
   const setTheme = (id: ThemeId) => setThemeState(id);
+
+  // GDPR / ePrivacy: on boot, apply whatever consent decision exists
+  // (no decision = no analytics, banner shows up). On every change,
+  // persist + apply the side effect.
+  useEffect(() => {
+    applyConsent(consent);
+    if (consent) saveConsent(consent);
+  }, [consent]);
+
+  const acceptAnalytics = () => setConsentState('accepted');
+  const declineAnalytics = () => setConsentState('declined');
+  // Used by PrivacyPopover when the user changes their mind.
+  // Switching from accepted -> declined requires a reload because the
+  // Analytics SDK can't be unloaded at runtime.
+  const changeAnalyticsConsent = (value: Consent) => {
+    const wasAccepted = consent === 'accepted';
+    setConsentState(value);
+    if (wasAccepted && value === 'declined') {
+      // Reload so the already-loaded Analytics SDK stops firing.
+      window.setTimeout(() => window.location.reload(), 60);
+    }
+  };
 
   // Live subscription to pairings/{uid} — drives matchmaking → matchFound transition.
   useEffect(() => {
@@ -976,9 +1008,24 @@ export default function App() {
         <AppFooter
           onOpenRules={() => setRulesOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
+          onOpenPrivacy={() => setPrivacyOpen(true)}
           version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
+        {privacyOpen && (
+          <PrivacyPopover
+            onClose={() => setPrivacyOpen(false)}
+            consent={consent}
+            onChangeConsent={changeAnalyticsConsent}
+          />
+        )}
+        {consent === null && (
+          <ConsentBanner
+            onAccept={acceptAnalytics}
+            onDecline={declineAnalytics}
+            onOpenPrivacy={() => setPrivacyOpen(true)}
+          />
+        )}
       </div>
     );
   }
@@ -1052,9 +1099,24 @@ export default function App() {
         <AppFooter
           onOpenRules={() => setRulesOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
+          onOpenPrivacy={() => setPrivacyOpen(true)}
           version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
+        {privacyOpen && (
+          <PrivacyPopover
+            onClose={() => setPrivacyOpen(false)}
+            consent={consent}
+            onChangeConsent={changeAnalyticsConsent}
+          />
+        )}
+        {consent === null && (
+          <ConsentBanner
+            onAccept={acceptAnalytics}
+            onDecline={declineAnalytics}
+            onOpenPrivacy={() => setPrivacyOpen(true)}
+          />
+        )}
         {settingsOpen && (
           <SettingsPopover
             settings={settings}
@@ -1093,6 +1155,11 @@ export default function App() {
               setRenameOpen(true);
             }}
             onClose={() => setProfileOpen(false)}
+            onAccountDeleted={() => {
+              setProfileOpen(false);
+              setScreen('menu');
+              void onSignOutSafe();
+            }}
           />
         )}
         {user && cloudProfileLoaded && !cloudProfile?.displayName && (
@@ -1282,9 +1349,24 @@ export default function App() {
       <AppFooter
         onOpenRules={() => setRulesOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenPrivacy={() => setPrivacyOpen(true)}
         version={APP_VERSION}
       />
       {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
+      {privacyOpen && (
+        <PrivacyPopover
+          onClose={() => setPrivacyOpen(false)}
+          consent={consent}
+          onChangeConsent={changeAnalyticsConsent}
+        />
+      )}
+      {consent === null && (
+        <ConsentBanner
+          onAccept={acceptAnalytics}
+          onDecline={declineAnalytics}
+          onOpenPrivacy={() => setPrivacyOpen(true)}
+        />
+      )}
       {settingsOpen && (
         <SettingsPopover
           settings={settings}
@@ -1306,6 +1388,11 @@ export default function App() {
             setRenameOpen(true);
           }}
           onClose={() => setProfileOpen(false)}
+          onAccountDeleted={() => {
+            setProfileOpen(false);
+            setScreen('menu');
+            void onSignOutSafe();
+          }}
         />
       )}
       {user && cloudProfileLoaded && !cloudProfile?.displayName && (

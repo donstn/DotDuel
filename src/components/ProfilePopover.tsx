@@ -17,6 +17,7 @@ import {
   watchRecentMatches,
   type MatchRecord,
 } from '../cloud/matchHistory';
+import { deleteMyAccount, downloadMyData } from '../cloud/account';
 
 const PLACEMENT_TOTAL = 10;
 
@@ -27,6 +28,7 @@ interface Props {
   onSignOut: () => void;
   onRename: () => void;
   onClose: () => void;
+  onAccountDeleted?: () => void;
 }
 
 export function ProfilePopover({
@@ -36,7 +38,12 @@ export function ProfilePopover({
   onSignOut,
   onRename,
   onClose,
+  onAccountDeleted,
 }: Props) {
+  const [exporting, setExporting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const cloudDisplayName = cloudProfile?.displayName ?? null;
   const [recentMatches, setRecentMatches] = useState<MatchRecord[]>([]);
 
@@ -190,6 +197,44 @@ export function ProfilePopover({
               comes next.
             </p>
           </section>
+
+          <section className="profile-section">
+            <h3>Your data</h3>
+            <p className="settings-hint">
+              Under GDPR you can download everything we hold about you, or
+              delete your account entirely. Deletion is immediate and
+              cannot be undone.
+            </p>
+            <div className="profile-gdpr-actions">
+              <button
+                type="button"
+                className="profile-rename-btn"
+                disabled={exporting}
+                onClick={async () => {
+                  setExporting(true);
+                  try {
+                    await downloadMyData(user.uid);
+                  } catch (e) {
+                    console.warn('export failed:', e);
+                  } finally {
+                    setExporting(false);
+                  }
+                }}
+              >
+                {exporting ? 'Preparing…' : 'Download my data'}
+              </button>
+              <button
+                type="button"
+                className="settings-danger-btn"
+                onClick={() => setConfirmDelete(true)}
+              >
+                Delete my account
+              </button>
+            </div>
+            {deleteError && (
+              <p className="profile-delete-error">{deleteError}</p>
+            )}
+          </section>
         </div>
 
         <footer className="rules-footer-bar profile-footer-bar">
@@ -201,6 +246,60 @@ export function ProfilePopover({
           </button>
         </footer>
       </div>
+      {confirmDelete && (
+        <div
+          className="confirm-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !deleting) {
+              setConfirmDelete(false);
+            }
+          }}
+        >
+          <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete your account?</h3>
+            <p>
+              This permanently removes your account, sign-in, leaderboard
+              entry, and scrubs your name from past matches. Opponents
+              keep their rating history. If you're in a live game it will
+              forfeit. This cannot be undone.
+            </p>
+            <div className="confirm-actions">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="danger"
+                disabled={deleting}
+                onClick={async () => {
+                  setDeleting(true);
+                  setDeleteError(null);
+                  try {
+                    await deleteMyAccount();
+                    setConfirmDelete(false);
+                    onClose();
+                    if (onAccountDeleted) onAccountDeleted();
+                    else onSignOut();
+                  } catch (e) {
+                    const msg =
+                      (e as { message?: string })?.message ??
+                      'Deletion failed. Please try again.';
+                    setDeleteError(msg);
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+              >
+                {deleting ? 'Deleting…' : 'Delete forever'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,10 +1,16 @@
 interface Props {
   onOpenRules: () => void;
   onOpenSettings: () => void;
+  onOpenPrivacy: () => void;
   version: string;
 }
 
-export function AppFooter({ onOpenRules, onOpenSettings, version }: Props) {
+export function AppFooter({
+  onOpenRules,
+  onOpenSettings,
+  onOpenPrivacy,
+  version,
+}: Props) {
   return (
     <footer className="app-footer">
       <div className="app-footer-inner">
@@ -28,6 +34,16 @@ export function AppFooter({ onOpenRules, onOpenSettings, version }: Props) {
           }}
         >
           Settings
+        </a>
+        <span className="sep">·</span>
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            onOpenPrivacy();
+          }}
+        >
+          Privacy
         </a>
         <span className="sep">·</span>
         <span className="app-footer-version">{version}</span>

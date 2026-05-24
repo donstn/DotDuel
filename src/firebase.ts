@@ -20,8 +20,20 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const rtdb = getDatabase(app);
 
-if (import.meta.env.PROD) {
-  isSupported().then((ok) => {
-    if (ok) getAnalytics(app);
-  });
+// GDPR / ePrivacy: Analytics is NEVER initialised on import. It only
+// starts after the user explicitly accepts via the consent banner.
+// See src/consent.ts.
+let analyticsStarted = false;
+
+export async function enableAnalyticsIfSupported(): Promise<void> {
+  if (analyticsStarted) return;
+  if (!import.meta.env.PROD) return;
+  try {
+    const ok = await isSupported();
+    if (!ok) return;
+    getAnalytics(app);
+    analyticsStarted = true;
+  } catch (e) {
+    console.warn('enableAnalyticsIfSupported failed:', e);
+  }
 }

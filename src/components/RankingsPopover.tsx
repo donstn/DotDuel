@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { User } from 'firebase/auth';
 import {
   aiOpponentDisplayName,
   aiOpponentKey,
@@ -12,11 +13,21 @@ import {
   type ModeStats,
   type PlayerRow,
 } from '../storage';
-import { SHAPE_LABEL, SHAPE_META } from '../types';
+import { PLAYABLE_SHAPE_META, SHAPE_LABEL } from '../types';
 import type { Difficulty, ShapeId } from '../types';
+import {
+  watchLeaderboard,
+  type LeaderboardEntry,
+} from '../cloud/leaderboard';
+
+const PLACEMENT_TOTAL = 10;
+
+type View = 'global' | 'local';
 
 interface Props {
   onClose: () => void;
+  user: User | null;
+  onOpenSignIn?: () => void;
 }
 
 type ShapeFilter = 'all' | ShapeId;
@@ -194,7 +205,10 @@ function buildAiH2H(diff: Difficulty): H2HRow[] {
   return out;
 }
 
-export function RankingsPopover({ onClose }: Props) {
+export function RankingsPopover({ onClose, user, onOpenSignIn }: Props) {
+  // Signed-in users get Global by default (the more interesting view).
+  // Signed-out users get Local so they don't bounce off a sign-in CTA.
+  const [view, setView] = useState<View>(user ? 'global' : 'local');
   const [stack, setStack] = useState<Subject[]>([]);
   const [shape, setShape] = useState<ShapeFilter>('all');
   const [lbSort, setLbSort] = useState<{ key: LeaderSortKey; dir: SortDir }>({
@@ -207,6 +221,24 @@ export function RankingsPopover({ onClose }: Props) {
   });
   const [confirmDelete, setConfirmDelete] = useState<{ key: string; name: string } | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
+  const [globalRows, setGlobalRows] = useState<LeaderboardEntry[]>([]);
+  const [globalLoading, setGlobalLoading] = useState(true);
+
+  // Subscribe to global leaderboard whenever the popover is open with a
+  // signed-in user. Only active in the global view (saves Firestore reads
+  // when the user is browsing local data).
+  useEffect(() => {
+    if (view !== 'global' || !user) {
+      setGlobalLoading(false);
+      return;
+    }
+    setGlobalLoading(true);
+    const unsub = watchLeaderboard((rows) => {
+      setGlobalRows(rows);
+      setGlobalLoading(false);
+    }, 50);
+    return unsub;
+  }, [view, user?.uid]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -348,7 +380,9 @@ export function RankingsPopover({ onClose }: Props) {
             <>
               <h2>Rankings</h2>
               <p className="rules-tagline">
-                Local profiles on this device. Not official until multiplayer ships.
+                {view === 'global'
+                  ? 'Global Elo across all multiplayer players.'
+                  : 'Local profiles on this device — vs-AI and hot-seat history.'}
               </p>
             </>
           )}
@@ -356,6 +390,41 @@ export function RankingsPopover({ onClose }: Props) {
 
         <div className="rankings-body">
           {!current && (
+            <div className="rankings-view-toggle">
+              <button
+                type="button"
+                className={`rankings-pill ${view === 'global' ? 'active' : ''}`}
+                onClick={() => {
+                  setView('global');
+                  setStack([]);
+                }}
+              >
+                Global Elo
+              </button>
+              <button
+                type="button"
+                className={`rankings-pill ${view === 'local' ? 'active' : ''}`}
+                onClick={() => {
+                  setView('local');
+                  setStack([]);
+                }}
+              >
+                Local
+              </button>
+            </div>
+          )}
+
+          {!current && view === 'global' && (
+            <GlobalLeaderboard
+              rows={globalRows}
+              loading={globalLoading}
+              signedIn={!!user}
+              myUid={user?.uid ?? null}
+              onSignIn={onOpenSignIn}
+            />
+          )}
+
+          {!current && view === 'local' && (
             <>
               <div className="rankings-toolbar">
                 <span className="rankings-toolbar-label">Shape:</span>
@@ -366,7 +435,7 @@ export function RankingsPopover({ onClose }: Props) {
                   >
                     All
                   </button>
-                  {SHAPE_META.map((s) => (
+                  {PLAYABLE_SHAPE_META.map((s) => (
                     <button
                       key={s.id}
                       className={`rankings-pill ${shape === s.id ? 'active' : ''}`}
@@ -582,6 +651,90 @@ export function RankingsPopover({ onClose }: Props) {
       </div>
     )}
     </>
+  );
+}
+
+function GlobalLeaderboard({
+  rows,
+  loading,
+  signedIn,
+  myUid,
+  onSignIn,
+}: {
+  rows: LeaderboardEntry[];
+  loading: boolean;
+  signedIn: boolean;
+  myUid: string | null;
+  onSignIn?: () => void;
+}) {
+  if (!signedIn) {
+    return (
+      <div className="rankings-global-signin">
+        <p className="rankings-empty">
+          Sign in to see the global Elo leaderboard.
+        </p>
+        {onSignIn && (
+          <button
+            type="button"
+            className="rules-got-it"
+            onClick={onSignIn}
+          >
+            Sign in
+          </button>
+        )}
+      </div>
+    );
+  }
+  if (loading) {
+    return <p className="rankings-empty">Loading leaderboard…</p>;
+  }
+  if (rows.length === 0) {
+    return (
+      <p className="rankings-empty">
+        No ranked multiplayer games played yet. Be the first to top the chart.
+      </p>
+    );
+  }
+  return (
+    <div className="rankings-table-wrap">
+      <table className="rankings-table">
+        <thead>
+          <tr>
+            <th className="col-rank">#</th>
+            <th className="col-name">Player</th>
+            <th className="col-num">Rating</th>
+            <th className="col-num">Games</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => {
+            const provisional = r.placementGamesPlayed < PLACEMENT_TOTAL;
+            const isMe = myUid && r.uid === myUid;
+            return (
+              <tr key={r.uid} className={isMe ? 'rankings-row-me' : ''}>
+                <td className="col-rank">{i + 1}</td>
+                <td className="col-name">
+                  <span className="rankings-global-name">
+                    {r.displayName}
+                    {isMe && <span className="rankings-global-me-tag">you</span>}
+                    {provisional && (
+                      <span
+                        className="provisional-badge"
+                        title="Rating stabilises after 10 ranked games"
+                      >
+                        Provisional {r.placementGamesPlayed}/{PLACEMENT_TOTAL}
+                      </span>
+                    )}
+                  </span>
+                </td>
+                <td className="col-num rankings-rating-cell">{r.rating}</td>
+                <td className="col-num">{r.placementGamesPlayed}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

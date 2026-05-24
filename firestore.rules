@@ -41,6 +41,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Global leaderboard (denormalised). Public-readable fields only —
+    // displayName, rating, placementGamesPlayed, totalGames, lastPlayedAt.
+    // Functions write inside the finalizeGame transaction so the entry
+    // always reflects the latest match outcome.
+    match /leaderboard/{uid} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // Invite codes for private games. Anyone signed-in can read to look up
     // a code; functions create + delete. (Phase C.2 will populate these.)
     match /inviteCodes/{code} {

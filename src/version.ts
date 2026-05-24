@@ -1,1 +1,1 @@
-export const APP_VERSION = 'v59 · same-opponent rematch';
+export const APP_VERSION = 'v60 · global Elo leaderboard';

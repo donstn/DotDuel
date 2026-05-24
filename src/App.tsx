@@ -1071,7 +1071,16 @@ export default function App() {
             onClose={() => setThemeOpen(false)}
           />
         )}
-        {rankingsOpen && <RankingsPopover onClose={() => setRankingsOpen(false)} />}
+        {rankingsOpen && (
+          <RankingsPopover
+            onClose={() => setRankingsOpen(false)}
+            user={user}
+            onOpenSignIn={() => {
+              setRankingsOpen(false);
+              setSignInOpen(true);
+            }}
+          />
+        )}
         {signInOpen && <SignInPopover onClose={() => setSignInOpen(false)} />}
         {profileOpen && user && (
           <ProfilePopover

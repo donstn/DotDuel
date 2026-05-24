@@ -559,6 +559,33 @@ export const finalizeGame = onValueWritten(
             },
             { merge: true },
           );
+
+          // Denormalised public leaderboard entries. Holds only fields that
+          // are safe for any signed-in user to read (displayName + rating +
+          // placement counter + last-played timestamp). Email / progress /
+          // anything else stays in users/{uid} which is owner-only.
+          tx.set(
+            db.doc(`leaderboard/${p1Uid}`),
+            {
+              uid: p1Uid,
+              displayName: (matchData.p1Display as string) ?? 'Player 1',
+              rating: p1RatingAfter,
+              placementGamesPlayed: p1Placement + 1,
+              lastPlayedAt: finishedAt,
+            },
+            { merge: true },
+          );
+          tx.set(
+            db.doc(`leaderboard/${p2Uid}`),
+            {
+              uid: p2Uid,
+              displayName: (matchData.p2Display as string) ?? 'Player 2',
+              rating: p2RatingAfter,
+              placementGamesPlayed: p2Placement + 1,
+              lastPlayedAt: finishedAt,
+            },
+            { merge: true },
+          );
         }
 
         tx.set(

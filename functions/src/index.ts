@@ -594,3 +594,171 @@ export const finalizeGame = onValueWritten(
     }
   },
 );
+
+// Rematch — triggered when a player flips games/{gameId}/rematch/{slot} = true.
+// When BOTH players have flipped their flag, spawn a fresh game node + new
+// pairings using the same shape and time control. Slots swap so the previous
+// P2 plays first this time (chess-style colour alternation). Idempotent via
+// rematchSpawnedId on the old game node.
+export const rematchGame = onValueWritten(
+  'games/{gameId}/rematch/{slot}',
+  async (event) => {
+    const after = event.data.after.val();
+    if (after !== true) return;
+
+    const gameId = event.params.gameId;
+    const rtdb = getDatabase();
+    const db = getFirestore();
+
+    const gameRef = rtdb.ref(`games/${gameId}`);
+    const gameSnap = await gameRef.get();
+    const game = gameSnap.val();
+    if (!game) return;
+
+    if (game.rematchSpawnedId) {
+      // Already spawned a rematch from this game node.
+      return;
+    }
+
+    const rematch = (game.rematch ?? {}) as { '1'?: boolean; '2'?: boolean };
+    if (rematch['1'] !== true || rematch['2'] !== true) {
+      // Only one side has agreed so far.
+      return;
+    }
+
+    const oldMatchRef = db.doc(`matches/${gameId}`);
+    const oldMatchSnap = await oldMatchRef.get();
+    const oldMatch = oldMatchSnap.data();
+    if (!oldMatch) {
+      logger.warn(`rematchGame: ${gameId} has no Firestore match doc`);
+      return;
+    }
+
+    const prevP1Uid = oldMatch.p1Uid as string | undefined;
+    const prevP2Uid = oldMatch.p2Uid as string | undefined;
+    const prevP1Display = (oldMatch.p1Display as string) ?? 'Player 1';
+    const prevP2Display = (oldMatch.p2Display as string) ?? 'Player 2';
+    const shape = oldMatch.shape as ShapeId | undefined;
+    const tc = oldMatch.timeControl as TimeControl | undefined;
+    if (!prevP1Uid || !prevP2Uid || !shape || !tc) {
+      logger.warn(`rematchGame: ${gameId} match doc missing required fields`);
+      return;
+    }
+
+    // Swap slots — previous P2 plays first in the rematch.
+    const newP1Uid = prevP2Uid;
+    const newP2Uid = prevP1Uid;
+    const newP1Display = prevP2Display;
+    const newP2Display = prevP1Display;
+
+    const newMatchId = db.collection('matches').doc().id;
+
+    // Mark idempotency on the OLD game node first so concurrent invocations
+    // bail. set() of a missing parent path will create it; safe even if a
+    // prior partial run already touched some fields.
+    try {
+      await gameRef.child('rematchSpawnedId').transaction((current) => {
+        if (current) return; // already set — abort spawn
+        return newMatchId;
+      });
+    } catch (e) {
+      logger.error(`rematchGame: idempotency tx failed for ${gameId}`, e);
+      return;
+    }
+    // Re-read to confirm we won the race.
+    const confirmedId = (await gameRef.child('rematchSpawnedId').get()).val();
+    if (confirmedId !== newMatchId) {
+      // Another invocation won the spawn race.
+      return;
+    }
+
+    // Read current ratings (snapshot, not transactional — best-effort).
+    const [p1UserSnap, p2UserSnap] = await Promise.all([
+      db.doc(`users/${newP1Uid}`).get(),
+      db.doc(`users/${newP2Uid}`).get(),
+    ]);
+    const newP1Rating =
+      typeof p1UserSnap.data()?.rating === 'number'
+        ? (p1UserSnap.data()!.rating as number)
+        : 1000;
+    const newP2Rating =
+      typeof p2UserSnap.data()?.rating === 'number'
+        ? (p2UserSnap.data()!.rating as number)
+        : 1000;
+
+    const totalMs = TIME_CONTROL_MS[tc];
+    const initialState = createGame(shape, 'multiplayer');
+
+    // Create the RTDB game node for the rematch.
+    try {
+      await rtdb.ref(`games/${newMatchId}`).set({
+        state: sanitize(initialState),
+        playerUids: { '1': newP1Uid, '2': newP2Uid },
+        status: 'active',
+        shape,
+        timeControl: tc,
+        ready: { '1': false, '2': false },
+        boardLoaded: { '1': false, '2': false },
+        clock: {
+          p1RemainingMs: totalMs,
+          p2RemainingMs: totalMs,
+          turnStartedAt: 0,
+          current: 1,
+          totalMs,
+        },
+        createdAt: Date.now(),
+        rematchOf: gameId,
+      });
+    } catch (e) {
+      logger.error(`rematchGame: RTDB node create failed for ${newMatchId}`, e);
+      return;
+    }
+
+    // Create Firestore match doc + pairings for both players (mirror matchmake).
+    try {
+      const batch = db.batch();
+      batch.set(db.doc(`matches/${newMatchId}`), {
+        status: 'created',
+        createdAt: FieldValue.serverTimestamp(),
+        timeControl: tc,
+        shape,
+        p1Uid: newP1Uid,
+        p2Uid: newP2Uid,
+        p1Display: newP1Display,
+        p2Display: newP2Display,
+        playerUids: [newP1Uid, newP2Uid],
+        ranked: true,
+        rematchOf: gameId,
+      });
+      batch.set(db.doc(`pairings/${newP1Uid}`), {
+        matchId: newMatchId,
+        shape,
+        opponentUid: newP2Uid,
+        opponentDisplayName: newP2Display,
+        opponentRating: newP2Rating,
+        player: 1,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      batch.set(db.doc(`pairings/${newP2Uid}`), {
+        matchId: newMatchId,
+        shape,
+        opponentUid: newP1Uid,
+        opponentDisplayName: newP1Display,
+        opponentRating: newP1Rating,
+        player: 2,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      await batch.commit();
+    } catch (e) {
+      logger.error(
+        `rematchGame: Firestore writes failed for ${newMatchId}`,
+        e,
+      );
+      return;
+    }
+
+    logger.info(
+      `rematchGame: ${gameId} → ${newMatchId} (rematch of ${prevP1Uid} vs ${prevP2Uid}, slots swapped)`,
+    );
+  },
+);

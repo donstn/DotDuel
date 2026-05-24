@@ -30,6 +30,11 @@ interface Props {
   finishedReason?: FinishedReason;
   rematchLabel?: string;
   ratingChange?: RatingChange;
+  /** Multiplayer rematch flags from both sides (true = wants rematch). */
+  rematchMine?: boolean;
+  rematchOpp?: boolean;
+  /** Cancel my pending rematch request. */
+  onCancelRematch?: () => void;
 }
 
 const SHAPE_NEXT: Record<ShapeId, ShapeId | null> = {
@@ -38,6 +43,58 @@ const SHAPE_NEXT: Record<ShapeId, ShapeId | null> = {
   rectangle: null,
   rhombus: null,
 };
+
+function RematchButton({
+  mine,
+  opp,
+  label,
+  onRequest,
+  onCancel,
+}: {
+  mine: boolean;
+  opp: boolean;
+  label: string;
+  onRequest: () => void;
+  onCancel?: () => void;
+}) {
+  // Opponent already wants a rematch — show big "Accept" affordance.
+  if (opp && !mine) {
+    return (
+      <button
+        className="primary rematch-accept"
+        onClick={onRequest}
+        title="Your opponent wants a rematch"
+      >
+        Accept rematch
+      </button>
+    );
+  }
+  // I've already asked — show waiting state with a Cancel link.
+  if (mine && !opp) {
+    return (
+      <span className="rematch-waiting">
+        <button disabled className="rematch-waiting-btn">
+          Waiting for opponent…
+        </button>
+        {onCancel && (
+          <button
+            type="button"
+            className="rematch-cancel-link"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+        )}
+      </span>
+    );
+  }
+  // Default — neither side has requested yet.
+  return (
+    <button className="primary" onClick={onRequest}>
+      {label}
+    </button>
+  );
+}
 
 function winText(name: string): string {
   // "You" is a pronoun ("You win"); everything else is a third-person noun ("Alice wins").
@@ -80,6 +137,9 @@ export function GameOver({
   finishedReason,
   rematchLabel,
   ratingChange,
+  rematchMine,
+  rematchOpp,
+  onCancelRematch,
 }: Props) {
   const humanWon = mode === 'ai' && state.winner === 1;
   const beatImpossible = humanWon && difficulty === 5;
@@ -159,9 +219,13 @@ export function GameOver({
         {mode === 'multiplayer' && onLobby ? (
           <div className="game-over-buttons">
             <button onClick={onMenu}>Menu</button>
-            <button className="primary" onClick={onPlayAgain}>
-              {rematchLabel ?? 'New game'}
-            </button>
+            <RematchButton
+              mine={!!rematchMine}
+              opp={!!rematchOpp}
+              label={rematchLabel ?? 'Rematch'}
+              onRequest={onPlayAgain}
+              onCancel={onCancelRematch}
+            />
             <button onClick={onLobby}>Lobby</button>
           </div>
         ) : (

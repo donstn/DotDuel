@@ -30,6 +30,7 @@ import {
   markBoardLoaded,
   markReady,
   playerNumFor,
+  requestRematch,
   sendMove,
   sendResign,
   watchError,
@@ -87,11 +88,6 @@ interface SessionConfig {
 const AI_DELAY_MS = 450;
 const HINT_GAME_LIMIT = 10;
 const HINT_CLAIM_LIMIT = 3;
-
-function formatRematchLabel(tc: TimeControl): string {
-  const minutes = tc === '1min' ? '1' : tc === '3min' ? '3' : '5';
-  return `New ${minutes} min game`;
-}
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('menu');
@@ -427,6 +423,18 @@ export default function App() {
   };
 
   const onLeaveMpGame = async () => {
+    // Clear any pending rematch flag so we're not pulled into a spawn
+    // after we've decided to leave.
+    if (onlineGame && onlineGameId && user) {
+      const slot = playerNumFor(onlineGame, user.uid);
+      if (slot) {
+        try {
+          await requestRematch(onlineGameId, slot, false);
+        } catch (e) {
+          console.warn('rematch flag clear failed on leave:', e);
+        }
+      }
+    }
     if (user) {
       await clearPairing(user.uid);
       await releaseSession(user.uid);
@@ -482,28 +490,45 @@ export default function App() {
     setResignConfirmOpen(true);
   };
 
-  // After a finished MP game, queue another match at the same time control
-  // without bouncing through the menu. Session lock stays claimed.
+  // Same-opponent rematch: flag this player as wanting one. The server's
+  // rematchGame Cloud Function spawns a new game + pairing when BOTH sides
+  // have flagged true. The new pairing arrives via watchPairing and the
+  // mpgame view automatically re-renders against the new game node.
   const onMpRematch = async () => {
-    if (!user || !onlineGame) return;
-    const tc = onlineGame.timeControl;
+    if (!user || !onlineGame || !onlineGameId) return;
+    const myNum = playerNumFor(onlineGame, user.uid);
+    if (!myNum) return;
     try {
-      await clearPairing(user.uid);
+      await requestRematch(onlineGameId, myNum, true);
     } catch (e) {
-      console.warn('clearPairing failed:', e);
+      console.warn('requestRematch failed:', e);
     }
-    setPairing(null);
-    setOnlineGameId(null);
-    setOnlineGame(null);
-    setOnlineError(null);
-    setMoveInFlight(false);
-    setOptimisticMpState(null);
-    setResignConfirmOpen(false);
-    await onFindMatch(tc);
+  };
+
+  // Withdraw a pending rematch request.
+  const onCancelMpRematch = async () => {
+    if (!user || !onlineGame || !onlineGameId) return;
+    const myNum = playerNumFor(onlineGame, user.uid);
+    if (!myNum) return;
+    try {
+      await requestRematch(onlineGameId, myNum, false);
+    } catch (e) {
+      console.warn('requestRematch cancel failed:', e);
+    }
   };
 
   // Back to the time-control picker. Session lock stays claimed.
   const onMpBackToLobby = async () => {
+    if (onlineGame && onlineGameId && user) {
+      const slot = playerNumFor(onlineGame, user.uid);
+      if (slot) {
+        try {
+          await requestRematch(onlineGameId, slot, false);
+        } catch (e) {
+          console.warn('rematch flag clear failed on lobby:', e);
+        }
+      }
+    }
     if (user) {
       try {
         await clearPairing(user.uid);
@@ -532,6 +557,17 @@ export default function App() {
     }
     setOnlineGameId(pairing.matchId);
   }, [pairing?.matchId]);
+
+  // Whenever the match ID flips (rematch spawned a new game, or matchmaker
+  // paired a fresh opponent), reset all per-game ephemeral state so the new
+  // game starts clean even though we never left the mpgame screen.
+  useEffect(() => {
+    setOptimisticMpState(null);
+    setMoveInFlight(false);
+    setMpMatchRecord(null);
+    setResignConfirmOpen(false);
+    setLastDot(null);
+  }, [onlineGameId]);
 
   // Subscribe to the RTDB game node whenever we have a matchId.
   useEffect(() => {
@@ -881,12 +917,25 @@ export default function App() {
             p2Name={mpP2Name}
             unlock={{ shape: null, difficulty: null }}
             onPlayAgain={onMpRematch}
+            onCancelRematch={onCancelMpRematch}
             onMenu={onLeaveMpGame}
             onLobby={onMpBackToLobby}
             onStartShape={() => onLeaveMpGame()}
             myPlayer={myNum ?? undefined}
             finishedReason={onlineGame.finishedReason}
-            rematchLabel={formatRematchLabel(onlineGame.timeControl)}
+            rematchLabel="Rematch"
+            rematchMine={
+              myNum
+                ? onlineGame.rematch?.[String(myNum) as '1' | '2'] === true
+                : false
+            }
+            rematchOpp={
+              myNum
+                ? onlineGame.rematch?.[
+                    String(myNum === 1 ? 2 : 1) as '1' | '2'
+                  ] === true
+                : false
+            }
             ratingChange={
               myNum && mpMatchRecord?.eloFinalized
                 ? {

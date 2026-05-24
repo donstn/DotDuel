@@ -30,6 +30,11 @@
             ".write": "auth != null && root.child('games').child($gameId).child('playerUids').child($slot).val() === auth.uid && (newData.val() === true || newData.val() === false)"
           }
         },
+        "rematch": {
+          "$slot": {
+            ".write": "auth != null && root.child('games').child($gameId).child('playerUids').child($slot).val() === auth.uid && (newData.val() === true || newData.val() === false)"
+          }
+        },
         "$other": { ".write": false }
       }
     }

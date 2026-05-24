@@ -19,6 +19,8 @@ export interface OnlineGame {
   timeControl: TimeControl;
   ready?: { '1'?: boolean; '2'?: boolean };
   boardLoaded?: { '1'?: boolean; '2'?: boolean };
+  rematch?: { '1'?: boolean; '2'?: boolean };
+  rematchSpawnedId?: string;
   clock?: GameClock;
   winner?: Player | 'draw' | null;
   finishedAt?: number;
@@ -144,6 +146,17 @@ export async function claimTimeout(
     action: { kind: 'timeout' },
     clientTime: Date.now(),
   });
+}
+
+// Flag this player as wanting a rematch. When both slots are true,
+// the rematchGame Cloud Function spawns a fresh game + new pairings.
+export async function requestRematch(
+  gameId: string,
+  slot: 1 | 2,
+  value: boolean,
+): Promise<void> {
+  const r = ref(rtdb, `games/${gameId}/rematch/${slot}`);
+  await set(r, value);
 }
 
 // Submitting player concedes. Opponent wins immediately.

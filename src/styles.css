@@ -304,7 +304,11 @@
 html,
 body,
 #root {
+  /* 100dvh accounts for the mobile browser's collapsing URL bar so
+     content doesn't overflow below the visible viewport. Falls back
+     to 100% for ancient browsers. */
   height: 100%;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   color: var(--text);
@@ -2796,6 +2800,30 @@ button {
     display: none;
   }
 
+  /* In the mobile row layout these slots were taking width: 100%, which
+     ate the row and pushed the score off-screen. Make them inline and
+     non-greedy here. */
+  .player-action-slot,
+  .player-below-avatar {
+    width: auto;
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .btn-resign-inline {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
+
+  /* Score must never get clipped — it's the most important number on
+     screen. Reserve enough width for two digits even on the tightest
+     phone (iPhone SE portrait ≈ 320px). */
+  .player-score {
+    min-width: 1.8em;
+    text-align: right;
+    padding-right: 4px;
+  }
+
   .thinking-dots {
     position: absolute;
     right: 10px;
@@ -2804,6 +2832,43 @@ button {
     margin: 0;
     font-size: 0.9rem;
     pointer-events: none;
+  }
+}
+
+/* ---------------- Landscape lock: rotate to portrait ----------------
+ * Web doesn't allow a true screen-orientation lock outside of fullscreen
+ * PWA mode, so this is the next best thing: hide the app in landscape on
+ * a short viewport (i.e. a phone held sideways) and show a rotate prompt.
+ * Triggered only on short-height landscape so a tablet or laptop window
+ * is unaffected.
+ */
+@media (orientation: landscape) and (max-height: 500px) {
+  #root {
+    display: none;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 38%, var(--bg-center) 0%, var(--bg-edge) 78%), #000;
+    z-index: 9999;
+  }
+  body::after {
+    content: "↻  Please rotate to portrait\Ato play DotDuel";
+    white-space: pre;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    color: var(--text);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
 }
 

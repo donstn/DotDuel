@@ -17,6 +17,7 @@ interface Props {
   onOpenProfile: () => void;
   onSignOut: () => void;
   onOpenMultiplayer: () => void;
+  onOpenThemes: () => void;
   mpLockedByOther: boolean;
 }
 
@@ -32,6 +33,7 @@ export function Menu({
   onOpenProfile,
   onSignOut,
   onOpenMultiplayer,
+  onOpenThemes,
   mpLockedByOther,
 }: Props) {
   const [mode, setMode] = useState<GameMode | null>(null);
@@ -42,6 +44,20 @@ export function Menu({
     const welcomeName = gameName ?? user?.email?.split('@')[0] ?? null;
     return (
       <div className="menu">
+        <button
+          type="button"
+          className="menu-theme-btn"
+          onClick={onOpenThemes}
+          aria-label="Change colour theme"
+          title="Change colour theme"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
+            <path
+              fill="currentColor"
+              d="M12 3a9 9 0 0 0 0 18 1.5 1.5 0 0 0 1.16-2.46 1.5 1.5 0 0 1 1.16-2.46H17a4 4 0 0 0 4-4c0-4.97-4.03-9-9-9zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
+            />
+          </svg>
+        </button>
         <h1 className="title">
           <span className="title-dot title-dot-1">●</span>
           <span className="title-text">DotDuel</span>

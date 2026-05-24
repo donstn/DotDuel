@@ -1,1 +1,1 @@
-export const APP_VERSION = 'v55 · Elo in panels + delta on GameOver';
+export const APP_VERSION = 'v57 · colour themes (experimental)';

@@ -111,16 +111,16 @@ export function Board({
       >
         <defs>
           <radialGradient id="dot-p1" cx="35%" cy="28%" r="72%">
-            <stop offset="0%" stopColor="#62cf90" />
-            <stop offset="32%" stopColor="#1e6e35" />
-            <stop offset="78%" stopColor="#0a371a" />
-            <stop offset="100%" stopColor="#021608" />
+            <stop offset="0%" stopColor="var(--p1-bright)" />
+            <stop offset="32%" stopColor="var(--p1-glow)" />
+            <stop offset="78%" stopColor="var(--p1)" />
+            <stop offset="100%" stopColor="var(--p1-deep)" />
           </radialGradient>
           <radialGradient id="dot-p2" cx="35%" cy="28%" r="72%">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="32%" stopColor="#e8f5cb" />
-            <stop offset="78%" stopColor="#a8c989" />
-            <stop offset="100%" stopColor="#5a7045" />
+            <stop offset="0%" stopColor="var(--p2-bright)" />
+            <stop offset="32%" stopColor="var(--p2-glow)" />
+            <stop offset="78%" stopColor="var(--p2)" />
+            <stop offset="100%" stopColor="var(--p2-deep)" />
           </radialGradient>
           <radialGradient id="dot-empty" cx="35%" cy="30%" r="72%">
             <stop offset="0%" stopColor="#6b8a78" stopOpacity="0.85" />

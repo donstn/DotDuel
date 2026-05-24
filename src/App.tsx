@@ -52,7 +52,9 @@ import { ClockBadge } from './components/ClockBadge';
 import { MatchFoundScreen } from './components/MatchFoundScreen';
 import { MatchmakingWaiting } from './components/MatchmakingWaiting';
 import { MultiplayerLobby } from './components/MultiplayerLobby';
+import { ThemePopover } from './components/ThemePopover';
 import { UsernamePicker } from './components/UsernamePicker';
+import { loadTheme, saveTheme, type ThemeId } from './theme';
 import { pickAIAction } from './ai';
 import { applyAction, applyClaim, applyMove, createGame } from './game';
 import { getBoard } from './geometry';
@@ -127,6 +129,8 @@ export default function App() {
     useState<GameSession | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(() => !loadSettings().tutorialSeen);
   const [resignConfirmOpen, setResignConfirmOpen] = useState(false);
+  const [theme, setThemeState] = useState<ThemeId>(loadTheme);
+  const [themeOpen, setThemeOpen] = useState(false);
   const { user, signOut } = useAuth();
   const aiTimer = useRef<number | null>(null);
   const winRecorded = useRef(false);
@@ -308,6 +312,14 @@ export default function App() {
     });
     return unsub;
   }, [user?.uid]);
+
+  // Apply colour theme to <html data-theme> and persist on every change.
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    saveTheme(theme);
+  }, [theme]);
+
+  const setTheme = (id: ThemeId) => setThemeState(id);
 
   // Live subscription to pairings/{uid} — drives matchmaking → matchFound transition.
   useEffect(() => {
@@ -960,6 +972,7 @@ export default function App() {
           onOpenProfile={() => setProfileOpen(true)}
           onSignOut={() => void onSignOutSafe()}
           onOpenMultiplayer={openMultiplayer}
+          onOpenThemes={() => setThemeOpen(true)}
           mpLockedByOther={mpLockedByOther}
         />
       );
@@ -980,6 +993,13 @@ export default function App() {
             onChange={updateSettings}
             onResetProgress={onProgressResetWiped}
             onClose={() => setSettingsOpen(false)}
+          />
+        )}
+        {themeOpen && (
+          <ThemePopover
+            current={theme}
+            onSelect={setTheme}
+            onClose={() => setThemeOpen(false)}
           />
         )}
         {rankingsOpen && <RankingsPopover onClose={() => setRankingsOpen(false)} />}

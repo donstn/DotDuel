@@ -185,7 +185,7 @@ function StatsLine({
 }
 
 function HumanAvatar({ player }: { player: Player }) {
-  const fg = player === 1 ? '#9dffc0' : '#0a2818';
+  const fg = player === 1 ? 'var(--avatar-p1-fg)' : 'var(--avatar-p2-fg)';
   const bgGrad = player === 1 ? 'avbg-p1' : 'avbg-p2';
   return (
     <svg viewBox="0 0 100 100" className="avatar-svg">
@@ -193,15 +193,15 @@ function HumanAvatar({ player }: { player: Player }) {
         <radialGradient id={bgGrad} cx="35%" cy="30%" r="80%">
           {player === 1 ? (
             <>
-              <stop offset="0%" stopColor="#3aa86b" />
-              <stop offset="65%" stopColor="#0d4a23" />
-              <stop offset="100%" stopColor="#02160a" />
+              <stop offset="0%" stopColor="var(--p1-glow)" />
+              <stop offset="65%" stopColor="var(--p1)" />
+              <stop offset="100%" stopColor="var(--p1-deep)" />
             </>
           ) : (
             <>
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="55%" stopColor="#d3ecaa" />
-              <stop offset="100%" stopColor="#7a9560" />
+              <stop offset="0%" stopColor="var(--p2-bright)" />
+              <stop offset="55%" stopColor="var(--p2)" />
+              <stop offset="100%" stopColor="var(--p2-deep)" />
             </>
           )}
         </radialGradient>
@@ -219,7 +219,7 @@ function HumanAvatar({ player }: { player: Player }) {
 }
 
 function GuestAvatar({ label, player }: { label: string; player: Player }) {
-  const fg = player === 1 ? '#9dffc0' : '#0a2818';
+  const fg = player === 1 ? 'var(--avatar-p1-fg)' : 'var(--avatar-p2-fg)';
   const bgGrad = player === 1 ? 'gv-p1' : 'gv-p2';
   return (
     <svg viewBox="0 0 100 100" className="avatar-svg">
@@ -227,15 +227,15 @@ function GuestAvatar({ label, player }: { label: string; player: Player }) {
         <radialGradient id={bgGrad} cx="35%" cy="30%" r="80%">
           {player === 1 ? (
             <>
-              <stop offset="0%" stopColor="#3aa86b" />
-              <stop offset="65%" stopColor="#0d4a23" />
-              <stop offset="100%" stopColor="#02160a" />
+              <stop offset="0%" stopColor="var(--p1-glow)" />
+              <stop offset="65%" stopColor="var(--p1)" />
+              <stop offset="100%" stopColor="var(--p1-deep)" />
             </>
           ) : (
             <>
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="55%" stopColor="#d3ecaa" />
-              <stop offset="100%" stopColor="#7a9560" />
+              <stop offset="0%" stopColor="var(--p2-bright)" />
+              <stop offset="55%" stopColor="var(--p2)" />
+              <stop offset="100%" stopColor="var(--p2-deep)" />
             </>
           )}
         </radialGradient>

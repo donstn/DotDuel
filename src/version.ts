@@ -1,1 +1,1 @@
-export const APP_VERSION = 'v60 · global Elo leaderboard';
+export const APP_VERSION = 'v61 · custom domain (www.dotduel.com)';

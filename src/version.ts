@@ -1,1 +1,1 @@
-export const APP_VERSION = 'v45 · ready + countdown';
+export const APP_VERSION = 'v53 · optimistic moves + ready debug';

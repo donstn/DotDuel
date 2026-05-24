@@ -37,7 +37,11 @@ export function MatchFoundScreen({
   // Start when both players are ready, or when the countdown expires.
   useEffect(() => {
     if (startedRef.current) return;
+    console.log('matchFound auto-start check:', { myReady, oppReady, secondsLeft });
     if ((myReady && oppReady) || secondsLeft <= 0) {
+      console.log('matchFound: starting game', {
+        reason: myReady && oppReady ? 'both-ready' : 'countdown-expired',
+      });
       startedRef.current = true;
       onStartPlaying();
     }

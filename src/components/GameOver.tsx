@@ -1,10 +1,12 @@
 import { DIFFICULTY_LABELS, SHAPE_LABEL } from '../types';
-import type { Difficulty, GameMode, GameState, ShapeId } from '../types';
+import type { Difficulty, GameMode, GameState, Player, ShapeId } from '../types';
 
 interface UnlockResult {
   shape: ShapeId | null;
   difficulty: Difficulty | null;
 }
+
+export type FinishedReason = 'normal' | 'timeout' | 'resign' | 'disconnect';
 
 interface Props {
   state: GameState;
@@ -17,12 +19,16 @@ interface Props {
   onPlayAgain: () => void;
   onMenu: () => void;
   onStartShape: (shape: ShapeId, difficulty: Difficulty) => void;
+  onLobby?: () => void;
+  myPlayer?: Player;
+  finishedReason?: FinishedReason;
+  rematchLabel?: string;
 }
 
 const SHAPE_NEXT: Record<ShapeId, ShapeId | null> = {
   triangle: 'square',
   square: 'rectangle',
-  rectangle: 'rhombus',
+  rectangle: null,
   rhombus: null,
 };
 
@@ -30,6 +36,25 @@ function winText(name: string): string {
   // "You" is a pronoun ("You win"); everything else is a third-person noun ("Alice wins").
   if (name === 'You') return 'You win';
   return `${name} wins`;
+}
+
+function multiplayerOutcome(
+  me: Player,
+  winner: GameState['winner'],
+  reason: FinishedReason | undefined,
+): { title: string; subtitle: string | null } {
+  if (winner === 'draw' || winner == null) {
+    return { title: 'Game ended in a draw', subtitle: null };
+  }
+  if (winner === me) {
+    return { title: 'You win', subtitle: null };
+  }
+  // We lost. Explain how.
+  let subtitle = 'on points';
+  if (reason === 'timeout') subtitle = 'on time';
+  else if (reason === 'resign') subtitle = 'you resigned';
+  else if (reason === 'disconnect') subtitle = 'disconnected';
+  return { title: 'You lost', subtitle };
 }
 
 export function GameOver({
@@ -43,15 +68,27 @@ export function GameOver({
   onPlayAgain,
   onMenu,
   onStartShape,
+  onLobby,
+  myPlayer,
+  finishedReason,
+  rematchLabel,
 }: Props) {
   const humanWon = mode === 'ai' && state.winner === 1;
   const beatImpossible = humanWon && difficulty === 5;
-  const isFinalShape = shape === 'rhombus';
+  const isFinalShape = SHAPE_NEXT[shape] === null;
   const nextShape = SHAPE_NEXT[shape];
 
   let title = 'Draw';
-  if (state.winner === 1) title = winText(p1Name);
-  else if (state.winner === 2) title = winText(p2Name);
+  let subtitle: string | null = null;
+  if (myPlayer !== undefined && mode === 'multiplayer') {
+    const m = multiplayerOutcome(myPlayer, state.winner, finishedReason);
+    title = m.title;
+    subtitle = m.subtitle;
+  } else if (state.winner === 1) {
+    title = winText(p1Name);
+  } else if (state.winner === 2) {
+    title = winText(p2Name);
+  }
 
   let titleClass = '';
   if (humanWon && beatImpossible && isFinalShape) {
@@ -79,6 +116,7 @@ export function GameOver({
     <div className="game-over">
       <div className="game-over-card">
         <h2 className={titleClass}>{title}</h2>
+        {subtitle && <p className="go-subtitle">{subtitle}</p>}
         <div className="final-scores">
           <div className="final-score final-p1">
             <span>{p1Name}</span>
@@ -90,10 +128,20 @@ export function GameOver({
           </div>
         </div>
         {suggestion}
-        <div className="game-over-buttons">
-          <button className="primary" onClick={onPlayAgain}>Play again</button>
-          <button onClick={onMenu}>Menu</button>
-        </div>
+        {mode === 'multiplayer' && onLobby ? (
+          <div className="game-over-buttons">
+            <button onClick={onMenu}>Menu</button>
+            <button className="primary" onClick={onPlayAgain}>
+              {rematchLabel ?? 'New game'}
+            </button>
+            <button onClick={onLobby}>Lobby</button>
+          </div>
+        ) : (
+          <div className="game-over-buttons">
+            <button className="primary" onClick={onPlayAgain}>Play again</button>
+            <button onClick={onMenu}>Menu</button>
+          </div>
+        )}
       </div>
     </div>
   );

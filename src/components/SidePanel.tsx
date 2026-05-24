@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { DIFFICULTY_LABELS } from '../types';
 import type { Difficulty, Player } from '../types';
 import {
@@ -20,10 +21,14 @@ interface SidePanelProps {
   name: string;
   score: number;
   rating?: string;
+  /** Optional live element (e.g. a clock) rendered in the rating slot. */
+  ratingSlot?: ReactNode;
   avatar: 'human' | { kind: 'ai'; level: Difficulty } | { kind: 'guest'; label: string };
   colorSwap?: boolean;
   /** Per-name stats. Pass `null` for AI panel (no stats tracked). */
   stats?: PlayerRow | null;
+  /** Optional control rendered directly under the player name (e.g. Resign). */
+  actionSlot?: ReactNode;
 }
 
 function effectiveColor(player: Player, swap: boolean): 1 | 2 {
@@ -39,9 +44,11 @@ export function SidePanel({
   name,
   score,
   rating,
+  ratingSlot,
   avatar,
   colorSwap = false,
   stats,
+  actionSlot,
 }: SidePanelProps) {
   const color = effectiveColor(player, colorSwap);
   const cls = [
@@ -67,8 +74,9 @@ export function SidePanel({
       <div className="player-name" title={name}>
         {name}
       </div>
+      {actionSlot && <div className="player-action-slot">{actionSlot}</div>}
       {stats && <StatsPanel stats={stats} />}
-      <div className="player-rating">{rating ?? '—'}</div>
+      <div className="player-rating">{ratingSlot ?? rating ?? '—'}</div>
       <div className="player-score">{score}</div>
       {stats && <PointsTotals stats={stats} />}
       {thinking && <div className="thinking-dots" aria-label="Thinking">···</div>}

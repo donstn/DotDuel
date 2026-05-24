@@ -413,6 +413,119 @@ button {
   border-bottom: 1px solid var(--glass-border);
 }
 
+.player-action-slot {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn-resign-inline {
+  padding: 5px 12px;
+  border-radius: 10px;
+  background: rgba(180, 50, 50, 0.16);
+  border: 1px solid rgba(220, 90, 90, 0.32);
+  color: #ffc4c4;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.btn-resign-inline:hover {
+  background: rgba(200, 60, 60, 0.26);
+  border-color: rgba(240, 110, 110, 0.48);
+  color: #ffd5d5;
+}
+
+.btn-resign-inline:active {
+  transform: scale(0.96);
+}
+
+.go-subtitle {
+  margin: -6px 0 14px;
+  text-align: center;
+  color: #b8c8be;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+}
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 9, 11, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.confirm-card {
+  background: rgba(20, 32, 26, 0.92);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 22px 26px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  color: #e6f1ea;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+}
+
+.confirm-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+  letter-spacing: 0.01em;
+}
+
+.confirm-card p {
+  margin: 0 0 18px;
+  color: #b8c8be;
+  font-size: 0.95rem;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.confirm-actions button {
+  flex: 1;
+  max-width: 140px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.confirm-actions button:hover {
+  background: var(--glass-bg-strong, rgba(255, 255, 255, 0.08));
+}
+
+.confirm-actions button:active {
+  transform: scale(0.97);
+}
+
+.confirm-actions button.danger {
+  background: rgba(200, 50, 50, 0.85);
+  border-color: rgba(255, 100, 100, 0.5);
+  color: #fff;
+}
+
+.confirm-actions button.danger:hover {
+  background: rgba(220, 60, 60, 0.95);
+}
+
 .topbar-center {
   display: flex;
   flex-direction: column;
@@ -1612,6 +1725,10 @@ button {
     height: 34px;
     font-size: 1.1rem;
   }
+  .btn-resign-inline {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
   .remaining-value { font-size: 1rem; }
   .remaining-label { font-size: 0.66rem; }
   .side-panel {
@@ -2325,6 +2442,43 @@ button {
   align-items: center;
   gap: 10px;
   margin-top: 14px;
+}
+
+/* ---------------- Multiplayer clock badge ---------------- */
+
+.clock-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.24);
+  border: 1px solid var(--glass-border);
+  color: var(--text-dim);
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  min-width: 64px;
+  text-align: center;
+  transition: color 160ms, background 160ms, border-color 160ms;
+}
+
+.clock-badge.is-running {
+  color: var(--text-bright);
+  background: rgba(28, 122, 61, 0.22);
+  border-color: rgba(123, 219, 149, 0.45);
+}
+
+.clock-badge.is-low {
+  color: #ffb4b4;
+  background: rgba(220, 80, 80, 0.18);
+  border-color: rgba(220, 80, 80, 0.45);
+  animation: clockLowPulse 1.05s ease-in-out infinite;
+}
+
+@keyframes clockLowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 80, 80, 0.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(220, 80, 80, 0); }
 }
 
 .match-found-ready {

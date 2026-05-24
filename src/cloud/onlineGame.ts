@@ -3,6 +3,14 @@ import { rtdb } from '../firebase';
 import type { GameAction, GameMode, GameState, Player, ShapeId } from '../types';
 import type { TimeControl } from './matchmaking';
 
+export interface GameClock {
+  p1RemainingMs: number;
+  p2RemainingMs: number;
+  turnStartedAt: number;
+  current: Player;
+  totalMs: number;
+}
+
 export interface OnlineGame {
   state: GameState;
   playerUids: { '1': string; '2': string };
@@ -10,8 +18,12 @@ export interface OnlineGame {
   shape: ShapeId;
   timeControl: TimeControl;
   ready?: { '1'?: boolean; '2'?: boolean };
+  boardLoaded?: { '1'?: boolean; '2'?: boolean };
+  clock?: GameClock;
   winner?: Player | 'draw' | null;
   finishedAt?: number;
+  finishedReason?: 'normal' | 'timeout' | 'resign';
+  gameStartedAt?: number;
 }
 
 // Firebase RTDB drops empty objects and empty arrays on write — anything that
@@ -109,6 +121,42 @@ export async function markReady(
 ): Promise<void> {
   const r = ref(rtdb, `games/${gameId}/ready/${slot}`);
   await set(r, value);
+}
+
+export async function markBoardLoaded(
+  gameId: string,
+  slot: 1 | 2,
+): Promise<void> {
+  const r = ref(rtdb, `games/${gameId}/boardLoaded/${slot}`);
+  await set(r, true);
+}
+
+// Either participant can claim a timeout when they see the active player's
+// clock has visually hit 0. The server verifies the clock state and only
+// forfeits if the timeout is real.
+export async function claimTimeout(
+  gameId: string,
+  uid: string,
+): Promise<void> {
+  const r = ref(rtdb, `games/${gameId}/pendingMove`);
+  await set(r, {
+    from: uid,
+    action: { kind: 'timeout' },
+    clientTime: Date.now(),
+  });
+}
+
+// Submitting player concedes. Opponent wins immediately.
+export async function sendResign(
+  gameId: string,
+  uid: string,
+): Promise<void> {
+  const r = ref(rtdb, `games/${gameId}/pendingMove`);
+  await set(r, {
+    from: uid,
+    action: { kind: 'resign' },
+    clientTime: Date.now(),
+  });
 }
 
 export function playerNumFor(game: OnlineGame, uid: string): Player | null {

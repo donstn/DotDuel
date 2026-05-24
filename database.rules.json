@@ -2,6 +2,12 @@
   "rules": {
     ".read": false,
     ".write": false,
+    "gameSessions": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
     "games": {
       "$gameId": {
         ".read": "auth != null && (root.child('games').child($gameId).child('playerUids').child('1').val() === auth.uid || root.child('games').child($gameId).child('playerUids').child('2').val() === auth.uid)",
@@ -15,6 +21,11 @@
         "status": { ".write": false },
         "winner": { ".write": false },
         "ready": {
+          "$slot": {
+            ".write": "auth != null && root.child('games').child($gameId).child('playerUids').child($slot).val() === auth.uid && (newData.val() === true || newData.val() === false)"
+          }
+        },
+        "boardLoaded": {
           "$slot": {
             ".write": "auth != null && root.child('games').child($gameId).child('playerUids').child($slot).val() === auth.uid && (newData.val() === true || newData.val() === false)"
           }

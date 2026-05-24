@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { User } from 'firebase/auth';
 import { availableDifficulties, isUnlocked } from '../storage';
 import type { Settings } from '../storage';
-import { DIFFICULTY_LABELS, SHAPE_META } from '../types';
+import { DIFFICULTY_LABELS, PLAYABLE_SHAPE_META, SHAPE_META } from '../types';
 import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
 
 interface Props {
@@ -17,6 +17,7 @@ interface Props {
   onOpenProfile: () => void;
   onSignOut: () => void;
   onOpenMultiplayer: () => void;
+  mpLockedByOther: boolean;
 }
 
 export function Menu({
@@ -31,6 +32,7 @@ export function Menu({
   onOpenProfile,
   onSignOut,
   onOpenMultiplayer,
+  mpLockedByOther,
 }: Props) {
   const [mode, setMode] = useState<GameMode | null>(null);
   const [shape, setShape] = useState<ShapeId | null>(null);
@@ -92,13 +94,24 @@ export function Menu({
               <span>Two players, one device.</span>
             </button>
             {user ? (
-              <button
-                className="menu-card"
-                onClick={onOpenMultiplayer}
-              >
-                <strong>Multiplayer</strong>
-                <span>Find a ranked match.</span>
-              </button>
+              mpLockedByOther ? (
+                <button
+                  className="menu-card disabled"
+                  disabled
+                  title="An active game session is held by another device or tab"
+                >
+                  <strong>Multiplayer</strong>
+                  <span>Active on another device. End that game first.</span>
+                </button>
+              ) : (
+                <button
+                  className="menu-card"
+                  onClick={onOpenMultiplayer}
+                >
+                  <strong>Multiplayer</strong>
+                  <span>Find a ranked match.</span>
+                </button>
+              )
             ) : (
               <button
                 className="menu-card disabled"
@@ -125,7 +138,7 @@ export function Menu({
         <button className="link-btn back-link" onClick={() => setMode(null)}>‹ Back</button>
         <h2>Choose shape</h2>
         <div className="menu-grid">
-          {SHAPE_META.map((s) => (
+          {PLAYABLE_SHAPE_META.map((s) => (
             <button
               key={s.id}
               className="menu-card"
@@ -167,7 +180,7 @@ export function Menu({
         <button className="link-btn back-link" onClick={() => setMode(null)}>‹ Back</button>
         <h2>Choose shape</h2>
         <div className="menu-grid">
-          {SHAPE_META.map((s) => {
+          {PLAYABLE_SHAPE_META.map((s) => {
             const unlockedAny = progress.unlocked[s.id] > 0;
             return (
               <button

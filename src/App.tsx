@@ -26,14 +26,25 @@ import {
   type TimeControl,
 } from './cloud/matchmaking';
 import {
+  claimTimeout,
+  markBoardLoaded,
   markReady,
   playerNumFor,
   sendMove,
+  sendResign,
   watchError,
   watchGame,
   type OnlineError,
   type OnlineGame,
 } from './cloud/onlineGame';
+import {
+  claimSession,
+  getSessionId,
+  releaseSession,
+  watchSession,
+  type GameSession,
+} from './cloud/gameSession';
+import { ClockBadge } from './components/ClockBadge';
 import { MatchFoundScreen } from './components/MatchFoundScreen';
 import { MatchmakingWaiting } from './components/MatchmakingWaiting';
 import { MultiplayerLobby } from './components/MultiplayerLobby';
@@ -71,6 +82,11 @@ const AI_DELAY_MS = 450;
 const HINT_GAME_LIMIT = 10;
 const HINT_CLAIM_LIMIT = 3;
 
+function formatRematchLabel(tc: TimeControl): string {
+  const minutes = tc === '1min' ? '1' : tc === '3min' ? '3' : '5';
+  return `New ${minutes} min game`;
+}
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>('menu');
   const [progress, setProgress] = useState<Progress>(() => loadProgress());
@@ -95,9 +111,17 @@ export default function App() {
   const [queueTimeControl, setQueueTimeControl] = useState<TimeControl | null>(null);
   const [onlineGameId, setOnlineGameId] = useState<string | null>(null);
   const [onlineGame, setOnlineGame] = useState<OnlineGame | null>(null);
-  const [, setOnlineError] = useState<OnlineError | null>(null);
+  const [onlineError, setOnlineError] = useState<OnlineError | null>(null);
   const [moveInFlight, setMoveInFlight] = useState(false);
+  const [optimisticMpState, setOptimisticMpState] = useState<{
+    baseTurn: number;
+    state: GameState;
+  } | null>(null);
+  const mySessionIdRef = useRef<string>(getSessionId());
+  const [activeGameSession, setActiveGameSession] =
+    useState<GameSession | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(() => !loadSettings().tutorialSeen);
+  const [resignConfirmOpen, setResignConfirmOpen] = useState(false);
   const { user, signOut } = useAuth();
   const aiTimer = useRef<number | null>(null);
   const winRecorded = useRef(false);
@@ -289,6 +313,17 @@ export default function App() {
     return watchPairing(user.uid, (p) => setPairing(p));
   }, [user?.uid]);
 
+  // Live subscription to gameSessions/{uid} — drives the "active on another
+  // device" lockout state. The lock auto-releases on disconnect (see
+  // claimSession) so a closed phone tab doesn't strand the laptop forever.
+  useEffect(() => {
+    if (!user) {
+      setActiveGameSession(null);
+      return;
+    }
+    return watchSession(user.uid, setActiveGameSession);
+  }, [user?.uid]);
+
   // When a pairing arrives while waiting (or even while on the menu — handles
   // reconnect mid-search), jump to matchFound.
   useEffect(() => {
@@ -298,7 +333,17 @@ export default function App() {
     }
   }, [pairing, screen]);
 
-  const openMultiplayer = () => {
+  const mySessionId = mySessionIdRef.current;
+  const mpLockedByOther =
+    !!activeGameSession && activeGameSession.sessionId !== mySessionId;
+
+  const openMultiplayer = async () => {
+    if (!user || mpLockedByOther) return;
+    try {
+      await claimSession(user.uid, mySessionId);
+    } catch (e) {
+      console.warn('claimSession failed:', e);
+    }
     setScreen('lobby');
   };
 
@@ -323,10 +368,29 @@ export default function App() {
   };
 
   const onLeaveMatch = async () => {
-    if (user) await clearPairing(user.uid);
+    if (user) {
+      await clearPairing(user.uid);
+      await releaseSession(user.uid);
+    }
     setPairing(null);
     setQueueTimeControl(null);
     setScreen('menu');
+  };
+
+  const onLeaveLobby = async () => {
+    if (user) await releaseSession(user.uid);
+    setScreen('menu');
+  };
+
+  const onSignOutSafe = async () => {
+    if (user) {
+      try {
+        await releaseSession(user.uid);
+      } catch (e) {
+        console.warn('releaseSession on sign-out failed:', e);
+      }
+    }
+    await signOut();
   };
 
   const onStartPlaying = () => {
@@ -336,22 +400,89 @@ export default function App() {
 
   const onMarkReady = async () => {
     if (!pairing || !onlineGameId) return;
+    console.log('markReady: writing', { gameId: onlineGameId, slot: pairing.player });
     try {
       await markReady(onlineGameId, pairing.player, true);
+      console.log('markReady: write OK');
     } catch (e) {
       console.warn('markReady failed:', e);
     }
   };
 
   const onLeaveMpGame = async () => {
-    if (user) await clearPairing(user.uid);
+    if (user) {
+      await clearPairing(user.uid);
+      await releaseSession(user.uid);
+    }
     setPairing(null);
     setOnlineGameId(null);
     setOnlineGame(null);
     setOnlineError(null);
     setMoveInFlight(false);
+    setOptimisticMpState(null);
     setQueueTimeControl(null);
+    setResignConfirmOpen(false);
     setScreen('menu');
+  };
+
+  // Back button while a match is live: prompt before resigning. After the
+  // game has finished, the back arrow just exits to the menu (no resign).
+  const onMpBackPressed = () => {
+    if (!onlineGame || onlineGame.state.finished) {
+      void onLeaveMpGame();
+      return;
+    }
+    setResignConfirmOpen(true);
+  };
+
+  const onConfirmResign = async () => {
+    setResignConfirmOpen(false);
+    if (!onlineGameId || !user) return;
+    try {
+      await sendResign(onlineGameId, user.uid);
+    } catch (e) {
+      console.warn('sendResign failed:', e);
+    }
+  };
+
+  // After a finished MP game, queue another match at the same time control
+  // without bouncing through the menu. Session lock stays claimed.
+  const onMpRematch = async () => {
+    if (!user || !onlineGame) return;
+    const tc = onlineGame.timeControl;
+    try {
+      await clearPairing(user.uid);
+    } catch (e) {
+      console.warn('clearPairing failed:', e);
+    }
+    setPairing(null);
+    setOnlineGameId(null);
+    setOnlineGame(null);
+    setOnlineError(null);
+    setMoveInFlight(false);
+    setOptimisticMpState(null);
+    setResignConfirmOpen(false);
+    await onFindMatch(tc);
+  };
+
+  // Back to the time-control picker. Session lock stays claimed.
+  const onMpBackToLobby = async () => {
+    if (user) {
+      try {
+        await clearPairing(user.uid);
+      } catch (e) {
+        console.warn('clearPairing failed:', e);
+      }
+    }
+    setPairing(null);
+    setOnlineGameId(null);
+    setOnlineGame(null);
+    setOnlineError(null);
+    setMoveInFlight(false);
+    setOptimisticMpState(null);
+    setQueueTimeControl(null);
+    setResignConfirmOpen(false);
+    setScreen('lobby');
   };
 
   // Mirror pairing.matchId into onlineGameId so the RTDB subscription
@@ -381,20 +512,109 @@ export default function App() {
     setMoveInFlight(false);
   }, [onlineGame?.state.turn]);
 
+  // Drop optimistic state once the server's confirmed turn catches up.
+  useEffect(() => {
+    if (!optimisticMpState || !onlineGame) return;
+    if (onlineGame.state.turn >= optimisticMpState.state.turn) {
+      setOptimisticMpState(null);
+    }
+  }, [onlineGame?.state.turn, optimisticMpState]);
+
+  // Server-side rejection of a move: revert optimistic state and unlock board.
+  useEffect(() => {
+    if (!onlineError) return;
+    setOptimisticMpState(null);
+    setMoveInFlight(false);
+  }, [onlineError?.ts]);
+
+  // Defensive recovery: if the mpgame screen is showing the loading guard
+  // for more than 2 seconds (onlineGame is null even though we have a
+  // matchId), force a fresh RTDB subscription by bouncing onlineGameId.
+  // The data is in RTDB - the client just got into a stale-state window
+  // during the matchFound -> mpgame transition.
+  useEffect(() => {
+    if (screen !== 'mpgame' || onlineGame || !onlineGameId) return;
+    const stuckId = onlineGameId;
+    const timer = window.setTimeout(() => {
+      console.warn('mpgame: onlineGame null for 2s, bouncing subscription');
+      setOnlineGameId(null);
+      window.setTimeout(() => setOnlineGameId(stuckId), 80);
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, [screen, onlineGameId, onlineGame]);
+
+  // Schedule an automatic timeout claim at the moment the current player's
+  // clock will hit 0. Both clients run this; whichever fires first wins, the
+  // other becomes a no-op (server rejects once status='finished').
+  useEffect(() => {
+    if (
+      screen !== 'mpgame' ||
+      !onlineGame ||
+      !onlineGameId ||
+      !user ||
+      onlineGame.state.finished
+    )
+      return;
+    const clock = onlineGame.clock;
+    if (!clock || clock.turnStartedAt <= 0) return;
+    const current = onlineGame.state.current;
+    const baseMs =
+      current === 1 ? clock.p1RemainingMs : clock.p2RemainingMs;
+    if (typeof baseMs !== 'number') return;
+    const expiryAt = clock.turnStartedAt + baseMs;
+    const msToExpire = expiryAt - Date.now();
+    if (msToExpire <= 0) {
+      void claimTimeout(onlineGameId, user.uid);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void claimTimeout(onlineGameId!, user.uid);
+    }, msToExpire + 500);
+    return () => window.clearTimeout(timer);
+  }, [screen, onlineGame, onlineGameId, user]);
+
+  // When the mpgame board first renders successfully (state available),
+  // tell the server we're ready. The clock won't actually start until both
+  // players' boardLoaded flips true.
+  const boardLoadedMarkedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      screen !== 'mpgame' ||
+      !onlineGameId ||
+      !pairing ||
+      !onlineGame ||
+      !user
+    )
+      return;
+    if (boardLoadedMarkedRef.current === onlineGameId) return;
+    boardLoadedMarkedRef.current = onlineGameId;
+    void markBoardLoaded(onlineGameId, pairing.player);
+  }, [screen, onlineGameId, onlineGame, pairing, user]);
+
   const handleMpDotClick = async (dotId: number) => {
     if (!user || !onlineGameId || !onlineGame) return;
     const myNum = playerNumFor(onlineGame, user.uid);
     if (!myNum) return;
-    if (onlineGame.state.current !== myNum) return;
+    const baseState = optimisticMpState?.state ?? onlineGame.state;
+    if (baseState.current !== myNum) return;
     if (moveInFlight) return;
-    if (onlineGame.state.colored[dotId]) return;
+    if (baseState.colored[dotId]) return;
     setMoveInFlight(true);
     setLastDot(dotId);
+    try {
+      const next = applyAction(baseState, { kind: 'dot', dotId });
+      setOptimisticMpState({ baseTurn: baseState.turn, state: next });
+    } catch (e) {
+      console.warn('local applyAction failed:', e);
+      setMoveInFlight(false);
+      return;
+    }
     try {
       await sendMove(onlineGameId, user.uid, { kind: 'dot', dotId });
     } catch (e) {
       console.warn('sendMove failed:', e);
       setMoveInFlight(false);
+      setOptimisticMpState(null);
     }
   };
 
@@ -402,15 +622,25 @@ export default function App() {
     if (!user || !onlineGameId || !onlineGame) return;
     const myNum = playerNumFor(onlineGame, user.uid);
     if (!myNum) return;
-    if (onlineGame.state.current !== myNum) return;
+    const baseState = optimisticMpState?.state ?? onlineGame.state;
+    if (baseState.current !== myNum) return;
     if (moveInFlight) return;
-    if (!onlineGame.state.pending.includes(lineId)) return;
+    if (!baseState.pending.includes(lineId)) return;
     setMoveInFlight(true);
+    try {
+      const next = applyAction(baseState, { kind: 'claim', lineId });
+      setOptimisticMpState({ baseTurn: baseState.turn, state: next });
+    } catch (e) {
+      console.warn('local applyAction failed:', e);
+      setMoveInFlight(false);
+      return;
+    }
     try {
       await sendMove(onlineGameId, user.uid, { kind: 'claim', lineId });
     } catch (e) {
       console.warn('sendMove failed:', e);
       setMoveInFlight(false);
+      setOptimisticMpState(null);
     }
   };
 
@@ -477,7 +707,7 @@ export default function App() {
       );
     }
     const myNum = playerNumFor(onlineGame, user.uid);
-    const mpState = onlineGame.state;
+    const mpState = optimisticMpState?.state ?? onlineGame.state;
     const mpShape = onlineGame.shape;
     const myName = effectiveGameName ?? 'You';
     const oppName = pairing.opponentDisplayName;
@@ -488,11 +718,27 @@ export default function App() {
     const mpShowOver = mpState.finished;
     const mpDisabled =
       mpState.finished || moveInFlight || (myNum !== null && mpState.current !== myNum);
+    const clock = onlineGame.clock;
+    const clockRunning = !mpState.finished && (clock?.turnStartedAt ?? 0) > 0;
+    const p1Clock = clock ? (
+      <ClockBadge
+        remainingAtRefMs={clock.p1RemainingMs}
+        refTime={clock.turnStartedAt}
+        isRunning={clockRunning && mpState.current === 1}
+      />
+    ) : null;
+    const p2Clock = clock ? (
+      <ClockBadge
+        remainingAtRefMs={clock.p2RemainingMs}
+        refTime={clock.turnStartedAt}
+        isRunning={clockRunning && mpState.current === 2}
+      />
+    ) : null;
 
     return (
       <div className="game-screen">
         <div className="game-topbar">
-          <button className="btn-back" onClick={onLeaveMpGame} aria-label="Leave match">
+          <button className="btn-back" onClick={onMpBackPressed} aria-label="Leave match">
             ‹
           </button>
           <div className="topbar-center">
@@ -529,6 +775,18 @@ export default function App() {
             score={mpState.scores[1]}
             avatar="human"
             stats={null}
+            ratingSlot={p1Clock}
+            actionSlot={
+              myNum === 1 && !mpState.finished ? (
+                <button
+                  className="btn-resign-inline"
+                  onClick={() => setResignConfirmOpen(true)}
+                  title="Resign and end the game"
+                >
+                  Resign
+                </button>
+              ) : null
+            }
           />
           <Board
             state={mpState}
@@ -546,6 +804,18 @@ export default function App() {
             score={mpState.scores[2]}
             avatar="human"
             stats={null}
+            ratingSlot={p2Clock}
+            actionSlot={
+              myNum === 2 && !mpState.finished ? (
+                <button
+                  className="btn-resign-inline"
+                  onClick={() => setResignConfirmOpen(true)}
+                  title="Resign and end the game"
+                >
+                  Resign
+                </button>
+              ) : null
+            }
           />
         </div>
         {mpShowOver && (
@@ -556,10 +826,31 @@ export default function App() {
             p1Name={mpP1Name}
             p2Name={mpP2Name}
             unlock={{ shape: null, difficulty: null }}
-            onPlayAgain={onLeaveMpGame}
+            onPlayAgain={onMpRematch}
             onMenu={onLeaveMpGame}
+            onLobby={onMpBackToLobby}
             onStartShape={() => onLeaveMpGame()}
+            myPlayer={myNum ?? undefined}
+            finishedReason={onlineGame.finishedReason}
+            rematchLabel={formatRematchLabel(onlineGame.timeControl)}
           />
+        )}
+        {resignConfirmOpen && !mpState.finished && (
+          <div
+            className="confirm-overlay"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setResignConfirmOpen(false)}
+          >
+            <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
+              <h3>Resign?</h3>
+              <p>You'll lose this game.</p>
+              <div className="confirm-actions">
+                <button onClick={() => setResignConfirmOpen(false)}>Cancel</button>
+                <button className="danger" onClick={onConfirmResign}>Resign</button>
+              </div>
+            </div>
+          </div>
         )}
         <AppFooter
           onOpenRules={() => setRulesOpen(true)}
@@ -585,7 +876,7 @@ export default function App() {
       mainContent = (
         <MultiplayerLobby
           rating={cloudProfile?.rating ?? 1000}
-          onBack={() => setScreen('menu')}
+          onBack={onLeaveLobby}
           onFindMatch={onFindMatch}
         />
       );
@@ -627,8 +918,9 @@ export default function App() {
           onOpenRankings={() => setRankingsOpen(true)}
           onOpenSignIn={() => setSignInOpen(true)}
           onOpenProfile={() => setProfileOpen(true)}
-          onSignOut={() => void signOut()}
+          onSignOut={() => void onSignOutSafe()}
           onOpenMultiplayer={openMultiplayer}
+          mpLockedByOther={mpLockedByOther}
         />
       );
     }
@@ -657,7 +949,7 @@ export default function App() {
             user={user}
             settings={settings}
             cloudDisplayName={cloudProfile?.displayName ?? null}
-            onSignOut={() => void signOut()}
+            onSignOut={() => void onSignOutSafe()}
             onRename={() => {
               setProfileOpen(false);
               setRenameOpen(true);
@@ -838,7 +1130,7 @@ export default function App() {
           user={user}
           settings={settings}
           cloudDisplayName={cloudProfile?.displayName ?? null}
-          onSignOut={() => void signOut()}
+          onSignOut={() => void onSignOutSafe()}
           onRename={() => {
             setProfileOpen(false);
             setRenameOpen(true);

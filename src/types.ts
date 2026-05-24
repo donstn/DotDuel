@@ -89,6 +89,11 @@ export const SHAPE_META: ShapeMeta[] = [
   { id: 'rhombus', label: 'Rhombus', dots: 36 },
 ];
 
+export const BANNED_SHAPES: ReadonlySet<ShapeId> = new Set(['rhombus']);
+export const PLAYABLE_SHAPE_META: ShapeMeta[] = SHAPE_META.filter(
+  (s) => !BANNED_SHAPES.has(s.id),
+);
+
 export const SHAPE_LABEL: Record<ShapeId, string> = {
   triangle: 'Triangle',
   square: 'Square',

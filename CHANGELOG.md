@@ -7,6 +7,40 @@ All notable changes to DotDuel will be documented in this file. Format follows
 
 ### Added
 
+- **Resign + back-button confirmation in multiplayer games.** The
+  topbar now has an explicit **Resign** button to the left of the
+  rules `?`. Pressing it (or the back `‹` arrow) while a match is
+  live opens a confirm overlay; confirming sends a new
+  `{ kind: 'resign' }` wire-action that `validateMove` accepts —
+  the opponent wins immediately (`finishedReason: 'resign'`, top
+  of game's `state.finished` + `state.winner` written so the
+  watching client renders GameOver). After the game has finished
+  the back arrow just exits to the menu without the prompt.
+- Multiplayer GameOver now has three buttons instead of the
+  misleading single "Play again": **Menu** (main menu, releases
+  session lock), **New game** (re-queues at the same time
+  control without bouncing through the menu), **Lobby** (back to
+  the time-control picker). Session lock stays claimed for the
+  middle two so the same tab continues to own the MP flow.
+
+### Changed
+
+- **Rhombus is temporarily disabled** across vs-AI, hot-seat, and
+  multiplayer menus and as a possible matchmade shape. Reason:
+  open issues with that board's pending/scoring flow. Single
+  source of truth is `BANNED_SHAPES` in `src/types.ts` plus the
+  `SHAPES` pool in `functions/src/index.ts`. GameOver's
+  next-shape ladder now treats rectangle as the final shape, so
+  "DotDuel champion" triggers after beating L5 on Rectangle.
+
+### Fixed
+
+- **Clock running out / timeout claim now actually triggers the
+  GameOver screen.** Both timeout paths in `validateMove` were
+  setting top-level `status: 'finished' + winner` but never the
+  embedded `state.finished` / `state.winner` that the multiplayer
+  client checks to render GameOver. Server now writes both.
+
 - **Phase D — multiplayer is playable end-to-end.** After matchmaking
   pairs two players, the new "Start playing →" button on the
   Opponent-found screen transitions both clients into a synced board
@@ -65,6 +99,38 @@ All notable changes to DotDuel will be documented in this file. Format follows
 
 ### Added
 
+- **One multiplayer game session per user** across all signed-in
+  devices. The first device to enter the multiplayer flow (queue,
+  matchFound, or active game) writes a per-tab `sessionId` to
+  `gameSessions/{uid}` in RTDB and arms an `onDisconnect` handler so
+  the lock auto-releases if the browser closes. Other devices/tabs
+  signed into the same account see the Multiplayer menu card switch
+  to "Active on another device. End that game first." and become
+  disabled. The lock is released on game-over, back-to-menu, or
+  browser disconnect.
+
+### Changed
+
+- The multiplayer chess clock now starts only when BOTH clients have
+  rendered the board (each writes `boardLoaded/{slot}=true` on
+  mpgame mount; the renamed `startClockWhenBoardsLoaded` Cloud
+  Function flips `turnStartedAt` when both flip true). Previously
+  it started on "both Ready", which ate up a few hundred ms of the
+  active player's budget before the board was visible.
+
+### Added
+
+- **Chess clocks** in multiplayer games. The lobby's time control
+  (Bullet 1 min / Blitz 3 min / Rapid 5 min) is now real — each
+  player has a per-turn countdown that drains while it's their move
+  and pauses while it's the opponent's. The clock starts when both
+  players are ready (a new `startClockWhenReady` Cloud Function picks
+  up the ready transition and sets `turnStartedAt`). On every move,
+  `validateMove` deducts the elapsed turn time from the current
+  player's remaining; if remaining hits zero the function declares
+  a timeout forfeit win for the opponent. The clock shows in the
+  side-panel rating slot, glows green while running, pulses red
+  under 10 seconds.
 - Match-found screen now shows a 5-second countdown plus a **Ready!**
   button on each side. The game auto-starts when both players are
   ready *or* when the countdown expires. Ready state syncs in real
@@ -73,6 +139,20 @@ All notable changes to DotDuel will be documented in this file. Format follows
 
 ### Fixed
 
+- **Clock running out now actually ends the game.** Previously the
+  timeout-forfeit logic in `validateMove` only fired when *someone*
+  wrote to `pendingMove`, so an idle player past 0:00 left the game
+  stuck. Both clients now schedule a `setTimeout` that fires a
+  special `{ kind: 'timeout' }` pendingMove at the exact moment the
+  active clock will hit zero. The server verifies the clock is
+  genuinely expired before forfeiting, so spurious or stale claims
+  are rejected. Either player can submit the claim.
+- Multiplayer game screen would sometimes stay on the "Connecting to
+  match…" loading guard during the matchFound → mpgame transition.
+  Added a defensive 2-second timer that bounces the `watchGame`
+  subscription if `onlineGame` is still null after entering mpgame,
+  triggering a fresh RTDB read. Refresh used to be the only
+  workaround.
 - Multiplayer game screen rendered as a blank/black page on first
   load. Firebase RTDB strips empty objects and arrays on write, so
   the freshly-created game state's `colored: {}`, `completed: []`,

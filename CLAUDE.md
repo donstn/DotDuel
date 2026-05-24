@@ -394,3 +394,53 @@ Runtime resources: only browser APIs (`localStorage`, SVG, DOM). No external net
 10. After AI changes: `npm run simulate:l4` — average scores across L5 vs L5 should stay within ~3 points per shape.
 11. After square / pending-flow changes: `npm run simulate:square` — must report 50/50 clean games with integrity OK and no double-turn anomalies.
 12. After pushing to `main`: confirm the `Deploy to GitHub Pages` workflow goes green (`gh run list --limit 1`) and the staging URL loads.
+
+---
+
+## Session handoff — 2026-05-23 (Phases D + E.1 work in progress)
+
+**Current local version:** `v50 · timeout ends the game` (uncommitted; last pushed commit is `52aa1e3` which is v45).
+
+**Deployed live right now:**
+- GitHub Pages serves **v45** (stale until you push the v46–v50 commit)
+- Firebase Cloud Functions (region `europe-west1`): `matchmake`, `validateMove`, `startClockWhenBoardsLoaded` — all on the **v50 code** (deployed during the session)
+- Firestore + RTDB rules: latest committed/deployed
+- Artifact Registry: 7-day cleanup policy active
+
+Because of that mismatch, **the phone (GitHub Pages) is currently running v45 client code talking to v50 server**. Functionally OK for vs-AI; multiplayer flow will misbehave because v45 client doesn't know about `clock`, `boardLoaded`, `ready`, or `gameSessions`. Resolution = `git push` the local commit so GitHub Pages catches up, OR just test on localhost until then.
+
+### What shipped this session (locally, not yet pushed)
+
+- **Phase D — server-authoritative multiplayer (v43–v44):** Shared engine (`functions/src/engine/` auto-copied from `src/` on every functions build). RTDB rules for `games/{id}` deny-by-default. `matchmake` creates the live RTDB game node on pairing. `validateMove` enforces turn order, applies moves via `applyAction`, rejects invalid moves and not-your-turn. Client subscribes via `watchGame`, sends moves via `sendMove → pendingMove`. State-normalization at the RTDB boundary fixes empty-`{}`-stripping (`colored`, `completed`, `pending`).
+- **Ready + 5s countdown (v45):** RTDB `ready/{slot}` field; MatchFoundScreen shows the countdown and per-side ready chips; auto-start on both-ready OR countdown expiry.
+- **Chess clocks (v46–v47):** RTDB `clock: {p1RemainingMs, p2RemainingMs, turnStartedAt, current, totalMs}`. `startClockWhenBoardsLoaded` sets `turnStartedAt` only when BOTH clients confirm via `boardLoaded/{slot}` (so the screen-transition + render time doesn't eat into the active player's budget). `ClockBadge` component self-ticks at 200ms, red-pulses under 10s. `validateMove` deducts elapsed per move and forfeits if remaining ≤ 0.
+- **One game session per user (v48):** RTDB `gameSessions/{uid}` lock with `onDisconnect` auto-release. Menu Multiplayer card disables with "Active on another device" when locked-by-other. Released on back-to-menu, sign-out, game-over, and browser disconnect.
+- **Loading screen auto-recovery (v49):** If `mpgame` shows the "Connecting to match…" guard for >2s, bounces `onlineGameId` to force a fresh `watchGame` subscription. Defensive — root cause of the stale-state window not fully diagnosed.
+- **Timeout actually ends the game (v50):** New wire-action `{kind:'timeout'}` accepted by `validateMove`. Either client schedules a `setTimeout` to fire `claimTimeout` at the moment the active clock will hit 0; server re-verifies the clock state before forfeiting.
+
+### What's still pending (Phase E.2 / E.3)
+
+- **Elo updates** on game-end. K-factor sequence from the multiplayer roadmap §6.2: `50, 45, 40, 35, 30, 25, 20, 15, 10, 10` for placement games 1–10, then `K=32` steady-state. Implement as new `finalizeGame` Cloud Function triggered on `games/{id}/status` flipping to `'finished'`. Update `users/{uid}.rating + placementGamesPlayed` transactionally for both players.
+- **Match history persistence** to Firestore `matches/{matchId}`: both player uids/displayNames/ratings before+after, scores, shape, time control, durationMs, finishedReason. Tightly coupled to the Elo finalize — same function.
+- **Profile shows Elo + recent matches.** Side panel rating slot currently shows the clock in mpgame and `'—'` everywhere else. Profile popover needs an Elo line + a small "last 5 matches" list once match history exists.
+- **`clockTimeout` scheduled function (Phase E.3).** Fallback for the edge case where both clients have crashed/lost connection mid-turn — the v50 client-driven timeout claim doesn't cover that. 1 Cloud Scheduler job, every 15s sweep of active games.
+- **Provisional badge** until 10 games played (UI only).
+
+### Specific things to test tomorrow
+
+1. **v50 timeout actually fires GameOver.** Two browsers, Bullet (1 min). Player 1 stalls. At 0:00 + 500ms, both clients should see GameOver with player 2 as winner.
+2. **v49 loading-screen recovery.** Pair + Ready a few times. If loading screen appears, watch DevTools console for `mpgame: onlineGame null for 2s, bouncing subscription`. Should recover within ~2s instead of needing a refresh.
+3. **Second-game flow.** Finish a game, back to menu, queue again. No stale session lock, no leftover pairing doc.
+4. **Cross-tab session lock.** Tab A enters Multiplayer → Tab B sees the card go disabled. Tab A clicks Back → Tab B re-enables within a second. (Verified working at end of session.)
+
+### Open UX threads
+
+- **Move latency.** User has flagged that clicks take ~300–500ms to render the new state because of the validateMove round-trip. Fix is optimistic UI: apply the move locally on click, reconcile via `watchGame` confirmation. ~30 lines, deferred until Elo lands.
+- **Bundle size.** 930 KB raw / 230 KB gzipped — Firestore + RTDB SDKs dominate. Code-splitting (dynamic-import the entire `cloud/` + `auth/` surface behind sign-in) would shave ~150 KB off the initial bundle. Real concern before public launch; not yet urgent.
+
+### How to resume tomorrow
+
+1. `git status` to confirm v46–v50 changes are still on disk.
+2. `npm run dev` and sanity-test multiplayer via two browser profiles.
+3. If everything looks right: commit the bundle (Phase D + Phase E.1 + Phase A.2 session lock + v49 loading-screen recovery + v50 timeout), push.
+4. Next: **start Phase E.2** — write the `finalizeGame` function with the K-table and match-history persistence.

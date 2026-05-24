@@ -24,19 +24,54 @@ interface QueueEntry {
   initialRange: number;
 }
 
+type WireAction = GameAction | { kind: 'timeout' } | { kind: 'resign' };
+
 interface PendingMove {
   from: string;
-  action: GameAction;
+  action: WireAction;
   clientTime?: number;
 }
 
 const RANGE_PER_SECOND = 25;
 const MAX_RANGE = 500;
-const SHAPES: ShapeId[] = ['triangle', 'square', 'rectangle', 'rhombus'];
+const SHAPES: ShapeId[] = ['triangle', 'square', 'rectangle'];
+const TIME_CONTROL_MS: Record<TimeControl, number> = {
+  '1min': 60_000,
+  '3min': 180_000,
+  '5min': 300_000,
+};
 
 // JSON round-trip strips undefined keys so RTDB accepts the payload.
 function sanitize<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj)) as T;
+}
+
+type FinishedReason = 'normal' | 'timeout' | 'resign' | 'disconnect';
+
+// Persist game outcome metadata to Firestore matches/{matchId} so we can
+// count how games end (points / time / resign / disconnect). Match doc was
+// created with status='created' by matchmake; we merge the final fields.
+async function recordMatchFinished(
+  matchId: string,
+  winner: 1 | 2 | 'draw' | null,
+  finishedReason: FinishedReason,
+  finishedAt: number,
+): Promise<void> {
+  try {
+    await getFirestore()
+      .doc(`matches/${matchId}`)
+      .set(
+        {
+          status: 'finished',
+          winner,
+          finishedReason,
+          finishedAt,
+        },
+        { merge: true },
+      );
+  } catch (e) {
+    logger.warn(`recordMatchFinished failed for ${matchId}`, e);
+  }
 }
 
 // RTDB strips empty objects + arrays on write, so reads can come back with
@@ -171,6 +206,7 @@ export const matchmake = onDocumentCreated(
     // Create the RTDB game node so both clients have a live state to subscribe to.
     try {
       const initialState = createGame(shape, 'multiplayer');
+      const totalMs = TIME_CONTROL_MS[newEntry.timeControl];
       await rtdb.ref(`games/${matchId}`).set({
         state: sanitize(initialState),
         playerUids: { '1': p1Uid, '2': p2Uid },
@@ -178,12 +214,47 @@ export const matchmake = onDocumentCreated(
         shape,
         timeControl: newEntry.timeControl,
         ready: { '1': false, '2': false },
+        boardLoaded: { '1': false, '2': false },
+        clock: {
+          p1RemainingMs: totalMs,
+          p2RemainingMs: totalMs,
+          turnStartedAt: 0,
+          current: 1,
+          totalMs,
+        },
         createdAt: Date.now(),
       });
       logger.info(`matchmake: RTDB game node ${matchId} created`);
     } catch (e) {
       logger.error(`matchmake: RTDB game node create failed for ${matchId}`, e);
     }
+  },
+);
+
+// Clock starts only after BOTH clients confirm they've mounted the mpgame
+// board (boardLoaded/{slot} flips true). Pressing Ready alone isn't enough -
+// the screen-transition + render time would otherwise eat into the player's
+// budget before the board is even visible.
+export const startClockWhenBoardsLoaded = onValueWritten(
+  'games/{gameId}/boardLoaded/{slot}',
+  async (event) => {
+    const after = event.data.after.val();
+    if (after !== true) return;
+    const gameId = event.params.gameId;
+    const rtdb = getDatabase();
+    const gameRef = rtdb.ref(`games/${gameId}`);
+    const snap = await gameRef.get();
+    const game = snap.val();
+    if (!game) return;
+    const loaded = game.boardLoaded ?? {};
+    if (loaded['1'] !== true || loaded['2'] !== true) return;
+    if (game.gameStartedAt) return; // already started
+    const now = Date.now();
+    await gameRef.update({
+      gameStartedAt: now,
+      'clock/turnStartedAt': now,
+    });
+    logger.info(`startClockWhenBoardsLoaded: game ${gameId} clock started at ${now}`);
   },
 );
 
@@ -218,6 +289,57 @@ export const validateMove = onValueWritten(
       return;
     }
 
+    // Resign: the submitting player concedes; opponent wins immediately.
+    if (after.action.kind === 'resign') {
+      const winner: 1 | 2 = playerNum === 1 ? 2 : 1;
+      const finishedAt = Date.now();
+      await gameRef.update({
+        'state/finished': true,
+        'state/winner': winner,
+        status: 'finished',
+        winner,
+        finishedAt,
+        finishedReason: 'resign',
+        pendingMove: null,
+      });
+      await recordMatchFinished(gameId, winner, 'resign', finishedAt);
+      logger.info(`validateMove: ${after.from} resigned in ${gameId}, winner=${winner}`);
+      return;
+    }
+
+    // Timeout claim: either participant can submit. Server verifies the
+    // current player's clock is actually expired before forfeiting.
+    if (after.action.kind === 'timeout') {
+      const clock = (game.clock ?? {}) as Record<string, number | undefined>;
+      const turnStartedAt = clock.turnStartedAt ?? 0;
+      const currentSlot = (state.current ?? 1) as 1 | 2;
+      const currentKey = currentSlot === 1 ? 'p1RemainingMs' : 'p2RemainingMs';
+      const totalMs = clock.totalMs ?? 0;
+      const baseMs = clock[currentKey] ?? totalMs;
+      const realRemaining =
+        turnStartedAt > 0 ? baseMs - (Date.now() - turnStartedAt) : baseMs;
+      if (realRemaining > 0) {
+        // Not actually timed out yet; reject silently.
+        await moveRef.remove();
+        return;
+      }
+      const winner: 1 | 2 = currentSlot === 1 ? 2 : 1;
+      const finishedAt = Date.now();
+      await gameRef.update({
+        [`clock/${currentKey}`]: 0,
+        'state/finished': true,
+        'state/winner': winner,
+        status: 'finished',
+        winner,
+        finishedAt,
+        finishedReason: 'timeout',
+        pendingMove: null,
+      });
+      await recordMatchFinished(gameId, winner, 'timeout', finishedAt);
+      logger.info(`validateMove: timeout claim accepted in ${gameId}, winner=${winner}`);
+      return;
+    }
+
     if (state.current !== playerNum) {
       await errorRef.set({
         code: 'not-your-turn',
@@ -229,19 +351,58 @@ export const validateMove = onValueWritten(
       return;
     }
 
+    // Clock bookkeeping: deduct elapsed since turn started from the current
+    // player's remaining time. turnStartedAt === 0 means the clock hasn't
+    // been started by startClockWhenReady yet — happens only if the function
+    // hasn't fired before the first move arrives; treat it as "now".
+    const clock = (game.clock ?? {}) as Record<string, number | undefined>;
+    const now = Date.now();
+    const turnStartedAt = clock.turnStartedAt ?? 0;
+    const elapsedMs = turnStartedAt > 0 ? now - turnStartedAt : 0;
+    const currentKey = playerNum === 1 ? 'p1RemainingMs' : 'p2RemainingMs';
+    const totalMs = clock.totalMs ?? 0;
+    const currentRemainingMs = clock[currentKey] ?? totalMs;
+    const newRemainingMs = currentRemainingMs - elapsedMs;
+
+    if (newRemainingMs <= 0) {
+      // Flag fall — current player loses on time.
+      const winner: 1 | 2 = playerNum === 1 ? 2 : 1;
+      await gameRef.update({
+        [`clock/${currentKey}`]: 0,
+        'state/finished': true,
+        'state/winner': winner,
+        status: 'finished',
+        winner,
+        finishedAt: now,
+        finishedReason: 'timeout',
+        pendingMove: null,
+      });
+      await recordMatchFinished(gameId, winner, 'timeout', now);
+      logger.info(`validateMove: game ${gameId} timeout, winner=${winner}`);
+      return;
+    }
+
     try {
       const newState = applyAction(state, after.action);
+      const otherKey = playerNum === 1 ? 'p2RemainingMs' : 'p1RemainingMs';
       const updates: Record<string, unknown> = {
         state: sanitize(newState),
         pendingMove: null,
+        [`clock/${currentKey}`]: newRemainingMs,
+        [`clock/${otherKey}`]: clock[otherKey] ?? totalMs,
+        'clock/turnStartedAt': now,
+        'clock/current': newState.current,
       };
       if (newState.finished) {
         updates.status = 'finished';
         updates.winner = newState.winner;
-        updates.finishedAt = Date.now();
+        updates.finishedAt = now;
+        updates.finishedReason = 'normal';
       }
       await gameRef.update(updates);
       if (newState.finished) {
+        const w = newState.winner as 1 | 2 | 'draw' | null;
+        await recordMatchFinished(gameId, w, 'normal', now);
         logger.info(`validateMove: game ${gameId} finished, winner=${String(newState.winner)}`);
       }
     } catch (e) {

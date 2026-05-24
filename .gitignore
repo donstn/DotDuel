@@ -150,3 +150,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Local synthesised review reports (kept local, not shipped)
+final_review_age_based_before_pushing.txt

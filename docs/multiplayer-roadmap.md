@@ -4,6 +4,28 @@
 
 ---
 
+## 0. Status (updated 2026-05-25 · build v59)
+
+| Phase | Status | Notes |
+|---|---|---|
+| **A** — Firebase project + Auth | ✅ shipped | Google sign-in via popup + Email/Password + verification email. UsernamePicker with transactional unique-name claim. |
+| **B** — Cloud profile sync | ✅ shipped | `users/{uid}` with displayName/rating/placementGamesPlayed/progress. localStorage merges on sign-in. |
+| **C** — Multiplayer lobby + matchmaking | ✅ shipped | Bullet/Blitz/Rapid lobby, queue with ~25 Elo/sec range expansion, `matchmake` Cloud Function pairs in Firestore transaction + creates RTDB game node. |
+| **D** — Server-authoritative game + realtime sync | ✅ shipped | Shared `engine/` (auto-copied at functions build). `validateMove` enforces turn order, applies action, rejects invalid. Optimistic client UI hides round-trip on own moves. |
+| **E** — Elo, time controls, match history | ✅ shipped | Per-player K-table (50→10 placement, K=32 steady). Chess clock with `startClockWhenBoardsLoaded` to avoid eating budget on first-render. Timeout via `{kind:'timeout'}` claim + server re-verification. Resign (`{kind:'resign'}`) in both MP and vs-AI. `finalizeGame` transactionally updates ratings + writes full match record. Profile shows Elo + Provisional N/10 badge + last 5 matches with ±delta. GameOver renders first-person outcome ("You win" / "You lost on time"...) and the rating delta. |
+| **F** — Leaderboard, polish | 🟡 partial | Rematch (same-opponent, bilateral accept, swapped slots) shipped v59. Themes (8 palettes including 2 light) shipped v57. Centered menu cards. Multiplayer name-swap bug fixed. **Not yet:** global leaderboard, friend list, replays, production domain cutover. |
+
+**Other things added that weren't in the original plan:**
+- One-session-per-user lock via `gameSessions/{uid}` with onDisconnect auto-release (v48). Prevents the same account from queueing in two tabs.
+- Rhombus shape temporarily disabled across all menus (pending scoring-flow rework).
+- 8 colour themes (Forest & Pearl default + Royal Court, Tempo Rivals, Sunset Catan, Coral Reef, Twilight Cosmos, Monochrome Pro, Vintage Press) with per-device persistence. Two light themes (Monochrome Pro, Vintage Press) for sunlight readability on mobile.
+- Centered menu cards across mode/shape/difficulty/TC pickers (v56).
+- Vs-AI back-button confirm + Resign pill (parity with multiplayer) (v58).
+
+See §17 for prioritised next work.
+
+---
+
 ## 1. Context
 
 DotDuel today is offline-first: React/Vite/TS, localStorage-only, no backend. The `CLAUDE.md` "Deferred" section already names the three pieces we need — multiplayer, Google auth, Elo rating — but no design has been committed. The Multiplayer card in `src/components/Menu.tsx:41` is a disabled stub. The side panel in `src/components/SidePanel.tsx:71` already renders a `rating` slot showing `—`.
@@ -332,6 +354,10 @@ Assumed average ranked game on the 3-min control:
 
 Don't try to ship all of this in one PR. Six phases, each independently testable.
 
+*(Phases A–E and most of F are already shipped — see §0 Status. The sections
+below are kept as the original scope-of-work for each phase, useful when
+debugging what was supposed to land.)*
+
 ### Phase A — Firebase project + Auth (no game changes)
 - Create Firebase project, enable Spark→Blaze, register web app, drop config into `src/firebase.ts`.
 - Build `<AuthGate>` wrapper, Google + Email/Password sign-in screens.
@@ -426,6 +452,126 @@ End-to-end smoke test, in order:
 
 ---
 
-## 16. Next session
+## 16. Next session (historical)
 
 When you come back to start implementation, the natural first step is **Phase A**: create the Firebase project, set up the Auth screens, get `signInWithPopup` working. Do not start with the game logic — auth is the gate everything else hangs on, and the rest of the plan presumes a signed-in `users/{uid}` doc exists.
+
+*This section is preserved for history; Phases A–E + most of F are already shipped (see §0). Active future work lives in §17.*
+
+---
+
+## 17. Future operational improvements (post-v59)
+
+Ordered by when they'll bite. None are blocking the current launch but every
+one is worth tracking before sustained user growth makes them painful.
+
+### 17.1 Cold-start latency on first move — **monitor; switch to minInstances when traffic warrants**
+
+**Symptom.** During quiet periods (no MP games in the last ~15 min), the first
+move of a fresh game feels laggy — ~1–2 seconds from click to opponent seeing
+the dot. Moves 3+ are snappy. Tester quote: *"the 3rd and the next look ok…
+it's like before the game starts I get less resources from the server and only
+then it somehow gives more speed."*
+
+**Diagnosis.** Cloud Functions Gen 2 de-provisions an idle container after
+~15 min. Cold start cost on `validateMove`:
+- Container boot: ~300–800 ms
+- Node 22 init: ~200–400 ms
+- Load `firebase-admin` + `firebase-functions` + shared engine: ~300–500 ms
+- `initializeApp()` + DB handles: ~100–200 ms
+- Actual move validation: ~50–100 ms
+
+Total cold: ~1–2 s. Warm: ~80–200 ms. Same applies to `matchmake`,
+`finalizeGame`, `startClockWhenBoardsLoaded`, `rematchGame`.
+
+**The user's own moves DON'T feel laggy** because v53 optimistic UI applies
+the move locally on click. The lag is felt as (a) opponent waiting to see
+your first move, and (b) you being unable to make your *second* move until
+the first one's server confirmation lands.
+
+**Options (ordered by cost):**
+
+| Option | Cost | Pros | Cons |
+|---|---|---|---|
+| **A. Pre-warm from lobby** | Free | Add an HTTP wrapper to `validateMove` (or a dedicated `warmMove` HTTP function). When the user enters MultiplayerLobby OR matchFound, fire a no-op POST. By the time they make their first move, container is hot. | Hacky. Adds an HTTP endpoint surface. Doesn't help if matchmaking is instant. |
+| **B. `minInstances: 1`** on hot-path functions | ~$5/mo per fn (256 MB) | Cleanest fix. Container always warm, zero cold starts. Industry standard for production. | Breaks the zero-cost CLAUDE.md rule. ~$10–25/month total if applied to `validateMove` + `matchmake`. |
+| **C. Cloud Scheduler keep-warm ping** | Free (3 jobs free tier) | Schedule a free ping every 5 min. Cheaper than minInstances. | Needs an HTTP wrapper. Spends invocations on nothing. |
+| **D. Accept it** | Free | At meaningful traffic (~5 games/hour) the container basically never cools down. | Quiet-period users still suffer; bad first impression for trickle traffic. |
+
+**Plan:** Stay on D for now. Switch to B once daily traffic justifies it.
+Concrete trigger: when sustained nightly periods of >30-minute function
+idleness drop below 30% of the active day (i.e. someone is playing most of
+the time), the cold-start window shrinks naturally. Until then, the ~$10/mo
+of minInstances is the right buy. Watch Firebase Console → Functions →
+Metrics → "Cold start count" weekly.
+
+**Also worth tracking** (related, but cheaper to fix individually):
+- **First RTDB WebSocket connection** takes 200–500 ms to fully establish.
+  Could be hidden by calling `goOnline()` early (e.g. on entering the lobby)
+  to warm the socket before the first write.
+- **Client bundle size** — 950 KB raw / 235 KB gzipped. Code-splitting the
+  whole `cloud/` + `auth/` surface behind sign-in would shave ~150 KB off
+  the initial bundle. Real concern before public launch, low urgency today.
+
+### 17.2 Global leaderboard
+
+Phase F item, not yet built. Firestore composite index already exists for
+`matches.playerUids array-contains, finishedAt DESC`; would need a similar
+index on `users.rating DESC` + a daily cron to materialize the top-100 into
+a denormalized doc (so we don't pay 100 reads per leaderboard open).
+Provisional players (placementGamesPlayed < 10) should be excluded.
+
+### 17.3 Friend invite (private match by username or code)
+
+Most-requested missing feature across every adult tester band per the v58
+age-banded review. Schema sketch:
+- `inviteCodes/{code}` — short base32 codes, TTL ~1 hour, single-use.
+- Or a username-direct invite that writes to `invites/{toUid}/{fromUid}`,
+  the recipient sees a popup, accepts → match created same as ranked but
+  with `ranked: false` (unless both opt in).
+- Friend invites do NOT mutate Elo by default. A "Play for rating?" toggle
+  in the invite dialog can re-enable it.
+
+### 17.4 Replays
+
+Schema is ready — store `moves: GameAction[]` on `matches/{id}` from
+`finalizeGame`. Viewer is the missing piece (a stepped re-apply of actions
+through `applyAction` from initial state, same engine the live game uses).
+Maybe a 4-hour build.
+
+### 17.5 "Play as guest" multiplayer (no account)
+
+The single biggest accessibility add for the 65+ bands per the v58 review.
+Sign-in is their dominant drop-off. A guest flow that skips account creation
+but still gets paired (with no Elo, no match history) would unlock that
+demographic. Schema lift: `users/{anonUid}` with `isGuest: true`, exclude
+from leaderboard, allow re-claim into a real account later.
+
+### 17.6 Untimed time control
+
+Band H (81-100) testers consistently asked for a no-clock or 15-min Slow
+option. Schema adds `'untimed'` to the `TimeControl` union. Engine
+unaffected; `validateMove` skips clock deductions when `timeControl ===
+'untimed'`. UI hides the ClockBadge.
+
+### 17.7 Production domain cutover (www.dotduel.com)
+
+Staging on GitHub Pages still. Cutover blocked on:
+- Privacy / Contact footer stubs (legal copy required for EU sign-ups).
+- Account deletion / GDPR Cloud Function (delete users/{uid}, scrub their
+  uid from matches.p1Uid/p2Uid).
+- Email-verification gating decision for ranked play.
+
+### 17.8 Theme picker discoverability (UX, not multiplayer)
+
+Tracked here so it doesn't get lost. The v58 age-banded review showed
+discovery falls off a cliff at 65+ (71% → 40% → 18% → 6% across bands E,
+F, G, H). Cheapest fix: enlarge icon + add the word "Themes" beside it.
+Best fix: first-launch theme prompt via TutorialPopover ("Find a colour
+you can read"). Half a day of work.
+
+### 17.9 Bullet (1 min) hidden by default above age 50
+
+Same source. Bullet is unplayable for 60+ and chosen by 0% of 65+ testers.
+A simple `age >= 50` heuristic (or just always default to Blitz) would
+prevent first-time elder users from trying Bullet, panicking, and bouncing.

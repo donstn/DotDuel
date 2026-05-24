@@ -64,14 +64,15 @@ export const THEMES: ThemeMeta[] = [
   {
     id: 'monochrome-pro',
     label: 'Monochrome Pro',
-    tagline: 'Go-board minimal. Maximum contrast.',
-    swatch: { p1: '#3a3b3c', p2: '#f5f5f0', bg: '#1c1c1a' },
+    tagline: 'Black & white pieces on wood. Maximum contrast.',
+    swatch: { p1: '#1a1a1c', p2: '#ffffff', bg: '#e8d8c0' },
+    isLight: true,
   },
   {
     id: 'vintage-press',
     label: 'Vintage Press',
-    tagline: 'Burgundy ink on parchment. Sun-friendly.',
-    swatch: { p1: '#8b1f33', p2: '#ede0c3', bg: '#f0e7d0' },
+    tagline: 'Burgundy & navy ink on parchment. Sun-friendly.',
+    swatch: { p1: '#8b1a2b', p2: '#1a3a4a', bg: '#f4ecd6' },
     isLight: true,
   },
 ];

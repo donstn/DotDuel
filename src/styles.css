@@ -46,6 +46,10 @@
   --text-mute: #5e7368;
   --text-bright: #ffffff;
 
+  /* Title gradient (DotDuel wordmark) */
+  --title-grad-top: #ffffff;
+  --title-grad-bottom: #b9d6c4;
+
   /* Misc */
   --accent: #7bdb95;
   --danger: #d97565;
@@ -188,65 +192,97 @@
   --accent: #67e8f9;
 }
 
-/* ---------- THEME 7: Monochrome Pro (charcoal + pearl) ---------- */
+/* ---------- THEME 7: Monochrome Pro (LIGHT — black + white on wood) ----------
+ * Go-board feel: warm tan wood background with true black and true white
+ * pieces. Maximum luminance contrast — best CVD safety of any theme.
+ * Second of the two light-bg themes.
+ */
 [data-theme="monochrome-pro"] {
-  --p1: #222324;
-  --p1-glow: #3a3b3c;
-  --p1-bright: #707172;
-  --p1-deep: #08090a;
-  --p1-rgb-bright: 112, 113, 114;
-  --p1-rgb-glow: 58, 59, 60;
-  --strike-p1-outer: #3a3b3c;
-  --strike-p1-inner: #b0b1b2;
-  --avatar-p1-fg: #c8c8c8;
+  /* Player 1 — deep black */
+  --p1: #1a1a1c;
+  --p1-glow: #2c2c2e;
+  --p1-bright: #5a5a5c;
+  --p1-deep: #000000;
+  --p1-rgb-bright: 90, 90, 92;
+  --p1-rgb-glow: 44, 44, 46;
+  --strike-p1-outer: #1a1a1c;
+  --strike-p1-inner: #6a6a6c;
+  --avatar-p1-fg: #e8e8e8;
 
-  --p2: #e5e5e0;
-  --p2-glow: #f5f5f0;
+  /* Player 2 — pure white */
+  --p2: #ffffff;
+  --p2-glow: #fafafa;
   --p2-bright: #ffffff;
-  --p2-deep: #6a6a65;
-  --p2-rgb-bright: 245, 245, 240;
-  --p2-rgb-glow: 229, 229, 224;
-  --strike-p2-outer: #c0c0bc;
+  --p2-deep: #888888;
+  --p2-rgb-bright: 255, 255, 255;
+  --p2-rgb-glow: 245, 245, 245;
+  --strike-p2-outer: #888888;
   --strike-p2-inner: #ffffff;
   --avatar-p2-fg: #1a1a1a;
 
-  --bg-center: #1c1c1a;
-  --bg-edge: #040404;
-  --accent: #b8b8b8;
+  /* Warm wood-tone bg */
+  --bg-center: #e8d8c0;
+  --bg-edge: #c8b896;
+
+  /* Dark-tinted glass on light wood */
+  --glass-bg: rgba(30, 20, 8, 0.05);
+  --glass-bg-strong: rgba(30, 20, 8, 0.1);
+  --glass-border: rgba(30, 20, 8, 0.22);
+  --glass-border-strong: rgba(30, 20, 8, 0.38);
+  --glass-shadow: 0 8px 24px rgba(60, 40, 20, 0.18), 0 1px 0 rgba(255, 245, 220, 0.45) inset;
+  --glass-shadow-strong: 0 16px 36px rgba(60, 40, 20, 0.24), 0 1px 0 rgba(255, 245, 220, 0.55) inset;
+
+  --text: #1a1a1a;
+  --text-dim: #4a4a4a;
+  --text-mute: #7a7a7a;
+  --text-bright: #000000;
+
+  --title-grad-top: #1a1a1c;
+  --title-grad-bottom: #5a5a5c;
+
+  --accent: #1a1a1c;
 }
 
-/* ---------- THEME 8: Vintage Press (LIGHT — burgundy + parchment) ---------- */
+/* ---------- THEME 8: Vintage Press (LIGHT — burgundy ink + navy ink on parchment) ----------
+ * Both players use DARK ink colors (not "lighter player = paler") because a
+ * light background needs dark pieces for visibility. Classic vintage-book
+ * combo: red and blue/black inks on cream stock. Hue distinguishes the
+ * players; the luminance gap (burgundy mid vs navy deeper) keeps it CVD-safe.
+ */
 [data-theme="vintage-press"] {
-  --p1: #641a2a;
-  --p1-glow: #8b1f33;
-  --p1-bright: #bf3f56;
-  --p1-deep: #2a0810;
-  --p1-rgb-bright: 100, 26, 42;
-  --p1-rgb-glow: 139, 31, 51;
-  --strike-p1-outer: #8b1f33;
-  --strike-p1-inner: #e8a8b5;
-  --avatar-p1-fg: #fce0e6;
+  /* Player 1 — burgundy ink */
+  --p1: #8b1a2b;
+  --p1-glow: #a82a3e;
+  --p1-bright: #c54d62;
+  --p1-deep: #3a0810;
+  --p1-rgb-bright: 197, 77, 98;
+  --p1-rgb-glow: 168, 42, 62;
+  --strike-p1-outer: #8b1a2b;
+  --strike-p1-inner: #c54d62;
+  --avatar-p1-fg: #fff0e8;
 
-  --p2: #e0d4b8;
-  --p2-glow: #ede0c3;
-  --p2-bright: #f8eed3;
-  --p2-deep: #7a6c4d;
-  --p2-rgb-bright: 122, 108, 77;
-  --p2-rgb-glow: 154, 134, 95;
-  --strike-p2-outer: #b8a070;
-  --strike-p2-inner: #fcf5e0;
-  --avatar-p2-fg: #2a1f0e;
+  /* Player 2 — deep navy/teal ink (intentionally another DARK color, not paper-pale) */
+  --p2: #1a3a4a;
+  --p2-glow: #28526a;
+  --p2-bright: #4a7898;
+  --p2-deep: #04101a;
+  --p2-rgb-bright: 74, 120, 152;
+  --p2-rgb-glow: 40, 82, 106;
+  --strike-p2-outer: #1a3a4a;
+  --strike-p2-inner: #4a7898;
+  --avatar-p2-fg: #eef5ff;
 
-  --bg-center: #f0e7d0;
-  --bg-edge: #d0c4a6;
+  /* Cream / aged-parchment radial */
+  --bg-center: #f4ecd6;
+  --bg-edge: #ddd1b0;
 
   /* Dark-tinted glass for legibility on light bg */
   --glass-bg: rgba(40, 24, 14, 0.05);
   --glass-bg-strong: rgba(40, 24, 14, 0.1);
-  --glass-border: rgba(40, 24, 14, 0.18);
-  --glass-border-strong: rgba(40, 24, 14, 0.32);
-  --glass-shadow: 0 8px 24px rgba(80, 50, 24, 0.18), 0 1px 0 rgba(255, 250, 232, 0.4) inset;
-  --glass-shadow-strong: 0 16px 36px rgba(80, 50, 24, 0.24), 0 1px 0 rgba(255, 250, 232, 0.5) inset;
+  --glass-border: rgba(40, 24, 14, 0.22);
+  --glass-border-strong: rgba(40, 24, 14, 0.38);
+  --glass-shadow: 0 8px 24px rgba(80, 50, 24, 0.18), 0 1px 0 rgba(255, 250, 232, 0.45) inset;
+  --glass-shadow-strong: 0 16px 36px rgba(80, 50, 24, 0.24), 0 1px 0 rgba(255, 250, 232, 0.55) inset;
 
   /* Dark text on light bg */
   --text: #2a1a14;
@@ -254,7 +290,11 @@
   --text-mute: #8a7868;
   --text-bright: #1a0a04;
 
-  --accent: #8b1f33;
+  /* Title wordmark — burgundy → navy ink gradient so the brand reads on cream */
+  --title-grad-top: #8b1a2b;
+  --title-grad-bottom: #1a3a4a;
+
+  --accent: #8b1a2b;
 }
 
 * {
@@ -350,7 +390,11 @@ button {
 }
 
 .title-text {
-  background: linear-gradient(180deg, #ffffff 0%, #b9d6c4 100%);
+  background: linear-gradient(
+    180deg,
+    var(--title-grad-top) 0%,
+    var(--title-grad-bottom) 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;

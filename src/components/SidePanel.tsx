@@ -29,6 +29,8 @@ interface SidePanelProps {
   stats?: PlayerRow | null;
   /** Optional control rendered directly under the player name (e.g. Resign). */
   actionSlot?: ReactNode;
+  /** Optional content rendered directly under the avatar (e.g. Elo). */
+  belowAvatar?: ReactNode;
 }
 
 function effectiveColor(player: Player, swap: boolean): 1 | 2 {
@@ -49,6 +51,7 @@ export function SidePanel({
   colorSwap = false,
   stats,
   actionSlot,
+  belowAvatar,
 }: SidePanelProps) {
   const color = effectiveColor(player, colorSwap);
   const cls = [
@@ -71,6 +74,7 @@ export function SidePanel({
           <AIAvatar level={avatar.level} />
         )}
       </div>
+      {belowAvatar && <div className="player-below-avatar">{belowAvatar}</div>}
       <div className="player-name" title={name}>
         {name}
       </div>

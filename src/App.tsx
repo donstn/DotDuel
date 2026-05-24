@@ -44,6 +44,10 @@ import {
   watchSession,
   type GameSession,
 } from './cloud/gameSession';
+import {
+  watchMatch,
+  type MatchRecord,
+} from './cloud/matchHistory';
 import { ClockBadge } from './components/ClockBadge';
 import { MatchFoundScreen } from './components/MatchFoundScreen';
 import { MatchmakingWaiting } from './components/MatchmakingWaiting';
@@ -117,6 +121,7 @@ export default function App() {
     baseTurn: number;
     state: GameState;
   } | null>(null);
+  const [mpMatchRecord, setMpMatchRecord] = useState<MatchRecord | null>(null);
   const mySessionIdRef = useRef<string>(getSessionId());
   const [activeGameSession, setActiveGameSession] =
     useState<GameSession | null>(null);
@@ -507,6 +512,16 @@ export default function App() {
     };
   }, [onlineGameId]);
 
+  // Subscribe to the Firestore match doc so we can read the Elo deltas
+  // written by finalizeGame after the game ends.
+  useEffect(() => {
+    if (!onlineGameId) {
+      setMpMatchRecord(null);
+      return;
+    }
+    return watchMatch(onlineGameId, setMpMatchRecord);
+  }, [onlineGameId]);
+
   // Server-confirmed state advance clears the in-flight flag.
   useEffect(() => {
     setMoveInFlight(false);
@@ -711,8 +726,13 @@ export default function App() {
     const mpShape = onlineGame.shape;
     const myName = effectiveGameName ?? 'You';
     const oppName = pairing.opponentDisplayName;
-    const mpP1Name = pairing.player === 1 ? oppName : myName;
-    const mpP2Name = pairing.player === 1 ? myName : oppName;
+    // pairing.player is THIS user's slot. P1 panel shows whoever holds slot 1.
+    const mpP1Name = pairing.player === 1 ? myName : oppName;
+    const mpP2Name = pairing.player === 2 ? myName : oppName;
+    const myRating = cloudProfile?.rating ?? 1000;
+    const oppRating = pairing.opponentRating;
+    const mpP1Elo = pairing.player === 1 ? myRating : oppRating;
+    const mpP2Elo = pairing.player === 2 ? myRating : oppRating;
     const mpTotalPoints = getBoard(mpShape).lines.reduce((sum, l) => sum + l.length, 0);
     const mpRemaining = mpTotalPoints - mpState.scores[1] - mpState.scores[2];
     const mpShowOver = mpState.finished;
@@ -776,6 +796,7 @@ export default function App() {
             avatar="human"
             stats={null}
             ratingSlot={p1Clock}
+            belowAvatar={<span className="player-elo">{mpP1Elo}</span>}
             actionSlot={
               myNum === 1 && !mpState.finished ? (
                 <button
@@ -805,6 +826,7 @@ export default function App() {
             avatar="human"
             stats={null}
             ratingSlot={p2Clock}
+            belowAvatar={<span className="player-elo">{mpP2Elo}</span>}
             actionSlot={
               myNum === 2 && !mpState.finished ? (
                 <button
@@ -833,6 +855,24 @@ export default function App() {
             myPlayer={myNum ?? undefined}
             finishedReason={onlineGame.finishedReason}
             rematchLabel={formatRematchLabel(onlineGame.timeControl)}
+            ratingChange={
+              myNum && mpMatchRecord?.eloFinalized
+                ? {
+                    before:
+                      myNum === 1
+                        ? mpMatchRecord.p1RatingBefore
+                        : mpMatchRecord.p2RatingBefore,
+                    after:
+                      myNum === 1
+                        ? mpMatchRecord.p1RatingAfter
+                        : mpMatchRecord.p2RatingAfter,
+                    delta:
+                      myNum === 1
+                        ? mpMatchRecord.p1RatingDelta
+                        : mpMatchRecord.p2RatingDelta,
+                  }
+                : undefined
+            }
           />
         )}
         {resignConfirmOpen && !mpState.finished && (
@@ -948,7 +988,7 @@ export default function App() {
           <ProfilePopover
             user={user}
             settings={settings}
-            cloudDisplayName={cloudProfile?.displayName ?? null}
+            cloudProfile={cloudProfile}
             onSignOut={() => void onSignOutSafe()}
             onRename={() => {
               setProfileOpen(false);
@@ -974,6 +1014,7 @@ export default function App() {
                 createdAt: prev?.createdAt ?? null,
                 displayName: newName,
                 rating: prev?.rating ?? 1000,
+                placementGamesPlayed: prev?.placementGamesPlayed ?? 0,
               }));
             }}
           />
@@ -1129,7 +1170,7 @@ export default function App() {
         <ProfilePopover
           user={user}
           settings={settings}
-          cloudDisplayName={cloudProfile?.displayName ?? null}
+          cloudProfile={cloudProfile}
           onSignOut={() => void onSignOutSafe()}
           onRename={() => {
             setProfileOpen(false);
@@ -1155,6 +1196,7 @@ export default function App() {
               createdAt: prev?.createdAt ?? null,
               displayName: newName,
               rating: prev?.rating ?? 1000,
+              placementGamesPlayed: prev?.placementGamesPlayed ?? 0,
             }));
           }}
         />

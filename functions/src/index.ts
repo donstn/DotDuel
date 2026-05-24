@@ -176,6 +176,7 @@ export const matchmake = onDocumentCreated(
           p2Uid,
           p1Display,
           p2Display,
+          playerUids: [p1Uid, p2Uid],
           ranked: true,
         });
         tx.set(newPairRef, {
@@ -413,6 +414,183 @@ export const validateMove = onValueWritten(
         ts: Date.now(),
       });
       await moveRef.remove();
+    }
+  },
+);
+
+// Phase E.2 — Elo + match history finalization.
+//
+// Per-player placement K-factor (games 1..10), then K=32 steady-state.
+// Locked in docs/multiplayer-roadmap.md §6.2.
+const PLACEMENT_K: readonly number[] = [50, 45, 40, 35, 30, 25, 20, 15, 10, 10];
+const STEADY_K = 32;
+
+function kForPlacement(gamesPlayed: number): number {
+  if (gamesPlayed >= PLACEMENT_K.length) return STEADY_K;
+  return PLACEMENT_K[gamesPlayed];
+}
+
+function expectedScore(myRating: number, oppRating: number): number {
+  return 1 / (1 + Math.pow(10, (oppRating - myRating) / 400));
+}
+
+// Triggered when a game's top-level status flips to 'finished'. Reads the
+// final state from RTDB, computes Elo deltas for both players using their
+// own placement K, and writes the full match record + new user ratings
+// in a single Firestore transaction. Idempotent via matches.eloFinalized.
+export const finalizeGame = onValueWritten(
+  'games/{gameId}/status',
+  async (event) => {
+    const after = event.data.after.val();
+    const before = event.data.before.val();
+    if (after !== 'finished') return;
+    if (before === 'finished') return;
+
+    const gameId = event.params.gameId;
+    const rtdb = getDatabase();
+    const db = getFirestore();
+
+    const gameSnap = await rtdb.ref(`games/${gameId}`).get();
+    const game = gameSnap.val();
+    if (!game) {
+      logger.warn(`finalizeGame: RTDB game ${gameId} not found`);
+      return;
+    }
+
+    const matchRef = db.doc(`matches/${gameId}`);
+    const matchOuter = await matchRef.get();
+    const matchData = matchOuter.data();
+    if (!matchData) {
+      logger.warn(`finalizeGame: Firestore match ${gameId} not found`);
+      return;
+    }
+    if (matchData.eloFinalized === true) {
+      logger.info(`finalizeGame: ${gameId} already finalized`);
+      return;
+    }
+
+    const p1Uid = matchData.p1Uid as string | undefined;
+    const p2Uid = matchData.p2Uid as string | undefined;
+    if (!p1Uid || !p2Uid) {
+      logger.warn(`finalizeGame: missing player UIDs in match ${gameId}`);
+      return;
+    }
+
+    const state = normalizeState(game.state ?? {});
+    const winner = (game.winner ?? state.winner ?? null) as
+      | 1
+      | 2
+      | 'draw'
+      | null;
+    const finishedReason = (game.finishedReason ?? 'normal') as FinishedReason;
+    const finishedAt = (game.finishedAt ?? Date.now()) as number;
+    const gameStartedAt = (game.gameStartedAt ?? finishedAt) as number;
+    const durationMs = Math.max(0, finishedAt - gameStartedAt);
+    const p1Score = (state.scores?.[1] ?? 0) as number;
+    const p2Score = (state.scores?.[2] ?? 0) as number;
+    const ranked = matchData.ranked !== false;
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const p1Ref = db.doc(`users/${p1Uid}`);
+        const p2Ref = db.doc(`users/${p2Uid}`);
+        const [p1Snap, p2Snap, mSnap] = await Promise.all([
+          tx.get(p1Ref),
+          tx.get(p2Ref),
+          tx.get(matchRef),
+        ]);
+
+        if (mSnap.data()?.eloFinalized === true) return;
+
+        const p1 = p1Snap.data() ?? {};
+        const p2 = p2Snap.data() ?? {};
+        const p1RatingBefore =
+          typeof p1.rating === 'number' ? p1.rating : 1000;
+        const p2RatingBefore =
+          typeof p2.rating === 'number' ? p2.rating : 1000;
+        const p1Placement =
+          typeof p1.placementGamesPlayed === 'number'
+            ? p1.placementGamesPlayed
+            : 0;
+        const p2Placement =
+          typeof p2.placementGamesPlayed === 'number'
+            ? p2.placementGamesPlayed
+            : 0;
+
+        let p1Actual = 0.5;
+        let p2Actual = 0.5;
+        if (winner === 1) {
+          p1Actual = 1;
+          p2Actual = 0;
+        } else if (winner === 2) {
+          p1Actual = 0;
+          p2Actual = 1;
+        }
+
+        const p1Expected = expectedScore(p1RatingBefore, p2RatingBefore);
+        const p2Expected = 1 - p1Expected;
+
+        const p1K = kForPlacement(p1Placement);
+        const p2K = kForPlacement(p2Placement);
+
+        const p1Delta = ranked
+          ? Math.round(p1K * (p1Actual - p1Expected))
+          : 0;
+        const p2Delta = ranked
+          ? Math.round(p2K * (p2Actual - p2Expected))
+          : 0;
+        const p1RatingAfter = p1RatingBefore + p1Delta;
+        const p2RatingAfter = p2RatingBefore + p2Delta;
+
+        if (ranked) {
+          tx.set(
+            p1Ref,
+            {
+              rating: p1RatingAfter,
+              placementGamesPlayed: p1Placement + 1,
+            },
+            { merge: true },
+          );
+          tx.set(
+            p2Ref,
+            {
+              rating: p2RatingAfter,
+              placementGamesPlayed: p2Placement + 1,
+            },
+            { merge: true },
+          );
+        }
+
+        tx.set(
+          matchRef,
+          {
+            status: 'finished',
+            winner,
+            finishedReason,
+            finishedAt,
+            gameStartedAt,
+            durationMs,
+            p1ScoreFinal: p1Score,
+            p2ScoreFinal: p2Score,
+            p1RatingBefore,
+            p2RatingBefore,
+            p1RatingAfter,
+            p2RatingAfter,
+            p1RatingDelta: p1Delta,
+            p2RatingDelta: p2Delta,
+            // Make sure the array exists for legacy matches written
+            // before the matchmake change.
+            playerUids: [p1Uid, p2Uid],
+            eloFinalized: true,
+          },
+          { merge: true },
+        );
+      });
+      logger.info(
+        `finalizeGame: ${gameId} Elo applied (winner=${String(winner)}, reason=${finishedReason})`,
+      );
+    } catch (e) {
+      logger.error(`finalizeGame: transaction failed for ${gameId}`, e);
     }
   },
 );

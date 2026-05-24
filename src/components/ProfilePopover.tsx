@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { User } from 'firebase/auth';
 import {
   avgPerGame,
@@ -11,11 +11,19 @@ import {
   vsAITotal,
 } from '../storage';
 import type { Settings } from '../storage';
+import type { CloudProfile } from '../cloud/usernames';
+import {
+  fromMyPerspective,
+  watchRecentMatches,
+  type MatchRecord,
+} from '../cloud/matchHistory';
+
+const PLACEMENT_TOTAL = 10;
 
 interface Props {
   user: User;
   settings: Settings;
-  cloudDisplayName: string | null;
+  cloudProfile: CloudProfile | null;
   onSignOut: () => void;
   onRename: () => void;
   onClose: () => void;
@@ -24,11 +32,14 @@ interface Props {
 export function ProfilePopover({
   user,
   settings,
-  cloudDisplayName,
+  cloudProfile,
   onSignOut,
   onRename,
   onClose,
 }: Props) {
+  const cloudDisplayName = cloudProfile?.displayName ?? null;
+  const [recentMatches, setRecentMatches] = useState<MatchRecord[]>([]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -36,6 +47,10 @@ export function ProfilePopover({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  useEffect(() => {
+    return watchRecentMatches(user.uid, setRecentMatches, 5);
+  }, [user.uid]);
 
   const onBackdrop = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose();
@@ -122,6 +137,15 @@ export function ProfilePopover({
           </section>
 
           <section className="profile-section">
+            <h3>Multiplayer</h3>
+            <MultiplayerSection
+              cloudProfile={cloudProfile}
+              myUid={user.uid}
+              matches={recentMatches}
+            />
+          </section>
+
+          <section className="profile-section">
             <h3>Offline history — &ldquo;{localName}&rdquo;</h3>
             {totalAll === 0 ? (
               <p className="settings-hint">
@@ -178,5 +202,67 @@ export function ProfilePopover({
         </footer>
       </div>
     </div>
+  );
+}
+
+function MultiplayerSection({
+  cloudProfile,
+  myUid,
+  matches,
+}: {
+  cloudProfile: CloudProfile | null;
+  myUid: string;
+  matches: MatchRecord[];
+}) {
+  const rating = cloudProfile?.rating ?? 1000;
+  const placement = cloudProfile?.placementGamesPlayed ?? 0;
+  const provisional = placement < PLACEMENT_TOTAL;
+
+  return (
+    <>
+      <div className="profile-row">
+        <span>Rating</span>
+        <strong className="profile-rating">
+          {rating}
+          {provisional && (
+            <span className="provisional-badge" title="Rating stabilises after 10 ranked games">
+              Provisional {placement}/{PLACEMENT_TOTAL}
+            </span>
+          )}
+        </strong>
+      </div>
+      <div className="match-history">
+        <div className="match-history-label">Last {Math.min(matches.length, 5) || ''} matches</div>
+        {matches.length === 0 ? (
+          <p className="settings-hint">No ranked matches yet. Queue up from the menu.</p>
+        ) : (
+          <ul className="match-history-list">
+            {matches.map((m) => {
+              const v = fromMyPerspective(m, myUid);
+              const sign = v.myRatingDelta > 0 ? '+' : '';
+              return (
+                <li key={m.matchId} className={`match-row match-row-${v.result}`}>
+                  <span className={`match-result match-result-${v.result}`}>
+                    {v.result === 'win' ? 'W' : v.result === 'loss' ? 'L' : 'D'}
+                  </span>
+                  <span className="match-opponent" title={v.opponentDisplay}>
+                    {v.opponentDisplay}
+                  </span>
+                  <span className="match-score">
+                    {v.myScore}–{v.opponentScore}
+                  </span>
+                  <span
+                    className={`match-delta match-delta-${v.myRatingDelta > 0 ? 'up' : v.myRatingDelta < 0 ? 'down' : 'flat'}`}
+                  >
+                    {sign}
+                    {v.myRatingDelta}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </>
   );
 }

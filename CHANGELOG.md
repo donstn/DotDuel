@@ -7,6 +7,65 @@ All notable changes to DotDuel will be documented in this file. Format follows
 
 ### Added
 
+- **Elo visible in multiplayer side panels under each avatar.** Both
+  your own current rating and the opponent's pre-match rating appear
+  as a small pill right below the profile picture. Pulled from
+  `cloudProfile.rating` and `pairing.opponentRating`.
+- **GameOver shows rating before → after with coloured delta.** On
+  finish of a ranked multiplayer match, the card displays
+  `Rating 1024 → 1041 (+17)` — `+N` rendered green, `-N` red, `0`
+  amber. Sourced from the new `watchMatch` subscription to
+  `matches/{matchId}` which fires as soon as the `finalizeGame`
+  Cloud Function commits the deltas.
+
+### Changed
+
+- Rating removed from the vs-AI side panel (was added in v54). Per
+  spec, rating only shows when playing against another human.
+
+### Fixed
+
+- Player names in the multiplayer side panels were swapped.
+  `pairing.player` is the user's own slot, but the previous ternary
+  treated it as the opponent's, so each tab showed the opposite
+  player's name under the avatar. The game logic was unaffected
+  because click handlers and turn highlighting key off the
+  authoritative `myNum` derived from `playerUids` in RTDB — only
+  the displayed labels were wrong.
+
+### Added
+
+- **Phase E.2 — Elo rating + match history persistence.** New
+  `finalizeGame` Cloud Function (RTDB trigger on
+  `games/{id}/status` flipping to `'finished'`) computes Elo deltas
+  for both players using their own per-player K-factor (placement
+  table `50, 45, 40, 35, 30, 25, 20, 15, 10, 10` for the first 10
+  ranked games, then steady-state `K = 32`). One Firestore
+  transaction writes the new ratings into both `users/{uid}` docs,
+  and a complete match record into `matches/{matchId}` — both
+  players' UIDs/displayNames, ratings before+after with deltas,
+  final scores, shape, time control, gameStartedAt/finishedAt and
+  durationMs, finishedReason. Idempotent via an `eloFinalized` flag
+  so re-triggered events are safe. Unranked matches still record
+  the history but skip the rating update.
+- **Profile popover now has a Multiplayer section.** Shows current
+  rating with a `Provisional N/10` badge while
+  `placementGamesPlayed < 10`, plus a live-updating last-5-matches
+  list with opponent name, score, and ±rating delta per row.
+- **Side panel shows your live rating in vs-AI games.** Replaces
+  the placeholder `—` for the signed-in human player; the AI panel
+  still reads `—`. Hot-seat panels stay `—` (the device is shared
+  so showing the signed-in user's rating would be misleading).
+- New client module `src/cloud/matchHistory.ts` exposing
+  `watchRecentMatches(uid, callback, limit)` plus a
+  `fromMyPerspective(match, myUid)` helper that derives the
+  win/loss/draw and signed rating delta from either side of the
+  record. A single Firestore composite index
+  (`matches.playerUids array-contains, finishedAt DESC`) lets the
+  query run as one read instead of two.
+
+### Added
+
 - **Resign + back-button confirmation in multiplayer games.** The
   topbar now has an explicit **Resign** button to the left of the
   rules `?`. Pressing it (or the back `‹` arrow) while a match is

@@ -1,1 +1,1 @@
-export const APP_VERSION = 'v53 · optimistic moves + ready debug';
+export const APP_VERSION = 'v55 · Elo in panels + delta on GameOver';

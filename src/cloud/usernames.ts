@@ -14,6 +14,7 @@ export interface CloudProfile {
   email: string | null;
   authProvider: string | null;
   rating: number;
+  placementGamesPlayed: number;
   createdAt: unknown;
 }
 
@@ -67,6 +68,10 @@ function shapeProfile(data: DocumentData | undefined): CloudProfile {
     email: data?.email ?? null,
     authProvider: data?.authProvider ?? null,
     rating: typeof data?.rating === 'number' ? data.rating : 1000,
+    placementGamesPlayed:
+      typeof data?.placementGamesPlayed === 'number'
+        ? data.placementGamesPlayed
+        : 0,
     createdAt: data?.createdAt ?? null,
   };
 }

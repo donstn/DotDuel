@@ -8,6 +8,12 @@ interface UnlockResult {
 
 export type FinishedReason = 'normal' | 'timeout' | 'resign' | 'disconnect';
 
+interface RatingChange {
+  before: number;
+  after: number;
+  delta: number;
+}
+
 interface Props {
   state: GameState;
   mode: GameMode;
@@ -23,6 +29,7 @@ interface Props {
   myPlayer?: Player;
   finishedReason?: FinishedReason;
   rematchLabel?: string;
+  ratingChange?: RatingChange;
 }
 
 const SHAPE_NEXT: Record<ShapeId, ShapeId | null> = {
@@ -72,6 +79,7 @@ export function GameOver({
   myPlayer,
   finishedReason,
   rematchLabel,
+  ratingChange,
 }: Props) {
   const humanWon = mode === 'ai' && state.winner === 1;
   const beatImpossible = humanWon && difficulty === 5;
@@ -127,6 +135,26 @@ export function GameOver({
             <strong>{state.scores[2]}</strong>
           </div>
         </div>
+        {ratingChange && (
+          <div className="go-rating-change">
+            <span className="go-rating-label">Rating</span>
+            <span className="go-rating-before">{ratingChange.before}</span>
+            <span className="go-rating-arrow" aria-hidden="true">→</span>
+            <span className="go-rating-after">{ratingChange.after}</span>
+            <span
+              className={`go-rating-delta go-rating-delta-${
+                ratingChange.delta > 0
+                  ? 'pos'
+                  : ratingChange.delta < 0
+                    ? 'neg'
+                    : 'flat'
+              }`}
+            >
+              {ratingChange.delta > 0 ? '+' : ''}
+              {ratingChange.delta}
+            </span>
+          </div>
+        )}
         {suggestion}
         {mode === 'multiplayer' && onLobby ? (
           <div className="game-over-buttons">

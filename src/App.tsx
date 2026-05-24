@@ -454,12 +454,32 @@ export default function App() {
 
   const onConfirmResign = async () => {
     setResignConfirmOpen(false);
+    // vs-AI resign: flip state to finished with AI as winner. The existing
+    // state.finished effect will record the loss for the human.
+    if (
+      screen === 'game' &&
+      config?.mode === 'ai' &&
+      state &&
+      !state.finished
+    ) {
+      setState({ ...state, finished: true, winner: 2 });
+      return;
+    }
+    // Multiplayer resign: send to server.
     if (!onlineGameId || !user) return;
     try {
       await sendResign(onlineGameId, user.uid);
     } catch (e) {
       console.warn('sendResign failed:', e);
     }
+  };
+
+  const onAiBackPressed = () => {
+    if (!state || state.finished) {
+      backToMenu();
+      return;
+    }
+    setResignConfirmOpen(true);
   };
 
   // After a finished MP game, queue another match at the same time control
@@ -1092,10 +1112,13 @@ export default function App() {
   const p1Stats = getPlayerRow(p1Name);
   const p2StatsRow = config.mode === 'hotseat' ? getPlayerRow(p2Name) : null;
 
+  const aiResignAvailable = config.mode === 'ai' && !state.finished;
+  const backHandler = config.mode === 'ai' ? onAiBackPressed : backToMenu;
+
   return (
     <div className="game-screen">
       <div className="game-topbar">
-        <button className="btn-back" onClick={backToMenu} aria-label="Back to menu">
+        <button className="btn-back" onClick={backHandler} aria-label="Back to menu">
           ‹
         </button>
         <div className="topbar-center">
@@ -1134,6 +1157,17 @@ export default function App() {
           avatar={p1Avatar}
           colorSwap={colorSwap}
           stats={p1Stats}
+          actionSlot={
+            aiResignAvailable ? (
+              <button
+                className="btn-resign-inline"
+                onClick={() => setResignConfirmOpen(true)}
+                title="Resign and end the game"
+              >
+                Resign
+              </button>
+            ) : null
+          }
         />
         <Board
           state={state}
@@ -1169,6 +1203,23 @@ export default function App() {
           onMenu={backToMenu}
           onStartShape={(s, d) => startGame('ai', s, d)}
         />
+      )}
+      {resignConfirmOpen && config.mode === 'ai' && !state.finished && (
+        <div
+          className="confirm-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setResignConfirmOpen(false)}
+        >
+          <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Resign?</h3>
+            <p>You'll lose this game.</p>
+            <div className="confirm-actions">
+              <button onClick={() => setResignConfirmOpen(false)}>Cancel</button>
+              <button className="danger" onClick={onConfirmResign}>Resign</button>
+            </div>
+          </div>
+        </div>
       )}
       <AppFooter
         onOpenRules={() => setRulesOpen(true)}

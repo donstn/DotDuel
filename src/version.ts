@@ -1,1 +1,1 @@
-export const APP_VERSION = 'v57 · colour themes (experimental)';
+export const APP_VERSION = 'v58 · vs-AI resign + back-confirm';

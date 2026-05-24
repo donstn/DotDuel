@@ -1,1 +1,1 @@
-export const APP_VERSION = 'v62 · GDPR compliance baseline';
+export const APP_VERSION = 'v62.1 · custom domain re-cutover';

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppFooter } from './components/AppFooter';
 import { Board } from './components/Board';
+import { ChangelogPopover } from './components/ChangelogPopover';
 import { ConsentBanner } from './components/ConsentBanner';
 import { GameOver } from './components/GameOver';
 import { Menu } from './components/Menu';
@@ -137,6 +138,7 @@ export default function App() {
   const [themeOpen, setThemeOpen] = useState(false);
   const [consent, setConsentState] = useState<Consent | null>(loadConsent);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
   const { user, signOut } = useAuth();
   const aiTimer = useRef<number | null>(null);
   const winRecorded = useRef(false);
@@ -1009,6 +1011,7 @@ export default function App() {
           onOpenRules={() => setRulesOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPrivacy={() => setPrivacyOpen(true)}
+          onOpenChangelog={() => setChangelogOpen(true)}
           version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
@@ -1018,6 +1021,9 @@ export default function App() {
             consent={consent}
             onChangeConsent={changeAnalyticsConsent}
           />
+        )}
+        {changelogOpen && (
+          <ChangelogPopover onClose={() => setChangelogOpen(false)} />
         )}
         {consent === null && (
           <ConsentBanner
@@ -1100,6 +1106,7 @@ export default function App() {
           onOpenRules={() => setRulesOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPrivacy={() => setPrivacyOpen(true)}
+          onOpenChangelog={() => setChangelogOpen(true)}
           version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
@@ -1109,6 +1116,9 @@ export default function App() {
             consent={consent}
             onChangeConsent={changeAnalyticsConsent}
           />
+        )}
+        {changelogOpen && (
+          <ChangelogPopover onClose={() => setChangelogOpen(false)} />
         )}
         {consent === null && (
           <ConsentBanner
@@ -1350,6 +1360,7 @@ export default function App() {
         onOpenRules={() => setRulesOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenPrivacy={() => setPrivacyOpen(true)}
+        onOpenChangelog={() => setChangelogOpen(true)}
         version={APP_VERSION}
       />
       {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
@@ -1359,6 +1370,9 @@ export default function App() {
           consent={consent}
           onChangeConsent={changeAnalyticsConsent}
         />
+      )}
+      {changelogOpen && (
+        <ChangelogPopover onClose={() => setChangelogOpen(false)} />
       )}
       {consent === null && (
         <ConsentBanner

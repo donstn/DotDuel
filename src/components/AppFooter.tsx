@@ -2,6 +2,7 @@ interface Props {
   onOpenRules: () => void;
   onOpenSettings: () => void;
   onOpenPrivacy: () => void;
+  onOpenChangelog: () => void;
   version: string;
 }
 
@@ -9,6 +10,7 @@ export function AppFooter({
   onOpenRules,
   onOpenSettings,
   onOpenPrivacy,
+  onOpenChangelog,
   version,
 }: Props) {
   return (
@@ -46,7 +48,14 @@ export function AppFooter({
           Privacy
         </a>
         <span className="sep">·</span>
-        <span className="app-footer-version">{version}</span>
+        <button
+          type="button"
+          className="app-footer-version app-footer-version-btn"
+          onClick={onOpenChangelog}
+          title="See what's new"
+        >
+          {version}
+        </button>
       </div>
     </footer>
   );

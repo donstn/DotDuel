@@ -498,12 +498,13 @@ the first one's server confirmation lands.
 | **C. Cloud Scheduler keep-warm ping** | Free (3 jobs free tier) | Schedule a free ping every 5 min. Cheaper than minInstances. | Needs an HTTP wrapper. Spends invocations on nothing. |
 | **D. Accept it** | Free | At meaningful traffic (~5 games/hour) the container basically never cools down. | Quiet-period users still suffer; bad first impression for trickle traffic. |
 
-**Plan:** Stay on D for now. Switch to B once daily traffic justifies it.
-Concrete trigger: when sustained nightly periods of >30-minute function
-idleness drop below 30% of the active day (i.e. someone is playing most of
-the time), the cold-start window shrinks naturally. Until then, the ~$10/mo
-of minInstances is the right buy. Watch Firebase Console → Functions →
-Metrics → "Cold start count" weekly.
+**Plan:** Stay on D until we have **~1,000 signed-up users** (user decision
+2026-05-25). At that traffic level there's enough sustained MP activity to
+keep the function naturally warm during peak hours, AND enough revenue
+upside that ~$10/mo of minInstances on `validateMove` + `matchmake` is
+trivially justified. Re-evaluate at that milestone: if cold-start metrics
+are already low, stay on D; otherwise switch to B. Watch Firebase Console
+→ Functions → Metrics → "Cold start count" weekly to confirm.
 
 **Also worth tracking** (related, but cheaper to fix individually):
 - **First RTDB WebSocket connection** takes 200–500 ms to fully establish.

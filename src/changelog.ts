@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.2.1',
+    date: '2026-05-25',
+    highlight: 'Theme polish',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Each colour theme now has its own text and wordmark colours instead of borrowing the default green',
+      },
+      {
+        kind: 'fixed',
+        text: 'Provisional badge was invisible on the Vintage Press parchment theme',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.2',
     date: '2026-05-25',
     highlight: 'UX polish',

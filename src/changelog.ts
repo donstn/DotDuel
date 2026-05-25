@@ -54,6 +54,14 @@ export const CHANGELOG: ChangelogEntry[] = [
         kind: 'fixed',
         text: 'Mobile popovers were impossible to close — close button now reliably reachable',
       },
+      {
+        kind: 'fixed',
+        text: 'Footer pill wraps to a second line on narrow phones instead of being cut off',
+      },
+      {
+        kind: 'fixed',
+        text: 'Theme picker and other popovers are now properly scrollable when content is taller than the screen',
+      },
     ],
   },
   {

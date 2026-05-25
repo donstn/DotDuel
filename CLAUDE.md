@@ -128,6 +128,17 @@ Triangle and rhombus use a **triangular lattice** — only 3 line directions exi
 
 ## UI rules
 
+### Hard rule — nothing goes outside the viewport on a non-scrollable page
+
+`body { overflow: hidden }` is in place — the game itself never scrolls, by design. The corollary, which has bitten us multiple times on mobile, is that **every interactive surface (popovers, footers, banners, modals) must fit within the visible viewport at the smallest target device size (iPhone SE class, ~320×568 effective)**. Things that can violate this:
+
+- **Inline-flex rows without `flex-wrap`** — long pill rows like the AppFooter (`Rules · Settings · Privacy · Theme · version`) extend past the right edge silently. Always allow wrap with `flex-wrap: wrap; justify-content: center; max-width: 100%` on these.
+- **Popover max-height using `100vh`** — on mobile Safari and Brave, `100vh` is the *largest* possible viewport (URL bar collapsed). When the URL bar is visible, content gets cut off the bottom. Use the cascade `max-height: 100vh; max-height: 100dvh; max-height: 100svh;` — `svh` (small viewport) is the safest target.
+- **Flex columns that forget `min-height: 0`** — a flex child with `overflow-y: auto` will refuse to scroll if its `min-height` defaults to `auto`; the body's intrinsic content height "wins" and the parent's `overflow: hidden` clips the footer.
+- **`position: fixed` overlays (e.g. the consent banner)** silently cover the bottom of unrelated content. Use `body:has(.banner-class) .other-thing { padding-bottom: ... }` to reserve space.
+
+When a layout can't be reduced enough, the bottom row(s) of items must wrap, scroll, or proportionally shrink — but never disappear off-screen. If you find yourself thinking "this will fit on most phones," double-check on an emulated 320px-wide viewport before merging.
+
 ### Theme — Glass Orb
 
 The entire app uses a **glassmorphism** treatment over a dark green vignette background (`#15291e` center → `#02090b` edges) with a subtle film-grain overlay. Cards, HUD, side panels, modals, footer are all `backdrop-filter: blur(...) saturate(...)` with thin gradient borders.

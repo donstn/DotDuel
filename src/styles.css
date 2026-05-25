@@ -2121,6 +2121,21 @@ button {
 
 /* ---------------- GDPR consent banner ---------------- */
 
+/* When the banner is present anywhere in the document, reserve room
+   for it at the bottom of the game screen so it doesn't overlay the
+   board's last rows. CSS :has() is supported on all modern browsers
+   as of mid-2023. */
+body:has(.consent-banner) .game-screen {
+  padding-bottom: 110px;
+}
+
+@media (max-width: 720px) {
+  body:has(.consent-banner) .game-screen {
+    /* Banner is taller on narrow phones (text wraps to 3 lines). */
+    padding-bottom: 160px;
+  }
+}
+
 .consent-banner {
   position: fixed;
   left: 12px;
@@ -2745,7 +2760,12 @@ button {
 @media (max-width: 720px), (orientation: landscape) and (max-height: 500px) {
   .game-body {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* minmax(0, 1fr) is the trick — '1fr' alone defaults to
+       minmax(auto, 1fr), so the column refuses to shrink below the
+       content's intrinsic min-width and the grid can overflow the
+       viewport horizontally (which is what was clipping the AI card).
+       minmax(0, 1fr) lets the column shrink to whatever fits. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-rows: auto 1fr;
     grid-template-areas:
       "p1 p2"
@@ -2753,6 +2773,7 @@ button {
     gap: 6px;
     padding: 6px;
     align-items: stretch;
+    overflow: hidden;
   }
 
   .side-panel-left { grid-area: p1; }
@@ -2760,12 +2781,14 @@ button {
   .board-wrap {
     grid-area: board;
     padding: 14px 0 10px;
+    min-height: 0;
   }
 
   .side-panel,
   .side-panel-left,
   .side-panel-right {
     width: auto;
+    min-width: 0;
     flex-direction: row;
     align-items: center;
     gap: 10px;
@@ -2773,6 +2796,7 @@ button {
     border-radius: var(--radius);
     margin: 0;
     border: 1px solid var(--glass-border);
+    overflow: hidden;
   }
 
   .avatar-frame {

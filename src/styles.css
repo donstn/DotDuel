@@ -82,6 +82,16 @@
   --bg-center: #1a0e2e;
   --bg-edge: #02010a;
   --accent: #f5d76a;
+
+  /* Warm champagne text tones — harmonises with the gold accent
+     and lifts away from the violet bg. Previously inherited the
+     default cream-green which looked "borrowed" from Forest & Pearl. */
+  --text: #f0e6c8;
+  --text-dim: #b0a585;
+  --text-mute: #7d7458;
+  --text-bright: #fff8e0;
+  --title-grad-top: #fff8e0;
+  --title-grad-bottom: #f5d76a;
 }
 
 /* ---------- THEME 3: Tempo Rivals (wine red + sky blue) ---------- */
@@ -109,6 +119,16 @@
   --bg-center: #1a1f2a;
   --bg-edge: #02060a;
   --accent: #5fb3d4;
+
+  /* Cool steel-blue text tones — harmonises with the sky-blue
+     accent and the charcoal-blue bg. Previously inherited the
+     default cream-green which clashed with the cool palette. */
+  --text: #dfe7ee;
+  --text-dim: #9aa7b3;
+  --text-mute: #5f6975;
+  --text-bright: #f5f8fb;
+  --title-grad-top: #f5f8fb;
+  --title-grad-bottom: #a8d8ec;
 }
 
 /* ---------- THEME 4: Sunset Catan (terracotta + parchment) ---------- */
@@ -136,6 +156,16 @@
   --bg-center: #3a2418;
   --bg-edge: #0d0604;
   --accent: #e0a050;
+
+  /* Warm cream / parchment text tones — mirrors the P2 family
+     and harmonises with the dusk-brown bg. Previously inherited
+     the default cream-green which read cold against warm earth. */
+  --text: #f0e0c0;
+  --text-dim: #c4b08c;
+  --text-mute: #8b7656;
+  --text-bright: #fff5e0;
+  --title-grad-top: #fff5e0;
+  --title-grad-bottom: #e0a050;
 }
 
 /* ---------- THEME 5: Coral Reef (deep teal + coral) ---------- */
@@ -163,6 +193,16 @@
   --bg-center: #0a2030;
   --bg-edge: #01060a;
   --accent: #ff8c5a;
+
+  /* Sea-foam / icy aqua text tones — sits cleanly on the deep
+     ocean bg and harmonises with the teal P1 family. The pale
+     coral title-bottom keeps the accent identity in the wordmark. */
+  --text: #d8eef0;
+  --text-dim: #8ca6b0;
+  --text-mute: #4a5e68;
+  --text-bright: #f0fafc;
+  --title-grad-top: #f0fafc;
+  --title-grad-bottom: #ffb088;
 }
 
 /* ---------- THEME 6: Twilight Cosmos (indigo + cyan) ---------- */
@@ -190,6 +230,16 @@
   --bg-center: #0c0a1a;
   --bg-edge: #02010a;
   --accent: #67e8f9;
+
+  /* Icy lavender-white text tones — the indigo bg is too cool
+     for the default cream-green to feel native. Cyan title-bottom
+     locks the brand wordmark to the theme's accent. */
+  --text: #e0e0f5;
+  --text-dim: #9090b8;
+  --text-mute: #555578;
+  --text-bright: #ffffff;
+  --title-grad-top: #ffffff;
+  --title-grad-bottom: #67e8f9;
 }
 
 /* ---------- THEME 7: Monochrome Pro (LIGHT — black + white on wood) ----------
@@ -295,6 +345,15 @@
   --title-grad-bottom: #1a3a4a;
 
   --accent: #8b1a2b;
+}
+
+/* Vintage Press: the global provisional-badge styling uses a pale
+   gold pill which is nearly invisible on cream parchment. Darken
+   the pill + flip text to a deep tobacco for contrast. */
+[data-theme="vintage-press"] .provisional-badge {
+  background: rgba(160, 110, 30, 0.22);
+  border: 1px solid rgba(160, 110, 30, 0.45);
+  color: #6b4708;
 }
 
 * {

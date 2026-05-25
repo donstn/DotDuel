@@ -2784,49 +2784,44 @@ body:has(.consent-banner) .game-screen {
     min-height: 0;
   }
 
+  /* Mobile card layout: avatar on top, name below, resign below,
+     score at the bottom. Vertical stack inside each card.
+     Cards still sit side-by-side via the game-body grid. */
   .side-panel,
   .side-panel-left,
   .side-panel-right {
     width: auto;
     min-width: 0;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+    justify-content: flex-start;
+    gap: 4px;
+    padding: 8px 6px;
     border-radius: var(--radius);
     margin: 0;
     border: 1px solid var(--glass-border);
     overflow: hidden;
+    position: relative;
   }
 
   .avatar-frame {
-    width: clamp(40px, 11vw, 56px);
+    /* Scale fluidly: tiny on small phones, larger on tablets. */
+    width: clamp(36px, 11vw, 56px);
     flex-shrink: 0;
   }
 
   .player-name {
-    flex: 1;
+    flex: initial;
+    width: 100%;
     min-width: 0;
-    font-size: 0.88rem;
-    text-align: left;
+    font-size: 0.78rem;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 2px;
   }
 
-  .player-score {
-    font-size: 1.5rem;
-    margin: 0;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-
-  .player-stats,
-  .player-points-totals,
-  .player-rating {
-    display: none;
-  }
-
-  /* In the mobile row layout these slots were taking width: 100%, which
-     ate the row and pushed the score off-screen. Make them inline and
-     non-greedy here. */
   .player-action-slot,
   .player-below-avatar {
     width: auto;
@@ -2835,26 +2830,32 @@ body:has(.consent-banner) .game-screen {
   }
 
   .btn-resign-inline {
-    padding: 4px 8px;
-    font-size: 0.72rem;
+    padding: 3px 9px;
+    font-size: 0.7rem;
   }
 
-  /* Score must never get clipped — it's the most important number on
-     screen. Reserve enough width for two digits even on the tightest
-     phone (iPhone SE portrait ≈ 320px). */
   .player-score {
-    min-width: 1.8em;
-    text-align: right;
-    padding-right: 4px;
+    font-size: 1.4rem;
+    margin: 2px 0 0;
+    line-height: 1;
+    flex-shrink: 0;
+    min-width: 0;
+    text-align: center;
+    padding: 0;
+  }
+
+  .player-stats,
+  .player-points-totals,
+  .player-rating {
+    display: none;
   }
 
   .thinking-dots {
     position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
+    right: 6px;
+    top: 6px;
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     pointer-events: none;
   }
 }

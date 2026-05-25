@@ -30,6 +30,33 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.2',
+    date: '2026-05-25',
+    highlight: 'UX polish',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Theme picker now reachable from every screen via the footer',
+      },
+      {
+        kind: 'added',
+        text: 'Clock visible on mobile in multiplayer',
+      },
+      {
+        kind: 'changed',
+        text: "Last-move highlight now shows the opponent's dot, not yours",
+      },
+      {
+        kind: 'changed',
+        text: 'Win screen now tells you HOW you won (on time / on points / opponent resigned)',
+      },
+      {
+        kind: 'fixed',
+        text: 'Mobile popovers were impossible to close — close button now reliably reachable',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1',
     date: '2026-05-24',
     highlight: 'DotDuel goes live!',

@@ -80,7 +80,9 @@ export function SidePanel({
       </div>
       {actionSlot && <div className="player-action-slot">{actionSlot}</div>}
       {stats && <StatsPanel stats={stats} />}
-      <div className="player-rating">{ratingSlot ?? rating ?? '—'}</div>
+      {(ratingSlot || rating) && (
+        <div className="player-rating">{ratingSlot ?? rating}</div>
+      )}
       <div className="player-score">{score}</div>
       {stats && <PointsTotals stats={stats} />}
       {thinking && <div className="thinking-dots" aria-label="Thinking">···</div>}

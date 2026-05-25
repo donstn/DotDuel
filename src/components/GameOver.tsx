@@ -111,9 +111,13 @@ function multiplayerOutcome(
     return { title: 'Game ended in a draw', subtitle: null };
   }
   if (winner === me) {
-    return { title: 'You win', subtitle: null };
+    // Tell the winner HOW they won — symmetric to the loss messaging.
+    let subtitle = 'on points';
+    if (reason === 'timeout') subtitle = 'on time';
+    else if (reason === 'resign') subtitle = 'opponent resigned';
+    else if (reason === 'disconnect') subtitle = 'opponent disconnected';
+    return { title: 'You win', subtitle };
   }
-  // We lost. Explain how.
   let subtitle = 'on points';
   if (reason === 'timeout') subtitle = 'on time';
   else if (reason === 'resign') subtitle = 'you resigned';

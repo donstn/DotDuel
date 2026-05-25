@@ -601,6 +601,7 @@ export default function App() {
     setMpMatchRecord(null);
     setResignConfirmOpen(false);
     setLastDot(null);
+    prevMpColoredKeysRef.current = null;
   }, [onlineGameId]);
 
   // Subscribe to the RTDB game node whenever we have a matchId.
@@ -628,6 +629,35 @@ export default function App() {
   useEffect(() => {
     setMoveInFlight(false);
   }, [onlineGame?.state.turn]);
+
+  // Track the OPPONENT's most recently placed dot in MP. We don't
+  // highlight the user's own moves — only their opponent's. State-diff
+  // approach: every time the game state changes, look for newly
+  // coloured dots that don't belong to us and flag the latest.
+  const prevMpColoredKeysRef = useRef<Set<number> | null>(null);
+  useEffect(() => {
+    const game = onlineGame;
+    if (!game || !user) {
+      prevMpColoredKeysRef.current = null;
+      return;
+    }
+    const myNum = playerNumFor(game, user.uid);
+    if (!myNum) return;
+    const colored = game.state.colored ?? {};
+    const prev = prevMpColoredKeysRef.current;
+    if (prev !== null) {
+      let newestOpp: number | null = null;
+      for (const [idStr, dot] of Object.entries(colored)) {
+        const id = Number(idStr);
+        if (prev.has(id)) continue;
+        if (dot.player !== myNum) newestOpp = id;
+      }
+      if (newestOpp !== null) setLastDot(newestOpp);
+    }
+    const nextKeys = new Set<number>();
+    for (const idStr of Object.keys(colored)) nextKeys.add(Number(idStr));
+    prevMpColoredKeysRef.current = nextKeys;
+  }, [onlineGame?.state.colored, onlineGame?.state.turn, user]);
 
   // Drop optimistic state once the server's confirmed turn catches up.
   useEffect(() => {
@@ -717,7 +747,9 @@ export default function App() {
     if (moveInFlight) return;
     if (baseState.colored[dotId]) return;
     setMoveInFlight(true);
-    setLastDot(dotId);
+    // Note: we do NOT setLastDot here. The "last move" highlight is
+    // reserved for the OPPONENT's most recent placement, picked up by
+    // the state-diff effect below.
     try {
       const next = applyAction(baseState, { kind: 'dot', dotId });
       setOptimisticMpState({ baseTurn: baseState.turn, state: next });
@@ -767,7 +799,12 @@ export default function App() {
     if (config.mode === 'ai' && state.current === 2) return;
     if (state.colored[dotId]) return;
     const result = applyMove(state, dotId);
-    setLastDot(dotId);
+    // Hot-seat both players share the screen, so still flag the last
+    // dot. In vs-AI we ONLY highlight the AI's moves (set by the AI
+    // scheduler effect), not the user's — opponent-last-move UX.
+    if (config.mode === 'hotseat') {
+      setLastDot(dotId);
+    }
     setState(result.state);
   };
 
@@ -1012,6 +1049,7 @@ export default function App() {
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPrivacy={() => setPrivacyOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
+          onOpenThemes={() => setThemeOpen(true)}
           version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
@@ -1024,6 +1062,13 @@ export default function App() {
         )}
         {changelogOpen && (
           <ChangelogPopover onClose={() => setChangelogOpen(false)} />
+        )}
+        {themeOpen && (
+          <ThemePopover
+            current={theme}
+            onSelect={setTheme}
+            onClose={() => setThemeOpen(false)}
+          />
         )}
         {consent === null && (
           <ConsentBanner
@@ -1107,6 +1152,7 @@ export default function App() {
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPrivacy={() => setPrivacyOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
+          onOpenThemes={() => setThemeOpen(true)}
           version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
@@ -1119,6 +1165,13 @@ export default function App() {
         )}
         {changelogOpen && (
           <ChangelogPopover onClose={() => setChangelogOpen(false)} />
+        )}
+        {themeOpen && (
+          <ThemePopover
+            current={theme}
+            onSelect={setTheme}
+            onClose={() => setThemeOpen(false)}
+          />
         )}
         {consent === null && (
           <ConsentBanner
@@ -1361,6 +1414,7 @@ export default function App() {
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenPrivacy={() => setPrivacyOpen(true)}
         onOpenChangelog={() => setChangelogOpen(true)}
+        onOpenThemes={() => setThemeOpen(true)}
         version={APP_VERSION}
       />
       {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
@@ -1373,6 +1427,13 @@ export default function App() {
       )}
       {changelogOpen && (
         <ChangelogPopover onClose={() => setChangelogOpen(false)} />
+      )}
+      {themeOpen && (
+        <ThemePopover
+          current={theme}
+          onSelect={setTheme}
+          onClose={() => setThemeOpen(false)}
+        />
       )}
       {consent === null && (
         <ConsentBanner

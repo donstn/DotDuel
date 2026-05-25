@@ -3,6 +3,7 @@ interface Props {
   onOpenSettings: () => void;
   onOpenPrivacy: () => void;
   onOpenChangelog: () => void;
+  onOpenThemes: () => void;
   version: string;
 }
 
@@ -11,6 +12,7 @@ export function AppFooter({
   onOpenSettings,
   onOpenPrivacy,
   onOpenChangelog,
+  onOpenThemes,
   version,
 }: Props) {
   return (
@@ -46,6 +48,16 @@ export function AppFooter({
           }}
         >
           Privacy
+        </a>
+        <span className="sep">·</span>
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            onOpenThemes();
+          }}
+        >
+          Theme
         </a>
         <span className="sep">·</span>
         <button

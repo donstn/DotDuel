@@ -1427,6 +1427,7 @@ button {
   align-items: center;
   justify-content: center;
   padding: 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
   z-index: 100;
   animation: fadeIn 220ms ease-out;
 }
@@ -1441,7 +1442,11 @@ button {
   box-shadow: var(--glass-shadow-strong);
   width: 100%;
   max-width: 860px;
+  /* 100dvh tracks the collapsing mobile URL bar so the card doesn't
+     extend past the visible viewport and put the close / Done button
+     out of reach. Falls back to 100vh on older browsers. */
   max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2845,9 +2850,20 @@ body:has(.consent-banner) .game-screen {
   }
 
   .player-stats,
-  .player-points-totals,
-  .player-rating {
+  .player-points-totals {
     display: none;
+  }
+
+  /* Show the rating slot on mobile so the MP clock is visible.
+     SidePanel only renders this div when there's actual content
+     (ratingSlot or rating prop), so in vs-AI / hot-seat where the
+     rating prop is undefined the slot is absent entirely. */
+  .player-rating {
+    font-size: 0.74rem;
+    padding: 0;
+    margin-top: 1px;
+    color: var(--text-dim);
+    text-align: center;
   }
 
   .thinking-dots {
@@ -2857,6 +2873,61 @@ body:has(.consent-banner) .game-screen {
     margin: 0;
     font-size: 0.85rem;
     pointer-events: none;
+  }
+}
+
+/* ---------------- Popovers on mobile ----------------
+ * Make Rules / Settings / Theme / Privacy / Changelog popovers fit
+ * within the visible viewport on phones, with the close ✕ button
+ * easy to reach. Also reserve room when the consent banner is
+ * visible at the bottom of the screen.
+ */
+@media (max-width: 720px) {
+  .rules-overlay {
+    padding: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .rules-card {
+    max-height: calc(100vh - 20px);
+    max-height: calc(100dvh - 20px);
+    border-radius: var(--radius);
+  }
+
+  .rules-close {
+    width: 40px;
+    height: 40px;
+    top: 8px;
+    right: 8px;
+    font-size: 1.1rem;
+  }
+
+  .rules-header {
+    padding: 14px 16px 4px;
+  }
+
+  .rules-header h2 {
+    /* leave room for the bigger close button */
+    margin-right: 48px;
+    font-size: 1.05rem;
+  }
+
+  .rules-body {
+    padding: 6px 14px 10px;
+  }
+
+  .rules-footer-bar {
+    padding: 8px 14px 10px;
+  }
+
+  /* The cookie consent banner is fixed at the bottom of the viewport.
+     When it's visible, both the overlay and the card need to leave
+     room for it so the Done / close-area isn't covered. */
+  body:has(.consent-banner) .rules-overlay {
+    padding-bottom: 170px;
+  }
+  body:has(.consent-banner) .rules-card {
+    max-height: calc(100dvh - 180px);
   }
 }
 
@@ -3020,6 +3091,31 @@ body:has(.consent-banner) .game-screen {
   padding: 4px 0;
 }
 
+@media (max-width: 720px) {
+  .theme-grid {
+    /* Smaller minimum so phones fit two clean columns at 320px+. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .theme-swatch {
+    padding: 8px;
+    gap: 6px;
+  }
+  .theme-swatch-preview {
+    height: 44px;
+  }
+  .theme-swatch-dot {
+    width: 18px;
+    height: 18px;
+  }
+  .theme-swatch-label strong {
+    font-size: 0.8rem;
+  }
+  .theme-swatch-label span {
+    font-size: 0.66rem;
+  }
+}
+
 .theme-swatch {
   position: relative;
   display: flex;
@@ -3047,7 +3143,26 @@ body:has(.consent-banner) .game-screen {
 
 .theme-swatch-selected {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent) inset, 0 8px 22px rgba(0, 0, 0, 0.32);
+  background: rgba(var(--p1-rgb-bright), 0.1);
+  box-shadow: 0 0 0 2px var(--accent) inset,
+              0 8px 22px rgba(0, 0, 0, 0.32);
+}
+
+.theme-swatch-selected::after {
+  content: "✓";
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #0f1c14;
+  font-weight: 700;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .theme-swatch-preview {

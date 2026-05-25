@@ -153,3 +153,4 @@ vite.config.ts.timestamp-*
 
 # Local synthesised review reports (kept local, not shipped)
 final_review_age_based_before_pushing.txt
+monetization_plan.md

@@ -62,6 +62,10 @@ export const CHANGELOG: ChangelogEntry[] = [
         kind: 'fixed',
         text: 'Theme picker and other popovers are now properly scrollable when content is taller than the screen',
       },
+      {
+        kind: 'fixed',
+        text: 'Popovers were unreadable on desktop when the cookie banner was visible — popup sizing now reserves room properly',
+      },
     ],
   },
   {

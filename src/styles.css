@@ -1445,16 +1445,12 @@ button {
   box-shadow: var(--glass-shadow-strong);
   width: 100%;
   max-width: 860px;
-  /* svh = "small viewport height" — smallest the viewport ever
-     gets (URL bar fully visible). Guarantees the card never goes
-     out of reach regardless of browser-chrome state.
-     Cascaded fallbacks for older engines. */
-  max-height: calc(100vh - 32px);
-  max-height: calc(100dvh - 32px);
-  max-height: calc(100svh - 32px);
-  /* Hard guard: never let content push the card past its
-     max-height. The body inside scrolls instead. */
-  overflow: hidden;
+  /* min() picks whichever viewport unit gives the smallest value —
+     gracefully degrades on browsers that only know one of them.
+     85% leaves a margin top + bottom so we never touch the edges
+     (and the consent banner has natural breathing room below). */
+  max-height: 85vh;
+  max-height: min(85vh, 85dvh, 85svh);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1536,17 +1532,14 @@ button {
 .rules-body {
   padding: 8px 22px 12px;
   overflow-y: auto;
-  /* flex:1 with min-height:0 is what actually lets the body scroll
-     inside a flex-column parent that has overflow:hidden. Without
-     min-height:0 the body's intrinsic content height "wins" and
-     the parent overflow:hidden clips header/footer instead. */
-  flex: 1 1 0;
+  /* min-height: 0 lets the flex child shrink below its intrinsic
+     content height, which is what allows overflow-y: auto to
+     actually engage inside a flex-column parent. */
+  flex: 1 1 auto;
   min-height: 0;
   color: var(--text);
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  column-count: 1;
-  column-gap: 24px;
 }
 
 .rules-body section {
@@ -2890,6 +2883,20 @@ body:has(.consent-banner) .game-screen {
   }
 }
 
+/* ---------------- Popover + consent-banner overlap (all sizes) ----------------
+ * If the consent banner is showing at the bottom of the viewport, the
+ * popover overlay must reserve room above it so the popup isn't
+ * covered. ~110px on desktop where the banner is one row, more on
+ * mobile (handled inside the mobile @media block).
+ */
+body:has(.consent-banner) .rules-overlay {
+  padding-bottom: 110px;
+}
+body:has(.consent-banner) .rules-card {
+  max-height: calc(85vh - 100px);
+  max-height: min(calc(85vh - 100px), calc(85dvh - 100px), calc(85svh - 100px));
+}
+
 /* ---------------- Popovers on mobile ----------------
  * Make Rules / Settings / Theme / Privacy / Changelog popovers fit
  * within the visible viewport on phones, with the close ✕ button
@@ -2903,9 +2910,10 @@ body:has(.consent-banner) .game-screen {
   }
 
   .rules-card {
-    max-height: calc(100vh - 20px);
-    max-height: calc(100dvh - 20px);
-    max-height: calc(100svh - 20px);
+    /* On mobile we want every available pixel — use 95% but capped
+       by the smallest viewport so it never exceeds visible area. */
+    max-height: 95vh;
+    max-height: min(95vh, 95dvh, 95svh);
     border-radius: var(--radius);
   }
 
@@ -2939,11 +2947,15 @@ body:has(.consent-banner) .game-screen {
      When it's visible, both the overlay and the card need to leave
      room for it so the Done / close-area isn't covered. */
   body:has(.consent-banner) .rules-overlay {
-    padding-bottom: 170px;
+    /* Reserve room at the bottom for the consent banner so the
+       popover doesn't get covered. ~150px is enough for the
+       wrapped 3-line banner on a phone. */
+    padding-bottom: 150px;
   }
   body:has(.consent-banner) .rules-card {
-    max-height: calc(100dvh - 180px);
-    max-height: calc(100svh - 180px);
+    /* Same 95% rule, just trimmed by the reserved 150px. */
+    max-height: calc(95vh - 150px);
+    max-height: min(calc(95vh - 150px), calc(95dvh - 150px), calc(95svh - 150px));
   }
 
   /* Footer pill must wrap to 2+ lines if needed — never let it

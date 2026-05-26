@@ -562,6 +562,17 @@ button {
   color: var(--text-dim);
 }
 
+.mp-shape-hint {
+  margin: 8px 0 2px;
+  font-size: 0.84rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.mp-shape-hint strong {
+  color: var(--text);
+}
+
 .menu-card.disabled,
 .menu-card:disabled {
   opacity: 0.4;
@@ -2091,6 +2102,13 @@ button {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent !important;
+  /* paint-order: stroke fill puts the dark outline BEHIND the gold
+     gradient, so the words read on any background — including the
+     light-bg themes (Vintage Press, Monochrome Pro) where the gold
+     would otherwise wash out against cream / wood. */
+  paint-order: stroke fill;
+  -webkit-text-stroke: 2px rgba(60, 30, 0, 0.55);
+  filter: drop-shadow(0 0 10px rgba(255, 220, 100, 0.45));
 }
 
 .go-title-impossible {
@@ -2099,6 +2117,9 @@ button {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent !important;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 2px rgba(10, 40, 20, 0.55);
+  filter: drop-shadow(0 0 10px rgba(122, 219, 149, 0.45));
 }
 
 .game-over-buttons {

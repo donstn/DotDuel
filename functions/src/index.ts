@@ -37,7 +37,9 @@ interface PendingMove {
 
 const RANGE_PER_SECOND = 25;
 const MAX_RANGE = 500;
-const SHAPES: ShapeId[] = ['triangle', 'square', 'rectangle'];
+// Note: the playable shape pool is now derived per-pair via the
+// unlockedShapes helper inside matchmake — see there. Rhombus
+// stays paused (not in any returned set).
 const TIME_CONTROL_MS: Record<TimeControl, number> = {
   '1min': 60_000,
   '3min': 180_000,
@@ -140,8 +142,32 @@ export const matchmake = onDocumentCreated(
     const newDisplay = (newUserSnap.data()?.displayName as string | undefined) ?? 'Opponent';
     const oppDisplay = (oppUserSnap.data()?.displayName as string | undefined) ?? 'Opponent';
 
+    // Shape progression — ranked-games gated.
+    // Triangle  unlocked from game 1.
+    // Square    unlocked at 50 ranked games (= 50 in placementGamesPlayed,
+    //                                        which is "total ranked games played"
+    //                                        post-finalize, not just placement).
+    // Rectangle unlocked at 100 ranked games.
+    // (Rhombus stays paused, not in SHAPES list.)
+    // The shape picked is the intersection of both players' unlocked
+    // sets, so a veteran matched with a beginner still plays Triangle.
+    const newGames =
+      (newUserSnap.data()?.placementGamesPlayed as number | undefined) ?? 0;
+    const oppGames =
+      (oppUserSnap.data()?.placementGamesPlayed as number | undefined) ?? 0;
+    const unlockedShapes = (gamesPlayed: number): ShapeId[] => {
+      const out: ShapeId[] = ['triangle'];
+      if (gamesPlayed >= 50) out.push('square');
+      if (gamesPlayed >= 100) out.push('rectangle');
+      return out;
+    };
+    const newShapes = unlockedShapes(newGames);
+    const oppShapes = unlockedShapes(oppGames);
+    const allowedShapes = newShapes.filter((s) => oppShapes.includes(s));
+    // allowedShapes is guaranteed non-empty (both have Triangle).
     const matchId = db.collection('matches').doc().id;
-    const shape: ShapeId = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+    const shape: ShapeId =
+      allowedShapes[Math.floor(Math.random() * allowedShapes.length)];
     const newRef = db.doc(`matchmakingQueue/${newUid}`);
     const oppRef = db.doc(`matchmakingQueue/${best.uid}`);
     const matchRef = db.doc(`matches/${matchId}`);

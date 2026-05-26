@@ -30,6 +30,29 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.2.2',
+    date: '2026-05-26',
+    highlight: 'Multiplayer pacing + readability',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Multiplayer board shape unlocks at 50 and 100 ranked games (Square then Rectangle)',
+      },
+      {
+        kind: 'changed',
+        text: 'Bullet (1 min) and Rapid (5 min) temporarily locked — only Blitz (3 min) available while the player base grows',
+      },
+      {
+        kind: 'changed',
+        text: 'Rules popover now says multiplayer is live',
+      },
+      {
+        kind: 'fixed',
+        text: "'DotDuel champion' and 'Impossible — defeated' titles were invisible on light themes",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.2.1',
     date: '2026-05-25',
     highlight: 'Theme polish',

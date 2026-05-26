@@ -1095,6 +1095,7 @@ export default function App() {
       mainContent = (
         <MultiplayerLobby
           rating={cloudProfile?.rating ?? 1000}
+          rankedGamesPlayed={cloudProfile?.placementGamesPlayed ?? 0}
           onBack={onLeaveLobby}
           onFindMatch={onFindMatch}
         />

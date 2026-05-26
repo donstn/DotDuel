@@ -97,7 +97,7 @@ export function RulesPopover({ onClose }: Props) {
             <ul className="rules-bullets">
               <li><strong>Vs AI</strong> — five difficulty levels. Beat Easy on one shape to unlock the next.</li>
               <li><strong>Hot-seat</strong> — two players, one device.</li>
-              <li><strong>Multiplayer</strong> — coming soon.</li>
+              <li><strong>Multiplayer</strong> — live with global Elo ranking, chess-style time controls, and rematches.</li>
             </ul>
           </section>
         </div>

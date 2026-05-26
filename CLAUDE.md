@@ -377,6 +377,142 @@ Runtime resources: only browser APIs (`localStorage`, SVG, DOM). No external net
 - GitHub Pages serves the staging build at `https://donstn.github.io/DotDuel/` already (auto-deployed on push to `main`).
 - Cutover to `www.dotduel.com` is on hold until the user signs off on overall polish. Either keep GH Pages with a custom domain CNAME, or migrate to Cloudflare Pages / Netlify / Vercel free tier — all within the zero-cost rule.
 
+### Friend list / add friend / invite friend
+
+User-requested feature. Builds on the random matchmaker + the
+ranked Elo system already in place. Estimated work: ~3 days (1 day
+server, 1.5 days client, 0.5 days polish + tests).
+
+**Data model** (Firestore):
+```
+friendships/{friendshipId}        // friendshipId = sortedUids.join('__')
+  uids: [string, string]           // sorted alphabetically for array-contains queries
+  status: 'pending' | 'accepted' | 'blocked'
+  requestedBy: string              // uid of the requester
+  requestedAt: timestamp
+  acceptedAt: timestamp | null
+  blockedAt: timestamp | null      // future
+
+friendInvites/{toUid}/{fromUid}    // ephemeral, TTL 10 min, deleted on accept/decline
+  timeControl: '1min' | '3min' | '5min'
+  shape: ShapeId | null            // null = random
+  ranked: boolean                  // false by default
+  sentAt: timestamp
+```
+
+**Server functions** (callable, in `functions/src/index.ts`):
+- `sendFriendRequest(targetUsername)` — looks up target uid via
+  `usernames/{lower}`, creates `friendships/{id}` with status
+  `'pending'`. Rejects if already friends or already pending.
+- `acceptFriendRequest(friendshipId)` — flips to `'accepted'`,
+  sets `acceptedAt`. Only the non-requester can accept.
+- `declineFriendRequest(friendshipId)` — deletes the doc.
+- `removeFriend(friendshipId)` — deletes the doc.
+- `inviteFriendToGame(friendUid, timeControl, shape, ranked)` —
+  writes `friendInvites/{toUid}/{fromUid}`. Both must already be
+  friends (status='accepted'). Recipient sees a popup; accept
+  spawns a pairing doc via the same code path as `matchmake`
+  (just skipping the queue lookup since both UIDs are known).
+
+**Firestore rules**:
+```
+match /friendships/{id} {
+  allow read: if request.auth.uid in resource.data.uids;
+  allow write: if false;  // function-only
+}
+match /friendInvites/{toUid}/{fromUid} {
+  allow read, delete: if request.auth.uid == toUid;
+  allow write: if false;  // function-only
+}
+```
+
+**Client**:
+- New `src/cloud/friends.ts` — `watchFriends(uid, cb)` using
+  `query(collection(db, 'friendships'), where('uids', 'array-contains', uid))`.
+- New `src/components/FriendsPopover.tsx` — opens from Profile.
+  Three sections: pending requests (accept/decline buttons),
+  friends list (Invite to play / Remove buttons + online dot if
+  presence shipped), "Add by username" input at the bottom.
+- Recipient-side: new effect in `App.tsx` subscribes to
+  `friendInvites/{user.uid}` and renders an in-game friend-invite
+  popup when one arrives.
+
+**Online presence** (sub-feature, deferable further): RTDB
+`presence/{uid}` with `onDisconnect` → null. Friends list shows
+green dot when friend is online. Mirrors the existing
+`gameSessions/{uid}` lock pattern.
+
+**Open question** to resolve when starting: should friend-invite
+matches default to **unranked** (Elo doesn't move) or **ranked**?
+Recommended: unranked default with an explicit "play for rating"
+toggle in the invite dialog. Reason: friends often play casually
+and getting demoted by a friend who tries hard once is bad UX.
+
+### Tutorial animations (first launch + Rules popover)
+
+User-requested feature. Replaces the current text-only
+TutorialPopover and enriches the Rules popover with visual
+demonstrations. Estimated work: ~2 days.
+
+**Format decision: SVG animations, NOT GIFs.** Reasons:
+- SVGs are ~5KB each vs 50–200KB for GIF
+- Themable (the animation adapts to whichever active theme)
+- No external asset pipeline — authored as TypeScript components
+- Crisp at every viewport size
+
+**Five animations needed** (each loops indefinitely):
+
+| # | Title | What it shows |
+|---|---|---|
+| 1 | Place a dot | Empty dot → click effect → dot fills with player colour → pop animation |
+| 2 | Score a line | Three empty dots in a row → P1 places dots one by one (slow) → on the 3rd dot the strike line draws + `+3` floats up |
+| 3 | The catch — biggest scores, rest go pending | A two-line completion: 4-dot horizontal AND 2-dot vertical share the last placement. Horizontal (4) strikes immediately. The vertical (2) is coloured but un-struck. A yellow ring pulses around it. `+4 only` indicator |
+| 4 | Claim a pending line | Opponent's turn, they tap a coloured dot in the pending vertical line. Strike draws in opponent's colour. `+2` floats up |
+| 5 | Game end | Board fills, all pending claims drained, final score displays (`You 14 — AI 11`) |
+
+**Implementation pattern**:
+- New `src/components/tutorial/AnimatedScene.tsx` that accepts a
+  `frames: { action: GameAction; pauseMs: number }[]` array and
+  animates by stepping through frames at intervals.
+- Reuse the existing `Board.tsx` (without click handlers and
+  with `disabled` to prevent interaction).
+- Use `applyAction` from the existing engine to compute the next
+  state from each frame's action — no parallel implementation,
+  no drift.
+
+**Placement**:
+- **First launch**: replace the current text-only
+  `TutorialPopover.tsx` with a 5-card carousel (one animation
+  per card + a 1-sentence caption). Carousel state stored in
+  `settings.tutorialSeen` (existing flag, no schema change).
+- **Rules popover**: alongside the relevant sections (Scoring,
+  The catch — one move one score, Watch the board, Game end)
+  embed the matching animation inline at small size (~120×120 px).
+
+### SEO refinements (after the basics in §B of the launch plan)
+
+The current `index.html` (post-Alpha 0.1.2.x) has full meta tags
++ Open Graph + Twitter Card + JSON-LD VideoGame schema +
+robots.txt + sitemap.xml + a `<noscript>` content block. That's
+the baseline. Future refinements when traffic justifies the work:
+
+- **Pre-render the menu HTML** via `vite-ssg` or
+  `@vitejs/plugin-react-pages` so Google sees a populated DOM
+  instead of a JS shell. Bigger win than meta tags.
+- **`/blog` route** with long-form posts about strategy, game
+  design notes, weekly tournament recaps — SEO long-tail content.
+  Could host on the same domain via a sub-route, or `blog.dotduel.com`.
+- **Schema.org `AggregateRating`** block once review count > 50.
+- **Real social card image** — `public/og-card.png` (1200×630)
+  with the DotDuel wordmark, a fragment of the board with a
+  strike across it, the URL at the bottom. Currently referenced in
+  meta tags but the file itself is a TODO — graphic-design task.
+- **Localised pages** (`/es`, `/pt`) once we have non-English MAU
+  to justify.
+- **Performance** — Lighthouse audit, code-split the
+  `cloud/` + `auth/` surface so initial JS bundle drops below
+  500 KB gzipped.
+
 ---
 
 ## Development conventions

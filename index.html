@@ -4,10 +4,93 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#0b3b1f" />
-    <title>DotDuel</title>
+
+    <title>DotDuel — Free Two-Player Dot Strategy Game</title>
+
+    <meta name="description" content="DotDuel is a free two-player strategy game. Take turns coloring dots until the whole board is filled — complete a line and score its length. The player with the most points at the end wins. Play vs AI or live online with global Elo ranking." />
+    <meta name="keywords" content="dot game online, two player dot game, dots and boxes alternative, strategy dot game, free browser board game, online dot strategy, dot duel" />
+    <meta name="author" content="DotDuel" />
+    <meta name="robots" content="index, follow" />
+
+    <link rel="canonical" href="https://www.dotduel.com/" />
+
+    <!-- Open Graph (Facebook, LinkedIn, Discord, Slack) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DotDuel" />
+    <meta property="og:title" content="DotDuel — Free Two-Player Dot Strategy Game" />
+    <meta property="og:description" content="Take turns coloring dots until the whole board is filled. Complete a line, score its length. Most points at the end wins. Free vs AI or live ranked multiplayer in any browser." />
+    <meta property="og:url" content="https://www.dotduel.com/" />
+    <meta property="og:image" content="https://www.dotduel.com/og-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="DotDuel — a strategy dot game" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="DotDuel — Free Two-Player Dot Strategy Game" />
+    <meta name="twitter:description" content="Take turns coloring dots until the whole board is filled. Complete a line, score its length. Most points at the end wins. Free vs AI or live ranked multiplayer." />
+    <meta name="twitter:image" content="https://www.dotduel.com/og-card.png" />
+
+    <!-- Structured data — Schema.org VideoGame -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "DotDuel",
+      "url": "https://www.dotduel.com/",
+      "description": "A free two-player strategy game about lines you didn't mean to finish. Take turns coloring dots until the whole board is filled — complete a line and score its length. When one move completes multiple lines, only the longest scores immediately; the rest become claimable. The player with the most points when every dot is colored and every line is claimed wins.",
+      "image": "https://www.dotduel.com/og-card.png",
+      "genre": ["Strategy", "Board Game", "Casual"],
+      "gamePlatform": ["Web Browser", "PWA"],
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "Modern browser with JavaScript enabled",
+      "playMode": ["SinglePlayer", "MultiPlayer", "CoOp"],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "DotDuel"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>DotDuel — Free Two-Player Dot Strategy Game</h1>
+      <p>
+        DotDuel is a free two-player strategy game playable in any
+        modern browser. Place dots on a grid — when your dot completes
+        a line, you score its length. The twist: when one move
+        completes multiple lines at once, only the longest scores
+        immediately; the rest become &ldquo;pending&rdquo; and either
+        player can claim them on a later turn by tapping a colored dot
+        on the line. Play continues until every dot is colored and
+        every line is claimed; the player with the most points at the
+        end wins.
+      </p>
+      <p>
+        Play vs AI across five difficulty levels (Beginner through
+        Impossible), or sign in for ranked multiplayer with a global
+        Elo ranking, chess-style time controls (Bullet 1 min / Blitz
+        3 min / Rapid 5 min), and match history. Available board
+        shapes: Triangle (36 dots), Square (49 dots), Rectangle (63
+        dots). No install, no fee, no third-party trackers without
+        consent.
+      </p>
+      <p>
+        DotDuel is a fresh take on classic pen-and-paper games like
+        Dots and Boxes — designed for quick mobile sessions on the
+        commute or longer thinking matches with a friend.
+        <strong>JavaScript must be enabled to play.</strong>
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

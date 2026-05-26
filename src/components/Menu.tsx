@@ -69,7 +69,7 @@ export function Menu({
               Welcome, <strong className="menu-welcome-name">{welcomeName}</strong> —{' '}
             </>
           ) : null}
-          take turns coloring dots. Complete a line — score its length.
+          take turns coloring dots, place the last dot to complete the line — score its length. Win by scoring the most points by the time the whole board is colored.
         </p>
         <div className="menu-auth-row">
           {user ? (

@@ -1,5 +1,4 @@
 import {
-  deleteDoc,
   doc,
   getDoc,
   onSnapshot,
@@ -7,7 +6,8 @@ import {
   serverTimestamp,
   type DocumentData,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { app, db } from '../firebase';
 
 export interface CloudProfile {
   displayName: string | null;
@@ -107,16 +107,27 @@ export function watchProfile(
   );
 }
 
+// Calls the checkUsernameAvailable Cloud Function. Going through the
+// function (rather than reading usernames/{lower} directly) lets us
+// rate-limit availability checks server-side so the global usernames
+// collection can't be cheaply enumerated. The transactional claim in
+// claimUsername/renameUsername still does direct reads — those are
+// inherently bounded by one read per claim attempt.
+const functions = getFunctions(app, 'europe-west1');
+
 export async function checkAvailability(
   desired: string,
-  ownUid: string,
+  _ownUid: string,
 ): Promise<boolean> {
-  const lower = normName(desired);
-  if (!lower) return false;
+  const trimmed = desired.trim();
+  if (!trimmed) return false;
   try {
-    const snap = await getDoc(usernameDoc(lower));
-    if (!snap.exists()) return true;
-    return snap.data().uid === ownUid;
+    const fn = httpsCallable<
+      { name: string },
+      { available: boolean; reason?: string }
+    >(functions, 'checkUsernameAvailable');
+    const result = await fn({ name: trimmed });
+    return result.data.available === true;
   } catch (e) {
     console.warn('checkAvailability failed:', e);
     return false;
@@ -187,14 +198,7 @@ export async function renameUsername(
       displayName: newDisplay,
       createdAt: serverTimestamp(),
     });
+    tx.delete(usernameDoc(oldLower));
     tx.set(userDoc(uid), { displayName: newDisplay }, { merge: true });
   });
-  // Best-effort: delete the old usernames doc outside the transaction.
-  // Failure here just leaves a stale claim by us — harmless because the
-  // new claim and users/{uid}.displayName are already the source of truth.
-  try {
-    await deleteDoc(usernameDoc(oldLower));
-  } catch (e) {
-    console.warn('failed to delete old username claim:', e);
-  }
 }

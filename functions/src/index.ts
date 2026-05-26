@@ -1,6 +1,7 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { onValueWritten } from 'firebase-functions/v2/database';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { setGlobalOptions, logger } from 'firebase-functions/v2';
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
@@ -131,7 +132,7 @@ export const matchmake = onDocumentCreated(
     }
 
     if (!best) {
-      logger.info(`matchmake: no opponent for ${newUid} (rating ${newEntry.rating}, tc ${newEntry.timeControl})`);
+      logger.info(`matchmake: no opponent for ${hashUid(newUid)} (rating ${newEntry.rating}, tc ${newEntry.timeControl})`);
       return;
     }
 
@@ -227,7 +228,7 @@ export const matchmake = onDocumentCreated(
           createdAt: FieldValue.serverTimestamp(),
         });
       });
-      logger.info(`matchmake: paired ${newUid} (${newDisplay}) <-> ${best.uid} (${oppDisplay}) as match ${matchId} on ${shape}`);
+      logger.info(`matchmake: paired ${hashUid(newUid)} <-> ${hashUid(best.uid)} as match ${matchId} on ${shape}`);
     } catch (e) {
       logger.warn('matchmake: pairing transaction failed', e);
       return;
@@ -314,7 +315,7 @@ export const validateMove = onValueWritten(
     else if (playerUids['2'] === after.from) playerNum = 2;
 
     if (!playerNum) {
-      logger.warn(`validateMove: ${after.from} is not a participant in ${gameId}`);
+      logger.warn(`validateMove: ${hashUid(String(after.from))} is not a participant in ${gameId}`);
       await moveRef.remove();
       return;
     }
@@ -333,7 +334,7 @@ export const validateMove = onValueWritten(
         pendingMove: null,
       });
       await recordMatchFinished(gameId, winner, 'resign', finishedAt);
-      logger.info(`validateMove: ${after.from} resigned in ${gameId}, winner=${winner}`);
+      logger.info(`validateMove: ${hashUid(String(after.from))} resigned in ${gameId}, winner=${winner}`);
       return;
     }
 
@@ -814,7 +815,7 @@ export const rematchGame = onValueWritten(
     }
 
     logger.info(
-      `rematchGame: ${gameId} → ${newMatchId} (rematch of ${prevP1Uid} vs ${prevP2Uid}, slots swapped)`,
+      `rematchGame: ${gameId} → ${newMatchId} (rematch of ${hashUid(prevP1Uid)} vs ${hashUid(prevP2Uid)}, slots swapped)`,
     );
   },
 );
@@ -852,6 +853,114 @@ function normNameForUsername(name: string): string {
   return name.trim().toLowerCase();
 }
 
+// ===========================================================================
+// M-3: Per-uid rate limiter for callable functions
+// ===========================================================================
+// Lightweight Firestore-backed token bucket. Each call updates a doc at
+// rateLimits/{uid}__{bucket} with a sliding-window counter. Above the
+// cap, throws RESOURCE_EXHAUSTED.
+//
+// Bucket strategy: we use a per-minute floor as the bucket id, so the
+// counter resets implicitly each minute. Cheap (one doc read/write per
+// call), no scheduled cleanup needed (docs naturally rotate; old ones
+// are unused).
+
+interface RateLimitConfig {
+  perMinute: number;  // calls allowed per uid per 60-second window
+  bucket: string;     // function identifier, e.g. 'deleteAccount'
+}
+
+async function enforceRateLimit(
+  uid: string,
+  config: RateLimitConfig,
+): Promise<void> {
+  const db = getFirestore();
+  const minuteFloor = Math.floor(Date.now() / 60_000);
+  const docId = `${uid}__${config.bucket}__${minuteFloor}`;
+  const ref = db.doc(`rateLimits/${docId}`);
+  try {
+    const newCount = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const current = (snap.data()?.count as number | undefined) ?? 0;
+      const next = current + 1;
+      tx.set(ref, {
+        count: next,
+        bucket: config.bucket,
+        uid,
+        windowStartMinute: minuteFloor,
+        updatedAt: Timestamp.now(),
+      });
+      return next;
+    });
+    if (newCount > config.perMinute) {
+      logger.warn(
+        `rateLimit: ${config.bucket} exceeded for ${hashUid(uid)} (${newCount}/${config.perMinute})`,
+      );
+      throw new HttpsError(
+        'resource-exhausted',
+        'Too many requests. Try again in a minute.',
+      );
+    }
+  } catch (e) {
+    if (e instanceof HttpsError) throw e;
+    // If the rate-limit infrastructure itself fails (Firestore outage),
+    // don't block the user — log and let the call proceed.
+    logger.error('rateLimit: storage failed, allowing call', e);
+  }
+}
+
+// L-5: hash UIDs in Cloud Logging so raw pseudonymous identifiers don't
+// sit in log indexes. The first 8 hex chars are enough to correlate
+// without exposing the full token.
+function hashUid(uid: string): string {
+  return 'u_' + createHash('sha256').update(uid).digest('hex').slice(0, 8);
+}
+
+// M-1: server-side username availability check. Used by the
+// UsernamePicker debounced lookup so we have a single throttleable
+// chokepoint instead of letting clients hit usernames/{lower} freely
+// for enumeration. The transactional claim in usernames.ts still
+// hits the docs directly (necessary for atomic uniqueness), but a
+// flood of availability checks now goes through this function which
+// the rate limiter (M-3) wraps.
+const USERNAME_RE = /^[a-zA-Z0-9_-]{3,16}$/;
+
+export const checkUsernameAvailable = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError(
+        'unauthenticated',
+        'Sign in required.',
+      );
+    }
+    await enforceRateLimit(uid, { perMinute: 30, bucket: 'checkUsernameAvailable' });
+    const raw = (request.data as { name?: unknown })?.name;
+    if (typeof raw !== 'string') {
+      throw new HttpsError('invalid-argument', 'name must be a string');
+    }
+    const trimmed = raw.trim();
+    if (!USERNAME_RE.test(trimmed)) {
+      // Don't reveal whether it's taken or invalid format — just say
+      // unavailable for any bad format input.
+      return { available: false, reason: 'format' as const };
+    }
+    const lower = trimmed.toLowerCase();
+    const db = getFirestore();
+    try {
+      const snap = await db.doc(`usernames/${lower}`).get();
+      if (!snap.exists) return { available: true };
+      const ownerUid = snap.data()?.uid as string | undefined;
+      // If the requester already owns this name, it's "available" to them.
+      return { available: ownerUid === uid };
+    } catch (e) {
+      logger.warn('checkUsernameAvailable read failed', e);
+      throw new HttpsError('internal', 'availability check failed');
+    }
+  },
+);
+
 export const deleteAccount = onCall(
   { region: 'europe-west1' },
   async (request) => {
@@ -864,6 +973,22 @@ export const deleteAccount = onCall(
     }
     // We don't accept a target uid argument — you can only delete yourself.
     // Future admin-purge path would be a separate function with claim check.
+
+    await enforceRateLimit(uid, { perMinute: 3, bucket: 'deleteAccount' });
+
+    // H-1: Re-auth gate. Account deletion is permanent and irreversible.
+    // Require the user to have signed in within the last 5 minutes so a
+    // session-theft attacker can't quietly nuke the account. Client catches
+    // the FAILED_PRECONDITION and prompts a fresh sign-in.
+    const authTimeSec = (request.auth?.token.auth_time as number | undefined) ?? 0;
+    const ageSec = Date.now() / 1000 - authTimeSec;
+    const REAUTH_WINDOW_SEC = 5 * 60;
+    if (ageSec > REAUTH_WINDOW_SEC) {
+      throw new HttpsError(
+        'failed-precondition',
+        'For security, please sign out and back in within the last 5 minutes, then try again.',
+      );
+    }
 
     const db = getFirestore();
     const rtdb = getDatabase();
@@ -896,7 +1021,7 @@ export const deleteAccount = onCall(
         }
       }
     } catch (e) {
-      logger.warn(`deleteAccount: pre-forfeit failed for ${uid}`, e);
+      logger.warn(`deleteAccount: pre-forfeit failed for ${hashUid(uid)}`, e);
       // Continue regardless — erasure must complete.
     }
 
@@ -920,7 +1045,7 @@ export const deleteAccount = onCall(
       // RTDB session lock
       await rtdb.ref(`gameSessions/${uid}`).remove();
     } catch (e) {
-      logger.error(`deleteAccount: scrub direct docs failed for ${uid}`, e);
+      logger.error(`deleteAccount: scrub direct docs failed for ${hashUid(uid)}`, e);
       throw new HttpsError('internal', 'Failed to delete account data.');
     }
 
@@ -969,11 +1094,11 @@ export const deleteAccount = onCall(
           await batch.commit();
         }
         logger.info(
-          `deleteAccount: anonymised ${docs.length} match records for ${uid}`,
+          `deleteAccount: anonymised ${docs.length} match records for ${hashUid(uid)}`,
         );
       }
     } catch (e) {
-      logger.error(`deleteAccount: anonymise matches failed for ${uid}`, e);
+      logger.error(`deleteAccount: anonymise matches failed for ${hashUid(uid)}`, e);
       // Don't throw — Auth user removal in step 4 is the highest-stakes
       // step; partial completion is better than rolling back step 2.
     }
@@ -986,7 +1111,7 @@ export const deleteAccount = onCall(
       if (code === 'auth/user-not-found') {
         // Already gone — fine.
       } else {
-        logger.error(`deleteAccount: Auth delete failed for ${uid}`, e);
+        logger.error(`deleteAccount: Auth delete failed for ${hashUid(uid)}`, e);
         throw new HttpsError(
           'internal',
           'Failed to remove your sign-in credentials.',
@@ -1002,13 +1127,70 @@ export const deleteAccount = onCall(
         reason: 'user-request',
       });
     } catch (e) {
-      logger.warn(`deleteAccount: audit log write failed for ${uid}`, e);
+      logger.warn(`deleteAccount: audit log write failed for ${hashUid(uid)}`, e);
     }
 
     logger.info(
-      `deleteAccount: completed for uid=${uid} (sentinel=${sentinelUid})`,
+      `deleteAccount: completed for ${hashUid(uid)} (sentinel=${sentinelUid})`,
     );
 
     return { ok: true, sentinel: sentinelUid };
+  },
+);
+
+// ===========================================================================
+// M-2: scheduled cleanup of finished RTDB games
+// ===========================================================================
+// PRIVACY.md promises live-game state is deleted "within ~24 hours of game
+// end". This cron honours that. Runs every 6 hours; scans games/* for
+// status='finished' AND finishedAt < (now - 24h); deletes them.
+// Removes both the privacy commitment risk and the unbounded RTDB storage
+// growth (each game node carries playerUids + state + move history).
+const CLEANUP_AGE_MS = 24 * 60 * 60 * 1000;
+const CLEANUP_BATCH_CAP = 200;
+
+export const cleanupFinishedGames = onSchedule(
+  {
+    schedule: 'every 6 hours',
+    timeZone: 'UTC',
+    region: 'europe-west1',
+  },
+  async () => {
+    const rtdb = getDatabase();
+    const cutoff = Date.now() - CLEANUP_AGE_MS;
+    const gamesRef = rtdb.ref('games');
+    const snap = await gamesRef.get();
+    if (!snap.exists()) {
+      logger.info('cleanupFinishedGames: no games to consider');
+      return;
+    }
+    const games = snap.val() as Record<string, { status?: string; finishedAt?: number }>;
+    const toDelete: string[] = [];
+    for (const [gameId, game] of Object.entries(games)) {
+      if (!game) continue;
+      if (game.status !== 'finished') continue;
+      const finishedAt = typeof game.finishedAt === 'number' ? game.finishedAt : 0;
+      if (finishedAt > 0 && finishedAt < cutoff) {
+        toDelete.push(gameId);
+      }
+      if (toDelete.length >= CLEANUP_BATCH_CAP) break;
+    }
+    if (toDelete.length === 0) {
+      logger.info('cleanupFinishedGames: no expired games');
+      return;
+    }
+    // Multi-path delete in one update call for atomicity.
+    const updates: Record<string, null> = {};
+    for (const gameId of toDelete) {
+      updates[`games/${gameId}`] = null;
+    }
+    try {
+      await rtdb.ref().update(updates);
+      logger.info(
+        `cleanupFinishedGames: deleted ${toDelete.length} expired finished games`,
+      );
+    } catch (e) {
+      logger.error('cleanupFinishedGames: bulk delete failed', e);
+    }
   },
 );

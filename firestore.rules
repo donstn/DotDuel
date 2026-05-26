@@ -77,5 +77,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // M-3: per-uid rate-limit token buckets. Function-only access; the
+    // enforceRateLimit helper updates these docs via Admin SDK.
+    match /rateLimits/{bucketId} {
+      allow read, write: if false;
+    }
+
   }
 }

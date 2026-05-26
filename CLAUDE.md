@@ -342,6 +342,24 @@ Runtime resources: only browser APIs (`localStorage`, SVG, DOM). No external net
 
 ---
 
+## Security — known accepted risks
+
+The security audit on 2026-05-26 identified three low-severity findings that we are **knowingly accepting** rather than mitigating. They are documented here so future work doesn't re-flag them as bugs and so a reader can see the threat model.
+
+### L-1: `matches/{matchId}` readable by any signed-in user
+
+Firestore rule allows every signed-in account to read every match record. Match docs contain both players' displayNames, rating before/after, scores, shape, time control, and finishedReason. **Accepted because:** displayName and Elo are already advertised on the public leaderboard, so cross-referencing matches reveals only "who played whom and how it ended" — the same information any spectator at a chess tournament has. If a future feature stores anything more sensitive on the match doc (chat, IP, email), the rule must be tightened to a participant-only `allow read`.
+
+### L-2: Firebase Web API key is public
+
+The `apiKey` shipped in the JS bundle is by design not a secret — Firebase uses it to identify the project, not to authenticate. Every Firebase web app exposes it. Misuse is prevented by Firestore + RTDB security rules and App Check (when enabled). **Accepted because:** this is the documented Firebase model. The mitigation if we ever see abuse is to enable App Check (reCAPTCHA or Play Integrity), which is on the post-launch list, not a code change.
+
+### L-4: Cookie banner is a client-only consent gate
+
+The consent banner records `analyticsConsent` in `localStorage` and gates the Analytics init at the React layer. A user who tampers with their own localStorage could load Analytics without "consenting" — but that only affects their own browser, not the GDPR posture against Google. **Accepted because:** GDPR consent is between the data subject and the controller (us); a user spoofing their own consent harms nobody else. If we add a server-side analytics ingest later, the consent gate moves server-side.
+
+---
+
 ## Deferred — do not start without explicit ask
 
 ### Multiplayer

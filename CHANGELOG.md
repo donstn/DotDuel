@@ -7,6 +7,56 @@ All notable changes to DotDuel will be documented in this file. Format follows
 
 ### Added
 
+- **Share previews and browser-tab icon.** New `public/og-card.png`
+  (1200×630, rendered from `public/og-card.svg` source-of-truth via
+  `scripts/build-assets.mjs` + sharp) makes shared DotDuel links
+  render with the two-dot wordmark on Facebook / Twitter / Discord /
+  Telegram / Slack / iMessage. New `public/favicon.svg` + 32px PNG +
+  180px Apple touch icon + 512px maskable icon + `site.webmanifest`
+  cover browser tabs, iOS Home Screen, and Android PWA installs.
+  `index.html` wired with `<link rel="icon">`, `apple-touch-icon`,
+  and `manifest`. The pre-existing `og:image` meta now resolves to
+  a real file.
+
+### Changed
+
+- **Security audit fixes — H-1, H-2, M-1, M-2, M-3, L-3, L-5.**
+  - **H-1**: `deleteAccount` Cloud Function now requires re-auth
+    within the last 5 minutes (`request.auth.token.auth_time`),
+    preventing stolen-session account deletion.
+  - **H-2**: Strict `Content-Security-Policy` meta tag in
+    `index.html` allow-listing first-party + Firebase + Google
+    Analytics origins; `frame-ancestors 'none'` blocks
+    clickjacking; `X-Content-Type-Options: nosniff` and
+    `Referrer-Policy: strict-origin-when-cross-origin`.
+  - **M-1**: Username availability check moved to a new
+    `checkUsernameAvailable` callable Cloud Function (server-side
+    rate-limited and case-normalised) so the `usernames`
+    collection can't be cheaply enumerated by reading every doc.
+    `src/cloud/usernames.ts` `checkAvailability()` now invokes
+    the callable.
+  - **M-2**: New `cleanupFinishedGames` scheduled function runs
+    every 6 hours and deletes finished RTDB `games/{id}` nodes
+    older than ~24h, honouring the PRIVACY.md commitment.
+  - **M-3**: New `enforceRateLimit()` helper backed by
+    Firestore `rateLimits/{bucketId}` per-minute counters.
+    Applied to `deleteAccount` (3/min) and
+    `checkUsernameAvailable` (30/min); throws
+    `resource-exhausted` above the cap.
+  - **L-3**: `renameUsername` now deletes the old username claim
+    *inside* the same Firestore transaction as the new claim
+    write, so a crash between the two writes can't leave a
+    stale entry.
+  - **L-5**: All Cloud Logging UID interpolations now go through
+    `hashUid(uid)` — first 8 hex chars of SHA-256 — so raw
+    Firebase UIDs no longer sit in log indexes. Correlation
+    still works; raw identifiers don't leak.
+- **L-1 / L-2 / L-4 documented as accepted risks** in `CLAUDE.md`
+  under a new "Security — known accepted risks" section. Future
+  sessions should not re-flag them as bugs.
+
+### Added
+
 - **Elo visible in multiplayer side panels under each avatar.** Both
   your own current rating and the opponent's pre-match rating appear
   as a small pill right below the profile picture. Pulled from

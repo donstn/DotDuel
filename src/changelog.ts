@@ -30,6 +30,29 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.2.3',
+    date: '2026-05-26',
+    highlight: 'Sharable links + security hardening',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Browser tab icon and home-screen icon — the two DotDuel dots show up wherever you bookmark or install the game',
+      },
+      {
+        kind: 'added',
+        text: 'Share previews — pasting the DotDuel link into Discord, Telegram, Slack, or Twitter now renders a card with the wordmark and tagline instead of a blank box',
+      },
+      {
+        kind: 'changed',
+        text: 'Username changes now happen atomically — the old name is released and the new one claimed in the same operation',
+      },
+      {
+        kind: 'changed',
+        text: 'Behind-the-scenes security hardening — stricter content-security policy, server-side rate limits on account deletion and username checks, scheduled cleanup of finished games (within ~24h per privacy policy), and hashed UIDs in server logs',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.2.2',
     date: '2026-05-26',
     highlight: 'Multiplayer pacing + readability',

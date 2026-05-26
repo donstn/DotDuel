@@ -3,9 +3,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Per-user profile + cloud-synced progression. Only the owner reads or writes.
+    // Per-user profile + cloud-synced progression.
+    // - Read: owner only.
+    // - Create: owner only (first-time write via claimUsername — every
+    //   initial field allowed).
+    // - Update: owner only AND restricted to a narrow allow-list of
+    //   user-controlled fields. Fields like rating, placementGamesPlayed,
+    //   email, authProvider, createdAt are writable ONLY by Cloud
+    //   Functions (Admin SDK bypasses rules). Prevents a malicious user
+    //   from self-granting rating or shape unlocks.
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['displayName', 'progress']);
+      allow delete: if false;  // account deletion goes through deleteAccount Cloud Function
     }
 
     // Username claims. Anyone signed-in may read (for availability checks).

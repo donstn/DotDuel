@@ -6,7 +6,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import type { ShapeId } from '../types';
+import type { Difficulty, ShapeId } from '../types';
 
 export type TimeControl = '1min' | '3min' | '5min';
 
@@ -23,6 +23,8 @@ export interface PairingDoc {
   opponentDisplayName: string;
   opponentRating: number;
   player: 1 | 2;
+  opponentIsBot: boolean;
+  opponentBotLevel: Difficulty | null;
 }
 
 export async function joinQueue(
@@ -74,6 +76,11 @@ export function watchPairing(
         opponentDisplayName: data.opponentDisplayName ?? 'Opponent',
         opponentRating: data.opponentRating ?? 1000,
         player: (data.player ?? 1) as 1 | 2,
+        opponentIsBot: data.opponentIsBot === true,
+        opponentBotLevel:
+          data.opponentIsBot === true && typeof data.opponentBotLevel === 'number'
+            ? (data.opponentBotLevel as Difficulty)
+            : null,
       });
     },
     (err) => {

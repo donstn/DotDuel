@@ -35,6 +35,9 @@ interface Props {
   rematchOpp?: boolean;
   /** Cancel my pending rematch request. */
   onCancelRematch?: () => void;
+  /** When true, suppress the rematch button (bot opponents don't accept
+   *  rematches — only humans do). Menu + Lobby still render. */
+  opponentIsBot?: boolean;
 }
 
 const SHAPE_NEXT: Record<ShapeId, ShapeId | null> = {
@@ -144,6 +147,7 @@ export function GameOver({
   rematchMine,
   rematchOpp,
   onCancelRematch,
+  opponentIsBot,
 }: Props) {
   const humanWon = mode === 'ai' && state.winner === 1;
   const beatImpossible = humanWon && difficulty === 5;
@@ -223,13 +227,15 @@ export function GameOver({
         {mode === 'multiplayer' && onLobby ? (
           <div className="game-over-buttons">
             <button onClick={onMenu}>Menu</button>
-            <RematchButton
-              mine={!!rematchMine}
-              opp={!!rematchOpp}
-              label={rematchLabel ?? 'Rematch'}
-              onRequest={onPlayAgain}
-              onCancel={onCancelRematch}
-            />
+            {!opponentIsBot && (
+              <RematchButton
+                mine={!!rematchMine}
+                opp={!!rematchOpp}
+                label={rematchLabel ?? 'Rematch'}
+                onRequest={onPlayAgain}
+                onCancel={onCancelRematch}
+              />
+            )}
             <button onClick={onLobby}>Lobby</button>
           </div>
         ) : (

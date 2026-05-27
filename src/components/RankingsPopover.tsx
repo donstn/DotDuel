@@ -716,8 +716,17 @@ function GlobalLeaderboard({
                 <td className="col-name">
                   <span className="rankings-global-name">
                     {r.displayName}
+                    {r.isBot && (
+                      <span
+                        className="bot-tag"
+                        title="AI opponent"
+                        aria-label="AI opponent"
+                      >
+                        BOT
+                      </span>
+                    )}
                     {isMe && <span className="rankings-global-me-tag">you</span>}
-                    {provisional && (
+                    {provisional && !r.isBot && (
                       <span
                         className="provisional-badge"
                         title="Rating stabilises after 10 ranked games"

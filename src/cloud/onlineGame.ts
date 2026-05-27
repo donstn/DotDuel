@@ -1,4 +1,4 @@
-import { onValue, ref, set } from 'firebase/database';
+import { get, onValue, ref, set } from 'firebase/database';
 import { rtdb } from '../firebase';
 import type { GameAction, GameMode, GameState, Player, ShapeId } from '../types';
 import type { TimeControl } from './matchmaking';
@@ -66,6 +66,7 @@ export function watchGame(
     (snap) => {
       const v = snap.val();
       if (!v) {
+        console.warn(`watchGame[${gameId}]: snap.val() is null`);
         onChange(null);
         return;
       }
@@ -76,10 +77,30 @@ export function watchGame(
       onChange(game);
     },
     (err) => {
-      console.warn('watchGame error:', err);
+      console.warn(`watchGame[${gameId}] error:`, err);
       onChange(null);
     },
   );
+}
+
+// One-shot fallback for when the streaming subscription (watchGame) hasn't
+// delivered data. Uses RTDB's get() — RPC-style, single request — which
+// sometimes succeeds on privacy-strict mobile browsers (Brave Shields) where
+// onValue registration registers but never fires. The game data IS in RTDB;
+// this is a "yes it's really there" probe + retrieval.
+export async function fetchGameOnce(gameId: string): Promise<OnlineGame | null> {
+  try {
+    const snap = await get(ref(rtdb, `games/${gameId}`));
+    const v = snap.val();
+    if (!v) return null;
+    return {
+      ...(v as OnlineGame),
+      state: normalizeState(v.state ?? {}),
+    };
+  } catch (e) {
+    console.warn(`fetchGameOnce[${gameId}] error:`, e);
+    return null;
+  }
 }
 
 export function watchError(

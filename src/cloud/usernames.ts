@@ -7,7 +7,7 @@ import {
   type DocumentData,
 } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { app, db } from '../firebase';
+import { app, db, trackEvent } from '../firebase';
 
 export interface CloudProfile {
   displayName: string | null;
@@ -146,27 +146,35 @@ export async function claimUsername(
 ): Promise<void> {
   const lower = normName(desired);
   const display = desired.trim();
-  await runTransaction(db, async (tx) => {
-    const existing = await tx.get(usernameDoc(lower));
-    if (existing.exists() && existing.data().uid !== uid) {
-      throw new Error('USERNAME_TAKEN');
-    }
-    tx.set(usernameDoc(lower), {
-      uid,
-      displayName: display,
-      createdAt: serverTimestamp(),
-    });
-    tx.set(
-      userDoc(uid),
-      {
+  try {
+    await runTransaction(db, async (tx) => {
+      const existing = await tx.get(usernameDoc(lower));
+      if (existing.exists() && existing.data().uid !== uid) {
+        throw new Error('USERNAME_TAKEN');
+      }
+      tx.set(usernameDoc(lower), {
+        uid,
         displayName: display,
-        email: seed.email,
-        authProvider: seed.authProvider,
         createdAt: serverTimestamp(),
-      },
-      { merge: true },
-    );
-  });
+      });
+      tx.set(
+        userDoc(uid),
+        {
+          displayName: display,
+          email: seed.email,
+          authProvider: seed.authProvider,
+          createdAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
+    });
+  } catch (e) {
+    const code = (e as { code?: string; message?: string })?.code
+      ?? (e as { message?: string })?.message
+      ?? 'unknown';
+    trackEvent('username_claim_failed', { mode: 'claim', error_code: code });
+    throw e;
+  }
 }
 
 export async function renameUsername(
@@ -177,28 +185,36 @@ export async function renameUsername(
   const oldLower = normName(oldName);
   const newLower = normName(newName);
   const newDisplay = newName.trim();
-  if (oldLower === newLower) {
+  try {
+    if (oldLower === newLower) {
+      await runTransaction(db, async (tx) => {
+        tx.set(usernameDoc(newLower), {
+          uid,
+          displayName: newDisplay,
+          createdAt: serverTimestamp(),
+        });
+        tx.set(userDoc(uid), { displayName: newDisplay }, { merge: true });
+      });
+      return;
+    }
     await runTransaction(db, async (tx) => {
+      const existing = await tx.get(usernameDoc(newLower));
+      if (existing.exists() && existing.data().uid !== uid) {
+        throw new Error('USERNAME_TAKEN');
+      }
       tx.set(usernameDoc(newLower), {
         uid,
         displayName: newDisplay,
         createdAt: serverTimestamp(),
       });
+      tx.delete(usernameDoc(oldLower));
       tx.set(userDoc(uid), { displayName: newDisplay }, { merge: true });
     });
-    return;
+  } catch (e) {
+    const code = (e as { code?: string; message?: string })?.code
+      ?? (e as { message?: string })?.message
+      ?? 'unknown';
+    trackEvent('username_claim_failed', { mode: 'rename', error_code: code });
+    throw e;
   }
-  await runTransaction(db, async (tx) => {
-    const existing = await tx.get(usernameDoc(newLower));
-    if (existing.exists() && existing.data().uid !== uid) {
-      throw new Error('USERNAME_TAKEN');
-    }
-    tx.set(usernameDoc(newLower), {
-      uid,
-      displayName: newDisplay,
-      createdAt: serverTimestamp(),
-    });
-    tx.delete(usernameDoc(oldLower));
-    tx.set(userDoc(uid), { displayName: newDisplay }, { merge: true });
-  });
 }

@@ -99,6 +99,10 @@ interface SessionConfig {
 const AI_DELAY_MS = 450;
 const HINT_GAME_LIMIT = 10;
 const HINT_CLAIM_LIMIT = 3;
+// If an optimistic multiplayer move isn't confirmed by the server within
+// this window, we assume the sendMove write hung (e.g. WebSocket stalled
+// behind a privacy filter) and reset the UI so the user can retry.
+const OPTIMISTIC_MOVE_TIMEOUT_MS = 10_000;
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('menu');
@@ -130,6 +134,10 @@ export default function App() {
     baseTurn: number;
     state: GameState;
   } | null>(null);
+  // Surfaced when a move doesn't make it to the server within OPTIMISTIC_MOVE_TIMEOUT_MS.
+  const [mpMoveError, setMpMoveError] = useState<string | null>(null);
+  // Cleared on successful confirm or when starting a new move.
+  const optimisticTimerRef = useRef<number | null>(null);
   const [mpMatchRecord, setMpMatchRecord] = useState<MatchRecord | null>(null);
   const mySessionIdRef = useRef<string>(getSessionId());
   const [activeGameSession, setActiveGameSession] =
@@ -707,10 +715,15 @@ export default function App() {
   }, [onlineGame?.state.colored, onlineGame?.state.turn, user]);
 
   // Drop optimistic state once the server's confirmed turn catches up.
+  // Also cancel the move-timeout timer — the move went through cleanly.
   useEffect(() => {
     if (!optimisticMpState || !onlineGame) return;
     if (onlineGame.state.turn >= optimisticMpState.state.turn) {
       setOptimisticMpState(null);
+      if (optimisticTimerRef.current !== null) {
+        window.clearTimeout(optimisticTimerRef.current);
+        optimisticTimerRef.current = null;
+      }
     }
   }, [onlineGame?.state.turn, optimisticMpState]);
 
@@ -719,7 +732,27 @@ export default function App() {
     if (!onlineError) return;
     setOptimisticMpState(null);
     setMoveInFlight(false);
+    if (optimisticTimerRef.current !== null) {
+      window.clearTimeout(optimisticTimerRef.current);
+      optimisticTimerRef.current = null;
+    }
   }, [onlineError?.ts]);
+
+  // Schedule (or restart) the optimistic-move timeout. If the server hasn't
+  // confirmed within OPTIMISTIC_MOVE_TIMEOUT_MS, assume the sendMove write
+  // hung and reset the UI so the user isn't stuck on a frozen board.
+  const scheduleOptimisticTimeout = () => {
+    if (optimisticTimerRef.current !== null) {
+      window.clearTimeout(optimisticTimerRef.current);
+    }
+    optimisticTimerRef.current = window.setTimeout(() => {
+      optimisticTimerRef.current = null;
+      console.warn('optimistic move timeout — clearing local state');
+      setOptimisticMpState(null);
+      setMoveInFlight(false);
+      setMpMoveError("Move didn't go through. Check connection and try again.");
+    }, OPTIMISTIC_MOVE_TIMEOUT_MS);
+  };
 
   // Defensive recovery: if the mpgame screen is showing the loading guard
   // for more than 2 seconds (onlineGame is null even though we have a
@@ -794,12 +827,14 @@ export default function App() {
     if (moveInFlight) return;
     if (baseState.colored[dotId]) return;
     setMoveInFlight(true);
+    setMpMoveError(null);
     // Note: we do NOT setLastDot here. The "last move" highlight is
     // reserved for the OPPONENT's most recent placement, picked up by
     // the state-diff effect below.
     try {
       const next = applyAction(baseState, { kind: 'dot', dotId });
       setOptimisticMpState({ baseTurn: baseState.turn, state: next });
+      scheduleOptimisticTimeout();
     } catch (e) {
       console.warn('local applyAction failed:', e);
       setMoveInFlight(false);
@@ -811,6 +846,11 @@ export default function App() {
       console.warn('sendMove failed:', e);
       setMoveInFlight(false);
       setOptimisticMpState(null);
+      if (optimisticTimerRef.current !== null) {
+        window.clearTimeout(optimisticTimerRef.current);
+        optimisticTimerRef.current = null;
+      }
+      setMpMoveError("Move didn't go through. Try again.");
     }
   };
 
@@ -823,9 +863,11 @@ export default function App() {
     if (moveInFlight) return;
     if (!baseState.pending.includes(lineId)) return;
     setMoveInFlight(true);
+    setMpMoveError(null);
     try {
       const next = applyAction(baseState, { kind: 'claim', lineId });
       setOptimisticMpState({ baseTurn: baseState.turn, state: next });
+      scheduleOptimisticTimeout();
     } catch (e) {
       console.warn('local applyAction failed:', e);
       setMoveInFlight(false);
@@ -837,6 +879,11 @@ export default function App() {
       console.warn('sendMove failed:', e);
       setMoveInFlight(false);
       setOptimisticMpState(null);
+      if (optimisticTimerRef.current !== null) {
+        window.clearTimeout(optimisticTimerRef.current);
+        optimisticTimerRef.current = null;
+      }
+      setMpMoveError("Move didn't go through. Try again.");
     }
   };
 
@@ -909,6 +956,15 @@ export default function App() {
     }
     const myNum = playerNumFor(onlineGame, user.uid);
     const mpState = optimisticMpState?.state ?? onlineGame.state;
+    // Defensive: if state.current is somehow corrupted (not 1 or 2), fall
+    // back to turn-parity so we never leave BOTH panels inactive
+    // simultaneously — the original "both see opponent's turn" symptom.
+    const mpCurrent: 1 | 2 =
+      mpState.current === 1 || mpState.current === 2
+        ? mpState.current
+        : mpState.turn % 2 === 1
+        ? 1
+        : 2;
     const mpShape = onlineGame.shape;
     const myName = effectiveGameName ?? 'You';
     const oppName = pairing.opponentDisplayName;
@@ -981,11 +1037,21 @@ export default function App() {
             ?
           </button>
         </div>
+        {mpMoveError && (
+          <div
+            className="mp-move-error"
+            role="status"
+            aria-live="polite"
+            onClick={() => setMpMoveError(null)}
+          >
+            {mpMoveError}
+          </div>
+        )}
         <div className="game-body">
           <SidePanel
             side="left"
             player={1}
-            active={!mpState.finished && mpState.current === 1}
+            active={!mpState.finished && mpCurrent === 1}
             name={mpP1Name}
             score={mpState.scores[1]}
             avatar={mpP1Avatar}
@@ -1022,7 +1088,7 @@ export default function App() {
           <SidePanel
             side="right"
             player={2}
-            active={!mpState.finished && mpState.current === 2}
+            active={!mpState.finished && mpCurrent === 2}
             name={mpP2Name}
             score={mpState.scores[2]}
             avatar={mpP2Avatar}

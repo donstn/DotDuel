@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.3.2',
+    date: '2026-05-27',
+    highlight: 'Multiplayer freeze fix',
+    changes: [
+      {
+        kind: 'fixed',
+        text: "Rare multiplayer freeze where both players saw \"opponent's turn\" indefinitely. The board now recovers within 10 seconds if a move stalls, and the server forfeits a game whose clock has expired even if both players lose connection.",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.3.1',
     date: '2026-05-27',
     highlight: 'Mobile button fix',

@@ -30,17 +30,6 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: 'Alpha 0.1.3.3',
-    date: '2026-05-27',
-    highlight: 'Match-loading fix',
-    changes: [
-      {
-        kind: 'fixed',
-        text: "Multiplayer match would sometimes get stuck on \"Connecting to match…\" indefinitely on privacy-strict mobile browsers. The match now also tries a direct fetch and shows a Retry button after 5 seconds.",
-      },
-    ],
-  },
-  {
     version: 'Alpha 0.1.3.2',
     date: '2026-05-27',
     highlight: 'Multiplayer freeze fix',

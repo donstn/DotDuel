@@ -30,7 +30,6 @@ import {
 } from './cloud/matchmaking';
 import {
   claimTimeout,
-  fetchGameOnce,
   markBoardLoaded,
   markReady,
   playerNumFor,
@@ -660,18 +659,11 @@ export default function App() {
     prevMpColoredKeysRef.current = null;
   }, [onlineGameId]);
 
-  // Subscribe to the RTDB game node whenever we have a matchId. Also fire
-  // a one-shot fetchGameOnce() immediately — on browsers where the streaming
-  // subscription stalls (Brave Shields, etc.), the RPC-style get() can still
-  // succeed and unblock the UI without waiting for the 2s bounce.
+  // Subscribe to the RTDB game node whenever we have a matchId.
   useEffect(() => {
     if (!onlineGameId) return;
-    const stuckId = onlineGameId;
-    const unsubGame = watchGame(stuckId, setOnlineGame);
-    const unsubErr = watchError(stuckId, setOnlineError);
-    void fetchGameOnce(stuckId).then((g) => {
-      if (g) setOnlineGame((prev) => prev ?? g);
-    });
+    const unsubGame = watchGame(onlineGameId, setOnlineGame);
+    const unsubErr = watchError(onlineGameId, setOnlineError);
     return () => {
       unsubGame();
       unsubErr();
@@ -764,56 +756,19 @@ export default function App() {
 
   // Defensive recovery: if the mpgame screen is showing the loading guard
   // for more than 2 seconds (onlineGame is null even though we have a
-  // matchId), force a fresh RTDB subscription by bouncing onlineGameId AND
-  // try a one-shot fetchGameOnce() — on privacy-strict mobile browsers the
-  // streaming subscription can register but never fire, while the RPC-style
-  // get() succeeds. Either path that returns data unsticks the loading guard.
-  const [mpLoadingTooLong, setMpLoadingTooLong] = useState(false);
+  // matchId), force a fresh RTDB subscription by bouncing onlineGameId.
+  // The data is in RTDB - the client just got into a stale-state window
+  // during the matchFound -> mpgame transition.
   useEffect(() => {
-    if (screen !== 'mpgame' || onlineGame || !onlineGameId) {
-      setMpLoadingTooLong(false);
-      return;
-    }
+    if (screen !== 'mpgame' || onlineGame || !onlineGameId) return;
     const stuckId = onlineGameId;
-    const bounce = window.setTimeout(() => {
-      console.warn('mpgame: onlineGame null for 2s, bouncing subscription + one-shot fetch');
-      void fetchGameOnce(stuckId).then((g) => {
-        if (g) {
-          console.info('mpgame: fetchGameOnce recovered the game');
-          setOnlineGame(g);
-        } else {
-          console.warn('mpgame: fetchGameOnce also returned null');
-        }
-      });
+    const timer = window.setTimeout(() => {
+      console.warn('mpgame: onlineGame null for 2s, bouncing subscription');
       setOnlineGameId(null);
       window.setTimeout(() => setOnlineGameId(stuckId), 80);
     }, 2000);
-    // After 5s of loading, surface a fail-fast UI so the user isn't stuck
-    // staring at "Connecting…" for minutes if both the stream AND the
-    // one-shot fetch keep failing.
-    const giveUp = window.setTimeout(() => setMpLoadingTooLong(true), 5000);
-    return () => {
-      window.clearTimeout(bounce);
-      window.clearTimeout(giveUp);
-    };
+    return () => window.clearTimeout(timer);
   }, [screen, onlineGameId, onlineGame]);
-
-  // Retry button on the loading guard. Runs the same recovery the auto-bounce
-  // does, but immediately + visibly to the user.
-  const onRetryMpLoading = () => {
-    if (!onlineGameId) return;
-    const stuckId = onlineGameId;
-    console.warn('mpgame: user-triggered retry');
-    setMpLoadingTooLong(false);
-    void fetchGameOnce(stuckId).then((g) => {
-      if (g) {
-        console.info('mpgame: retry fetchGameOnce recovered the game');
-        setOnlineGame(g);
-      }
-    });
-    setOnlineGameId(null);
-    window.setTimeout(() => setOnlineGameId(stuckId), 80);
-  };
 
   // Schedule an automatic timeout claim at the moment the current player's
   // clock will hit 0. Both clients run this; whichever fires first wins, the
@@ -984,21 +939,11 @@ export default function App() {
       });
       return (
         <div className="menu">
-          <h2>{mpLoadingTooLong ? 'Connection trouble' : 'Connecting to match…'}</h2>
+          <h2>Connecting to match…</h2>
           <p className="hint">
-            {mpLoadingTooLong
-              ? "Couldn't reach the game data. Your connection may be blocked by a privacy filter or extension. Try again, or head back."
-              : 'Linking up with the game server.'}
+            Linking up with the game server. If this hangs for more than ~10
+            seconds, something's wrong — back out and try again.
           </p>
-          {mpLoadingTooLong && (
-            <button
-              type="button"
-              className="menu-auth-btn menu-auth-btn-cta"
-              onClick={onRetryMpLoading}
-            >
-              Retry
-            </button>
-          )}
           <button
             type="button"
             className="menu-auth-btn"

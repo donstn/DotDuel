@@ -15,9 +15,24 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow create: if request.auth != null && request.auth.uid == uid;
+      // Two allowed update shapes:
+      //   1. Normal player-controlled update — only displayName/progress
+      //      may change (rating, email, authProvider, createdAt remain
+      //      function-only).
+      //   2. First-time profile completion — when the doc exists but has
+      //      no displayName yet (e.g. a stale {progress}-only partial
+      //      from a previous client version), allow the same fields the
+      //      create rule would have allowed. Gated by displayName being
+      //      absent so it cannot be replayed after the username is set.
       allow update: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['displayName', 'progress']);
+        && (
+          request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['displayName', 'progress'])
+          ||
+          (!('displayName' in resource.data) &&
+           request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['displayName', 'email', 'authProvider', 'createdAt', 'progress']))
+        );
       allow delete: if false;  // account deletion goes through deleteAccount Cloud Function
     }
 

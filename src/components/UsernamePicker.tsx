@@ -13,6 +13,10 @@ interface Props {
   seed?: { email: string | null; authProvider: string | null };
   onSuccess: (newName: string) => void;
   onCancel?: () => void;
+  // Claim mode is non-dismissible by design — but if claim keeps failing
+  // (e.g. a stale Firestore doc the user can't repair), this gives them
+  // an escape hatch back to sign-in instead of being trapped on the picker.
+  onSignOut?: () => void;
 }
 
 type AvailState =
@@ -32,6 +36,7 @@ export function UsernamePicker({
   seed,
   onSuccess,
   onCancel,
+  onSignOut,
 }: Props) {
   const [name, setName] = useState(initialName);
   const [avail, setAvail] = useState<AvailState>({ kind: 'idle' });
@@ -196,6 +201,17 @@ export function UsernamePicker({
             <div className="auth-error" role="alert">
               {submitError}
             </div>
+          )}
+
+          {mode === 'claim' && onSignOut && (
+            <button
+              type="button"
+              className="username-signout-link"
+              onClick={onSignOut}
+              disabled={submitting}
+            >
+              Sign out
+            </button>
           )}
         </div>
       </div>

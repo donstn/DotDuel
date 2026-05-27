@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.2.5',
+    date: '2026-05-27',
+    highlight: 'Signup fix follow-up',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Picking a username now works even if a previous signup attempt left a half-finished profile',
+      },
+      {
+        kind: 'added',
+        text: "Sign-out button on the pick-name screen so you're never stuck",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.2.4',
     date: '2026-05-27',
     highlight: 'Signup fix',

@@ -4066,3 +4066,27 @@ body:has(.consent-banner) .rules-card {
 .username-status.invalid {
   color: #ffb4b4;
 }
+
+.username-signout-link {
+  align-self: center;
+  background: transparent;
+  border: none;
+  color: var(--text-mute);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  padding: 6px 10px;
+  margin-top: 2px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 120ms ease;
+}
+
+.username-signout-link:hover:not(:disabled) {
+  color: var(--text-bright);
+}
+
+.username-signout-link:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

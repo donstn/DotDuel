@@ -1247,6 +1247,7 @@ export default function App() {
               }));
               void saveCloudProgress(user.uid, progress);
             }}
+            onSignOut={() => void onSignOutSafe()}
           />
         )}
         {renameOpen && user && cloudProfile?.displayName && (
@@ -1493,6 +1494,7 @@ export default function App() {
             }));
             void saveCloudProgress(user.uid, progress);
           }}
+          onSignOut={() => void onSignOutSafe()}
         />
       )}
       {renameOpen && user && cloudProfile?.displayName && (

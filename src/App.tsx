@@ -85,6 +85,8 @@ import {
 import { DIFFICULTY_LABELS } from './types';
 import type { Difficulty, GameMode, GameState, Progress, ShapeId } from './types';
 import { APP_VERSION } from './version';
+import { app } from './firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound' | 'mpgame';
 
@@ -305,6 +307,23 @@ export default function App() {
       cancelled = true;
     };
   }, [user?.uid]);
+
+  // Admin-only debug helper. Exposes window.__countStuckSignups() in the
+  // console for the project owner so we can measure impact of regressions
+  // like the 0.1.2.3 signup permission bug. Invisible to non-admin users.
+  useEffect(() => {
+    if (user?.email !== 'donstn@gmail.com') return;
+    (window as unknown as { __countStuckSignups?: () => Promise<unknown> }).__countStuckSignups =
+      async () => {
+        const fn = httpsCallable(getFunctions(app, 'europe-west1'), 'countStuckSignups');
+        const r = await fn();
+        // eslint-disable-next-line no-console
+        console.log(JSON.stringify(r.data, null, 2));
+        return r.data;
+      };
+    // eslint-disable-next-line no-console
+    console.log('[admin] await window.__countStuckSignups()');
+  }, [user?.email]);
 
   // Live subscription to users/{uid} — auto-updates display name across tabs.
   useEffect(() => {

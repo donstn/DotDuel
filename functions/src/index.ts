@@ -1194,3 +1194,74 @@ export const cleanupFinishedGames = onSchedule(
     }
   },
 );
+
+// ===========================================================================
+// Admin debug: count accounts stuck mid-signup
+// ===========================================================================
+//
+// One-shot diagnostic to measure the impact of the 0.1.2.3 → 0.1.2.5
+// signup permission regression. Counts users/{uid} docs that have NO
+// displayName field (these never completed claimUsername). Cross-references
+// Firebase Auth metadata to bucket them by hour of account creation so we
+// can see when the impact peaked.
+//
+// Admin-gated by email. Keep it in the codebase — same shape is useful any
+// time a future regression looks like it left users in a partial state.
+const ADMIN_EMAILS = new Set(['donstn@gmail.com']);
+
+interface StuckReport {
+  totalUsers: number;
+  stuckCount: number;
+  claimedCount: number;
+  hourlyBuckets: Record<string, number>; // ISO hour → count
+  sampleUids: string[];                  // first 5 for sanity checking
+}
+
+export const countStuckSignups = onCall(
+  { region: 'europe-west1' },
+  async (request): Promise<StuckReport> => {
+    const callerEmail = request.auth?.token.email;
+    if (!callerEmail || !ADMIN_EMAILS.has(callerEmail)) {
+      throw new HttpsError('permission-denied', 'Admin only.');
+    }
+    const db = getFirestore();
+    const auth = getAuth();
+
+    const all = await db.collection('users').get();
+    const stuck: string[] = [];
+    let claimed = 0;
+    for (const doc of all.docs) {
+      const data = doc.data();
+      if (typeof data.displayName === 'string' && data.displayName.length > 0) {
+        claimed++;
+      } else {
+        stuck.push(doc.id);
+      }
+    }
+
+    // Bucket stuck accounts by hour of Auth-user creation. getUsers takes
+    // up to 100 uids per call.
+    const hourlyBuckets: Record<string, number> = {};
+    for (let i = 0; i < stuck.length; i += 100) {
+      const chunk = stuck.slice(i, i + 100).map((uid) => ({ uid }));
+      const { users } = await auth.getUsers(chunk);
+      for (const u of users) {
+        const createdAt = new Date(u.metadata.creationTime);
+        // ISO hour: 'YYYY-MM-DDTHH:00:00Z'
+        const iso = createdAt.toISOString();
+        const hourKey = iso.slice(0, 13) + ':00:00Z';
+        hourlyBuckets[hourKey] = (hourlyBuckets[hourKey] ?? 0) + 1;
+      }
+    }
+
+    const report: StuckReport = {
+      totalUsers: all.size,
+      stuckCount: stuck.length,
+      claimedCount: claimed,
+      hourlyBuckets,
+      sampleUids: stuck.slice(0, 5),
+    };
+    logger.info('countStuckSignups report', report);
+    return report;
+  },
+);

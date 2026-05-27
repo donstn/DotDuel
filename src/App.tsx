@@ -768,12 +768,8 @@ export default function App() {
   // try a one-shot fetchGameOnce() — on privacy-strict mobile browsers the
   // streaming subscription can register but never fire, while the RPC-style
   // get() succeeds. Either path that returns data unsticks the loading guard.
-  const [mpLoadingTooLong, setMpLoadingTooLong] = useState(false);
   useEffect(() => {
-    if (screen !== 'mpgame' || onlineGame || !onlineGameId) {
-      setMpLoadingTooLong(false);
-      return;
-    }
+    if (screen !== 'mpgame' || onlineGame || !onlineGameId) return;
     const stuckId = onlineGameId;
     const bounce = window.setTimeout(() => {
       console.warn('mpgame: onlineGame null for 2s, bouncing subscription + one-shot fetch');
@@ -788,15 +784,26 @@ export default function App() {
       setOnlineGameId(null);
       window.setTimeout(() => setOnlineGameId(stuckId), 80);
     }, 2000);
-    // After 5s of loading, surface a fail-fast UI so the user isn't stuck
-    // staring at "Connecting…" for minutes if both the stream AND the
-    // one-shot fetch keep failing.
-    const giveUp = window.setTimeout(() => setMpLoadingTooLong(true), 5000);
-    return () => {
-      window.clearTimeout(bounce);
-      window.clearTimeout(giveUp);
-    };
+    return () => window.clearTimeout(bounce);
   }, [screen, onlineGameId, onlineGame]);
+
+  // Give-up timer: deliberately separated from the bounce loop above so the
+  // 2s subscription bounces don't keep resetting this 5s timer. Depends only
+  // on `screen` and `onlineGame` — onlineGameId churn from the bounce loop
+  // does NOT reset it. Once onlineGame populates or the user leaves mpgame,
+  // the effect cleanup fires and we reset the flag.
+  const [mpLoadingTooLong, setMpLoadingTooLong] = useState(false);
+  useEffect(() => {
+    if (screen !== 'mpgame' || onlineGame) {
+      setMpLoadingTooLong(false);
+      return;
+    }
+    const giveUp = window.setTimeout(() => {
+      console.warn('mpgame: still no onlineGame after 5s — surfacing retry UI');
+      setMpLoadingTooLong(true);
+    }, 5000);
+    return () => window.clearTimeout(giveUp);
+  }, [screen, onlineGame]);
 
   // Retry button on the loading guard. Runs the same recovery the auto-bounce
   // does, but immediately + visibly to the user.

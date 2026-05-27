@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.3.4',
+    date: '2026-05-27',
+    highlight: 'Match-loading retry actually appears',
+    changes: [
+      {
+        kind: 'fixed',
+        text: "Retry button on the \"Connecting to match…\" screen wasn't appearing — the 5-second timer was being reset by the background reconnection loop. Now it shows up reliably.",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.3.3',
     date: '2026-05-27',
     highlight: 'Match-loading fix',

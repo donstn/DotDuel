@@ -61,13 +61,39 @@ export async function saveCloudProgress(
 
 export async function syncOnSignIn(uid: string): Promise<Progress | null> {
   const local = loadProgress();
-  const cloud = await loadCloudProgress(uid);
-  if (!cloud) {
-    await saveCloudProgress(uid, local);
+  // Read users/{uid} directly so we can distinguish "no doc yet" (user
+  // hasn't claimed a username) from "doc exists but no progress field".
+  // In the no-doc case we must NOT pre-create the doc here — claimUsername
+  // creates it with required server-only fields (email, authProvider,
+  // createdAt). If we wrote {progress} first, claimUsername's later write
+  // would hit allow update (not allow create) and be rejected because the
+  // update rule restricts fields to ['displayName', 'progress'].
+  try {
+    const snap = await getDoc(userDoc(uid));
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    const cloud = data?.progress as Progress | undefined;
+    if (!cloud) {
+      await saveCloudProgress(uid, local);
+      return null;
+    }
+    const p = cloud;
+    const u = p.unlocked ?? ({} as Partial<Progress['unlocked']>);
+    const normalised: Progress = {
+      unlocked: {
+        triangle: u.triangle ?? 1,
+        square: u.square ?? 0,
+        rectangle: u.rectangle ?? 0,
+        rhombus: u.rhombus ?? 0,
+      },
+      wins: p.wins ?? {},
+    };
+    const merged = mergeProgress(local, normalised);
+    saveProgress(merged);
+    await saveCloudProgress(uid, merged);
+    return merged;
+  } catch (e) {
+    console.warn('syncOnSignIn failed:', e);
     return null;
   }
-  const merged = mergeProgress(local, cloud);
-  saveProgress(merged);
-  await saveCloudProgress(uid, merged);
-  return merged;
 }

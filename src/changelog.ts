@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.2.4',
+    date: '2026-05-27',
+    highlight: 'Signup fix',
+    changes: [
+      {
+        kind: 'fixed',
+        text: "Signing up with a new account no longer fails with a 'missing permissions' error when picking a username",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.2.3',
     date: '2026-05-26',
     highlight: 'Sharable links + security hardening',

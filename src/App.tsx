@@ -1245,6 +1245,7 @@ export default function App() {
                 rating: prev?.rating ?? 1000,
                 placementGamesPlayed: prev?.placementGamesPlayed ?? 0,
               }));
+              void saveCloudProgress(user.uid, progress);
             }}
           />
         )}
@@ -1490,6 +1491,7 @@ export default function App() {
               rating: prev?.rating ?? 1000,
               placementGamesPlayed: prev?.placementGamesPlayed ?? 0,
             }));
+            void saveCloudProgress(user.uid, progress);
           }}
         />
       )}

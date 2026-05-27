@@ -7,12 +7,14 @@ import {
   type DocumentData,
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import type { Difficulty } from '../types';
 
 /**
  * Global Elo leaderboard. Denormalised public view of users/{uid} —
  * only displayName + rating + placement counter + lastPlayedAt are
  * exposed here. Updated transactionally by finalizeGame on every
- * ranked match-end.
+ * ranked match-end. Bot rows additionally carry isBot + botLevel so
+ * the UI can show a robot avatar + BOT tag inline.
  */
 export interface LeaderboardEntry {
   uid: string;
@@ -20,9 +22,12 @@ export interface LeaderboardEntry {
   rating: number;
   placementGamesPlayed: number;
   lastPlayedAt: number;
+  isBot: boolean;
+  botLevel: Difficulty | null;
 }
 
 function shape(uid: string, d: DocumentData): LeaderboardEntry {
+  const isBot = d.isBot === true;
   return {
     uid: (d.uid as string) ?? uid,
     displayName: (d.displayName as string) ?? 'Player',
@@ -31,6 +36,9 @@ function shape(uid: string, d: DocumentData): LeaderboardEntry {
       typeof d.placementGamesPlayed === 'number' ? d.placementGamesPlayed : 0,
     lastPlayedAt:
       typeof d.lastPlayedAt === 'number' ? d.lastPlayedAt : 0,
+    isBot,
+    botLevel:
+      isBot && typeof d.botLevel === 'number' ? (d.botLevel as Difficulty) : null,
   };
 }
 

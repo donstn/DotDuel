@@ -85,6 +85,8 @@ import {
 import { DIFFICULTY_LABELS } from './types';
 import type { Difficulty, GameMode, GameState, Progress, ShapeId } from './types';
 import { APP_VERSION } from './version';
+import { app } from './firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound' | 'mpgame';
 
@@ -305,6 +307,32 @@ export default function App() {
       cancelled = true;
     };
   }, [user?.uid]);
+
+  // Admin-only debug helpers — exposed on window for the project owner so
+  // we can invoke admin-gated callables (seedBots, countStuckSignups) from
+  // the live app without ad-hoc deploys. Invisible to non-admin users.
+  useEffect(() => {
+    if (user?.email !== 'donstn@gmail.com') return;
+    const fns = getFunctions(app, 'europe-west1');
+    const wnd = window as unknown as {
+      __seedBots?: () => Promise<unknown>;
+      __countStuckSignups?: () => Promise<unknown>;
+    };
+    wnd.__seedBots = async () => {
+      const r = await httpsCallable(fns, 'seedBots')();
+      // eslint-disable-next-line no-console
+      console.log(JSON.stringify(r.data, null, 2));
+      return r.data;
+    };
+    wnd.__countStuckSignups = async () => {
+      const r = await httpsCallable(fns, 'countStuckSignups')();
+      // eslint-disable-next-line no-console
+      console.log(JSON.stringify(r.data, null, 2));
+      return r.data;
+    };
+    // eslint-disable-next-line no-console
+    console.log('[admin] await __seedBots() · await __countStuckSignups()');
+  }, [user?.email]);
 
   // Live subscription to users/{uid} — auto-updates display name across tabs.
   useEffect(() => {
@@ -872,6 +900,15 @@ export default function App() {
     const oppRating = pairing.opponentRating;
     const mpP1Elo = pairing.player === 1 ? myRating : oppRating;
     const mpP2Elo = pairing.player === 2 ? myRating : oppRating;
+    // When opponent is a bot, render the matching RobotL{level} avatar in
+    // their slot. Human always shows the human silhouette.
+    const opponentSlot: 1 | 2 = pairing.player === 1 ? 2 : 1;
+    const oppAvatar: 'human' | { kind: 'ai'; level: Difficulty } =
+      pairing.opponentIsBot && pairing.opponentBotLevel
+        ? { kind: 'ai', level: pairing.opponentBotLevel }
+        : 'human';
+    const mpP1Avatar = opponentSlot === 1 ? oppAvatar : 'human';
+    const mpP2Avatar = opponentSlot === 2 ? oppAvatar : 'human';
     const mpTotalPoints = getBoard(mpShape).lines.reduce((sum, l) => sum + l.length, 0);
     const mpRemaining = mpTotalPoints - mpState.scores[1] - mpState.scores[2];
     const mpShowOver = mpState.finished;
@@ -932,10 +969,17 @@ export default function App() {
             active={!mpState.finished && mpState.current === 1}
             name={mpP1Name}
             score={mpState.scores[1]}
-            avatar="human"
+            avatar={mpP1Avatar}
             stats={null}
             ratingSlot={p1Clock}
-            belowAvatar={<span className="player-elo">{mpP1Elo}</span>}
+            belowAvatar={
+              <span className="player-elo">
+                {mpP1Elo}
+                {opponentSlot === 1 && pairing.opponentIsBot && (
+                  <span className="bot-tag" aria-label="AI opponent">BOT</span>
+                )}
+              </span>
+            }
             actionSlot={
               myNum === 1 && !mpState.finished ? (
                 <button
@@ -962,10 +1006,17 @@ export default function App() {
             active={!mpState.finished && mpState.current === 2}
             name={mpP2Name}
             score={mpState.scores[2]}
-            avatar="human"
+            avatar={mpP2Avatar}
             stats={null}
             ratingSlot={p2Clock}
-            belowAvatar={<span className="player-elo">{mpP2Elo}</span>}
+            belowAvatar={
+              <span className="player-elo">
+                {mpP2Elo}
+                {opponentSlot === 2 && pairing.opponentIsBot && (
+                  <span className="bot-tag" aria-label="AI opponent">BOT</span>
+                )}
+              </span>
+            }
             actionSlot={
               myNum === 2 && !mpState.finished ? (
                 <button
@@ -994,6 +1045,7 @@ export default function App() {
             onStartShape={() => onLeaveMpGame()}
             myPlayer={myNum ?? undefined}
             finishedReason={onlineGame.finishedReason}
+            opponentIsBot={pairing.opponentIsBot}
             rematchLabel="Rematch"
             rematchMine={
               myNum

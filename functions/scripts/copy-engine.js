@@ -8,7 +8,7 @@ const path = require('path');
 
 const SRC = path.join(__dirname, '..', '..', 'src');
 const DEST = path.join(__dirname, '..', 'src', 'engine');
-const FILES = ['types.ts', 'geometry.ts', 'game.ts'];
+const FILES = ['types.ts', 'geometry.ts', 'game.ts', 'ai.ts'];
 
 fs.mkdirSync(DEST, { recursive: true });
 

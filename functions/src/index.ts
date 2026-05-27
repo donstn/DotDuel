@@ -12,7 +12,8 @@ import {
 } from 'firebase-admin/firestore';
 import { getDatabase } from 'firebase-admin/database';
 import { applyAction, createGame } from './engine/game';
-import type { GameAction, GameState, ShapeId } from './engine/types';
+import { pickAIAction } from './engine/ai';
+import type { Difficulty, GameAction, GameState, Player, ShapeId } from './engine/types';
 import { createHash } from 'crypto';
 
 initializeApp();
@@ -594,6 +595,10 @@ export const finalizeGame = onValueWritten(
           // are safe for any signed-in user to read (displayName + rating +
           // placement counter + last-played timestamp). Email / progress /
           // anything else stays in users/{uid} which is owner-only.
+          // isBot / botLevel are surfaced here so RankingsPopover can render
+          // bot avatars + the "BOT" tag without needing a second fetch.
+          const p1IsBot = p1.isBot === true;
+          const p2IsBot = p2.isBot === true;
           tx.set(
             db.doc(`leaderboard/${p1Uid}`),
             {
@@ -602,6 +607,8 @@ export const finalizeGame = onValueWritten(
               rating: p1RatingAfter,
               placementGamesPlayed: p1Placement + 1,
               lastPlayedAt: finishedAt,
+              isBot: p1IsBot,
+              botLevel: p1IsBot ? (p1.botLevel as Difficulty) : null,
             },
             { merge: true },
           );
@@ -613,6 +620,8 @@ export const finalizeGame = onValueWritten(
               rating: p2RatingAfter,
               placementGamesPlayed: p2Placement + 1,
               lastPlayedAt: finishedAt,
+              isBot: p2IsBot,
+              botLevel: p2IsBot ? (p2.botLevel as Difficulty) : null,
             },
             { merge: true },
           );
@@ -1265,3 +1274,613 @@ export const countStuckSignups = onCall(
     return report;
   },
 );
+
+// ===========================================================================
+// Bot Army — ranked AI opponents that fill in when the human matchmaker queue
+// is empty. See plans/multiplayer_bots.md for the full design.
+//
+// Bots live as real Firestore users/{botUid} docs (isBot: true, botLevel,
+// rating that floats with results). One bot per AI level — Pip (L1), Cricket
+// (L2), Ranger (L3), Knight (L4), Voidstar (L5). Private metadata (think
+// delay range, active flag) lives in bots/{botUid}.
+//
+// Three new entry points:
+//   - botFallbackSweep: scheduled, picks up queue entries waiting > 30s and
+//     spawns a bot match.
+//   - botMove: RTDB trigger on games/{id}/state/current; when it's a bot's
+//     turn, sleeps briefly then submits a move via pendingMove (same path
+//     humans use, so validateMove handles it unchanged).
+//   - seedBots: admin-gated one-shot to provision the 5 bot identities.
+// ===========================================================================
+
+interface BotMeta {
+  level: Difficulty;
+  thinkMsMin: number;
+  thinkMsMax: number;
+  active: boolean;
+  displayName: string;
+}
+
+// Per-time-control hard caps on bot think delay so Bullet bots don't burn
+// their own clock too aggressively. min..max is sampled uniformly per move.
+const BOT_THINK_CAP_MS: Record<TimeControl, number> = {
+  '1min': 1200,
+  '3min': 2200,
+  '5min': 3500,
+};
+
+const BOT_FALLBACK_THRESHOLD_MS = 15_000;
+
+// Module-scope cache for bot metadata — 5 docs total, change rarely. The
+// 5-min TTL is enough for botMove to avoid a Firestore read per move while
+// staying responsive to seedBots updates.
+const BOT_CACHE_TTL_MS = 5 * 60 * 1000;
+let botCache: { byUid: Record<string, BotMeta>; loadedAt: number } | null = null;
+
+async function loadActiveBots(): Promise<Record<string, BotMeta>> {
+  if (botCache && Date.now() - botCache.loadedAt < BOT_CACHE_TTL_MS) {
+    return botCache.byUid;
+  }
+  const db = getFirestore();
+  const snap = await db.collection('bots').where('active', '==', true).get();
+  const byUid: Record<string, BotMeta> = {};
+  for (const doc of snap.docs) {
+    const d = doc.data();
+    byUid[doc.id] = {
+      level: d.level as Difficulty,
+      thinkMsMin: typeof d.thinkMsMin === 'number' ? d.thinkMsMin : 800,
+      thinkMsMax: typeof d.thinkMsMax === 'number' ? d.thinkMsMax : 2500,
+      active: d.active === true,
+      displayName: (d.displayName as string) ?? doc.id,
+    };
+  }
+  botCache = { byUid, loadedAt: Date.now() };
+  return byUid;
+}
+
+// Returns null if uid is not a registered bot.
+async function getBotMeta(uid: string): Promise<BotMeta | null> {
+  const bots = await loadActiveBots();
+  return bots[uid] ?? null;
+}
+
+// Picks the bot whose CURRENT rating is closest to the user's, with a small
+// random shuffle when several are within 100 Elo so the same user doesn't
+// always see the same bot.
+async function pickBotForRating(
+  userRating: number,
+): Promise<{ uid: string; meta: BotMeta; rating: number; displayName: string } | null> {
+  const db = getFirestore();
+  const bots = await loadActiveBots();
+  const botUids = Object.keys(bots);
+  if (botUids.length === 0) return null;
+
+  // Live-read bot ratings (they float). 5 reads total.
+  const userSnaps = await Promise.all(
+    botUids.map((uid) => db.doc(`users/${uid}`).get()),
+  );
+  const candidates = userSnaps.map((snap, i) => {
+    const data = snap.data() ?? {};
+    return {
+      uid: botUids[i],
+      meta: bots[botUids[i]],
+      rating: typeof data.rating === 'number' ? data.rating : 1000,
+      displayName: (data.displayName as string) ?? bots[botUids[i]].displayName,
+    };
+  });
+
+  candidates.sort(
+    (a, b) => Math.abs(a.rating - userRating) - Math.abs(b.rating - userRating),
+  );
+  // Pick uniformly from those within 100 Elo of the best match.
+  const bestDelta = Math.abs(candidates[0].rating - userRating);
+  const tiebreak = candidates.filter(
+    (c) => Math.abs(Math.abs(c.rating - userRating) - bestDelta) <= 100,
+  );
+  return tiebreak[Math.floor(Math.random() * tiebreak.length)];
+}
+
+// Spawns a bot match for a single human in the matchmaking queue. Mirrors
+// the pair-creation block of `matchmake` so downstream code (validateMove,
+// finalizeGame, watchGame on the client) treats it identically.
+async function spawnBotMatch(args: {
+  humanUid: string;
+  humanRating: number;
+  humanDisplayName: string;
+  humanPlacementGames: number;
+  timeControl: TimeControl;
+}): Promise<void> {
+  const db = getFirestore();
+  const rtdb = getDatabase();
+  const { humanUid, humanRating, humanDisplayName, humanPlacementGames, timeControl } = args;
+
+  const bot = await pickBotForRating(humanRating);
+  if (!bot) {
+    logger.warn(`spawnBotMatch: no active bots for ${hashUid(humanUid)}`);
+    return;
+  }
+
+  // Shape selection: intersection of human's unlocked + bot's unlocked.
+  // Bots are seeded with placementGamesPlayed >= 100 so they have all
+  // shapes unlocked, but we still compute the intersection for symmetry.
+  const unlockedShapes = (gamesPlayed: number): ShapeId[] => {
+    const out: ShapeId[] = ['triangle'];
+    if (gamesPlayed >= 50) out.push('square');
+    if (gamesPlayed >= 100) out.push('rectangle');
+    return out;
+  };
+  const allowedShapes = unlockedShapes(humanPlacementGames);
+  const shape: ShapeId =
+    allowedShapes[Math.floor(Math.random() * allowedShapes.length)];
+
+  const matchId = db.collection('matches').doc().id;
+  const queueRef = db.doc(`matchmakingQueue/${humanUid}`);
+  const matchRef = db.doc(`matches/${matchId}`);
+  const humanPairRef = db.doc(`pairings/${humanUid}`);
+
+  // Human is always P1 (joined the queue first; bot is the responder).
+  const p1Uid = humanUid;
+  const p2Uid = bot.uid;
+  const p1Display = humanDisplayName;
+  const p2Display = bot.displayName;
+
+  try {
+    await db.runTransaction(async (tx) => {
+      const queueSnap = await tx.get(queueRef);
+      if (!queueSnap.exists) {
+        throw new Error('queue entry already claimed (likely paired with a human)');
+      }
+      tx.delete(queueRef);
+      tx.set(matchRef, {
+        status: 'created',
+        createdAt: FieldValue.serverTimestamp(),
+        timeControl,
+        shape,
+        p1Uid,
+        p2Uid,
+        p1Display,
+        p2Display,
+        playerUids: [p1Uid, p2Uid],
+        ranked: true,
+      });
+      tx.set(humanPairRef, {
+        matchId,
+        shape,
+        opponentUid: bot.uid,
+        opponentDisplayName: bot.displayName,
+        opponentRating: bot.rating,
+        opponentIsBot: true,
+        opponentBotLevel: bot.meta.level,
+        player: 1,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    });
+  } catch (e) {
+    logger.warn(`spawnBotMatch: pairing tx failed for ${hashUid(humanUid)}`, e);
+    return;
+  }
+
+  // Create the RTDB game node. Bot is pre-readied AND pre-board-loaded so
+  // startClockWhenBoardsLoaded fires as soon as the human's client mounts
+  // and acks boardLoaded[1] = true.
+  try {
+    const initialState = createGame(shape, 'multiplayer');
+    const totalMs = TIME_CONTROL_MS[timeControl];
+    await rtdb.ref(`games/${matchId}`).set({
+      state: sanitize(initialState),
+      playerUids: { '1': p1Uid, '2': p2Uid },
+      status: 'active',
+      shape,
+      timeControl,
+      ready: { '1': false, '2': true },
+      boardLoaded: { '1': false, '2': true },
+      clock: {
+        p1RemainingMs: totalMs,
+        p2RemainingMs: totalMs,
+        turnStartedAt: 0,
+        current: 1,
+        totalMs,
+      },
+      createdAt: Date.now(),
+    });
+    logger.info(
+      `spawnBotMatch: ${hashUid(humanUid)} (${humanRating}) <-> bot ${bot.uid} (${bot.rating}) on ${shape}, match=${matchId}`,
+    );
+  } catch (e) {
+    logger.error(`spawnBotMatch: RTDB game create failed for ${matchId}`, e);
+  }
+}
+
+// Pair two stale queue entries as a human-vs-human match. Mirrors the
+// match-write block of `matchmake` so downstream pipelines (validateMove,
+// finalizeGame, watchGame) treat the result identically. Earlier joiner
+// becomes P1. Returns true on success, false if either queue entry was
+// already claimed mid-transaction.
+async function pairTwoHumans(args: {
+  a: { uid: string; rating: number; displayName: string; placementGames: number; joinedAtMs: number };
+  b: { uid: string; rating: number; displayName: string; placementGames: number; joinedAtMs: number };
+  timeControl: TimeControl;
+}): Promise<boolean> {
+  const db = getFirestore();
+  const rtdb = getDatabase();
+  const { a, b, timeControl } = args;
+
+  // Earlier-joined player gets slot 1 (chess colour convention; matches
+  // matchmake behaviour).
+  const aIsFirst = a.joinedAtMs <= b.joinedAtMs;
+  const p1 = aIsFirst ? a : b;
+  const p2 = aIsFirst ? b : a;
+
+  // Shape: intersection of both players' unlocked sets (same gate matchmake uses).
+  const unlockedShapes = (gamesPlayed: number): ShapeId[] => {
+    const out: ShapeId[] = ['triangle'];
+    if (gamesPlayed >= 50) out.push('square');
+    if (gamesPlayed >= 100) out.push('rectangle');
+    return out;
+  };
+  const allowed = unlockedShapes(p1.placementGames).filter((s) =>
+    unlockedShapes(p2.placementGames).includes(s),
+  );
+  const shape: ShapeId = allowed[Math.floor(Math.random() * allowed.length)];
+
+  const matchId = db.collection('matches').doc().id;
+  const p1Ref = db.doc(`matchmakingQueue/${p1.uid}`);
+  const p2Ref = db.doc(`matchmakingQueue/${p2.uid}`);
+  const matchRef = db.doc(`matches/${matchId}`);
+  const p1PairRef = db.doc(`pairings/${p1.uid}`);
+  const p2PairRef = db.doc(`pairings/${p2.uid}`);
+
+  try {
+    await db.runTransaction(async (tx) => {
+      const [p1Snap, p2Snap] = await Promise.all([tx.get(p1Ref), tx.get(p2Ref)]);
+      if (!p1Snap.exists || !p2Snap.exists) {
+        throw new Error('queue entry already claimed by another pairing');
+      }
+      tx.delete(p1Ref);
+      tx.delete(p2Ref);
+      tx.set(matchRef, {
+        status: 'created',
+        createdAt: FieldValue.serverTimestamp(),
+        timeControl,
+        shape,
+        p1Uid: p1.uid,
+        p2Uid: p2.uid,
+        p1Display: p1.displayName,
+        p2Display: p2.displayName,
+        playerUids: [p1.uid, p2.uid],
+        ranked: true,
+      });
+      tx.set(p1PairRef, {
+        matchId,
+        shape,
+        opponentUid: p2.uid,
+        opponentDisplayName: p2.displayName,
+        opponentRating: p2.rating,
+        player: 1,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      tx.set(p2PairRef, {
+        matchId,
+        shape,
+        opponentUid: p1.uid,
+        opponentDisplayName: p1.displayName,
+        opponentRating: p1.rating,
+        player: 2,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    });
+  } catch (e) {
+    logger.warn(`pairTwoHumans: tx failed (${hashUid(p1.uid)} <-> ${hashUid(p2.uid)})`, e);
+    return false;
+  }
+
+  try {
+    const initialState = createGame(shape, 'multiplayer');
+    const totalMs = TIME_CONTROL_MS[timeControl];
+    await rtdb.ref(`games/${matchId}`).set({
+      state: sanitize(initialState),
+      playerUids: { '1': p1.uid, '2': p2.uid },
+      status: 'active',
+      shape,
+      timeControl,
+      ready: { '1': false, '2': false },
+      boardLoaded: { '1': false, '2': false },
+      clock: {
+        p1RemainingMs: totalMs,
+        p2RemainingMs: totalMs,
+        turnStartedAt: 0,
+        current: 1,
+        totalMs,
+      },
+      createdAt: Date.now(),
+    });
+    logger.info(
+      `pairTwoHumans: ${hashUid(p1.uid)} <-> ${hashUid(p2.uid)} match ${matchId} on ${shape}`,
+    );
+  } catch (e) {
+    logger.error(`pairTwoHumans: RTDB game create failed for ${matchId}`, e);
+  }
+  return true;
+}
+
+export const botFallbackSweep = onSchedule(
+  {
+    schedule: 'every 1 minutes',
+    timeZone: 'UTC',
+    region: 'europe-west1',
+  },
+  async () => {
+    const db = getFirestore();
+    const cutoff = Date.now() - BOT_FALLBACK_THRESHOLD_MS;
+    const staleSnap = await db
+      .collection('matchmakingQueue')
+      .where('joinedAt', '<', Timestamp.fromMillis(cutoff))
+      .get();
+    if (staleSnap.empty) {
+      return;
+    }
+    logger.info(`botFallbackSweep: ${staleSnap.size} stale queue entries`);
+
+    // Pull the entire queue once; we need full visibility to do human-first
+    // matching (a "fresh" entry may also be compatible with a stale one and
+    // wins priority over bots).
+    const allSnap = await db.collection('matchmakingQueue').get();
+    type QE = QueueEntry & { uid: string };
+    const allEntries: QE[] = allSnap.docs.map((d) => ({
+      ...(d.data() as QueueEntry),
+      uid: d.id,
+    }));
+    const processed = new Set<string>();
+    const now = Date.now();
+
+    for (const staleDoc of staleSnap.docs) {
+      if (processed.has(staleDoc.id)) continue;
+      const target = allEntries.find((e) => e.uid === staleDoc.id);
+      if (!target) continue;
+      const targetJoinedMs = target.joinedAt?.toMillis?.() ?? now;
+      const targetWaitedSec = Math.max(0, (now - targetJoinedMs) / 1000);
+      const targetRange = Math.min(
+        MAX_RANGE,
+        target.initialRange + RANGE_PER_SECOND * targetWaitedSec,
+      );
+
+      // HUMAN PRIORITY: scan the rest of the queue for a compatible
+      // partner. Match if delta is within EITHER side's grown range — the
+      // wait-time tolerance is supposed to be symmetric, so being within
+      // the more patient side's range is enough.
+      let bestPartner: QE | null = null;
+      let bestPartnerDelta = Infinity;
+      for (const cand of allEntries) {
+        if (cand.uid === target.uid) continue;
+        if (cand.timeControl !== target.timeControl) continue;
+        if (processed.has(cand.uid)) continue;
+        const candJoinedMs = cand.joinedAt?.toMillis?.() ?? now;
+        const candWaitedSec = Math.max(0, (now - candJoinedMs) / 1000);
+        const candRange = Math.min(
+          MAX_RANGE,
+          cand.initialRange + RANGE_PER_SECOND * candWaitedSec,
+        );
+        const delta = Math.abs(cand.rating - target.rating);
+        if (delta > Math.max(targetRange, candRange)) continue;
+        if (delta < bestPartnerDelta) {
+          bestPartnerDelta = delta;
+          bestPartner = cand;
+        }
+      }
+
+      if (bestPartner) {
+        const [aUserSnap, bUserSnap] = await Promise.all([
+          db.doc(`users/${target.uid}`).get(),
+          db.doc(`users/${bestPartner.uid}`).get(),
+        ]);
+        const aData = aUserSnap.data() ?? {};
+        const bData = bUserSnap.data() ?? {};
+        const partner: QE = bestPartner;
+        const paired = await pairTwoHumans({
+          a: {
+            uid: target.uid,
+            rating: target.rating,
+            displayName: (aData.displayName as string) ?? 'Player',
+            placementGames:
+              typeof aData.placementGamesPlayed === 'number'
+                ? aData.placementGamesPlayed
+                : 0,
+            joinedAtMs: targetJoinedMs,
+          },
+          b: {
+            uid: partner.uid,
+            rating: partner.rating,
+            displayName: (bData.displayName as string) ?? 'Player',
+            placementGames:
+              typeof bData.placementGamesPlayed === 'number'
+                ? bData.placementGamesPlayed
+                : 0,
+            joinedAtMs: partner.joinedAt?.toMillis?.() ?? now,
+          },
+          timeControl: target.timeControl,
+        });
+        if (paired) {
+          processed.add(target.uid);
+          processed.add(partner.uid);
+          continue;
+        }
+        // Fall through to bot fallback if human pairing failed.
+      }
+
+      // No compatible human → spawn bot match.
+      const userSnap = await db.doc(`users/${target.uid}`).get();
+      const userData = userSnap.data() ?? {};
+      await spawnBotMatch({
+        humanUid: target.uid,
+        humanRating: target.rating,
+        humanDisplayName: (userData.displayName as string) ?? 'Player',
+        humanPlacementGames:
+          typeof userData.placementGamesPlayed === 'number'
+            ? userData.placementGamesPlayed
+            : 0,
+        timeControl: target.timeControl,
+      });
+      processed.add(target.uid);
+    }
+  },
+);
+
+// Trigger on state.current changing — i.e., a turn handoff. If the new
+// active player is a bot, sleep a "thinking" delay then submit a move via
+// pendingMove. validateMove handles it from there (same path as a human).
+export const botMove = onValueWritten(
+  'games/{gameId}/state/current',
+  async (event) => {
+    const after = event.data.after.val();
+    if (after !== 1 && after !== 2) return;
+    const gameId = event.params.gameId;
+    const rtdb = getDatabase();
+    const gameRef = rtdb.ref(`games/${gameId}`);
+
+    const initialSnap = await gameRef.get();
+    const initial = initialSnap.val();
+    if (!initial || initial.status !== 'active') return;
+    const currentSlot = String(after);
+    const currentUid = initial.playerUids?.[currentSlot];
+    if (typeof currentUid !== 'string') return;
+
+    const botMeta = await getBotMeta(currentUid);
+    if (!botMeta) return; // human turn — nothing to do
+
+    // Clock-aware think delay: never spend more than the time-control cap,
+    // and never spend more than 25% of the bot's remaining clock.
+    const tc = initial.timeControl as TimeControl;
+    const cap = BOT_THINK_CAP_MS[tc] ?? botMeta.thinkMsMax;
+    const remaining =
+      currentSlot === '1'
+        ? Number(initial.clock?.p1RemainingMs ?? cap)
+        : Number(initial.clock?.p2RemainingMs ?? cap);
+    const safeCap = Math.min(cap, botMeta.thinkMsMax, Math.floor(remaining * 0.25));
+    const safeMin = Math.min(botMeta.thinkMsMin, safeCap);
+    const delay = safeMin + Math.random() * Math.max(0, safeCap - safeMin);
+    await new Promise((r) => setTimeout(r, delay));
+
+    // Re-read after the sleep: game may have ended, opponent may have
+    // resigned, turn may have changed (shouldn't, but be defensive).
+    const freshSnap = await gameRef.get();
+    const fresh = freshSnap.val();
+    if (!fresh || fresh.status !== 'active') return;
+    if (String(fresh.state?.current) !== currentSlot) return;
+    if (fresh.pendingMove) return; // a move is already being processed
+
+    const state = normalizeState(fresh.state ?? {});
+    let action: GameAction;
+    try {
+      action = pickAIAction(state, botMeta.level, state.current as Player);
+    } catch (e) {
+      logger.error(`botMove: pickAIAction failed for game ${gameId}`, e);
+      return;
+    }
+
+    try {
+      await rtdb.ref(`games/${gameId}/pendingMove`).set({
+        from: currentUid,
+        action,
+        clientTime: Date.now(),
+      });
+    } catch (e) {
+      logger.error(`botMove: pendingMove write failed for game ${gameId}`, e);
+    }
+  },
+);
+
+// One-shot seeding callable — admin-gated. Creates the 5 bot identities
+// (users/, usernames/, bots/, leaderboard/) idempotently. Re-running it is
+// safe: existing docs are merged, never overwritten with default fields.
+interface BotSeed {
+  uid: string;
+  displayName: string;
+  level: Difficulty;
+  rating: number;
+  thinkMsMin: number;
+  thinkMsMax: number;
+}
+
+const BOT_SEEDS: BotSeed[] = [
+  { uid: 'bot_pip',       displayName: 'Pip',       level: 1, rating: 500,  thinkMsMin: 500,  thinkMsMax: 1500 },
+  { uid: 'bot_cricket',   displayName: 'Cricket',   level: 2, rating: 850,  thinkMsMin: 700,  thinkMsMax: 1800 },
+  { uid: 'bot_ranger',    displayName: 'Ranger',    level: 3, rating: 1150, thinkMsMin: 800,  thinkMsMax: 2200 },
+  { uid: 'bot_knight',    displayName: 'Knight',    level: 4, rating: 1450, thinkMsMin: 1000, thinkMsMax: 2800 },
+  { uid: 'bot_voidstar',  displayName: 'Voidstar',  level: 5, rating: 1750, thinkMsMin: 1200, thinkMsMax: 3500 },
+];
+
+export const seedBots = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const callerEmail = request.auth?.token.email;
+    if (!callerEmail || !ADMIN_EMAILS.has(callerEmail)) {
+      throw new HttpsError('permission-denied', 'Admin only.');
+    }
+    const db = getFirestore();
+    const results: { uid: string; created: boolean }[] = [];
+    for (const seed of BOT_SEEDS) {
+      const userRef = db.doc(`users/${seed.uid}`);
+      const usernameRef = db.doc(`usernames/${seed.displayName.toLowerCase()}`);
+      const botRef = db.doc(`bots/${seed.uid}`);
+      const leaderRef = db.doc(`leaderboard/${seed.uid}`);
+
+      const existing = await userRef.get();
+      const isNew = !existing.exists;
+
+      // users/{botUid}: same shape as humans + isBot/botLevel. Seeded
+      // placementGamesPlayed = 100 so K-factor uses STEADY_K (32) AND all
+      // multiplayer shapes are unlocked. rating only set if absent so a
+      // re-run doesn't undo Elo drift.
+      await userRef.set(
+        {
+          displayName: seed.displayName,
+          isBot: true,
+          botLevel: seed.level,
+          placementGamesPlayed: 100,
+          ...(isNew ? { rating: seed.rating, createdAt: FieldValue.serverTimestamp() } : {}),
+        },
+        { merge: true },
+      );
+      await usernameRef.set(
+        {
+          uid: seed.uid,
+          displayName: seed.displayName,
+          createdAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+      await botRef.set(
+        {
+          level: seed.level,
+          thinkMsMin: seed.thinkMsMin,
+          thinkMsMax: seed.thinkMsMax,
+          active: true,
+          displayName: seed.displayName,
+        },
+        { merge: true },
+      );
+      // Leaderboard denorm so bots appear immediately even before their
+      // first ranked game.
+      await leaderRef.set(
+        {
+          uid: seed.uid,
+          displayName: seed.displayName,
+          rating: isNew ? seed.rating : ((existing.data()?.rating as number | undefined) ?? seed.rating),
+          placementGamesPlayed: 100,
+          lastPlayedAt: Date.now(),
+          isBot: true,
+          botLevel: seed.level,
+        },
+        { merge: true },
+      );
+
+      results.push({ uid: seed.uid, created: isNew });
+    }
+    // Invalidate cache so the next botMove / pickBotForRating sees the
+    // freshly-seeded set.
+    botCache = null;
+    logger.info('seedBots completed', results);
+    return { results };
+  },
+);
+

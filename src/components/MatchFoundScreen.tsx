@@ -65,7 +65,12 @@ export function MatchFoundScreen({
           </div>
           <span className="match-found-vs">vs</span>
           <div className="match-found-player">
-            <strong>{pairing.opponentDisplayName}</strong>
+            <strong>
+              {pairing.opponentDisplayName}
+              {pairing.opponentIsBot && (
+                <span className="bot-tag" aria-label="AI opponent">BOT</span>
+              )}
+            </strong>
             <span className="match-found-rating">{pairing.opponentRating}</span>
             <span className="match-found-tag">
               Player {pairing.player === 1 ? 2 : 1}

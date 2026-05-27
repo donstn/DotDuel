@@ -98,5 +98,14 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Bot Army — private metadata for the AI opponents (level, think
+    // delay range, active flag). Client never reads this directly; the
+    // public-facing fields (displayName, rating, isBot, botLevel) are
+    // mirrored to users/{botUid} (still owner-gated) and leaderboard/{botUid}
+    // (signed-in-readable) which existing rules already cover.
+    match /bots/{botUid} {
+      allow read, write: if false;
+    }
+
   }
 }

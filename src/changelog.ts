@@ -30,6 +30,25 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.3.0',
+    date: '2026-05-27',
+    highlight: 'Bot Army — never wait alone',
+    changes: [
+      {
+        kind: 'added',
+        text: "If no human is found within ~15s, you'll be paired with a ranked AI opponent (Pip, Cricket, Ranger, Knight, or Voidstar). They count for Elo and appear on the leaderboard.",
+      },
+      {
+        kind: 'changed',
+        text: 'Searching screen now tells you when a bot might step in.',
+      },
+      {
+        kind: 'fixed',
+        text: "Rematch button now hides when your opponent was a bot (bots don't accept rematches).",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.2.5',
     date: '2026-05-27',
     highlight: 'Signup fix follow-up',

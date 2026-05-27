@@ -29,7 +29,11 @@ export function MatchmakingWaiting({ timeControl, onCancel }: Props) {
           <span>·</span>
           <span>·</span>
         </div>
-        <p className="matchmaking-status">Waiting for a player at your rating ({seconds}s)</p>
+        <p className="matchmaking-status">
+          {seconds < 15
+            ? `Waiting for a player at your rating (${seconds}s)`
+            : `Still searching — we may pair you with a ranked AI shortly (${seconds}s)`}
+        </p>
         <button
           type="button"
           className="menu-auth-btn matchmaking-cancel-btn"

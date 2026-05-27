@@ -412,13 +412,16 @@ export default function App() {
   const mpLockedByOther =
     !!activeGameSession && activeGameSession.sessionId !== mySessionId;
 
-  const openMultiplayer = async () => {
+  const openMultiplayer = () => {
     if (!user || mpLockedByOther) return;
-    try {
-      await claimSession(user.uid, mySessionId);
-    } catch (e) {
-      console.warn('claimSession failed:', e);
-    }
+    // Fire-and-forget — session lock is best-effort. On privacy-strict
+    // browsers (Brave on mobile, in particular) the RTDB WebSocket can
+    // hang silently; awaiting here would freeze the UI transition. The
+    // server-side onDisconnect handler still cleans up if the write
+    // arrives late and the network later drops.
+    void claimSession(user.uid, mySessionId).catch((e) =>
+      console.warn('claimSession failed:', e),
+    );
     setScreen('lobby');
   };
 
@@ -436,34 +439,47 @@ export default function App() {
     }
   };
 
-  const onCancelMatch = async () => {
-    if (user) await cancelQueue(user.uid);
+  const onCancelMatch = () => {
+    if (user) {
+      void cancelQueue(user.uid).catch((e) =>
+        console.warn('cancelQueue failed:', e),
+      );
+    }
     setQueueTimeControl(null);
     setScreen('lobby');
   };
 
-  const onLeaveMatch = async () => {
+  const onLeaveMatch = () => {
     if (user) {
-      await clearPairing(user.uid);
-      await releaseSession(user.uid);
+      void clearPairing(user.uid).catch((e) =>
+        console.warn('clearPairing failed:', e),
+      );
+      void releaseSession(user.uid).catch((e) =>
+        console.warn('releaseSession failed:', e),
+      );
     }
     setPairing(null);
     setQueueTimeControl(null);
     setScreen('menu');
   };
 
-  const onLeaveLobby = async () => {
-    if (user) await releaseSession(user.uid);
+  const onLeaveLobby = () => {
+    if (user) {
+      void releaseSession(user.uid).catch((e) =>
+        console.warn('releaseSession failed:', e),
+      );
+    }
     setScreen('menu');
   };
 
   const onSignOutSafe = async () => {
     if (user) {
-      try {
-        await releaseSession(user.uid);
-      } catch (e) {
-        console.warn('releaseSession on sign-out failed:', e);
-      }
+      // Fire-and-forget — sign-out must never be blocked by a hung RTDB
+      // write (see openMultiplayer note). signOut() itself is mostly local
+      // Firebase Auth state, so awaiting it is safe.
+      void releaseSession(user.uid).catch((e) =>
+        console.warn('releaseSession on sign-out failed:', e),
+      );
     }
     await signOut();
   };
@@ -484,22 +500,25 @@ export default function App() {
     }
   };
 
-  const onLeaveMpGame = async () => {
+  const onLeaveMpGame = () => {
     // Clear any pending rematch flag so we're not pulled into a spawn
-    // after we've decided to leave.
+    // after we've decided to leave. All cleanup is fire-and-forget so
+    // a hung RTDB write can't freeze the back-to-menu transition.
     if (onlineGame && onlineGameId && user) {
       const slot = playerNumFor(onlineGame, user.uid);
       if (slot) {
-        try {
-          await requestRematch(onlineGameId, slot, false);
-        } catch (e) {
-          console.warn('rematch flag clear failed on leave:', e);
-        }
+        void requestRematch(onlineGameId, slot, false).catch((e) =>
+          console.warn('rematch flag clear failed on leave:', e),
+        );
       }
     }
     if (user) {
-      await clearPairing(user.uid);
-      await releaseSession(user.uid);
+      void clearPairing(user.uid).catch((e) =>
+        console.warn('clearPairing failed:', e),
+      );
+      void releaseSession(user.uid).catch((e) =>
+        console.warn('releaseSession failed:', e),
+      );
     }
     setPairing(null);
     setOnlineGameId(null);

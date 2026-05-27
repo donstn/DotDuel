@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.3.1',
+    date: '2026-05-27',
+    highlight: 'Mobile button fix',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Multiplayer and Sign-out buttons sometimes did nothing on privacy-strict mobile browsers (Brave, Firefox Focus). The UI now transitions immediately and cleanup happens in the background.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.3.0',
     date: '2026-05-27',
     highlight: 'Bot Army — never wait alone',

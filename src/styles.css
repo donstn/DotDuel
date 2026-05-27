@@ -1080,23 +1080,6 @@ button {
   text-transform: uppercase;
 }
 
-/* Move-failure toast (multiplayer). Inline above the board, dismissable
-   on tap. Stays inside the topbar slot so it doesn't shift the board. */
-.mp-move-error {
-  margin: 0 auto 4px;
-  padding: 6px 14px;
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-  color: var(--text-bright, #f5d27a);
-  background: rgba(255, 200, 90, 0.12);
-  border: 1px solid rgba(255, 200, 90, 0.32);
-  border-radius: 999px;
-  cursor: pointer;
-  max-width: 90%;
-  text-align: center;
-  align-self: center;
-}
-
 /* Game body — 3-column: side | board | side */
 .game-body {
   flex: 1;

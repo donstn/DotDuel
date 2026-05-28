@@ -4106,6 +4106,18 @@ body:has(.consent-banner) .rules-card {
   cursor: default;
 }
 
+.mp-offline .hint code {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+  word-break: break-all;
+}
+.mp-offline h2 {
+  color: #f5d27a;
+}
+
 /* Diagnostic overlay — only renders when ?diag=1 is in the URL. Fixed at
    the bottom of the viewport, scrollable, copy-to-clipboard button. */
 .diag-overlay {

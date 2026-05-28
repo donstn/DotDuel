@@ -40,6 +40,51 @@ export function subscribeConnectionDiag(): () => void {
   );
 }
 
+// React-facing connection-state subscription. Emits 'connecting' while still
+// trying, 'connected' once RTDB confirms, 'disconnected' if disconnected
+// persistently for ~15s (long enough to filter out normal reconnect blips
+// but short enough to surface real blocking to the user).
+export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
+
+export function watchConnection(
+  cb: (status: ConnectionStatus) => void,
+): () => void {
+  cb('connecting');
+  const r = ref(rtdb, '.info/connected');
+  let pendingDisconnect: number | null = null;
+  const clearPending = () => {
+    if (pendingDisconnect !== null) {
+      window.clearTimeout(pendingDisconnect);
+      pendingDisconnect = null;
+    }
+  };
+  const unsub = onValue(
+    r,
+    (snap) => {
+      const isConnected = snap.val() === true;
+      clearPending();
+      if (isConnected) {
+        cb('connected');
+      } else {
+        // 15s grace so the brief 'false' during reconnects doesn't flash
+        // the offline UI at users on shaky-but-functional networks.
+        pendingDisconnect = window.setTimeout(() => {
+          pendingDisconnect = null;
+          cb('disconnected');
+        }, 15_000);
+      }
+    },
+    () => {
+      clearPending();
+      cb('disconnected');
+    },
+  );
+  return () => {
+    clearPending();
+    unsub();
+  };
+}
+
 export interface GameClock {
   p1RemainingMs: number;
   p2RemainingMs: number;

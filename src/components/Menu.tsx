@@ -19,6 +19,7 @@ interface Props {
   onOpenMultiplayer: () => void;
   onOpenThemes: () => void;
   mpLockedByOther: boolean;
+  mpUnreachable: boolean;
 }
 
 export function Menu({
@@ -35,6 +36,7 @@ export function Menu({
   onOpenMultiplayer,
   onOpenThemes,
   mpLockedByOther,
+  mpUnreachable,
 }: Props) {
   const [mode, setMode] = useState<GameMode | null>(null);
   const [shape, setShape] = useState<ShapeId | null>(null);
@@ -114,7 +116,16 @@ export function Menu({
               <span>Two players, one device.</span>
             </button>
             {user ? (
-              mpLockedByOther ? (
+              mpUnreachable ? (
+                <button
+                  className="menu-card disabled"
+                  disabled
+                  title="Your network is blocking the game server (likely an ad/tracker blocker or DNS filter)"
+                >
+                  <strong>Multiplayer</strong>
+                  <span>Server unreachable — your network may be blocking it.</span>
+                </button>
+              ) : mpLockedByOther ? (
                 <button
                   className="menu-card disabled"
                   disabled

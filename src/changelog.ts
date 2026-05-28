@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.3.5',
+    date: '2026-05-28',
+    highlight: 'Friendly offline message',
+    changes: [
+      {
+        kind: 'added',
+        text: "If your network blocks the game server (common with mobile ad/tracker blockers like AdGuard, NextDNS, or Whalebone), Multiplayer now shows a clear explanation with troubleshooting tips instead of getting stuck on a loading screen. Single-player vs AI works offline as usual.",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.3.1',
     date: '2026-05-27',
     highlight: 'Mobile button fix',

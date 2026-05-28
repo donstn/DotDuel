@@ -37,8 +37,10 @@ import {
   sendMove,
   sendResign,
   subscribeConnectionDiag,
+  watchConnection,
   watchError,
   watchGame,
+  type ConnectionStatus,
   type OnlineError,
   type OnlineGame,
 } from './cloud/onlineGame';
@@ -100,6 +102,38 @@ interface SessionConfig {
 const AI_DELAY_MS = 450;
 const HINT_GAME_LIMIT = 10;
 const HINT_CLAIM_LIMIT = 3;
+
+// Shown on any mp-flow screen when Firebase RTDB has been unreachable for
+// >15s — typically a DNS-level ad/tracker blocker (Whalebone, AdGuard,
+// NextDNS, etc.) or a restrictive Wi-Fi blocking *.firebasedatabase.app.
+// Replaces matchmaking/matchFound/mpgame-loading with a clear explanation
+// + Back to menu escape, instead of letting the user stare at a frozen
+// "Searching for opponent" screen.
+function renderMpUnreachable({ onLeave }: { onLeave: () => void }) {
+  return (
+    <div className="menu mp-offline">
+      <h2>Multiplayer unavailable</h2>
+      <p className="hint">
+        Your network is blocking the game server. The most common cause is
+        an ad/tracker blocker (Whalebone, AdGuard, NextDNS, Pi-hole) or a
+        DNS filter on your phone or router.
+      </p>
+      <p className="hint">
+        <strong>Try:</strong>
+        <br />· another Wi-Fi network or mobile data
+        <br />· another browser
+        <br />· disabling DNS filters / VPN for a moment
+        <br />· whitelisting <code>*.firebasedatabase.app</code> in your blocker
+      </p>
+      <p className="hint">
+        Single-player vs the bot works offline — open Menu and pick Vs AI.
+      </p>
+      <button type="button" className="menu-auth-btn" onClick={onLeave}>
+        Back to menu
+      </button>
+    </div>
+  );
+}
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('menu');
@@ -372,6 +406,17 @@ export default function App() {
   useEffect(() => {
     return subscribeConnectionDiag();
   }, []);
+
+  // React-facing connection state. Disconnected = persistent (>15s) failure
+  // to reach Firebase RTDB. Drives the offline UI: greys-out the Multiplayer
+  // button on the menu and surfaces a clear explanation on the mp screens
+  // so users with strict DNS / ad-blocker setups know what's wrong instead
+  // of staring at a frozen "Connecting…" screen.
+  const [connStatus, setConnStatus] = useState<ConnectionStatus>('connecting');
+  useEffect(() => {
+    return watchConnection(setConnStatus);
+  }, []);
+  const mpUnreachable = connStatus === 'disconnected';
 
   const acceptAnalytics = () => setConsentState('accepted');
   const declineAnalytics = () => setConsentState('declined');
@@ -898,6 +943,9 @@ export default function App() {
         onlineGameId,
         pairingMatchId: pairing?.matchId,
       });
+      if (mpUnreachable) {
+        return renderMpUnreachable({ onLeave: () => onLeaveMpGame() });
+      }
       return (
         <div className="menu">
           <h2>Connecting to match…</h2>
@@ -1179,6 +1227,16 @@ export default function App() {
           onFindMatch={onFindMatch}
         />
       );
+    } else if (mpUnreachable && (screen === 'matchmaking' || screen === 'matchFound')) {
+      // The server is unreachable from this network. Drop the user from
+      // the matchmaking/matchFound flow and explain why instead of letting
+      // them stare at a frozen "Searching for opponent" forever.
+      mainContent = renderMpUnreachable({
+        onLeave: () => {
+          if (screen === 'matchmaking') void onCancelMatch();
+          else void onLeaveMatch();
+        },
+      });
     } else if (screen === 'matchmaking' && queueTimeControl) {
       mainContent = (
         <MatchmakingWaiting
@@ -1221,6 +1279,7 @@ export default function App() {
           onOpenMultiplayer={openMultiplayer}
           onOpenThemes={() => setThemeOpen(true)}
           mpLockedByOther={mpLockedByOther}
+          mpUnreachable={mpUnreachable}
         />
       );
     }

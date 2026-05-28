@@ -94,13 +94,15 @@ async function createGameNode(args: {
   timeControl: TimeControl;
   ready: { '1': boolean; '2': boolean };
   boardLoaded: { '1': boolean; '2': boolean };
+  /** Optional trace field for rematch chains. Written verbatim to both backends. */
+  rematchOf?: string;
 }): Promise<void> {
-  const { gameId, state, playerUids, shape, timeControl, ready, boardLoaded } = args;
+  const { gameId, state, playerUids, shape, timeControl, ready, boardLoaded, rematchOf } = args;
   const totalMs = TIME_CONTROL_MS[timeControl];
   const createdAt = Date.now();
 
   // Shared inner shape — written to both backends so they stay in sync.
-  const gameDoc: FirestoreGame = {
+  const gameDoc: FirestoreGame & { rematchOf?: string } = {
     shape,
     timeControl,
     playerUids,
@@ -116,6 +118,7 @@ async function createGameNode(args: {
     },
     ready,
     boardLoaded,
+    ...(rematchOf ? { rematchOf } : {}),
   };
 
   const promises: Promise<unknown>[] = [];
@@ -149,37 +152,30 @@ async function createGameNode(args: {
   // to abort.
 }
 
-// Update game state in both backends. Used by validateMove on every move.
-// Path-update semantics: write the specific fields, leave the rest alone.
-// Firestore takes a partial document; RTDB takes path-keyed updates.
+// Update fields on the game node in both backends. Path-style keys (e.g.
+// 'state/finished', 'clock/current') translate to RTDB's slash convention
+// and Firestore's dot convention automatically. Caller responsibility:
+//
+//   - pass `state: newState` to replace the whole state object, OR
+//   - pass `state/finished: true` to update just the subfield
+//
+// NEVER pass `pendingMove`: that's an RTDB-only field (Firestore uses
+// callable functions for moves), and validateMove should call moveRef.remove()
+// directly for the RTDB cleanup.
+//
+// Record<string, unknown> for ergonomic flexibility; the trade-off is no
+// per-field typing here. validateMove + clock + finalize callers know
+// what they're doing.
 async function updateGameNode(
   gameId: string,
-  updates: {
-    state?: GameState;
-    'clock/p1RemainingMs'?: number;
-    'clock/p2RemainingMs'?: number;
-    'clock/turnStartedAt'?: number;
-    'clock/current'?: Player;
-    status?: 'active' | 'finished';
-    winner?: Player | 'draw' | null;
-    finishedReason?: 'normal' | 'timeout' | 'resign';
-    finishedAt?: number;
-    gameStartedAt?: number;
-    'ready/1'?: boolean;
-    'ready/2'?: boolean;
-    'boardLoaded/1'?: boolean;
-    'boardLoaded/2'?: boolean;
-    'rematch/1'?: boolean;
-    'rematch/2'?: boolean;
-    rematchSpawnedId?: string;
-  },
+  updates: Record<string, unknown>,
 ): Promise<void> {
   const promises: Promise<unknown>[] = [];
 
   if (shouldWriteRtdb()) {
     // RTDB takes nested path keys like 'clock/current'.
     const rtdbUpdates: Record<string, unknown> = { ...updates };
-    if (updates.state !== undefined) {
+    if ('state' in updates && updates.state !== undefined) {
       rtdbUpdates.state = sanitize(updates.state);
     }
     promises.push(getDatabase().ref(`games/${gameId}`).update(rtdbUpdates));
@@ -203,11 +199,8 @@ async function updateGameNode(
 }
 
 // Suppress unused-import warnings when MULTIPLAYER_BACKEND is 'rtdb' or
-// 'firestore' (Vite/TSC otherwise warns that one branch is dead). The
-// updateGameNode reference is also temporarily noop'd — it gets used in
-// Day 1.3 when validateMove + clock-update + finalize sites are migrated.
+// 'firestore' (Vite/TSC otherwise warns that one branch is dead).
 void (MULTIPLAYER_BACKEND as MultiplayerBackend);
-void updateGameNode;
 
 type FinishedReason = 'normal' | 'timeout' | 'resign' | 'disconnect';
 
@@ -428,7 +421,7 @@ export const startClockWhenBoardsLoaded = onValueWritten(
     if (loaded['1'] !== true || loaded['2'] !== true) return;
     if (game.gameStartedAt) return; // already started
     const now = Date.now();
-    await gameRef.update({
+    await updateGameNode(gameId, {
       gameStartedAt: now,
       'clock/turnStartedAt': now,
     });
@@ -471,15 +464,15 @@ export const validateMove = onValueWritten(
     if (after.action.kind === 'resign') {
       const winner: 1 | 2 = playerNum === 1 ? 2 : 1;
       const finishedAt = Date.now();
-      await gameRef.update({
+      await updateGameNode(gameId, {
         'state/finished': true,
         'state/winner': winner,
         status: 'finished',
         winner,
         finishedAt,
         finishedReason: 'resign',
-        pendingMove: null,
       });
+      await moveRef.remove();
       await recordMatchFinished(gameId, winner, 'resign', finishedAt);
       logger.info(`validateMove: ${hashUid(String(after.from))} resigned in ${gameId}, winner=${winner}`);
       return;
@@ -503,7 +496,7 @@ export const validateMove = onValueWritten(
       }
       const winner: 1 | 2 = currentSlot === 1 ? 2 : 1;
       const finishedAt = Date.now();
-      await gameRef.update({
+      await updateGameNode(gameId, {
         [`clock/${currentKey}`]: 0,
         'state/finished': true,
         'state/winner': winner,
@@ -511,8 +504,8 @@ export const validateMove = onValueWritten(
         winner,
         finishedAt,
         finishedReason: 'timeout',
-        pendingMove: null,
       });
+      await moveRef.remove();
       await recordMatchFinished(gameId, winner, 'timeout', finishedAt);
       logger.info(`validateMove: timeout claim accepted in ${gameId}, winner=${winner}`);
       return;
@@ -545,7 +538,7 @@ export const validateMove = onValueWritten(
     if (newRemainingMs <= 0) {
       // Flag fall — current player loses on time.
       const winner: 1 | 2 = playerNum === 1 ? 2 : 1;
-      await gameRef.update({
+      await updateGameNode(gameId, {
         [`clock/${currentKey}`]: 0,
         'state/finished': true,
         'state/winner': winner,
@@ -553,8 +546,8 @@ export const validateMove = onValueWritten(
         winner,
         finishedAt: now,
         finishedReason: 'timeout',
-        pendingMove: null,
       });
+      await moveRef.remove();
       await recordMatchFinished(gameId, winner, 'timeout', now);
       logger.info(`validateMove: game ${gameId} timeout, winner=${winner}`);
       return;
@@ -564,8 +557,7 @@ export const validateMove = onValueWritten(
       const newState = applyAction(state, after.action);
       const otherKey = playerNum === 1 ? 'p2RemainingMs' : 'p1RemainingMs';
       const updates: Record<string, unknown> = {
-        state: sanitize(newState),
-        pendingMove: null,
+        state: newState,
         [`clock/${currentKey}`]: newRemainingMs,
         [`clock/${otherKey}`]: clock[otherKey] ?? totalMs,
         'clock/turnStartedAt': now,
@@ -577,7 +569,8 @@ export const validateMove = onValueWritten(
         updates.finishedAt = now;
         updates.finishedReason = 'normal';
       }
-      await gameRef.update(updates);
+      await updateGameNode(gameId, updates);
+      await moveRef.remove();
       if (newState.finished) {
         const w = newState.winner as 1 | 2 | 'draw' | null;
         await recordMatchFinished(gameId, w, 'normal', now);
@@ -884,6 +877,17 @@ export const rematchGame = onValueWritten(
       return;
     }
 
+    // Mirror rematchSpawnedId to Firestore so the dual-write copy doesn't
+    // diverge. RTDB stays canonical for the idempotency transaction above
+    // — we only echo the result here.
+    if (shouldWriteFirestore()) {
+      try {
+        await db.doc(`games/${gameId}`).update({ rematchSpawnedId: newMatchId });
+      } catch (e) {
+        logger.warn(`rematchGame: Firestore rematchSpawnedId mirror failed for ${gameId}`, e);
+      }
+    }
+
     // Read current ratings (snapshot, not transactional — best-effort).
     const [p1UserSnap, p2UserSnap] = await Promise.all([
       db.doc(`users/${newP1Uid}`).get(),
@@ -898,31 +902,22 @@ export const rematchGame = onValueWritten(
         ? (p2UserSnap.data()!.rating as number)
         : 1000;
 
-    const totalMs = TIME_CONTROL_MS[tc];
     const initialState = createGame(shape, 'multiplayer');
 
-    // Create the RTDB game node for the rematch.
+    // Create the game node in both backends (per MULTIPLAYER_BACKEND flag).
     try {
-      await rtdb.ref(`games/${newMatchId}`).set({
-        state: sanitize(initialState),
+      await createGameNode({
+        gameId: newMatchId,
+        state: initialState,
         playerUids: { '1': newP1Uid, '2': newP2Uid },
-        status: 'active',
         shape,
         timeControl: tc,
         ready: { '1': false, '2': false },
         boardLoaded: { '1': false, '2': false },
-        clock: {
-          p1RemainingMs: totalMs,
-          p2RemainingMs: totalMs,
-          turnStartedAt: 0,
-          current: 1,
-          totalMs,
-        },
-        createdAt: Date.now(),
         rematchOf: gameId,
       });
     } catch (e) {
-      logger.error(`rematchGame: RTDB node create failed for ${newMatchId}`, e);
+      logger.error(`rematchGame: game node create failed for ${newMatchId}`, e);
       return;
     }
 
@@ -1334,18 +1329,41 @@ export const cleanupFinishedGames = onSchedule(
       logger.info('cleanupFinishedGames: no expired games');
       return;
     }
-    // Multi-path delete in one update call for atomicity.
-    const updates: Record<string, null> = {};
-    for (const gameId of toDelete) {
-      updates[`games/${gameId}`] = null;
+
+    // RTDB: multi-path delete in one atomic update.
+    if (shouldWriteRtdb()) {
+      const rtdbUpdates: Record<string, null> = {};
+      for (const gameId of toDelete) {
+        rtdbUpdates[`games/${gameId}`] = null;
+      }
+      try {
+        await rtdb.ref().update(rtdbUpdates);
+        logger.info(
+          `cleanupFinishedGames: deleted ${toDelete.length} expired finished games from RTDB`,
+        );
+      } catch (e) {
+        logger.error('cleanupFinishedGames: RTDB bulk delete failed', e);
+      }
     }
-    try {
-      await rtdb.ref().update(updates);
-      logger.info(
-        `cleanupFinishedGames: deleted ${toDelete.length} expired finished games`,
-      );
-    } catch (e) {
-      logger.error('cleanupFinishedGames: bulk delete failed', e);
+
+    // Firestore: batch delete (max 500 per batch).
+    if (shouldWriteFirestore()) {
+      const db = getFirestore();
+      try {
+        for (let i = 0; i < toDelete.length; i += 400) {
+          const chunk = toDelete.slice(i, i + 400);
+          const batch = db.batch();
+          for (const gameId of chunk) {
+            batch.delete(db.doc(`games/${gameId}`));
+          }
+          await batch.commit();
+        }
+        logger.info(
+          `cleanupFinishedGames: deleted ${toDelete.length} expired finished games from Firestore`,
+        );
+      } catch (e) {
+        logger.error('cleanupFinishedGames: Firestore batch delete failed', e);
+      }
     }
   },
 );

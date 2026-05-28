@@ -107,5 +107,18 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Live game state. Mirrors the RTDB games/{gameId} node during the
+    // Firestore migration (MULTIPLAYER_BACKEND = 'dual' or 'firestore').
+    // Read: participants only — same semantics as the RTDB rule.
+    // Write: function-only. Client-driven actions go through callable
+    // functions (submitMove, setReady, etc., added in later migration
+    // phases); direct client writes never happen.
+    match /games/{gameId} {
+      allow read: if request.auth != null &&
+        (resource.data.playerUids['1'] == request.auth.uid ||
+         resource.data.playerUids['2'] == request.auth.uid);
+      allow write: if false;
+    }
+
   }
 }

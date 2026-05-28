@@ -2,15 +2,7 @@ import { onValue, ref, set } from 'firebase/database';
 import { rtdb } from '../firebase';
 import type { GameAction, GameMode, GameState, Player, ShapeId } from '../types';
 import type { TimeControl } from './matchmaking';
-
-// Diagnostic helper — all RTDB operations log with [DD-DIAG] prefix so we
-// can spot WebSocket failures on mobile browsers via Chrome USB inspect.
-// No behavior change — pure observability. Safe to leave in or remove later.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const DIAG = (msg: string, ...args: any[]) => {
-  // eslint-disable-next-line no-console
-  console.log(`[DD-DIAG] ${msg}`, ...args);
-};
+import { diag as DIAG } from '../diag';
 
 // Wrap any RTDB write so a silent hang shows up in logs after 10s.
 async function loggedWrite<T>(tag: string, op: () => Promise<T>): Promise<T> {

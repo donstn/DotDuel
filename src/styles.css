@@ -4105,3 +4105,87 @@ body:has(.consent-banner) .rules-card {
   opacity: 0.5;
   cursor: default;
 }
+
+/* Diagnostic overlay — only renders when ?diag=1 is in the URL. Fixed at
+   the bottom of the viewport, scrollable, copy-to-clipboard button. */
+.diag-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 50vh;
+  background: rgba(0, 0, 0, 0.92);
+  color: #c8f0d4;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(123, 219, 149, 0.4);
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.diag-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(123, 219, 149, 0.1);
+  border-bottom: 1px solid rgba(123, 219, 149, 0.3);
+  font-size: 12px;
+  color: #7bdb95;
+}
+
+.diag-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.diag-btn {
+  background: rgba(123, 219, 149, 0.18);
+  color: #c8f0d4;
+  border: 1px solid rgba(123, 219, 149, 0.4);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.diag-btn:active {
+  background: rgba(123, 219, 149, 0.3);
+}
+
+.diag-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.diag-line {
+  white-space: pre-wrap;
+  word-break: break-all;
+  padding: 1px 0;
+}
+
+.diag-empty {
+  opacity: 0.6;
+  padding: 6px 0;
+}
+
+.diag-restore {
+  position: fixed;
+  bottom: 8px;
+  right: 8px;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.85);
+  color: #7bdb95;
+  border: 1px solid rgba(123, 219, 149, 0.4);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 11px;
+  cursor: pointer;
+}

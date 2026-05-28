@@ -3,6 +3,51 @@ import { rtdb } from '../firebase';
 import type { GameAction, GameMode, GameState, Player, ShapeId } from '../types';
 import type { TimeControl } from './matchmaking';
 
+// Diagnostic helper — all RTDB operations log with [DD-DIAG] prefix so we
+// can spot WebSocket failures on mobile browsers via Chrome USB inspect.
+// No behavior change — pure observability. Safe to leave in or remove later.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DIAG = (msg: string, ...args: any[]) => {
+  // eslint-disable-next-line no-console
+  console.log(`[DD-DIAG] ${msg}`, ...args);
+};
+
+// Wrap any RTDB write so a silent hang shows up in logs after 10s.
+async function loggedWrite<T>(tag: string, op: () => Promise<T>): Promise<T> {
+  DIAG(`${tag} starting`);
+  const hangTimer = setTimeout(
+    () => DIAG(`${tag} STILL PENDING after 10s — write likely hung`),
+    10_000,
+  );
+  try {
+    const r = await op();
+    clearTimeout(hangTimer);
+    DIAG(`${tag} completed`);
+    return r;
+  } catch (e) {
+    clearTimeout(hangTimer);
+    DIAG(`${tag} threw`, e);
+    throw e;
+  }
+}
+
+// Subscribe to Firebase's connection-state pseudo-node. Logs every change.
+// Useful for spotting WebSocket-level failures (PC stays connected, mobile
+// flaps or never connects).
+export function subscribeConnectionDiag(): () => void {
+  const r = ref(rtdb, '.info/connected');
+  DIAG('subscribing to .info/connected');
+  return onValue(
+    r,
+    (snap) => {
+      DIAG(`.info/connected = ${snap.val() === true}`);
+    },
+    (err) => {
+      DIAG('.info/connected error', err);
+    },
+  );
+}
+
 export interface GameClock {
   p1RemainingMs: number;
   p2RemainingMs: number;
@@ -60,11 +105,25 @@ export function watchGame(
   gameId: string,
   onChange: (game: OnlineGame | null) => void,
 ): () => void {
+  DIAG(`watchGame[${gameId}] subscribing`);
+  let firstFire = true;
   const r = ref(rtdb, `games/${gameId}`);
+  // Diagnostic: if onValue never fires within 8s, the subscription registered
+  // but the server never pushed initial data — classic mobile-WebSocket stall.
+  const stallTimer = setTimeout(() => {
+    if (firstFire) {
+      DIAG(`watchGame[${gameId}] STILL no onValue fire after 8s — subscription likely stalled`);
+    }
+  }, 8_000);
   return onValue(
     r,
     (snap) => {
+      if (firstFire) {
+        clearTimeout(stallTimer);
+        firstFire = false;
+      }
       const v = snap.val();
+      DIAG(`watchGame[${gameId}] onValue fired, hasData=${!!v}`);
       if (!v) {
         onChange(null);
         return;
@@ -76,6 +135,8 @@ export function watchGame(
       onChange(game);
     },
     (err) => {
+      clearTimeout(stallTimer);
+      DIAG(`watchGame[${gameId}] error`, err);
       console.warn('watchGame error:', err);
       onChange(null);
     },
@@ -109,11 +170,9 @@ export async function sendMove(
   action: GameAction,
 ): Promise<void> {
   const r = ref(rtdb, `games/${gameId}/pendingMove`);
-  await set(r, {
-    from: uid,
-    action,
-    clientTime: Date.now(),
-  });
+  await loggedWrite(`sendMove[${gameId} kind=${action.kind}]`, () =>
+    set(r, { from: uid, action, clientTime: Date.now() }),
+  );
 }
 
 export async function markReady(
@@ -122,7 +181,7 @@ export async function markReady(
   value: boolean,
 ): Promise<void> {
   const r = ref(rtdb, `games/${gameId}/ready/${slot}`);
-  await set(r, value);
+  await loggedWrite(`markReady[${gameId}:${slot}=${value}]`, () => set(r, value));
 }
 
 export async function markBoardLoaded(
@@ -130,7 +189,7 @@ export async function markBoardLoaded(
   slot: 1 | 2,
 ): Promise<void> {
   const r = ref(rtdb, `games/${gameId}/boardLoaded/${slot}`);
-  await set(r, true);
+  await loggedWrite(`markBoardLoaded[${gameId}:${slot}]`, () => set(r, true));
 }
 
 // Either participant can claim a timeout when they see the active player's

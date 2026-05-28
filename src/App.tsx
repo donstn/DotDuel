@@ -36,6 +36,7 @@ import {
   requestRematch,
   sendMove,
   sendResign,
+  subscribeConnectionDiag,
   watchError,
   watchGame,
   type OnlineError,
@@ -364,6 +365,13 @@ export default function App() {
     applyConsent(consent);
     if (consent) saveConsent(consent);
   }, [consent]);
+
+  // Diagnostic: log Firebase RTDB connection state changes for the lifetime
+  // of the page. Lets us see (via Chrome USB inspect) whether the
+  // WebSocket-level connection is even establishing on mobile browsers.
+  useEffect(() => {
+    return subscribeConnectionDiag();
+  }, []);
 
   const acceptAnalytics = () => setConsentState('accepted');
   const declineAnalytics = () => setConsentState('declined');

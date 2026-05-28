@@ -13,7 +13,16 @@ import {
 import { getDatabase } from 'firebase-admin/database';
 import { applyAction, createGame } from './engine/game';
 import { pickAIAction } from './engine/ai';
-import type { Difficulty, GameAction, GameState, Player, ShapeId } from './engine/types';
+import type {
+  Difficulty,
+  FirestoreGame,
+  GameAction,
+  GameState,
+  MultiplayerBackend,
+  Player,
+  ShapeId,
+} from './engine/types';
+import { MULTIPLAYER_BACKEND } from './engine/types';
 import { createHash } from 'crypto';
 
 initializeApp();
@@ -52,6 +61,153 @@ const TIME_CONTROL_MS: Record<TimeControl, number> = {
 function sanitize<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj)) as T;
 }
+
+// =============================================================================
+// Multiplayer backend write helpers (Firestore migration)
+// =============================================================================
+//
+// During the 'dual' phase of the migration, every game-state write goes to BOTH
+// RTDB and Firestore. RTDB stays canonical until the client also reads from
+// Firestore (Day 4). These helpers centralise the dual-write so individual
+// functions don't repeat the pattern. Failures on the Firestore side are
+// logged but do NOT throw — RTDB remains the source of truth.
+//
+// When the flag is 'rtdb' (pre-migration), helpers are no-ops on the
+// Firestore side. When the flag is 'firestore' (post-migration), helpers
+// no-op on the RTDB side.
+// =============================================================================
+
+const shouldWriteRtdb = (): boolean =>
+  MULTIPLAYER_BACKEND === 'rtdb' || MULTIPLAYER_BACKEND === 'dual';
+
+const shouldWriteFirestore = (): boolean =>
+  MULTIPLAYER_BACKEND === 'firestore' || MULTIPLAYER_BACKEND === 'dual';
+
+// Create a new game in both backends. Used by matchmake, spawnBotMatch,
+// pairTwoHumans on initial game creation, and rematchGame for a new game
+// after both players ready up.
+async function createGameNode(args: {
+  gameId: string;
+  state: GameState;
+  playerUids: { '1': string; '2': string };
+  shape: ShapeId;
+  timeControl: TimeControl;
+  ready: { '1': boolean; '2': boolean };
+  boardLoaded: { '1': boolean; '2': boolean };
+}): Promise<void> {
+  const { gameId, state, playerUids, shape, timeControl, ready, boardLoaded } = args;
+  const totalMs = TIME_CONTROL_MS[timeControl];
+  const createdAt = Date.now();
+
+  // Shared inner shape — written to both backends so they stay in sync.
+  const gameDoc: FirestoreGame = {
+    shape,
+    timeControl,
+    playerUids,
+    status: 'active',
+    createdAt,
+    state,
+    clock: {
+      p1RemainingMs: totalMs,
+      p2RemainingMs: totalMs,
+      turnStartedAt: 0,
+      current: 1,
+      totalMs,
+    },
+    ready,
+    boardLoaded,
+  };
+
+  const promises: Promise<unknown>[] = [];
+
+  if (shouldWriteRtdb()) {
+    promises.push(
+      getDatabase().ref(`games/${gameId}`).set({
+        ...gameDoc,
+        state: sanitize(state),
+      }),
+    );
+  }
+  if (shouldWriteFirestore()) {
+    promises.push(
+      getFirestore().doc(`games/${gameId}`).set(gameDoc),
+    );
+  }
+
+  const results = await Promise.allSettled(promises);
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      const backend = shouldWriteRtdb() && i === 0 ? 'rtdb' : 'firestore';
+      logger.error(`createGameNode: ${backend} write failed for ${gameId}`, r.reason);
+    }
+  });
+
+  // If we expect both writes and Firestore failed but RTDB succeeded (or vice
+  // versa during 'firestore' phase), the canonical write still went through.
+  // Hard failure only if the CANONICAL write threw — for which Promise.allSettled
+  // would log it above and the caller can decide via subsequent reads whether
+  // to abort.
+}
+
+// Update game state in both backends. Used by validateMove on every move.
+// Path-update semantics: write the specific fields, leave the rest alone.
+// Firestore takes a partial document; RTDB takes path-keyed updates.
+async function updateGameNode(
+  gameId: string,
+  updates: {
+    state?: GameState;
+    'clock/p1RemainingMs'?: number;
+    'clock/p2RemainingMs'?: number;
+    'clock/turnStartedAt'?: number;
+    'clock/current'?: Player;
+    status?: 'active' | 'finished';
+    winner?: Player | 'draw' | null;
+    finishedReason?: 'normal' | 'timeout' | 'resign';
+    finishedAt?: number;
+    gameStartedAt?: number;
+    'ready/1'?: boolean;
+    'ready/2'?: boolean;
+    'boardLoaded/1'?: boolean;
+    'boardLoaded/2'?: boolean;
+    'rematch/1'?: boolean;
+    'rematch/2'?: boolean;
+    rematchSpawnedId?: string;
+  },
+): Promise<void> {
+  const promises: Promise<unknown>[] = [];
+
+  if (shouldWriteRtdb()) {
+    // RTDB takes nested path keys like 'clock/current'.
+    const rtdbUpdates: Record<string, unknown> = { ...updates };
+    if (updates.state !== undefined) {
+      rtdbUpdates.state = sanitize(updates.state);
+    }
+    promises.push(getDatabase().ref(`games/${gameId}`).update(rtdbUpdates));
+  }
+  if (shouldWriteFirestore()) {
+    // Firestore uses dot-notation for nested fields.
+    const firestoreUpdates: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(updates)) {
+      firestoreUpdates[k.replace(/\//g, '.')] = v;
+    }
+    promises.push(getFirestore().doc(`games/${gameId}`).update(firestoreUpdates));
+  }
+
+  const results = await Promise.allSettled(promises);
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      const backend = shouldWriteRtdb() && i === 0 ? 'rtdb' : 'firestore';
+      logger.error(`updateGameNode: ${backend} update failed for ${gameId}`, r.reason);
+    }
+  });
+}
+
+// Suppress unused-import warnings when MULTIPLAYER_BACKEND is 'rtdb' or
+// 'firestore' (Vite/TSC otherwise warns that one branch is dead). The
+// updateGameNode reference is also temporarily noop'd — it gets used in
+// Day 1.3 when validateMove + clock-update + finalize sites are migrated.
+void (MULTIPLAYER_BACKEND as MultiplayerBackend);
+void updateGameNode;
 
 type FinishedReason = 'normal' | 'timeout' | 'resign' | 'disconnect';
 
@@ -104,7 +260,6 @@ export const matchmake = onDocumentCreated(
   'matchmakingQueue/{uid}',
   async (event) => {
     const db = getFirestore();
-    const rtdb = getDatabase();
     const newEntry = event.data?.data() as QueueEntry | undefined;
     if (!newEntry) return;
     const newUid = event.params.uid;
@@ -235,28 +390,19 @@ export const matchmake = onDocumentCreated(
       return;
     }
 
-    // Create the RTDB game node so both clients have a live state to subscribe to.
+    // Create the game node in both backends (per MULTIPLAYER_BACKEND flag).
     try {
       const initialState = createGame(shape, 'multiplayer');
-      const totalMs = TIME_CONTROL_MS[newEntry.timeControl];
-      await rtdb.ref(`games/${matchId}`).set({
-        state: sanitize(initialState),
+      await createGameNode({
+        gameId: matchId,
+        state: initialState,
         playerUids: { '1': p1Uid, '2': p2Uid },
-        status: 'active',
         shape,
         timeControl: newEntry.timeControl,
         ready: { '1': false, '2': false },
         boardLoaded: { '1': false, '2': false },
-        clock: {
-          p1RemainingMs: totalMs,
-          p2RemainingMs: totalMs,
-          turnStartedAt: 0,
-          current: 1,
-          totalMs,
-        },
-        createdAt: Date.now(),
       });
-      logger.info(`matchmake: RTDB game node ${matchId} created`);
+      logger.info(`matchmake: game node ${matchId} created`);
     } catch (e) {
       logger.error(`matchmake: RTDB game node create failed for ${matchId}`, e);
     }
@@ -1391,7 +1537,6 @@ async function spawnBotMatch(args: {
   timeControl: TimeControl;
 }): Promise<void> {
   const db = getFirestore();
-  const rtdb = getDatabase();
   const { humanUid, humanRating, humanDisplayName, humanPlacementGames, timeControl } = args;
 
   const bot = await pickBotForRating(humanRating);
@@ -1460,28 +1605,19 @@ async function spawnBotMatch(args: {
     return;
   }
 
-  // Create the RTDB game node. Bot is pre-readied AND pre-board-loaded so
-  // startClockWhenBoardsLoaded fires as soon as the human's client mounts
-  // and acks boardLoaded[1] = true.
+  // Create the game node in both backends (per MULTIPLAYER_BACKEND flag).
+  // Bot is pre-readied AND pre-board-loaded so startClockWhenBoardsLoaded
+  // fires as soon as the human's client mounts and acks boardLoaded[1] = true.
   try {
     const initialState = createGame(shape, 'multiplayer');
-    const totalMs = TIME_CONTROL_MS[timeControl];
-    await rtdb.ref(`games/${matchId}`).set({
-      state: sanitize(initialState),
+    await createGameNode({
+      gameId: matchId,
+      state: initialState,
       playerUids: { '1': p1Uid, '2': p2Uid },
-      status: 'active',
       shape,
       timeControl,
       ready: { '1': false, '2': true },
       boardLoaded: { '1': false, '2': true },
-      clock: {
-        p1RemainingMs: totalMs,
-        p2RemainingMs: totalMs,
-        turnStartedAt: 0,
-        current: 1,
-        totalMs,
-      },
-      createdAt: Date.now(),
     });
     logger.info(
       `spawnBotMatch: ${hashUid(humanUid)} (${humanRating}) <-> bot ${bot.uid} (${bot.rating}) on ${shape}, match=${matchId}`,
@@ -1502,7 +1638,6 @@ async function pairTwoHumans(args: {
   timeControl: TimeControl;
 }): Promise<boolean> {
   const db = getFirestore();
-  const rtdb = getDatabase();
   const { a, b, timeControl } = args;
 
   // Earlier-joined player gets slot 1 (chess colour convention; matches
@@ -1576,29 +1711,20 @@ async function pairTwoHumans(args: {
 
   try {
     const initialState = createGame(shape, 'multiplayer');
-    const totalMs = TIME_CONTROL_MS[timeControl];
-    await rtdb.ref(`games/${matchId}`).set({
-      state: sanitize(initialState),
+    await createGameNode({
+      gameId: matchId,
+      state: initialState,
       playerUids: { '1': p1.uid, '2': p2.uid },
-      status: 'active',
       shape,
       timeControl,
       ready: { '1': false, '2': false },
       boardLoaded: { '1': false, '2': false },
-      clock: {
-        p1RemainingMs: totalMs,
-        p2RemainingMs: totalMs,
-        turnStartedAt: 0,
-        current: 1,
-        totalMs,
-      },
-      createdAt: Date.now(),
     });
     logger.info(
       `pairTwoHumans: ${hashUid(p1.uid)} <-> ${hashUid(p2.uid)} match ${matchId} on ${shape}`,
     );
   } catch (e) {
-    logger.error(`pairTwoHumans: RTDB game create failed for ${matchId}`, e);
+    logger.error(`pairTwoHumans: game create failed for ${matchId}`, e);
   }
   return true;
 }

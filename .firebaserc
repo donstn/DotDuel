@@ -1,7 +1,7 @@
 {
   "projects": {
     "default": "dotduel",
-    "staging": "dotduel"
+    "staging": "dotduel-staging"
   },
   "targets": {},
   "etags": {}

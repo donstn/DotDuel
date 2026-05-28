@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:staging": "vite --mode staging --host",
     "build": "tsc -b && vite build",
+    "build:staging": "tsc -b && vite build --mode staging",
     "preview": "vite preview",
     "simulate": "tsx scripts/simulate.ts",
     "simulate:l4": "tsx scripts/simulate-l4.ts",

@@ -140,7 +140,7 @@ export const MULTIPLAYER_BACKEND: MultiplayerBackend = 'dual';
 // While the flag is 'dual' on the server, BOTH backends are kept in sync,
 // so users on the old transport (RTDB) and the new transport (Firestore)
 // see the same game state in parallel.
-export const CLIENT_FIRESTORE_TRANSPORT: boolean = false;
+export const CLIENT_FIRESTORE_TRANSPORT: boolean = true;
 
 // FirestoreGame document shape — what `games/{matchId}` looks like in Firestore.
 // Matches the existing RTDB shape closely so the migration is mechanical, but

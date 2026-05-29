@@ -123,6 +123,25 @@ export const SHAPE_LABEL: Record<ShapeId, string> = {
 export type MultiplayerBackend = 'rtdb' | 'dual' | 'firestore';
 export const MULTIPLAYER_BACKEND: MultiplayerBackend = 'dual';
 
+// Client-side transport flag — independent of MULTIPLAYER_BACKEND (which
+// drives server writes). When false (default) the client reads game state
+// from RTDB and submits actions as direct RTDB writes. When true, the
+// client subscribes to Firestore via onSnapshot and submits actions via
+// callable Cloud Functions. The latter unblocks mobile users whose DNS
+// filter blocks *.firebasedatabase.app.
+//
+// Day 4 rollout sequence:
+//   1. Deploy with CLIENT_FIRESTORE_TRANSPORT = false → no behaviour change.
+//   2. Server callables exist + verified by direct test calls.
+//   3. Flip to true on a separate commit. Users switch transport on next
+//      page load. If anything goes wrong, flip back to false (single-line
+//      revert + push) and users immediately resume RTDB transport.
+//
+// While the flag is 'dual' on the server, BOTH backends are kept in sync,
+// so users on the old transport (RTDB) and the new transport (Firestore)
+// see the same game state in parallel.
+export const CLIENT_FIRESTORE_TRANSPORT: boolean = false;
+
 // FirestoreGame document shape — what `games/{matchId}` looks like in Firestore.
 // Matches the existing RTDB shape closely so the migration is mechanical, but
 // removes RTDB-only oddities:

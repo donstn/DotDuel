@@ -2036,3 +2036,169 @@ export const seedBots = onCall(
   },
 );
 
+
+// ===========================================================================
+// Day 4 (Firestore migration): callable wrappers for client actions
+// ===========================================================================
+//
+// Web clients on privacy-strict mobile networks (Whalebone, AdGuard, etc.)
+// can't reach *.firebasedatabase.app. Cloud Functions running server-side
+// have full RTDB access regardless of client network conditions. These
+// callables let the client perform game actions through HTTPS to
+// *.cloudfunctions.net or *.run.app — domains those filters don't block —
+// while the server-side write still goes to RTDB so the existing
+// validateMove trigger continues to fire.
+//
+// Same auth + validation rules as the direct RTDB writes had via security
+// rules. Each callable is admin-gated as "must be a participant in this
+// game" or "must be the slot-holder for this write".
+
+async function assertParticipant(
+  gameId: string,
+  uid: string,
+): Promise<{ slot: 1 | 2; playerUids: { '1': string; '2': string } }> {
+  const snap = await getDatabase().ref(`games/${gameId}/playerUids`).get();
+  const playerUids = snap.val() as { '1': string; '2': string } | null;
+  if (!playerUids) {
+    throw new HttpsError('not-found', 'Game not found.');
+  }
+  let slot: 1 | 2 | null = null;
+  if (playerUids['1'] === uid) slot = 1;
+  else if (playerUids['2'] === uid) slot = 2;
+  if (!slot) {
+    throw new HttpsError('permission-denied', 'Not a player in this game.');
+  }
+  return { slot, playerUids };
+}
+
+interface SubmitMoveReq {
+  gameId: string;
+  action: WireAction;
+}
+
+export const submitMove = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    const { gameId, action } = (request.data ?? {}) as SubmitMoveReq;
+    if (typeof gameId !== 'string' || !gameId) {
+      throw new HttpsError('invalid-argument', 'gameId required.');
+    }
+    if (!action || typeof action !== 'object') {
+      throw new HttpsError('invalid-argument', 'action required.');
+    }
+    await assertParticipant(gameId, uid);
+    await getDatabase()
+      .ref(`games/${gameId}/pendingMove`)
+      .set({ from: uid, action, clientTime: Date.now() });
+    return { ok: true };
+  },
+);
+
+interface SetReadyReq {
+  gameId: string;
+  value: boolean;
+}
+
+export const setReady = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    const { gameId, value } = (request.data ?? {}) as SetReadyReq;
+    if (typeof gameId !== 'string' || !gameId) {
+      throw new HttpsError('invalid-argument', 'gameId required.');
+    }
+    if (typeof value !== 'boolean') {
+      throw new HttpsError('invalid-argument', 'value must be boolean.');
+    }
+    const { slot } = await assertParticipant(gameId, uid);
+    await getDatabase().ref(`games/${gameId}/ready/${slot}`).set(value);
+    return { ok: true };
+  },
+);
+
+interface SetBoardLoadedReq {
+  gameId: string;
+}
+
+export const setBoardLoaded = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    const { gameId } = (request.data ?? {}) as SetBoardLoadedReq;
+    if (typeof gameId !== 'string' || !gameId) {
+      throw new HttpsError('invalid-argument', 'gameId required.');
+    }
+    const { slot } = await assertParticipant(gameId, uid);
+    await getDatabase().ref(`games/${gameId}/boardLoaded/${slot}`).set(true);
+    return { ok: true };
+  },
+);
+
+interface ClaimTimeoutReq {
+  gameId: string;
+}
+
+export const claimTimeoutCallable = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    const { gameId } = (request.data ?? {}) as ClaimTimeoutReq;
+    if (typeof gameId !== 'string' || !gameId) {
+      throw new HttpsError('invalid-argument', 'gameId required.');
+    }
+    await assertParticipant(gameId, uid);
+    await getDatabase()
+      .ref(`games/${gameId}/pendingMove`)
+      .set({ from: uid, action: { kind: 'timeout' }, clientTime: Date.now() });
+    return { ok: true };
+  },
+);
+
+interface ResignReq {
+  gameId: string;
+}
+
+export const resignCallable = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    const { gameId } = (request.data ?? {}) as ResignReq;
+    if (typeof gameId !== 'string' || !gameId) {
+      throw new HttpsError('invalid-argument', 'gameId required.');
+    }
+    await assertParticipant(gameId, uid);
+    await getDatabase()
+      .ref(`games/${gameId}/pendingMove`)
+      .set({ from: uid, action: { kind: 'resign' }, clientTime: Date.now() });
+    return { ok: true };
+  },
+);
+
+interface SetRematchReq {
+  gameId: string;
+  value: boolean;
+}
+
+export const setRematch = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    const { gameId, value } = (request.data ?? {}) as SetRematchReq;
+    if (typeof gameId !== 'string' || !gameId) {
+      throw new HttpsError('invalid-argument', 'gameId required.');
+    }
+    if (typeof value !== 'boolean') {
+      throw new HttpsError('invalid-argument', 'value must be boolean.');
+    }
+    const { slot } = await assertParticipant(gameId, uid);
+    await getDatabase().ref(`games/${gameId}/rematch/${slot}`).set(value);
+    return { ok: true };
+  },
+);

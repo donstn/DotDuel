@@ -1,8 +1,14 @@
 import { onValue, ref, set } from 'firebase/database';
-import { rtdb } from '../firebase';
+import { doc, onSnapshot, type DocumentData } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { app, db, rtdb } from '../firebase';
 import type { GameAction, GameMode, GameState, Player, ShapeId } from '../types';
+import { CLIENT_FIRESTORE_TRANSPORT } from '../types';
 import type { TimeControl } from './matchmaking';
 import { diag as DIAG } from '../diag';
+
+// Cached Functions instance for callables. Region must match server deploys.
+const functionsEW1 = getFunctions(app, 'europe-west1');
 
 // Wrap any RTDB write so a silent hang shows up in logs after 10s.
 async function loggedWrite<T>(tag: string, op: () => Promise<T>): Promise<T> {
@@ -138,15 +144,58 @@ export interface OnlineError {
   ts: number;
 }
 
+// Convert a raw Firestore doc to the OnlineGame shape the rest of the app
+// consumes. Same normalisation pattern as the RTDB read path, but Firestore
+// doesn't strip empty objects so the safety paths in normalizeState are
+// mostly defensive.
+function firestoreDocToOnlineGame(data: DocumentData): OnlineGame {
+  return {
+    ...(data as OnlineGame),
+    state: normalizeState((data.state ?? {}) as Record<string, unknown>),
+  };
+}
+
 export function watchGame(
   gameId: string,
   onChange: (game: OnlineGame | null) => void,
 ): () => void {
-  DIAG(`watchGame[${gameId}] subscribing`);
+  if (CLIENT_FIRESTORE_TRANSPORT) {
+    DIAG(`watchGame[${gameId}] subscribing (firestore)`);
+    let firstFire = true;
+    const docRef = doc(db, 'games', gameId);
+    const stallTimer = setTimeout(() => {
+      if (firstFire) {
+        DIAG(`watchGame[${gameId}] STILL no onSnapshot fire after 8s — subscription likely stalled`);
+      }
+    }, 8_000);
+    return onSnapshot(
+      docRef,
+      (snap) => {
+        if (firstFire) {
+          clearTimeout(stallTimer);
+          firstFire = false;
+        }
+        const data = snap.data();
+        DIAG(`watchGame[${gameId}] onSnapshot fired, hasData=${!!data}`);
+        if (!data) {
+          onChange(null);
+          return;
+        }
+        onChange(firestoreDocToOnlineGame(data));
+      },
+      (err) => {
+        clearTimeout(stallTimer);
+        DIAG(`watchGame[${gameId}] error`, err);
+        console.warn('watchGame (firestore) error:', err);
+        onChange(null);
+      },
+    );
+  }
+
+  // Legacy RTDB path. Used when CLIENT_FIRESTORE_TRANSPORT is false.
+  DIAG(`watchGame[${gameId}] subscribing (rtdb)`);
   let firstFire = true;
   const r = ref(rtdb, `games/${gameId}`);
-  // Diagnostic: if onValue never fires within 8s, the subscription registered
-  // but the server never pushed initial data — classic mobile-WebSocket stall.
   const stallTimer = setTimeout(() => {
     if (firstFire) {
       DIAG(`watchGame[${gameId}] STILL no onValue fire after 8s — subscription likely stalled`);
@@ -201,11 +250,39 @@ export function watchError(
   );
 }
 
+// Callable function references — created once, reused. The HTTPS endpoint
+// they hit (*.cloudfunctions.net / *.run.app) is on a different domain from
+// RTDB so it bypasses the DNS filters that block *.firebasedatabase.app.
+const callSubmitMove = httpsCallable<{ gameId: string; action: unknown }, { ok: boolean }>(
+  functionsEW1, 'submitMove',
+);
+const callSetReady = httpsCallable<{ gameId: string; value: boolean }, { ok: boolean }>(
+  functionsEW1, 'setReady',
+);
+const callSetBoardLoaded = httpsCallable<{ gameId: string }, { ok: boolean }>(
+  functionsEW1, 'setBoardLoaded',
+);
+const callClaimTimeout = httpsCallable<{ gameId: string }, { ok: boolean }>(
+  functionsEW1, 'claimTimeoutCallable',
+);
+const callResign = httpsCallable<{ gameId: string }, { ok: boolean }>(
+  functionsEW1, 'resignCallable',
+);
+const callSetRematch = httpsCallable<{ gameId: string; value: boolean }, { ok: boolean }>(
+  functionsEW1, 'setRematch',
+);
+
 export async function sendMove(
   gameId: string,
   uid: string,
   action: GameAction,
 ): Promise<void> {
+  if (CLIENT_FIRESTORE_TRANSPORT) {
+    await loggedWrite(`sendMove[${gameId} kind=${action.kind}] (callable)`, () =>
+      callSubmitMove({ gameId, action }).then(() => undefined),
+    );
+    return;
+  }
   const r = ref(rtdb, `games/${gameId}/pendingMove`);
   await loggedWrite(`sendMove[${gameId} kind=${action.kind}]`, () =>
     set(r, { from: uid, action, clientTime: Date.now() }),
@@ -217,6 +294,12 @@ export async function markReady(
   slot: 1 | 2,
   value: boolean,
 ): Promise<void> {
+  if (CLIENT_FIRESTORE_TRANSPORT) {
+    await loggedWrite(`markReady[${gameId}:${slot}=${value}] (callable)`, () =>
+      callSetReady({ gameId, value }).then(() => undefined),
+    );
+    return;
+  }
   const r = ref(rtdb, `games/${gameId}/ready/${slot}`);
   await loggedWrite(`markReady[${gameId}:${slot}=${value}]`, () => set(r, value));
 }
@@ -225,6 +308,12 @@ export async function markBoardLoaded(
   gameId: string,
   slot: 1 | 2,
 ): Promise<void> {
+  if (CLIENT_FIRESTORE_TRANSPORT) {
+    await loggedWrite(`markBoardLoaded[${gameId}:${slot}] (callable)`, () =>
+      callSetBoardLoaded({ gameId }).then(() => undefined),
+    );
+    return;
+  }
   const r = ref(rtdb, `games/${gameId}/boardLoaded/${slot}`);
   await loggedWrite(`markBoardLoaded[${gameId}:${slot}]`, () => set(r, true));
 }
@@ -236,6 +325,10 @@ export async function claimTimeout(
   gameId: string,
   uid: string,
 ): Promise<void> {
+  if (CLIENT_FIRESTORE_TRANSPORT) {
+    await callClaimTimeout({ gameId });
+    return;
+  }
   const r = ref(rtdb, `games/${gameId}/pendingMove`);
   await set(r, {
     from: uid,
@@ -251,6 +344,10 @@ export async function requestRematch(
   slot: 1 | 2,
   value: boolean,
 ): Promise<void> {
+  if (CLIENT_FIRESTORE_TRANSPORT) {
+    await callSetRematch({ gameId, value });
+    return;
+  }
   const r = ref(rtdb, `games/${gameId}/rematch/${slot}`);
   await set(r, value);
 }
@@ -260,6 +357,10 @@ export async function sendResign(
   gameId: string,
   uid: string,
 ): Promise<void> {
+  if (CLIENT_FIRESTORE_TRANSPORT) {
+    await callResign({ gameId });
+    return;
+  }
   const r = ref(rtdb, `games/${gameId}/pendingMove`);
   await set(r, {
     from: uid,

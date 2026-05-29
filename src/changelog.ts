@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.4.4',
+    date: '2026-05-29',
+    highlight: 'Refresh goes home',
+    changes: [
+      {
+        kind: 'fixed',
+        text: "Hard-refreshing the page after a finished game now returns to the main menu instead of replaying the same Game Over screen on every reload.",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.4.3',
     date: '2026-05-29',
     highlight: 'Ready button + stale tab cleanup',

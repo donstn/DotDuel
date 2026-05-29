@@ -465,6 +465,32 @@ export default function App() {
     }
   }, [pairing, screen]);
 
+  // Stale-pairing guard. After a hard refresh on the GameOver screen,
+  // watchPairing surfaces the prior pairing (Firestore never cleaned it up
+  // because the tab closed without going through onLeaveMpGame). watchGame
+  // then resolves to a game whose status is already 'finished' and whose
+  // ready/boardLoaded maps are both true from the prior session — so the
+  // MatchFound auto-start fires immediately, pushes us into mpgame, and
+  // GameOver renders for a match the user already finished. Detect that
+  // case here and route back to menu instead. Natural in-game GameOver
+  // (status flips while screen is already 'mpgame') is preserved.
+  useEffect(() => {
+    if (!pairing || !onlineGame || !user) return;
+    if (onlineGame.status !== 'finished') return;
+    if (screen === 'mpgame') return;
+    void clearPairing(user.uid).catch((e) =>
+      console.warn('clearPairing on stale finished pairing failed:', e),
+    );
+    void releaseSession(user.uid).catch((e) =>
+      console.warn('releaseSession on stale finished pairing failed:', e),
+    );
+    setPairing(null);
+    setOnlineGameId(null);
+    setOnlineGame(null);
+    setOnlineError(null);
+    setScreen('menu');
+  }, [pairing, onlineGame, user, screen]);
+
   const mySessionId = mySessionIdRef.current;
   const mpLockedByOther =
     !!activeGameSession && activeGameSession.sessionId !== mySessionId;

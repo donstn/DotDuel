@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.4.3',
+    date: '2026-05-29',
+    highlight: 'Ready button + stale tab cleanup',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Ready button now responds instantly when you tap it instead of waiting for the network round-trip, and vs AI the game starts the moment you press it (no waiting for the countdown).',
+      },
+      {
+        kind: 'fixed',
+        text: 'If you took over the multiplayer session on a second device, the first device no longer shows a phantom game over for the game you finished there.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.4.2',
     date: '2026-05-29',
     highlight: 'Session lock recovery',

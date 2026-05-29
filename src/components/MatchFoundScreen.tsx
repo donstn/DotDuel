@@ -25,7 +25,21 @@ export function MatchFoundScreen({
   onLeave,
 }: Props) {
   const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
+  const [pressedReady, setPressedReady] = useState(false);
   const startedRef = useRef(false);
+
+  // Optimistic local "I clicked Ready". Used for instant visual feedback
+  // (button text/disabled state) and to shortcut the local countdown
+  // before the server-confirmed myReady arrives ~1-2s later through the
+  // callable → Firestore → onSnapshot round-trip. The real server write
+  // still happens via onMarkReady() — this is purely UI ack.
+  const effectiveMyReady = myReady || pressedReady;
+
+  const handlePressReady = () => {
+    if (effectiveMyReady) return;
+    setPressedReady(true);
+    onMarkReady();
+  };
 
   // Local countdown — each client runs their own from mount.
   useEffect(() => {
@@ -35,17 +49,19 @@ export function MatchFoundScreen({
   }, [secondsLeft]);
 
   // Start when both players are ready, or when the countdown expires.
+  // effectiveMyReady includes the optimistic click so vs-bot (bot pre-ready)
+  // starts instantly on your tap instead of after a network round-trip.
   useEffect(() => {
     if (startedRef.current) return;
-    console.log('matchFound auto-start check:', { myReady, oppReady, secondsLeft });
-    if ((myReady && oppReady) || secondsLeft <= 0) {
+    console.log('matchFound auto-start check:', { effectiveMyReady, oppReady, secondsLeft });
+    if ((effectiveMyReady && oppReady) || secondsLeft <= 0) {
       console.log('matchFound: starting game', {
-        reason: myReady && oppReady ? 'both-ready' : 'countdown-expired',
+        reason: effectiveMyReady && oppReady ? 'both-ready' : 'countdown-expired',
       });
       startedRef.current = true;
       onStartPlaying();
     }
-  }, [myReady, oppReady, secondsLeft, onStartPlaying]);
+  }, [effectiveMyReady, oppReady, secondsLeft, onStartPlaying]);
 
   return (
     <div className="menu">
@@ -57,10 +73,10 @@ export function MatchFoundScreen({
             <span className="match-found-rating">{myRating}</span>
             <span className="match-found-tag">You · Player {pairing.player}</span>
             <span
-              className={`match-found-ready${myReady ? ' is-ready' : ''}`}
+              className={`match-found-ready${effectiveMyReady ? ' is-ready' : ''}`}
               aria-live="polite"
             >
-              {myReady ? '✓ Ready' : '— Not ready'}
+              {effectiveMyReady ? '✓ Ready' : '— Not ready'}
             </span>
           </div>
           <span className="match-found-vs">vs</span>
@@ -84,7 +100,7 @@ export function MatchFoundScreen({
           </div>
         </div>
         <div className="match-found-countdown" aria-live="polite">
-          {myReady && oppReady ? (
+          {effectiveMyReady && oppReady ? (
             <>Both ready — starting…</>
           ) : (
             <>
@@ -100,10 +116,10 @@ export function MatchFoundScreen({
         <button
           type="button"
           className="hotseat-start"
-          onClick={onMarkReady}
-          disabled={myReady}
+          onClick={handlePressReady}
+          disabled={effectiveMyReady}
         >
-          {myReady ? '✓ Ready — waiting on opponent' : "Ready!"}
+          {effectiveMyReady ? '✓ Ready — waiting on opponent' : "Ready!"}
         </button>
         <button type="button" className="menu-auth-btn" onClick={onLeave}>
           Back to menu

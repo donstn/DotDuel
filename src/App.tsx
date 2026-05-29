@@ -469,6 +469,33 @@ export default function App() {
   const mpLockedByOther =
     !!activeGameSession && activeGameSession.sessionId !== mySessionId;
 
+  // Defensive teardown: when another device takes over our session, we must
+  // unsubscribe from the game we were watching and route off any multiplayer
+  // screen. Otherwise the abandoned tab keeps receiving onSnapshot updates
+  // for a game it no longer owns — when the OTHER device finishes the game,
+  // Firestore flips status to 'finished' and we'd render a GameOver screen
+  // for a match we weren't really playing.
+  useEffect(() => {
+    if (!mpLockedByOther) return;
+    setPairing(null);
+    setOnlineGameId(null);
+    setOnlineGame(null);
+    setOnlineError(null);
+    setOptimisticMpState(null);
+    setQueueTimeControl(null);
+    setMpMatchRecord(null);
+    setResignConfirmOpen(false);
+    setMoveInFlight(false);
+    if (
+      screen === 'mpgame' ||
+      screen === 'matchFound' ||
+      screen === 'matchmaking' ||
+      screen === 'lobby'
+    ) {
+      setScreen('menu');
+    }
+  }, [mpLockedByOther, screen]);
+
   const openMultiplayer = () => {
     if (!user) return;
     // claimSession is setDoc-with-merge-overwrite semantics: if another

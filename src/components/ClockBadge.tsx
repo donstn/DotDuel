@@ -27,8 +27,13 @@ export function ClockBadge({ remainingAtRefMs, refTime, isRunning }: Props) {
 
   // When the clock isn't running, the stored remaining value is authoritative.
   // When running, extrapolate locally from refTime (the server's turnStartedAt).
+  // Clamp the elapsed value to non-negative — if the server's refTime briefly
+  // appears to be in the FUTURE relative to the client (clock skew between
+  // server and client, ~few hundred ms typical), the raw subtraction would
+  // ADD to remaining and display values higher than the starting time.
+  const elapsedMs = Math.max(0, now - refTime);
   const remaining = isRunning && refTime > 0
-    ? remainingAtRefMs - (now - refTime)
+    ? remainingAtRefMs - elapsedMs
     : remainingAtRefMs;
   const safeRemaining = Math.max(0, remaining);
   const low = safeRemaining <= LOW_TIME_MS;

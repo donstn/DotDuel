@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.3.6',
+    date: '2026-05-29',
+    highlight: 'Clock display fix',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Multiplayer clock display no longer flickers on each move.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.3.5',
     date: '2026-05-28',
     highlight: 'Friendly offline message',

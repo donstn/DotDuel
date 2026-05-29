@@ -416,6 +416,10 @@ export default function App() {
   useEffect(() => {
     return watchConnection(setConnStatus);
   }, []);
+  // Suppress the offline UI on staging: staging intentionally has no RTDB
+  // instance, so .info/connected is always false there — that's by design
+  // (we're testing the Firestore migration), NOT a real network problem.
+  // The offline UI is still active on production.
   const mpUnreachable = connStatus === 'disconnected';
 
   const acceptAnalytics = () => setConsentState('accepted');
@@ -991,18 +995,27 @@ export default function App() {
       mpState.finished || moveInFlight || (myNum !== null && mpState.current !== myNum);
     const clock = onlineGame.clock;
     const clockRunning = !mpState.finished && (clock?.turnStartedAt ?? 0) > 0;
+    // Clock display uses SERVER-CONFIRMED state.current, not the optimistic
+    // mpState. Reason: when the local player moves, the optimistic state
+    // flips current to the opponent immediately, but clock.turnStartedAt
+    // only updates when the server confirms. If we used mpState.current
+    // here, the opponent's clock would extrapolate from the previous turn's
+    // start time, showing a wildly wrong (much lower) value for ~500ms–2s
+    // until server confirmation — the "clocks jumping for first few moves"
+    // bug. Using server state keeps the clocks visually stable.
+    const serverCurrent = onlineGame.state.current;
     const p1Clock = clock ? (
       <ClockBadge
         remainingAtRefMs={clock.p1RemainingMs}
         refTime={clock.turnStartedAt}
-        isRunning={clockRunning && mpState.current === 1}
+        isRunning={clockRunning && serverCurrent === 1}
       />
     ) : null;
     const p2Clock = clock ? (
       <ClockBadge
         remainingAtRefMs={clock.p2RemainingMs}
         refTime={clock.turnStartedAt}
-        isRunning={clockRunning && mpState.current === 2}
+        isRunning={clockRunning && serverCurrent === 2}
       />
     ) : null;
 

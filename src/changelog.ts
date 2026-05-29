@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.4.0',
+    date: '2026-05-29',
+    highlight: 'Multiplayer now works on more networks',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Multiplayer now connects on networks that previously blocked the game server (Whalebone, AdGuard, NextDNS, Brave Shields, and similar DNS-level filters). The game uses a new transport path that travels over standard HTTPS and is not blocked by tracker-blocking lists. If multiplayer used to get stuck on the loading screen for you, try again.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.3.6',
     date: '2026-05-29',
     highlight: 'Clock display fix',

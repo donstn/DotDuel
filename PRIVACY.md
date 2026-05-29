@@ -61,6 +61,11 @@ beyond Google (Firebase) and the registrar (Namecheap, DNS only).
 We do **not** use third-party ad networks, social-media trackers, or
 analytics other than Google Analytics. We do not sell data to anyone.
 
+> **Future change.** Google AdSense may be added to the menu screens
+> in a future release. When that happens this policy and the consent
+> banner will be updated to disclose it, and existing players will
+> not see ads. The current release does not load AdSense.
+
 ---
 
 ## How long we keep it

@@ -4,6 +4,7 @@ import { availableDifficulties, isUnlocked } from '../storage';
 import type { Settings } from '../storage';
 import { DIFFICULTY_LABELS, PLAYABLE_SHAPE_META, SHAPE_META } from '../types';
 import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
+import { AdBanner } from './AdBanner';
 
 interface Props {
   progress: Progress;
@@ -159,6 +160,7 @@ export function Menu({
             <span>Your records and head-to-head.</span>
           </button>
         </div>
+        <AdBanner />
       </div>
     );
   }
@@ -180,6 +182,7 @@ export function Menu({
             </button>
           ))}
         </div>
+        <AdBanner />
       </div>
     );
   }
@@ -227,6 +230,7 @@ export function Menu({
             );
           })}
         </div>
+        <AdBanner />
       </div>
     );
   }
@@ -261,6 +265,7 @@ export function Menu({
             );
           })}
         </div>
+        <AdBanner />
       </div>
     );
   }

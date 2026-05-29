@@ -1,3 +1,5 @@
+import { ADS_ENABLED } from '../ads';
+
 interface Props {
   onAccept: () => void;
   onDecline: () => void;
@@ -10,8 +12,19 @@ export function ConsentBanner({ onAccept, onDecline, onOpenPrivacy }: Props) {
       <div className="consent-banner-text">
         <strong>We respect your privacy.</strong>
         <span>
-          DotDuel uses optional Google Analytics to understand how the game
-          is played. You can play with full features either way.{' '}
+          {ADS_ENABLED ? (
+            <>
+              DotDuel uses optional Google Analytics to understand how the
+              game is played, and Google AdSense to show small ads on menu
+              screens that keep the game free to run. You can play with
+              full features either way.{' '}
+            </>
+          ) : (
+            <>
+              DotDuel uses optional Google Analytics to understand how the
+              game is played. You can play with full features either way.{' '}
+            </>
+          )}
           <button
             type="button"
             className="consent-banner-link"
@@ -27,7 +40,7 @@ export function ConsentBanner({ onAccept, onDecline, onOpenPrivacy }: Props) {
           Decline
         </button>
         <button type="button" className="consent-accept" onClick={onAccept}>
-          Accept analytics
+          {ADS_ENABLED ? 'Accept' : 'Accept analytics'}
         </button>
       </div>
     </div>

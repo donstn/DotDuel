@@ -2431,6 +2431,49 @@ body:has(.consent-banner) .game-screen {
   }
 }
 
+/* ---------------- AdSense banner slot ----------------
+ * Used only on the four menu screens (main, vs AI shape, vs AI level,
+ * hot-seat shape). Reserves vertical space BEFORE the ad iframe fills
+ * to prevent CLS — the slot is the same height whether AdSense has
+ * loaded or not. Hidden in landscape (the menu UI is portrait-only
+ * by app design; nothing would fit). The 'Ad' label is a small
+ * disclosure pinned to the top-left.
+ */
+.ad-slot {
+  position: relative;
+  width: 100%;
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-height: 50px;
+}
+.ad-slot::before {
+  content: "Ad";
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .ad-slot {
+    min-height: 90px;
+  }
+}
+@media (orientation: landscape) {
+  .ad-slot {
+    display: none;
+  }
+}
+
 /* ---------------- Rankings popover ---------------- */
 
 .menu-card-rank {

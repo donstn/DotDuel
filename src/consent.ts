@@ -1,4 +1,5 @@
 import { enableAnalyticsIfSupported } from './firebase';
+import { enableAdSenseIfAccepted } from './ads';
 
 /**
  * GDPR / ePrivacy analytics-consent gate.
@@ -30,10 +31,13 @@ export function saveConsent(value: Consent): void {
 
 /**
  * Apply the consent decision side-effect. If accepted, start Analytics
- * (in prod only — the helper itself is no-op in dev). If declined,
- * do nothing (Analytics never starts; if previously started a reload
- * is required to fully stop it — see PrivacyPopover).
+ * AND AdSense (both are no-ops in dev — they only load in prod).
+ * If declined, do nothing — neither has been loaded; if previously
+ * loaded a reload is required to fully stop them, see PrivacyPopover.
  */
 export function applyConsent(value: Consent | null): void {
-  if (value === 'accepted') void enableAnalyticsIfSupported();
+  if (value === 'accepted') {
+    void enableAnalyticsIfSupported();
+    enableAdSenseIfAccepted();
+  }
 }

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { Consent } from '../consent';
+import { ADS_ENABLED } from '../ads';
 
 interface Props {
   onClose: () => void;
@@ -109,9 +110,20 @@ export function PrivacyPopover({ onClose, consent, onChangeConsent }: Props) {
                 competitive environment for all players.
               </li>
               <li>
-                <strong>Consent (Art. 6.1.a):</strong> Google Analytics —
-                only loaded after you click Accept on the consent banner.
-                Declined or undecided means it never starts.
+                <strong>Consent (Art. 6.1.a):</strong>{' '}
+                {ADS_ENABLED ? (
+                  <>
+                    Google Analytics AND Google AdSense — both only load
+                    after you click Accept on the consent banner. Declined
+                    or undecided means neither starts.
+                  </>
+                ) : (
+                  <>
+                    Google Analytics — only loaded after you click Accept
+                    on the consent banner. Declined or undecided means it
+                    never starts.
+                  </>
+                )}
               </li>
             </ul>
           </section>
@@ -121,10 +133,22 @@ export function PrivacyPopover({ onClose, consent, onChangeConsent }: Props) {
             <p>
               We use Google's Firebase platform (Authentication, Firestore,
               Realtime Database, Cloud Functions, Hosting, and Analytics)
-              as our infrastructure provider. Google processes data under
-              its standard Cloud Terms / Data Processing Addendum. We do
-              not sell or share your data with any other third party. We
-              do not use third-party ad networks or tracking pixels.
+              as our infrastructure provider
+              {ADS_ENABLED ? (
+                <>
+                  , plus Google AdSense to serve small banner ads on a
+                  few menu screens. Both Analytics and AdSense load only
+                  after you accept the consent banner
+                </>
+              ) : (
+                <>. Analytics only loads after you accept the consent banner</>
+              )}
+              . Google processes data under its standard Cloud Terms /
+              Data Processing Addendum. We do not sell or share your data
+              with any other third party.
+              {ADS_ENABLED ? null : (
+                <> We do not currently use third-party ad networks.</>
+              )}
             </p>
           </section>
 

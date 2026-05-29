@@ -55,6 +55,16 @@ export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
 export function watchConnection(
   cb: (status: ConnectionStatus) => void,
 ): () => void {
+  // When the client uses the Firestore transport, RTDB is no longer needed
+  // for multiplayer. Probing .info/connected would falsely report 'disconnected'
+  // on networks that block *.firebasedatabase.app (Whalebone, AdGuard, NextDNS,
+  // Brave Shields) — the very networks this migration unblocks. Report
+  // 'connected' optimistically; if Firestore or callables actually fail, the
+  // matchmake/sendMove error surfaces directly to the user with a real reason.
+  if (CLIENT_FIRESTORE_TRANSPORT) {
+    cb('connected');
+    return () => {};
+  }
   cb('connecting');
   const r = ref(rtdb, '.info/connected');
   let pendingDisconnect: number | null = null;

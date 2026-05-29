@@ -2307,3 +2307,683 @@ export const setRematch = onCall(
     return { ok: true };
   },
 );
+
+// ===========================================================================
+// Friends & invites (Alpha 0.2.0.0)
+// ===========================================================================
+//
+// Data model (see plans/ok-so-situation-is-eager-key.md):
+//   friendships/{sortedUidsJoined}                    — accepted/pending
+//   invites/{autoId}                                  — game challenges
+//   blocks/{blockerUid}/blockedUids/{blockedUid}      — unilateral block
+//   presence/{uid}                                    — friend-readable status
+//
+// All writes go through these callables; clients only read via the
+// firestore.rules grants. Reuses the existing enforceRateLimit helper.
+
+const FRIEND_REQUESTS_PER_DAY = 20;
+
+function friendshipIdOf(a: string, b: string): string {
+  return a < b ? `${a}__${b}` : `${b}__${a}`;
+}
+
+async function isBlockedEitherWay(a: string, b: string): Promise<boolean> {
+  const db = getFirestore();
+  const [aBlockedB, bBlockedA] = await Promise.all([
+    db.doc(`blocks/${a}/blockedUids/${b}`).get(),
+    db.doc(`blocks/${b}/blockedUids/${a}`).get(),
+  ]);
+  return aBlockedB.exists || bBlockedA.exists;
+}
+
+interface SendFriendRequestReq {
+  targetUsername?: string;
+  targetUid?: string; // alternate path used by the ?ref=<uid> referral flow
+}
+
+export const sendFriendRequest = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    await enforceRateLimit(uid, {
+      perMinute: FRIEND_REQUESTS_PER_DAY, // generous burst; per-day shaping is implicit
+      bucket: 'sendFriendRequest',
+    });
+    const { targetUsername, targetUid } = (request.data ?? {}) as SendFriendRequestReq;
+    if (!targetUsername && !targetUid) {
+      throw new HttpsError('invalid-argument', 'targetUsername or targetUid required.');
+    }
+    const db = getFirestore();
+
+    let otherUid: string | null = null;
+    if (targetUid && typeof targetUid === 'string') {
+      otherUid = targetUid;
+    } else if (targetUsername && typeof targetUsername === 'string') {
+      const lower = targetUsername.trim().toLowerCase();
+      if (!USERNAME_RE.test(targetUsername.trim())) {
+        throw new HttpsError('invalid-argument', 'Invalid username format.');
+      }
+      const snap = await db.doc(`usernames/${lower}`).get();
+      if (!snap.exists) {
+        throw new HttpsError('not-found', 'No user with that username.');
+      }
+      otherUid = (snap.data()?.uid as string | undefined) ?? null;
+    }
+    if (!otherUid) throw new HttpsError('not-found', 'No user with that username.');
+    if (otherUid === uid) throw new HttpsError('invalid-argument', "Can't friend yourself.");
+
+    if (await isBlockedEitherWay(uid, otherUid)) {
+      throw new HttpsError('permission-denied', 'Cannot send request to this user.');
+    }
+
+    const friendshipId = friendshipIdOf(uid, otherUid);
+    const ref = db.doc(`friendships/${friendshipId}`);
+
+    // Pre-read both display names so the doc can carry denormalised friend
+    // info — needed by the friend list UI (users/{uid} is owner-only).
+    const [meSnap, otherSnap] = await Promise.all([
+      db.doc(`users/${uid}`).get(),
+      db.doc(`users/${otherUid}`).get(),
+    ]);
+    const meDisplay =
+      (meSnap.data()?.displayName as string | undefined) ?? 'Player';
+    const otherDisplay =
+      (otherSnap.data()?.displayName as string | undefined) ?? 'Player';
+    const displayNames: Record<string, string> = {
+      [uid]: meDisplay,
+      [otherUid]: otherDisplay,
+    };
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (snap.exists) {
+          const status = snap.data()?.status as string | undefined;
+          if (status === 'accepted') {
+            throw new HttpsError('already-exists', 'Already friends.');
+          }
+          if (status === 'pending') {
+            const requestedBy = snap.data()?.requestedBy as string | undefined;
+            if (requestedBy === uid) {
+              throw new HttpsError('already-exists', 'Request already sent.');
+            }
+            // The other person already sent us a request — auto-accept it.
+            tx.update(ref, {
+              status: 'accepted',
+              acceptedAt: Timestamp.now(),
+              displayNames,
+            });
+            tx.set(
+              db.doc(`presence/${uid}`),
+              { friendUids: FieldValue.arrayUnion(otherUid) },
+              { merge: true },
+            );
+            tx.set(
+              db.doc(`presence/${otherUid}`),
+              { friendUids: FieldValue.arrayUnion(uid) },
+              { merge: true },
+            );
+            return;
+          }
+        }
+        tx.set(ref, {
+          uids: uid < otherUid ? [uid, otherUid] : [otherUid, uid],
+          status: 'pending',
+          requestedBy: uid,
+          requestedAt: Timestamp.now(),
+          acceptedAt: null,
+          displayNames,
+        });
+      });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      logger.error(`sendFriendRequest tx failed for ${hashUid(uid)}`, e);
+      throw new HttpsError('internal', 'Friend request failed.');
+    }
+    logger.info(`sendFriendRequest: ${hashUid(uid)} -> ${hashUid(otherUid)}`);
+    return { ok: true };
+  },
+);
+
+interface FriendshipIdReq {
+  friendshipId: string;
+}
+
+export const acceptFriendRequest = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    await enforceRateLimit(uid, { perMinute: 30, bucket: 'acceptFriendRequest' });
+    const { friendshipId } = (request.data ?? {}) as FriendshipIdReq;
+    if (typeof friendshipId !== 'string' || !friendshipId) {
+      throw new HttpsError('invalid-argument', 'friendshipId required.');
+    }
+    const db = getFirestore();
+    const ref = db.doc(`friendships/${friendshipId}`);
+    try {
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists) throw new HttpsError('not-found', 'Request not found.');
+        const data = snap.data() as {
+          uids?: string[];
+          status?: string;
+          requestedBy?: string;
+        };
+        const uids = data.uids ?? [];
+        if (!uids.includes(uid)) {
+          throw new HttpsError('permission-denied', 'Not your friendship.');
+        }
+        if (data.status !== 'pending') {
+          throw new HttpsError('failed-precondition', 'Request is not pending.');
+        }
+        if (data.requestedBy === uid) {
+          throw new HttpsError(
+            'failed-precondition',
+            'You sent this request; the other side must accept.',
+          );
+        }
+        const otherUid = uids.find((u) => u !== uid)!;
+        tx.update(ref, {
+          status: 'accepted',
+          acceptedAt: Timestamp.now(),
+        });
+        tx.set(
+          db.doc(`presence/${uid}`),
+          { friendUids: FieldValue.arrayUnion(otherUid) },
+          { merge: true },
+        );
+        tx.set(
+          db.doc(`presence/${otherUid}`),
+          { friendUids: FieldValue.arrayUnion(uid) },
+          { merge: true },
+        );
+      });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      logger.error(`acceptFriendRequest tx failed for ${hashUid(uid)}`, e);
+      throw new HttpsError('internal', 'Accept failed.');
+    }
+    return { ok: true };
+  },
+);
+
+export const declineFriendRequest = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    await enforceRateLimit(uid, { perMinute: 30, bucket: 'declineFriendRequest' });
+    const { friendshipId } = (request.data ?? {}) as FriendshipIdReq;
+    if (typeof friendshipId !== 'string' || !friendshipId) {
+      throw new HttpsError('invalid-argument', 'friendshipId required.');
+    }
+    const db = getFirestore();
+    const ref = db.doc(`friendships/${friendshipId}`);
+    const snap = await ref.get();
+    if (!snap.exists) return { ok: true }; // already gone — idempotent
+    const data = snap.data() as { uids?: string[]; status?: string };
+    if (!data.uids?.includes(uid)) {
+      throw new HttpsError('permission-denied', 'Not your friendship.');
+    }
+    if (data.status !== 'pending') {
+      throw new HttpsError('failed-precondition', 'Request is not pending.');
+    }
+    await ref.delete();
+    return { ok: true };
+  },
+);
+
+export const removeFriend = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    await enforceRateLimit(uid, { perMinute: 30, bucket: 'removeFriend' });
+    const { friendshipId } = (request.data ?? {}) as FriendshipIdReq;
+    if (typeof friendshipId !== 'string' || !friendshipId) {
+      throw new HttpsError('invalid-argument', 'friendshipId required.');
+    }
+    const db = getFirestore();
+    const ref = db.doc(`friendships/${friendshipId}`);
+    try {
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists) return; // already removed — idempotent
+        const data = snap.data() as { uids?: string[] };
+        const uids = data.uids ?? [];
+        if (!uids.includes(uid)) {
+          throw new HttpsError('permission-denied', 'Not your friendship.');
+        }
+        const otherUid = uids.find((u) => u !== uid)!;
+        tx.delete(ref);
+        tx.set(
+          db.doc(`presence/${uid}`),
+          { friendUids: FieldValue.arrayRemove(otherUid) },
+          { merge: true },
+        );
+        tx.set(
+          db.doc(`presence/${otherUid}`),
+          { friendUids: FieldValue.arrayRemove(uid) },
+          { merge: true },
+        );
+      });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      logger.error(`removeFriend tx failed for ${hashUid(uid)}`, e);
+      throw new HttpsError('internal', 'Remove failed.');
+    }
+    return { ok: true };
+  },
+);
+
+interface BlockUserReq {
+  blockedUid: string;
+}
+
+export const blockUser = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    await enforceRateLimit(uid, { perMinute: 20, bucket: 'blockUser' });
+    const { blockedUid } = (request.data ?? {}) as BlockUserReq;
+    if (typeof blockedUid !== 'string' || !blockedUid) {
+      throw new HttpsError('invalid-argument', 'blockedUid required.');
+    }
+    if (blockedUid === uid) {
+      throw new HttpsError('invalid-argument', "Can't block yourself.");
+    }
+    const db = getFirestore();
+    const blockRef = db.doc(`blocks/${uid}/blockedUids/${blockedUid}`);
+    const friendshipRef = db.doc(`friendships/${friendshipIdOf(uid, blockedUid)}`);
+
+    // Block + remove any friendship + cancel any pending invites between the two.
+    const pendingInvitesSnap = await db
+      .collection('invites')
+      .where('status', '==', 'pending')
+      .where('from', 'in', [uid, blockedUid])
+      .get();
+    const between = pendingInvitesSnap.docs.filter((d) => {
+      const data = d.data() as { from?: string; to?: string };
+      return (
+        (data.from === uid && data.to === blockedUid) ||
+        (data.from === blockedUid && data.to === uid)
+      );
+    });
+
+    const batch = db.batch();
+    batch.set(blockRef, { blockedAt: Timestamp.now() });
+    batch.delete(friendshipRef); // no-op if it didn't exist
+    batch.set(
+      db.doc(`presence/${uid}`),
+      { friendUids: FieldValue.arrayRemove(blockedUid) },
+      { merge: true },
+    );
+    batch.set(
+      db.doc(`presence/${blockedUid}`),
+      { friendUids: FieldValue.arrayRemove(uid) },
+      { merge: true },
+    );
+    for (const inv of between) {
+      batch.update(inv.ref, { status: 'cancelled' });
+    }
+    await batch.commit();
+    logger.info(`blockUser: ${hashUid(uid)} blocked ${hashUid(blockedUid)}`);
+    return { ok: true };
+  },
+);
+
+export const unblockUser = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    await enforceRateLimit(uid, { perMinute: 20, bucket: 'unblockUser' });
+    const { blockedUid } = (request.data ?? {}) as BlockUserReq;
+    if (typeof blockedUid !== 'string' || !blockedUid) {
+      throw new HttpsError('invalid-argument', 'blockedUid required.');
+    }
+    await getFirestore()
+      .doc(`blocks/${uid}/blockedUids/${blockedUid}`)
+      .delete();
+    return { ok: true };
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Game invites
+// ---------------------------------------------------------------------------
+
+const INVITE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const INVITE_RATE_PER_MINUTE = 10;
+
+interface SendInviteReq {
+  toUids: string[];
+  shape: ShapeId;
+  timeControl: TimeControl;
+  fromRanked: boolean;
+}
+
+export const sendInvite = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const fromUid = request.auth?.uid;
+    if (!fromUid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    await enforceRateLimit(fromUid, {
+      perMinute: INVITE_RATE_PER_MINUTE,
+      bucket: 'sendInvite',
+    });
+    const { toUids, shape, timeControl, fromRanked } = (request.data ??
+      {}) as SendInviteReq;
+    if (!Array.isArray(toUids) || toUids.length === 0 || toUids.length > 10) {
+      throw new HttpsError('invalid-argument', 'toUids must be 1-10 uids.');
+    }
+    if (shape !== 'triangle' && shape !== 'square' && shape !== 'rectangle') {
+      throw new HttpsError('invalid-argument', 'Invalid shape.');
+    }
+    if (timeControl !== '1min' && timeControl !== '3min' && timeControl !== '5min') {
+      throw new HttpsError('invalid-argument', 'Invalid timeControl.');
+    }
+    if (typeof fromRanked !== 'boolean') {
+      throw new HttpsError('invalid-argument', 'fromRanked must be boolean.');
+    }
+
+    const db = getFirestore();
+    const now = Date.now();
+    const expiresAt = now + INVITE_TTL_MS;
+    const groupId = db.collection('invites').doc().id;
+
+    // Validate each recipient: not self, not blocked, challengePolicy permits.
+    const validated: string[] = [];
+    for (const toUid of toUids) {
+      if (typeof toUid !== 'string' || !toUid) continue;
+      if (toUid === fromUid) continue;
+      if (await isBlockedEitherWay(fromUid, toUid)) continue;
+
+      // Check challengePolicy: 'nobody' rejects all; 'friends-only' requires friendship.
+      const userSnap = await db.doc(`users/${toUid}`).get();
+      const policy =
+        (userSnap.data()?.challengePolicy as string | undefined) ?? 'everyone';
+      if (policy === 'nobody') continue;
+      if (policy === 'friends-only') {
+        const friendshipSnap = await db
+          .doc(`friendships/${friendshipIdOf(fromUid, toUid)}`)
+          .get();
+        const isFriend =
+          friendshipSnap.exists &&
+          (friendshipSnap.data()?.status as string | undefined) === 'accepted';
+        if (!isFriend) continue;
+      }
+      validated.push(toUid);
+    }
+    if (validated.length === 0) {
+      throw new HttpsError('permission-denied', 'No valid recipients.');
+    }
+
+    const batch = db.batch();
+    const created: { inviteId: string; toUid: string }[] = [];
+    for (const toUid of validated) {
+      const ref = db.collection('invites').doc();
+      batch.set(ref, {
+        from: fromUid,
+        to: toUid,
+        groupId,
+        shape,
+        timeControl,
+        fromRanked,
+        status: 'pending',
+        createdAt: Timestamp.now(),
+        expiresAt,
+      });
+      created.push({ inviteId: ref.id, toUid });
+    }
+    await batch.commit();
+    logger.info(
+      `sendInvite: ${hashUid(fromUid)} sent ${created.length} invites in group ${groupId}`,
+    );
+    return { ok: true, groupId, sent: created.length };
+  },
+);
+
+interface AcceptInviteReq {
+  inviteId: string;
+  ranked: boolean; // recipient's ranked toggle
+}
+
+export const acceptInvite = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    await enforceRateLimit(uid, { perMinute: 20, bucket: 'acceptInvite' });
+    const { inviteId, ranked } = (request.data ?? {}) as AcceptInviteReq;
+    if (typeof inviteId !== 'string' || !inviteId) {
+      throw new HttpsError('invalid-argument', 'inviteId required.');
+    }
+    if (typeof ranked !== 'boolean') {
+      throw new HttpsError('invalid-argument', 'ranked must be boolean.');
+    }
+    const db = getFirestore();
+    const inviteRef = db.doc(`invites/${inviteId}`);
+    const matchId = db.collection('matches').doc().id;
+
+    let fromUid = '';
+    let shape: ShapeId = 'triangle';
+    let timeControl: TimeControl = '3min';
+    let willBeRanked = false;
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(inviteRef);
+        if (!snap.exists) throw new HttpsError('not-found', 'Invite not found.');
+        const inv = snap.data() as {
+          from?: string;
+          to?: string;
+          groupId?: string;
+          shape?: ShapeId;
+          timeControl?: TimeControl;
+          fromRanked?: boolean;
+          status?: string;
+          expiresAt?: number;
+        };
+        if (inv.to !== uid) {
+          throw new HttpsError('permission-denied', 'Not your invite.');
+        }
+        if (inv.status !== 'pending') {
+          throw new HttpsError('failed-precondition', 'Invite no longer pending.');
+        }
+        if (typeof inv.expiresAt === 'number' && inv.expiresAt < Date.now()) {
+          throw new HttpsError('failed-precondition', 'Invite expired.');
+        }
+        fromUid = inv.from!;
+        shape = inv.shape!;
+        timeControl = inv.timeControl!;
+        willBeRanked = Boolean(inv.fromRanked) && ranked;
+
+        // Race cancellation: find sibling pending invites in the same groupId
+        // and mark them cancelled. The accepted one wins.
+        const siblings = await tx.get(
+          db.collection('invites')
+            .where('groupId', '==', inv.groupId)
+            .where('status', '==', 'pending'),
+        );
+        for (const sib of siblings.docs) {
+          if (sib.id === inviteId) {
+            tx.update(sib.ref, { status: 'accepted', matchId });
+          } else {
+            tx.update(sib.ref, { status: 'cancelled' });
+          }
+        }
+
+        // Match record + pairings — same shape as matchmake writes.
+        const matchRef = db.doc(`matches/${matchId}`);
+        const fromPairRef = db.doc(`pairings/${fromUid}`);
+        const toPairRef = db.doc(`pairings/${uid}`);
+        // Look up display names from users/{uid}.
+        const [fromUserSnap, toUserSnap] = await Promise.all([
+          tx.get(db.doc(`users/${fromUid}`)),
+          tx.get(db.doc(`users/${uid}`)),
+        ]);
+        const fromDisplay =
+          (fromUserSnap.data()?.displayName as string | undefined) ?? 'Player 1';
+        const toDisplay =
+          (toUserSnap.data()?.displayName as string | undefined) ?? 'Player 2';
+        const fromRating =
+          (fromUserSnap.data()?.rating as number | undefined) ?? 1000;
+        const toRating =
+          (toUserSnap.data()?.rating as number | undefined) ?? 1000;
+
+        tx.set(matchRef, {
+          status: 'created',
+          createdAt: FieldValue.serverTimestamp(),
+          timeControl,
+          shape,
+          p1Uid: fromUid,
+          p2Uid: uid,
+          p1Display: fromDisplay,
+          p2Display: toDisplay,
+          playerUids: [fromUid, uid],
+          ranked: willBeRanked,
+          inviteId,
+          groupId: inv.groupId,
+        });
+        tx.set(fromPairRef, {
+          matchId,
+          shape,
+          opponentUid: uid,
+          opponentDisplayName: toDisplay,
+          opponentRating: toRating,
+          player: 1,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+        tx.set(toPairRef, {
+          matchId,
+          shape,
+          opponentUid: fromUid,
+          opponentDisplayName: fromDisplay,
+          opponentRating: fromRating,
+          player: 2,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+      });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      logger.error(`acceptInvite tx failed for ${hashUid(uid)}`, e);
+      throw new HttpsError('internal', 'Accept failed.');
+    }
+
+    // After the transaction commits, create the game doc itself. Same split
+    // as matchmake (lines 415–426) — game-node creation lives outside the tx
+    // because it writes through createGameNode dual-write helper.
+    try {
+      const initialState = createGame(shape, 'multiplayer');
+      await createGameNode({
+        gameId: matchId,
+        state: initialState,
+        playerUids: { '1': fromUid, '2': uid },
+        shape,
+        timeControl,
+        ready: { '1': false, '2': false },
+        boardLoaded: { '1': false, '2': false },
+      });
+      logger.info(
+        `acceptInvite: ${hashUid(uid)} accepted invite ${inviteId} → match ${matchId}`,
+      );
+    } catch (e) {
+      logger.error(`acceptInvite: createGameNode failed for ${matchId}`, e);
+      throw new HttpsError('internal', 'Game creation failed.');
+    }
+    return { ok: true, matchId };
+  },
+);
+
+interface InviteIdReq {
+  inviteId: string;
+}
+
+export const declineInvite = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    await enforceRateLimit(uid, { perMinute: 30, bucket: 'declineInvite' });
+    const { inviteId } = (request.data ?? {}) as InviteIdReq;
+    if (typeof inviteId !== 'string' || !inviteId) {
+      throw new HttpsError('invalid-argument', 'inviteId required.');
+    }
+    const db = getFirestore();
+    const ref = db.doc(`invites/${inviteId}`);
+    const snap = await ref.get();
+    if (!snap.exists) return { ok: true };
+    const data = snap.data() as { to?: string; status?: string };
+    if (data.to !== uid) {
+      throw new HttpsError('permission-denied', 'Not your invite.');
+    }
+    if (data.status !== 'pending') return { ok: true };
+    await ref.update({ status: 'declined' });
+    return { ok: true };
+  },
+);
+
+export const cancelInvite = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    await enforceRateLimit(uid, { perMinute: 30, bucket: 'cancelInvite' });
+    const { inviteId } = (request.data ?? {}) as InviteIdReq;
+    if (typeof inviteId !== 'string' || !inviteId) {
+      throw new HttpsError('invalid-argument', 'inviteId required.');
+    }
+    const db = getFirestore();
+    const ref = db.doc(`invites/${inviteId}`);
+    const snap = await ref.get();
+    if (!snap.exists) return { ok: true };
+    const data = snap.data() as { from?: string; groupId?: string; status?: string };
+    if (data.from !== uid) {
+      throw new HttpsError('permission-denied', 'Not your invite.');
+    }
+    // Cancel the entire group — sender semantics is "cancel this challenge",
+    // not "cancel one recipient and let the others race".
+    const groupSnap = await db
+      .collection('invites')
+      .where('groupId', '==', data.groupId)
+      .where('status', '==', 'pending')
+      .get();
+    const batch = db.batch();
+    for (const d of groupSnap.docs) {
+      batch.update(d.ref, { status: 'cancelled' });
+    }
+    await batch.commit();
+    return { ok: true };
+  },
+);
+
+// Scheduled: every 5 minutes, expire pending invites past their expiresAt.
+// Same shape as cleanupFinishedGames.
+export const expireStaleInvites = onSchedule(
+  { schedule: 'every 5 minutes', timeZone: 'UTC', region: 'europe-west1' },
+  async () => {
+    const db = getFirestore();
+    const now = Date.now();
+    try {
+      const snap = await db
+        .collection('invites')
+        .where('status', '==', 'pending')
+        .where('expiresAt', '<', now)
+        .limit(500)
+        .get();
+      if (snap.empty) return;
+      const batch = db.batch();
+      for (const d of snap.docs) {
+        batch.update(d.ref, { status: 'expired' });
+      }
+      await batch.commit();
+      logger.info(`expireStaleInvites: expired ${snap.size} invites`);
+    } catch (e) {
+      logger.error('expireStaleInvites failed', e);
+    }
+  },
+);

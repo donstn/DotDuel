@@ -4253,3 +4253,442 @@ body:has(.consent-banner) .rules-card {
   font-size: 11px;
   cursor: pointer;
 }
+
+/* ============================================================================
+ * Friends & invites (Alpha 0.2.0.0)
+ * ========================================================================== */
+
+/* FriendsButton — sits in the menu auth row alongside Profile / Sign-out. */
+.friends-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.friends-btn-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #062812;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* FriendsPopover — uses the existing rules-overlay + rules-card chrome. */
+.friends-card {
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+}
+.friends-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 6px;
+}
+.friends-tab {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  position: relative;
+  transition: background 160ms ease, color 160ms ease;
+}
+.friends-tab:hover {
+  color: var(--text);
+}
+.friends-tab.is-active {
+  background: var(--glass-bg-strong);
+  color: var(--text);
+}
+.friends-tab-badge {
+  display: inline-block;
+  margin-left: 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #062812;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+.friends-tab-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.friends-empty {
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  text-align: center;
+  padding: 16px 8px;
+}
+.friends-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.friends-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+}
+.friends-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.friends-row-name {
+  font-size: 0.95rem;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.friends-row-status {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+.friends-row-status.status-menu { color: var(--accent); }
+.friends-row-status.status-in-ai,
+.friends-row-status.status-in-hotseat { color: #d3b574; }
+.friends-row-status.status-in-ranked,
+.friends-row-status.status-searching-ranked { color: #d36c5e; }
+.friends-row-status.status-offline { color: var(--text-dim); opacity: 0.6; }
+.friends-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+.friends-row-invite,
+.friends-row-accept,
+.friends-row-decline,
+.friends-row-cancel,
+.friends-row-more {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.friends-row-invite:hover:not(:disabled),
+.friends-row-accept:hover,
+.friends-row-decline:hover,
+.friends-row-cancel:hover,
+.friends-row-more:hover { background: rgba(255, 255, 255, 0.12); }
+.friends-row-invite:disabled { opacity: 0.4; cursor: not-allowed; }
+.friends-row-accept { background: rgba(98, 207, 144, 0.18); }
+.friends-row-decline { background: rgba(211, 108, 94, 0.18); }
+.friends-row-more { padding: 6px 8px; }
+.friends-row-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 4px;
+  z-index: 5;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.friends-row-menu button {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  text-align: left;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.friends-row-menu button:hover { background: rgba(255, 255, 255, 0.08); }
+
+.friends-requests-heading {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 14px 0 6px;
+}
+
+.friends-add {
+  margin-top: 14px;
+  border-top: 1px solid var(--glass-border);
+  padding-top: 12px;
+}
+.friends-add-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.friends-add-row {
+  display: flex;
+  gap: 6px;
+}
+.friends-add-input {
+  flex: 1;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+.friends-add-input:focus { outline: 1px solid var(--accent); }
+.friends-add-btn {
+  background: var(--accent);
+  color: #062812;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.friends-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.friends-add-error {
+  margin: 6px 0 0;
+  color: #d36c5e;
+  font-size: 0.78rem;
+}
+.friends-add-success {
+  margin: 6px 0 0;
+  color: var(--accent);
+  font-size: 0.78rem;
+}
+.friends-tell-a-friend {
+  margin-top: 14px;
+  border-top: 1px solid var(--glass-border);
+  padding-top: 12px;
+  text-align: center;
+}
+
+/* TellAFriendButton */
+.tell-a-friend-btn {
+  background: transparent;
+  border: 1px dashed var(--glass-border);
+  color: var(--text-dim);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.tell-a-friend-btn:hover {
+  background: var(--glass-bg);
+  color: var(--text);
+}
+.tell-a-friend-feedback {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
+/* SendInviteDialog */
+.invite-card { max-width: 380px; }
+.invite-section {
+  margin-top: 12px;
+}
+.invite-section-title {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  margin: 0 0 6px;
+}
+.invite-radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.invite-radio {
+  flex: 1;
+  min-width: 96px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 120ms, border-color 120ms;
+}
+.invite-radio:hover { background: var(--glass-bg-strong); }
+.invite-radio.is-selected {
+  border-color: var(--accent);
+  background: rgba(98, 207, 144, 0.12);
+}
+.invite-radio input { accent-color: var(--accent); }
+.invite-radio small { color: var(--text-dim); font-size: 0.7rem; }
+.invite-ranked-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+.invite-ranked-toggle input { accent-color: var(--accent); }
+.invite-ranked-hint {
+  margin: 6px 0 0;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+}
+.invite-error {
+  margin: 8px 0 0;
+  color: #d36c5e;
+  font-size: 0.82rem;
+}
+.invite-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* IncomingInviteToast — top-of-menu slide-in stack */
+.invite-toast-stack {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, calc(100% - 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 90;
+  pointer-events: none;
+}
+.invite-toast {
+  pointer-events: auto;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  animation: inviteToastIn 240ms ease-out;
+}
+@keyframes inviteToastIn {
+  from { transform: translateY(-12px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+.invite-toast-text {
+  font-size: 0.92rem;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.invite-toast-meta {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.invite-toast-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.invite-toast-decline,
+.invite-toast-accept,
+.invite-toast-accept-casual {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.invite-toast-decline {
+  background: var(--glass-bg);
+  color: var(--text-dim);
+}
+.invite-toast-accept-casual {
+  background: var(--glass-bg-strong);
+  color: var(--text);
+}
+.invite-toast-accept {
+  background: var(--accent);
+  color: #062812;
+}
+.invite-toast-decline:disabled,
+.invite-toast-accept:disabled,
+.invite-toast-accept-casual:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* GameOver — Add-as-friend row */
+.go-add-friend-row {
+  margin-top: 10px;
+  text-align: center;
+  min-height: 32px;
+}
+.go-add-friend-btn {
+  background: transparent;
+  border: 1px dashed var(--glass-border);
+  color: var(--text-dim);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+.go-add-friend-btn:hover {
+  background: var(--glass-bg);
+  color: var(--text);
+}
+.go-add-friend-note {
+  display: inline-block;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  padding: 6px 14px;
+}
+
+/* Mobile tightening */
+@media (max-width: 480px) {
+  .friends-card { max-width: 100%; }
+  .friends-tabs { gap: 4px; }
+  .friends-tab { padding: 6px 8px; font-size: 0.78rem; }
+  .friends-row { padding: 8px 10px; }
+  .friends-row-name { font-size: 0.88rem; }
+  .invite-toast-text { font-size: 0.86rem; }
+}

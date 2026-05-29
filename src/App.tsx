@@ -61,6 +61,27 @@ import { MatchmakingWaiting } from './components/MatchmakingWaiting';
 import { MultiplayerLobby } from './components/MultiplayerLobby';
 import { ThemePopover } from './components/ThemePopover';
 import { UsernamePicker } from './components/UsernamePicker';
+import { FriendsPopover } from './components/FriendsPopover';
+import { SendInviteDialog } from './components/SendInviteDialog';
+import { IncomingInviteToast } from './components/IncomingInviteToast';
+import type { Friend, PendingRequest } from './cloud/friends';
+import {
+  subscribeFriends,
+  subscribeIncomingRequests,
+  subscribeOutgoingRequests,
+  sendFriendRequestByUid,
+} from './cloud/friends';
+import type { Invite } from './cloud/invites';
+import { subscribeIncomingInvites } from './cloud/invites';
+import type { FriendStatus, PresenceStatus } from './cloud/presence';
+import {
+  setPresenceEnabled,
+  setPresenceStatus,
+  stopPresence,
+  subscribePresence,
+} from './cloud/presence';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from './firebase';
 import { loadTheme, saveTheme, type ThemeId } from './theme';
 import {
   applyConsent,
@@ -176,6 +197,18 @@ export default function App() {
   const [consent, setConsentState] = useState<Consent | null>(loadConsent);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
+
+  // --- Friends & invites (Alpha 0.2.0.0) ---
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [friendStatusMap, setFriendStatusMap] = useState<
+    Record<string, FriendStatus>
+  >({});
+  const [incomingRequests, setIncomingRequests] = useState<PendingRequest[]>([]);
+  const [outgoingRequests, setOutgoingRequests] = useState<PendingRequest[]>([]);
+  const [incomingInvites, setIncomingInvites] = useState<Invite[]>([]);
+  const [friendsOpen, setFriendsOpen] = useState(false);
+  const [sendInviteFor, setSendInviteFor] = useState<Friend | null>(null);
+
   const { user, signOut } = useAuth();
   const aiTimer = useRef<number | null>(null);
   const winRecorded = useRef(false);
@@ -455,6 +488,101 @@ export default function App() {
     }
     return watchSession(user.uid, setActiveGameSession);
   }, [user?.uid]);
+
+  // --- Friends & invites subscriptions ---
+  useEffect(() => {
+    if (!user) {
+      setFriends([]);
+      setIncomingRequests([]);
+      setOutgoingRequests([]);
+      setIncomingInvites([]);
+      setFriendStatusMap({});
+      return;
+    }
+    const unsubFriends = subscribeFriends(user.uid, setFriends);
+    const unsubIn = subscribeIncomingRequests(user.uid, setIncomingRequests);
+    const unsubOut = subscribeOutgoingRequests(user.uid, setOutgoingRequests);
+    const unsubInvites = subscribeIncomingInvites(user.uid, setIncomingInvites);
+    return () => {
+      unsubFriends();
+      unsubIn();
+      unsubOut();
+      unsubInvites();
+    };
+  }, [user?.uid]);
+
+  // Re-subscribe to presence whenever the friend uid list changes.
+  useEffect(() => {
+    if (friends.length === 0) {
+      setFriendStatusMap({});
+      return;
+    }
+    return subscribePresence(
+      friends.map((f) => f.uid),
+      setFriendStatusMap,
+    );
+  }, [friends]);
+
+  // Presence opt-out — Settings → Privacy → "Show my status to friends".
+  // Default ON if the cloud profile doesn't carry the field yet (existing
+  // pre-0.2.0 accounts). When OFF, the presence module short-circuits all
+  // writes; friends see this user as offline.
+  useEffect(() => {
+    if (!user) {
+      setPresenceEnabled(false);
+      return;
+    }
+    setPresenceEnabled(cloudProfile?.showPresence !== false);
+  }, [user?.uid, cloudProfile?.showPresence]);
+
+  // Status push: mirror local screen + mode to presence/{me}.status so
+  // friends can see what we're doing. Cleaned up on sign-out via stopPresence.
+  useEffect(() => {
+    if (!user) {
+      stopPresence();
+      return;
+    }
+    let status: PresenceStatus;
+    if (screen === 'matchmaking') status = 'searching-ranked';
+    else if (screen === 'matchFound' || screen === 'mpgame') status = 'in-ranked';
+    else if (screen === 'game' && config?.mode === 'ai') status = 'in-ai';
+    else if (screen === 'game' && config?.mode === 'hotseat') status = 'in-hotseat';
+    else status = 'menu'; // menu, lobby, fallback
+    void setPresenceStatus(user.uid, status);
+  }, [user?.uid, screen, config?.mode]);
+
+  // Tell-a-friend: pick up ?ref=<uid> on first load, hold it in sessionStorage,
+  // consume it once the user has signed up + claimed a username (post-signup
+  // auto-friend-request). The pickup runs unconditionally; the consume waits
+  // for cloudProfile.displayName to be present so it fires after username claim.
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref');
+      if (ref && /^[a-zA-Z0-9_-]{1,128}$/.test(ref)) {
+        if (!sessionStorage.getItem('dotduel:pendingFriendRef')) {
+          sessionStorage.setItem('dotduel:pendingFriendRef', ref);
+        }
+      }
+    } catch {
+      // ignore — private mode etc.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user || !cloudProfile?.displayName) return;
+    let ref: string | null = null;
+    try {
+      ref = sessionStorage.getItem('dotduel:pendingFriendRef');
+    } catch {
+      return;
+    }
+    if (!ref || ref === user.uid) return;
+    sessionStorage.removeItem('dotduel:pendingFriendRef');
+    sendFriendRequestByUid(ref).catch((e) =>
+      console.warn('referral friend-request failed:', e),
+    );
+  }, [user?.uid, cloudProfile?.displayName]);
 
   // When a pairing arrives while waiting (or even while on the menu — handles
   // reconnect mid-search), jump to matchFound.
@@ -1186,6 +1314,15 @@ export default function App() {
             myPlayer={myNum ?? undefined}
             finishedReason={onlineGame.finishedReason}
             opponentIsBot={pairing.opponentIsBot}
+            opponentUid={pairing.opponentUid}
+            opponentIsFriend={friends.some(
+              (f) => f.uid === pairing.opponentUid,
+            )}
+            onAddOpponentAsFriend={
+              !pairing.opponentIsBot
+                ? () => sendFriendRequestByUid(pairing.opponentUid)
+                : undefined
+            }
             rematchLabel="Rematch"
             rematchMine={
               myNum
@@ -1329,6 +1466,11 @@ export default function App() {
         />
       );
     } else {
+      const friendsOnlineCount = friends.filter(
+        (f) => friendStatusMap[f.uid] && friendStatusMap[f.uid] !== 'offline',
+      ).length;
+      const friendsBadgeCount =
+        incomingRequests.length + incomingInvites.length;
       mainContent = (
         <Menu
           progress={progress}
@@ -1345,6 +1487,10 @@ export default function App() {
           onOpenThemes={() => setThemeOpen(true)}
           mpLockedByOther={mpLockedByOther}
           mpUnreachable={mpUnreachable}
+          friendsOnlineCount={friendsOnlineCount}
+          friendsTotal={friends.length}
+          friendsBadgeCount={friendsBadgeCount}
+          onOpenFriends={() => setFriendsOpen(true)}
         />
       );
     }
@@ -1391,6 +1537,26 @@ export default function App() {
             onChange={updateSettings}
             onResetProgress={onProgressResetWiped}
             onClose={() => setSettingsOpen(false)}
+            challengePolicy={user ? cloudProfile?.challengePolicy : undefined}
+            showPresence={user ? cloudProfile?.showPresence ?? true : undefined}
+            onChangePrivacy={
+              user && cloudProfile
+                ? (next) => {
+                    // Optimistic UI: update local state, write to Firestore in
+                    // the background. If the write fails, log; revert is more
+                    // trouble than it's worth for a non-critical preference.
+                    setCloudProfile((prev) =>
+                      prev ? { ...prev, ...next } : prev,
+                    );
+                    if (next.showPresence !== undefined) {
+                      setPresenceEnabled(next.showPresence);
+                    }
+                    updateDoc(doc(db, 'users', user.uid), next).catch((e) =>
+                      console.warn('privacy update failed', e),
+                    );
+                  }
+                : undefined
+            }
           />
         )}
         {themeOpen && (
@@ -1472,6 +1638,46 @@ export default function App() {
           />
         )}
         {tutorialOpen && <TutorialPopover onDismiss={dismissTutorial} />}
+        {/* IncomingInviteToast renders only on the menu (or lobby) — the
+            invite UI should NOT distract during gameplay or matchmaking.
+            Server delivers the invite immediately; we just hold off displaying
+            it until the user is back on a menu-class screen. */}
+        {user && (screen === 'menu' || screen === 'lobby') && (
+          <IncomingInviteToast
+            invites={incomingInvites}
+            fromNames={Object.fromEntries(
+              friends.map((f) => [f.uid, f.displayName]),
+            )}
+            onAccepted={() => {
+              // The acceptInvite callable already wrote the pairing doc; the
+              // existing watchPairing subscription will fire and route us to
+              // matchFound. Nothing to do here beyond closing surfaces.
+              setFriendsOpen(false);
+              setSendInviteFor(null);
+            }}
+          />
+        )}
+        {friendsOpen && user && (
+          <FriendsPopover
+            myUid={user.uid}
+            friends={friends}
+            statusMap={friendStatusMap}
+            incoming={incomingRequests}
+            outgoing={outgoingRequests}
+            onClose={() => setFriendsOpen(false)}
+            onInvite={(f) => {
+              setFriendsOpen(false);
+              setSendInviteFor(f);
+            }}
+          />
+        )}
+        {sendInviteFor && user && (
+          <SendInviteDialog
+            friend={sendInviteFor}
+            onClose={() => setSendInviteFor(null)}
+            onSent={() => setSendInviteFor(null)}
+          />
+        )}
       </>
     );
   }

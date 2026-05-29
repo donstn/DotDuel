@@ -30,6 +30,25 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.2.0.0',
+    date: '2026-05-29',
+    highlight: 'Friends & invites',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Friends list. Add a friend by username, see which friends are online and what they\'re doing (vs AI, hot-seat, ranked match), invite a friend to a specific game (your choice of shape, time control, ranked or casual). Invites you receive while you\'re in a game stay queued and appear the moment you\'re back on the menu. A ranked invite counts for Elo only if both sides chose Ranked; otherwise it\'s a casual match. After a multiplayer match you can add the opponent as a friend with one tap.',
+      },
+      {
+        kind: 'added',
+        text: 'Tell-a-friend: invite people to try DotDuel — they don\'t need an account yet. Uses your phone\'s share sheet or your email client; we never see their address. When they sign up, you get a friend request from them automatically.',
+      },
+      {
+        kind: 'added',
+        text: 'Settings → Privacy: choose who can challenge you (Everyone / Friends only / Nobody) and whether your live status is visible to friends.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.5.0',
     date: '2026-05-29',
     highlight: 'Backend cleanup',

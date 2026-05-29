@@ -5,6 +5,7 @@ import type { Settings } from '../storage';
 import { DIFFICULTY_LABELS, PLAYABLE_SHAPE_META, SHAPE_META } from '../types';
 import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
 import { AdBanner } from './AdBanner';
+import { FriendsButton } from './FriendsButton';
 
 interface Props {
   progress: Progress;
@@ -21,6 +22,11 @@ interface Props {
   onOpenThemes: () => void;
   mpLockedByOther: boolean;
   mpUnreachable: boolean;
+  // Friends button (Alpha 0.2.0.0) — only meaningful when signed in.
+  friendsOnlineCount?: number;
+  friendsTotal?: number;
+  friendsBadgeCount?: number;
+  onOpenFriends?: () => void;
 }
 
 export function Menu({
@@ -38,6 +44,10 @@ export function Menu({
   onOpenThemes,
   mpLockedByOther,
   mpUnreachable,
+  friendsOnlineCount = 0,
+  friendsTotal = 0,
+  friendsBadgeCount = 0,
+  onOpenFriends,
 }: Props) {
   const [mode, setMode] = useState<GameMode | null>(null);
   const [shape, setShape] = useState<ShapeId | null>(null);
@@ -88,6 +98,14 @@ export function Menu({
               >
                 Profile
               </button>
+              {onOpenFriends && (
+                <FriendsButton
+                  onlineCount={friendsOnlineCount}
+                  totalFriends={friendsTotal}
+                  badgeCount={friendsBadgeCount}
+                  onClick={onOpenFriends}
+                />
+              )}
               <button
                 type="button"
                 className="menu-auth-btn"

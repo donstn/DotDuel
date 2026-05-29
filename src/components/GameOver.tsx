@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DIFFICULTY_LABELS, SHAPE_LABEL } from '../types';
 import type { Difficulty, GameMode, GameState, Player, ShapeId } from '../types';
 
@@ -38,6 +39,14 @@ interface Props {
   /** When true, suppress the rematch button (bot opponents don't accept
    *  rematches — only humans do). Menu + Lobby still render. */
   opponentIsBot?: boolean;
+  /** Opponent's uid; used by the Add-as-friend affordance. Undefined for bots. */
+  opponentUid?: string;
+  /** True when the opponent is already in my friend list. Hides the
+   *  Add-as-friend button when true. */
+  opponentIsFriend?: boolean;
+  /** Sends a friend request to the opponent. Undefined to suppress the
+   *  button entirely (e.g., in vs-AI mode or when caller isn't signed in). */
+  onAddOpponentAsFriend?: () => Promise<void>;
 }
 
 const SHAPE_NEXT: Record<ShapeId, ShapeId | null> = {
@@ -148,7 +157,29 @@ export function GameOver({
   rematchOpp,
   onCancelRematch,
   opponentIsBot,
+  opponentUid,
+  opponentIsFriend,
+  onAddOpponentAsFriend,
 }: Props) {
+  const [addFriendState, setAddFriendState] = useState<
+    'idle' | 'sending' | 'sent' | 'failed'
+  >('idle');
+  const canAddFriend =
+    mode === 'multiplayer' &&
+    !opponentIsBot &&
+    !opponentIsFriend &&
+    !!opponentUid &&
+    !!onAddOpponentAsFriend;
+  const onAddFriendClick = async () => {
+    if (!onAddOpponentAsFriend) return;
+    setAddFriendState('sending');
+    try {
+      await onAddOpponentAsFriend();
+      setAddFriendState('sent');
+    } catch {
+      setAddFriendState('failed');
+    }
+  };
   const humanWon = mode === 'ai' && state.winner === 1;
   const beatImpossible = humanWon && difficulty === 5;
   const isFinalShape = SHAPE_NEXT[shape] === null;
@@ -225,19 +256,49 @@ export function GameOver({
         )}
         {suggestion}
         {mode === 'multiplayer' && onLobby ? (
-          <div className="game-over-buttons">
-            <button onClick={onMenu}>Menu</button>
-            {!opponentIsBot && (
-              <RematchButton
-                mine={!!rematchMine}
-                opp={!!rematchOpp}
-                label={rematchLabel ?? 'Rematch'}
-                onRequest={onPlayAgain}
-                onCancel={onCancelRematch}
-              />
+          <>
+            <div className="game-over-buttons">
+              <button onClick={onMenu}>Menu</button>
+              {!opponentIsBot && (
+                <RematchButton
+                  mine={!!rematchMine}
+                  opp={!!rematchOpp}
+                  label={rematchLabel ?? 'Rematch'}
+                  onRequest={onPlayAgain}
+                  onCancel={onCancelRematch}
+                />
+              )}
+              <button onClick={onLobby}>Lobby</button>
+            </div>
+            {canAddFriend && (
+              <div className="go-add-friend-row">
+                {addFriendState === 'idle' && (
+                  <button
+                    type="button"
+                    className="go-add-friend-btn"
+                    onClick={onAddFriendClick}
+                  >
+                    ➕ Add {p2Name === 'You' ? p1Name : p2Name} as friend
+                  </button>
+                )}
+                {addFriendState === 'sending' && (
+                  <span className="go-add-friend-note">Sending request…</span>
+                )}
+                {addFriendState === 'sent' && (
+                  <span className="go-add-friend-note">Friend request sent.</span>
+                )}
+                {addFriendState === 'failed' && (
+                  <button
+                    type="button"
+                    className="go-add-friend-btn"
+                    onClick={onAddFriendClick}
+                  >
+                    Couldn't send — try again
+                  </button>
+                )}
+              </div>
             )}
-            <button onClick={onLobby}>Lobby</button>
-          </div>
+          </>
         ) : (
           <div className="game-over-buttons">
             <button className="primary" onClick={onPlayAgain}>Play again</button>

@@ -16,6 +16,12 @@ export interface CloudProfile {
   rating: number;
   placementGamesPlayed: number;
   createdAt: unknown;
+  // Alpha 0.2.0.0 — friends & invites privacy fields. Optional in the type
+  // because existing pre-0.2 profile docs won't have them; reader logic
+  // defaults them.
+  challengePolicy?: 'everyone' | 'friends-only' | 'nobody';
+  showPresence?: boolean;
+  friendListHidden?: boolean;
 }
 
 export const USERNAME_RE = /^[a-zA-Z0-9_-]{3,16}$/;

@@ -2,12 +2,23 @@ import { useEffect, useState } from 'react';
 import { resetStats } from '../storage';
 import type { Settings } from '../storage';
 
+type ChallengePolicy = 'everyone' | 'friends-only' | 'nobody';
+
 interface Props {
   settings: Settings;
   cloudDisplayName: string | null;
   onChange: (next: Settings) => void;
   onResetProgress: () => void;
   onClose: () => void;
+  // Privacy fields (Alpha 0.2.0.0). Undefined when the user isn't signed in;
+  // in that case the Privacy section is hidden — these settings are
+  // server-side and need a cloud profile.
+  challengePolicy?: ChallengePolicy;
+  showPresence?: boolean;
+  onChangePrivacy?: (next: {
+    challengePolicy?: ChallengePolicy;
+    showPresence?: boolean;
+  }) => void;
 }
 
 export function SettingsPopover({
@@ -16,6 +27,9 @@ export function SettingsPopover({
   onChange,
   onResetProgress,
   onClose,
+  challengePolicy,
+  showPresence,
+  onChangePrivacy,
 }: Props) {
   const [local, setLocal] = useState<Settings>(settings);
 
@@ -116,6 +130,42 @@ export function SettingsPopover({
               <span>Swap colours (Player 1 cream · Player 2 green)</span>
             </label>
           </section>
+
+          {onChangePrivacy && (
+            <section className="settings-section">
+              <h3>Privacy</h3>
+              <label className="settings-label">
+                <span>Who can challenge me to a game?</span>
+                <select
+                  className="settings-input"
+                  value={challengePolicy ?? 'everyone'}
+                  onChange={(e) =>
+                    onChangePrivacy({
+                      challengePolicy: e.target.value as ChallengePolicy,
+                    })
+                  }
+                >
+                  <option value="everyone">Everyone</option>
+                  <option value="friends-only">Friends only</option>
+                  <option value="nobody">Nobody</option>
+                </select>
+              </label>
+              <label className="settings-toggle">
+                <input
+                  type="checkbox"
+                  checked={showPresence ?? true}
+                  onChange={(e) =>
+                    onChangePrivacy({ showPresence: e.target.checked })
+                  }
+                />
+                <span>Show my status to friends</span>
+              </label>
+              <p className="settings-hint">
+                When off, friends see you as offline. Friend requests still
+                work; only the live status indicator is hidden.
+              </p>
+            </section>
+          )}
 
           <section className="settings-section settings-danger">
             <button

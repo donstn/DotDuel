@@ -1,11 +1,11 @@
 import {
-  onDisconnect,
-  onValue,
-  ref,
-  remove,
-  set,
-} from 'firebase/database';
-import { rtdb } from '../firebase';
+  deleteDoc,
+  doc,
+  onSnapshot,
+  setDoc,
+  updateDoc,
+} from 'firebase/firestore';
+import { db } from '../firebase';
 
 const STORAGE_KEY = 'dotduel:gameSessionId';
 
@@ -32,39 +32,56 @@ export function getSessionId(): string {
   }
 }
 
-function sessionRef(uid: string) {
-  return ref(rtdb, `gameSessions/${uid}`);
+// Stale-session threshold. A claim is considered abandoned (other devices
+// may take over) if claimedAt is older than this. Set well above the
+// heartbeat interval so a brief tab-suspended state doesn't free the lock.
+const STALE_MS = 90_000;
+const HEARTBEAT_MS = 30_000;
+
+let heartbeatTimer: number | null = null;
+let heartbeatUid: string | null = null;
+
+function stopHeartbeat() {
+  if (heartbeatTimer !== null) {
+    window.clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
+  }
+  heartbeatUid = null;
 }
 
-// Claim the multiplayer game-session lock for this tab. Also arms an
-// onDisconnect handler so the lock auto-releases if the browser closes
-// or the network drops mid-game.
+function startHeartbeat(uid: string) {
+  stopHeartbeat();
+  heartbeatUid = uid;
+  heartbeatTimer = window.setInterval(() => {
+    if (heartbeatUid !== uid) return;
+    updateDoc(doc(db, 'sessions', uid), { claimedAt: Date.now() }).catch((e) => {
+      console.warn('gameSession heartbeat failed:', e);
+    });
+  }, HEARTBEAT_MS);
+}
+
+// Claim the multiplayer game-session lock for this tab. Writes a Firestore
+// doc at sessions/{uid} carrying our sessionId, then heartbeats every 30s
+// so other tabs of the same account can tell the claim is still live.
 export async function claimSession(
   uid: string,
   sessionId: string,
 ): Promise<void> {
-  const r = sessionRef(uid);
-  await set(r, { sessionId, claimedAt: Date.now() });
-  try {
-    await onDisconnect(r).remove();
-  } catch (e) {
-    console.warn('claimSession onDisconnect arm failed:', e);
-  }
+  await setDoc(doc(db, 'sessions', uid), {
+    sessionId,
+    claimedAt: Date.now(),
+  });
+  startHeartbeat(uid);
 }
 
-// Explicit release. Cancels the onDisconnect handler so a transient
-// reconnect doesn't immediately re-fire it.
+// Explicit release. Cancels the heartbeat and deletes the doc so any
+// other tab signed in as the same uid can claim immediately.
 export async function releaseSession(uid: string): Promise<void> {
-  const r = sessionRef(uid);
+  stopHeartbeat();
   try {
-    await onDisconnect(r).cancel();
+    await deleteDoc(doc(db, 'sessions', uid));
   } catch (e) {
-    console.warn('releaseSession onDisconnect cancel failed:', e);
-  }
-  try {
-    await remove(r);
-  } catch (e) {
-    console.warn('releaseSession remove failed:', e);
+    console.warn('releaseSession deleteDoc failed:', e);
   }
 }
 
@@ -72,18 +89,26 @@ export function watchSession(
   uid: string,
   onChange: (s: GameSession | null) => void,
 ): () => void {
-  const r = sessionRef(uid);
-  return onValue(
-    r,
+  return onSnapshot(
+    doc(db, 'sessions', uid),
     (snap) => {
-      const v = snap.val();
-      if (!v) {
+      if (!snap.exists()) {
+        onChange(null);
+        return;
+      }
+      const v = snap.data() as { sessionId?: string; claimedAt?: number };
+      const claimedAt = Number(v.claimedAt ?? 0);
+      // Treat stale claims (older than STALE_MS) as released — covers the
+      // case where the active tab crashed or lost connectivity without a
+      // chance to call releaseSession. Without this we'd need an
+      // onDisconnect equivalent, which Firestore does not provide.
+      if (claimedAt > 0 && Date.now() - claimedAt > STALE_MS) {
         onChange(null);
         return;
       }
       onChange({
         sessionId: String(v.sessionId ?? ''),
-        claimedAt: Number(v.claimedAt ?? 0),
+        claimedAt,
       });
     },
     (err) => {

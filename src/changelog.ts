@@ -30,6 +30,29 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.4.1',
+    date: '2026-05-29',
+    highlight: 'Multiplayer polish',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Ready button now actually starts the game as soon as both sides press it (vs AI, that means as soon as you press it).',
+      },
+      {
+        kind: 'fixed',
+        text: 'First move of a match no longer takes 8-9 seconds before your opponent reacts.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Signing in on a second device no longer accidentally drops it into your active game on the first.',
+      },
+      {
+        kind: 'changed',
+        text: 'Menu buttons aligned to the same size for a cleaner look.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.4.0',
     date: '2026-05-29',
     highlight: 'Multiplayer now works on more networks',

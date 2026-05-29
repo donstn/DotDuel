@@ -156,7 +156,7 @@ export function Menu({
           </div>
           <button className="menu-card menu-card-rank" onClick={onOpenRankings}>
             <strong>Rankings</strong>
-            <span>See profile records and head-to-head on this device.</span>
+            <span>Your records and head-to-head.</span>
           </button>
         </div>
       </div>

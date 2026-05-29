@@ -1377,6 +1377,67 @@ export const cleanupFinishedGames = onSchedule(
 );
 
 // ===========================================================================
+// Keep-warm cron
+// ===========================================================================
+//
+// Cloud Functions cold-start when an instance has been idle. The first move
+// of the first multiplayer game after a quiet period therefore pays ~3-5s
+// per function instance on the critical path:
+//
+//   client → submitMove (cold) → RTDB pendingMove
+//          → validateMove trigger (cold) → state write + bot move
+//          → Firestore onSnapshot → UI
+//
+// That stacked cold start manifests as 8-9s of dead air after the user's
+// click. This cron pings both critical functions every 5 minutes so the
+// instances stay warm.
+//
+// Cost: 1 Cloud Scheduler job (free tier covers 3). Invocations counted
+// against Cloud Functions free tier (2M/month) — ~8,640/month per function.
+// Hosting fees: $0. Matches the zero-cost stack mandate in CLAUDE.md.
+//
+// submitMove warmup path is a sentinel inside the callable itself; an
+// unauthenticated POST with `{ data: { warmup: true } }` short-circuits to
+// `{ warm: true }` without touching the database. validateMove is fired by
+// writing a dummy pendingMove to games/__warmup__ — validateMove early
+// returns because no game exists with that id, then removes the move.
+export const keepWarm = onSchedule(
+  { schedule: 'every 5 minutes', timeZone: 'UTC', region: 'europe-west1' },
+  async () => {
+    const project = process.env.GCLOUD_PROJECT;
+    if (!project) {
+      logger.warn('keepWarm: GCLOUD_PROJECT unset, skipping');
+      return;
+    }
+
+    const submitMoveUrl = `https://europe-west1-${project}.cloudfunctions.net/submitMove`;
+    try {
+      const res = await fetch(submitMoveUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: { warmup: true } }),
+      });
+      logger.info(`keepWarm: submitMove status=${res.status}`);
+    } catch (e) {
+      logger.warn('keepWarm: submitMove ping failed', e);
+    }
+
+    try {
+      await getDatabase()
+        .ref('games/__warmup__/pendingMove')
+        .set({
+          from: '__warmup__',
+          action: { kind: 'noop' },
+          clientTime: Date.now(),
+        });
+      logger.info('keepWarm: validateMove triggered via sentinel pendingMove');
+    } catch (e) {
+      logger.warn('keepWarm: validateMove warmup write failed', e);
+    }
+  },
+);
+
+// ===========================================================================
 // Admin debug: count accounts stuck mid-signup
 // ===========================================================================
 //
@@ -2079,6 +2140,11 @@ interface SubmitMoveReq {
 export const submitMove = onCall(
   { region: 'europe-west1' },
   async (request) => {
+    // Warmup ping path — keepWarm cron calls this to keep the instance alive
+    // so the first real move after idle doesn't pay a ~3s cold start.
+    if ((request.data as { warmup?: boolean } | undefined)?.warmup === true) {
+      return { warm: true };
+    }
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
     const { gameId, action } = (request.data ?? {}) as SubmitMoveReq;
@@ -2114,7 +2180,7 @@ export const setReady = onCall(
       throw new HttpsError('invalid-argument', 'value must be boolean.');
     }
     const { slot } = await assertParticipant(gameId, uid);
-    await getDatabase().ref(`games/${gameId}/ready/${slot}`).set(value);
+    await updateGameNode(gameId, { [`ready/${slot}`]: value });
     return { ok: true };
   },
 );
@@ -2133,7 +2199,7 @@ export const setBoardLoaded = onCall(
       throw new HttpsError('invalid-argument', 'gameId required.');
     }
     const { slot } = await assertParticipant(gameId, uid);
-    await getDatabase().ref(`games/${gameId}/boardLoaded/${slot}`).set(true);
+    await updateGameNode(gameId, { [`boardLoaded/${slot}`]: true });
     return { ok: true };
   },
 );
@@ -2198,7 +2264,7 @@ export const setRematch = onCall(
       throw new HttpsError('invalid-argument', 'value must be boolean.');
     }
     const { slot } = await assertParticipant(gameId, uid);
-    await getDatabase().ref(`games/${gameId}/rematch/${slot}`).set(value);
+    await updateGameNode(gameId, { [`rematch/${slot}`]: value });
     return { ok: true };
   },
 );

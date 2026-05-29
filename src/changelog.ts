@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.5.0',
+    date: '2026-05-29',
+    highlight: 'Backend cleanup',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Internal: multiplayer game state migrated entirely to the new transport. The old Realtime Database path is no longer used for game data. No visible difference — if anything, slightly snappier.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.4.4',
     date: '2026-05-29',
     highlight: 'Refresh goes home',

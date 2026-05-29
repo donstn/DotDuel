@@ -121,7 +121,7 @@ export const SHAPE_LABEL: Record<ShapeId, string> = {
 // Changing this value is the entire rollout knob — three small commits.
 // =============================================================================
 export type MultiplayerBackend = 'rtdb' | 'dual' | 'firestore';
-export const MULTIPLAYER_BACKEND: MultiplayerBackend = 'dual';
+export const MULTIPLAYER_BACKEND: MultiplayerBackend = 'firestore';
 
 // Client-side transport flag — independent of MULTIPLAYER_BACKEND (which
 // drives server writes). When false (default) the client reads game state

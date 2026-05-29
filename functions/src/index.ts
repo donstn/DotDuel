@@ -1,4 +1,4 @@
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { onValueWritten } from 'firebase-functions/v2/database';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
@@ -210,6 +210,27 @@ async function updateGameNode(
 // 'firestore' (Vite/TSC otherwise warns that one branch is dead).
 void (MULTIPLAYER_BACKEND as MultiplayerBackend);
 
+// Read the authoritative game doc. After Day 5 (MULTIPLAYER_BACKEND='firestore')
+// the Firestore document is the only source of truth. During 'dual' mode it's
+// still preferred — RTDB and Firestore are kept in sync but Firestore lookups
+// are routed the same way to match production behaviour. Returns null if the
+// game doesn't exist.
+//
+// Returns the doc as a loose Record because callers reach into legacy fields
+// (state, clock, ready, boardLoaded, playerUids, status, finishedReason,
+// gameStartedAt, finishedAt, winner, etc.) that combine the FirestoreGame
+// schema and a few admin-only fields. Each call site narrows as needed.
+async function readGameDoc(gameId: string): Promise<Record<string, unknown> | null> {
+  try {
+    const snap = await getFirestore().doc(`games/${gameId}`).get();
+    if (!snap.exists) return null;
+    return (snap.data() ?? null) as Record<string, unknown> | null;
+  } catch (e) {
+    logger.warn(`readGameDoc(${gameId}) firestore read failed`, e);
+    return null;
+  }
+}
+
 type FinishedReason = 'normal' | 'timeout' | 'resign' | 'disconnect';
 
 // Persist game outcome metadata to Firestore matches/{matchId} so we can
@@ -410,32 +431,10 @@ export const matchmake = onDocumentCreated(
   },
 );
 
-// Clock starts only after BOTH clients confirm they've mounted the mpgame
-// board (boardLoaded/{slot} flips true). Pressing Ready alone isn't enough -
-// the screen-transition + render time would otherwise eat into the player's
-// budget before the board is even visible.
-export const startClockWhenBoardsLoaded = onValueWritten(
-  'games/{gameId}/boardLoaded/{slot}',
-  async (event) => {
-    const after = event.data.after.val();
-    if (after !== true) return;
-    const gameId = event.params.gameId;
-    const rtdb = getDatabase();
-    const gameRef = rtdb.ref(`games/${gameId}`);
-    const snap = await gameRef.get();
-    const game = snap.val();
-    if (!game) return;
-    const loaded = game.boardLoaded ?? {};
-    if (loaded['1'] !== true || loaded['2'] !== true) return;
-    if (game.gameStartedAt) return; // already started
-    const now = Date.now();
-    await updateGameNode(gameId, {
-      gameStartedAt: now,
-      'clock/turnStartedAt': now,
-    });
-    logger.info(`startClockWhenBoardsLoaded: game ${gameId} clock started at ${now}`);
-  },
-);
+// Clock-start was previously a separate RTDB trigger
+// (startClockWhenBoardsLoaded) firing on boardLoaded/{slot}. After Day 5 we
+// stopped writing to RTDB, so the trigger would never fire. The logic moved
+// inline into the setBoardLoaded callable itself (see below).
 
 export const validateMove = onValueWritten(
   'games/{gameId}/pendingMove',
@@ -444,18 +443,18 @@ export const validateMove = onValueWritten(
     if (!after) return; // we cleared it ourselves
     const gameId = event.params.gameId;
     const rtdb = getDatabase();
-    const gameRef = rtdb.ref(`games/${gameId}`);
     const moveRef = rtdb.ref(`games/${gameId}/pendingMove`);
-    const errorRef = rtdb.ref(`games/${gameId}/error`);
 
-    const gameSnap = await gameRef.get();
-    const game = gameSnap.val();
+    // State authority is Firestore. RTDB only carries the transient
+    // pendingMove signal that triggered this function. After Day 5 the
+    // RTDB game node is no longer written at all.
+    const game = await readGameDoc(gameId);
     if (!game || game.status !== 'active') {
       await moveRef.remove();
       return;
     }
 
-    const state = normalizeState(game.state ?? {});
+    const state = normalizeState((game.state ?? {}) as Record<string, unknown>);
     const playerUids = game.playerUids as { '1': string; '2': string };
 
     let playerNum: 1 | 2 | 0 = 0;
@@ -520,12 +519,10 @@ export const validateMove = onValueWritten(
     }
 
     if (state.current !== playerNum) {
-      await errorRef.set({
-        code: 'not-your-turn',
-        message: 'It is not your turn.',
-        forUid: after.from,
-        ts: Date.now(),
-      });
+      // Client UI prevents this; if we still see it, just discard the
+      // move. (Pre-Day-5 we wrote a transient error sub-node to RTDB so
+      // the client could surface it; with state authority on Firestore
+      // and RTDB blocked for some users, that signal isn't reliable.)
       await moveRef.remove();
       return;
     }
@@ -585,12 +582,9 @@ export const validateMove = onValueWritten(
         logger.info(`validateMove: game ${gameId} finished, winner=${String(newState.winner)}`);
       }
     } catch (e) {
-      await errorRef.set({
-        code: 'invalid-move',
-        message: (e as Error)?.message ?? 'Invalid move',
-        forUid: after.from,
-        ts: Date.now(),
-      });
+      // See above: invalid moves are discarded server-side. Client UI prevents
+      // them; if we still see one, just drop it without surfacing through RTDB.
+      logger.warn(`validateMove: invalid move in ${gameId}: ${(e as Error)?.message ?? 'unknown'}`);
       await moveRef.remove();
     }
   },
@@ -613,25 +607,30 @@ function expectedScore(myRating: number, oppRating: number): number {
 }
 
 // Triggered when a game's top-level status flips to 'finished'. Reads the
-// final state from RTDB, computes Elo deltas for both players using their
+// final state from Firestore, computes Elo deltas for both players using their
 // own placement K, and writes the full match record + new user ratings
 // in a single Firestore transaction. Idempotent via matches.eloFinalized.
-export const finalizeGame = onValueWritten(
-  'games/{gameId}/status',
+//
+// Pre-Day-5 this was an RTDB onValueWritten trigger on games/{gameId}/status.
+// Now that game state lives in Firestore, the trigger fires when the
+// Firestore games/{gameId} doc transitions status from non-'finished' to
+// 'finished'.
+export const finalizeGame = onDocumentUpdated(
+  'games/{gameId}',
   async (event) => {
-    const after = event.data.after.val();
-    const before = event.data.before.val();
-    if (after !== 'finished') return;
-    if (before === 'finished') return;
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return;
+    if (after.status !== 'finished') return;
+    if (before.status === 'finished') return;
 
     const gameId = event.params.gameId;
-    const rtdb = getDatabase();
     const db = getFirestore();
 
-    const gameSnap = await rtdb.ref(`games/${gameId}`).get();
-    const game = gameSnap.val();
+    // We already have the final state from the trigger payload; no extra read.
+    const game = after as Record<string, unknown>;
     if (!game) {
-      logger.warn(`finalizeGame: RTDB game ${gameId} not found`);
+      logger.warn(`finalizeGame: trigger payload missing for ${gameId}`);
       return;
     }
 
@@ -654,7 +653,7 @@ export const finalizeGame = onValueWritten(
       return;
     }
 
-    const state = normalizeState(game.state ?? {});
+    const state = normalizeState((game.state ?? {}) as Record<string, unknown>);
     const winner = (game.winner ?? state.winner ?? null) as
       | 1
       | 2
@@ -808,33 +807,40 @@ export const finalizeGame = onValueWritten(
   },
 );
 
-// Rematch — triggered when a player flips games/{gameId}/rematch/{slot} = true.
-// When BOTH players have flipped their flag, spawn a fresh game node + new
-// pairings using the same shape and time control. Slots swap so the previous
-// P2 plays first this time (chess-style colour alternation). Idempotent via
-// rematchSpawnedId on the old game node.
-export const rematchGame = onValueWritten(
-  'games/{gameId}/rematch/{slot}',
+// Rematch — fires when games/{gameId}.rematch.{slot} flips true (via the
+// setRematch callable). When BOTH players have flipped their flag, spawn a
+// fresh game node + new pairings using the same shape and time control.
+// Slots swap so the previous P2 plays first this time (chess-style colour
+// alternation). Idempotent via rematchSpawnedId on the old game doc.
+//
+// Pre-Day-5 this was an RTDB onValueWritten trigger on rematch/{slot}.
+// Now both slots live in Firestore alongside the rest of game state.
+export const rematchGame = onDocumentUpdated(
+  'games/{gameId}',
   async (event) => {
-    const after = event.data.after.val();
-    if (after !== true) return;
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return;
+
+    // Fire only when SOMETHING in the rematch sub-map changed. We can't trigger
+    // narrowly on rematch.{slot} like RTDB used to — Firestore fires on every
+    // doc update. Filter cheaply: skip if neither slot's value differs.
+    const beforeRematch = (before.rematch ?? {}) as { '1'?: boolean; '2'?: boolean };
+    const afterRematch = (after.rematch ?? {}) as { '1'?: boolean; '2'?: boolean };
+    if (beforeRematch['1'] === afterRematch['1'] && beforeRematch['2'] === afterRematch['2']) {
+      return;
+    }
 
     const gameId = event.params.gameId;
-    const rtdb = getDatabase();
     const db = getFirestore();
-
-    const gameRef = rtdb.ref(`games/${gameId}`);
-    const gameSnap = await gameRef.get();
-    const game = gameSnap.val();
-    if (!game) return;
+    const game = after;
 
     if (game.rematchSpawnedId) {
       // Already spawned a rematch from this game node.
       return;
     }
 
-    const rematch = (game.rematch ?? {}) as { '1'?: boolean; '2'?: boolean };
-    if (rematch['1'] !== true || rematch['2'] !== true) {
+    if (afterRematch['1'] !== true || afterRematch['2'] !== true) {
       // Only one side has agreed so far.
       return;
     }
@@ -866,34 +872,26 @@ export const rematchGame = onValueWritten(
 
     const newMatchId = db.collection('matches').doc().id;
 
-    // Mark idempotency on the OLD game node first so concurrent invocations
-    // bail. set() of a missing parent path will create it; safe even if a
-    // prior partial run already touched some fields.
+    // Firestore transaction: mark idempotency on the OLD game doc first so
+    // concurrent invocations bail. The transaction succeeds only if no other
+    // invocation already wrote rematchSpawnedId. (Pre-Day-5 used an RTDB
+    // transaction; this is the Firestore equivalent.)
+    const gameDocRef = db.doc(`games/${gameId}`);
     try {
-      await gameRef.child('rematchSpawnedId').transaction((current) => {
-        if (current) return; // already set — abort spawn
-        return newMatchId;
+      const wonRace = await db.runTransaction(async (tx) => {
+        const snap = await tx.get(gameDocRef);
+        const current = snap.data();
+        if (current?.rematchSpawnedId) return false;
+        tx.update(gameDocRef, { rematchSpawnedId: newMatchId });
+        return true;
       });
+      if (!wonRace) {
+        // Another invocation won the spawn race.
+        return;
+      }
     } catch (e) {
       logger.error(`rematchGame: idempotency tx failed for ${gameId}`, e);
       return;
-    }
-    // Re-read to confirm we won the race.
-    const confirmedId = (await gameRef.child('rematchSpawnedId').get()).val();
-    if (confirmedId !== newMatchId) {
-      // Another invocation won the spawn race.
-      return;
-    }
-
-    // Mirror rematchSpawnedId to Firestore so the dual-write copy doesn't
-    // diverge. RTDB stays canonical for the idempotency transaction above
-    // — we only echo the result here.
-    if (shouldWriteFirestore()) {
-      try {
-        await db.doc(`games/${gameId}`).update({ rematchSpawnedId: newMatchId });
-      } catch (e) {
-        logger.warn(`rematchGame: Firestore rematchSpawnedId mirror failed for ${gameId}`, e);
-      }
     }
 
     // Read current ratings (snapshot, not transactional — best-effort).
@@ -1160,14 +1158,14 @@ export const deleteAccount = onCall(
         const pairing = pairingSnap.data();
         const matchId = pairing?.matchId as string | undefined;
         if (matchId) {
-          const gameRef = rtdb.ref(`games/${matchId}`);
-          const gameSnap = await gameRef.get();
-          const game = gameSnap.val();
+          // Read game state from Firestore (authority after Day 5).
+          const game = await readGameDoc(matchId);
           if (game && game.status === 'active') {
             // Submit a synthetic resign action through pendingMove. The
-            // existing validateMove trigger will accept it, finalizeGame
-            // will fire on status='finished', the opponent gets their
-            // Elo gain via the standard resign code path.
+            // existing validateMove trigger will accept it (still on RTDB
+            // as the move signal bus), finalizeGame fires on Firestore
+            // status='finished', opponent gets their Elo via the standard
+            // resign path.
             await rtdb.ref(`games/${matchId}/pendingMove`).set({
               from: uid,
               action: { kind: 'resign' },
@@ -1200,8 +1198,14 @@ export const deleteAccount = onCall(
       }
       await batch.commit();
 
-      // RTDB session lock
-      await rtdb.ref(`gameSessions/${uid}`).remove();
+      // Session lock — Firestore (current) and RTDB (legacy, may still
+      // hold stale rows for old clients). Both best-effort cleanup.
+      try { await db.doc(`sessions/${uid}`).delete(); } catch (e) {
+        logger.warn(`deleteAccount: Firestore session cleanup failed for ${hashUid(uid)}`, e);
+      }
+      try { await rtdb.ref(`gameSessions/${uid}`).remove(); } catch (e) {
+        logger.warn(`deleteAccount: legacy RTDB session cleanup failed for ${hashUid(uid)}`, e);
+      }
     } catch (e) {
       logger.error(`deleteAccount: scrub direct docs failed for ${hashUid(uid)}`, e);
       throw new HttpsError('internal', 'Failed to delete account data.');
@@ -1314,64 +1318,56 @@ export const cleanupFinishedGames = onSchedule(
     region: 'europe-west1',
   },
   async () => {
+    const db = getFirestore();
     const rtdb = getDatabase();
     const cutoff = Date.now() - CLEANUP_AGE_MS;
-    const gamesRef = rtdb.ref('games');
-    const snap = await gamesRef.get();
-    if (!snap.exists()) {
-      logger.info('cleanupFinishedGames: no games to consider');
+
+    // Find expired finished games in Firestore (state authority).
+    let snapshot;
+    try {
+      snapshot = await db
+        .collection('games')
+        .where('status', '==', 'finished')
+        .where('finishedAt', '<', cutoff)
+        .limit(CLEANUP_BATCH_CAP)
+        .get();
+    } catch (e) {
+      logger.error('cleanupFinishedGames: Firestore query failed', e);
       return;
     }
-    const games = snap.val() as Record<string, { status?: string; finishedAt?: number }>;
-    const toDelete: string[] = [];
-    for (const [gameId, game] of Object.entries(games)) {
-      if (!game) continue;
-      if (game.status !== 'finished') continue;
-      const finishedAt = typeof game.finishedAt === 'number' ? game.finishedAt : 0;
-      if (finishedAt > 0 && finishedAt < cutoff) {
-        toDelete.push(gameId);
-      }
-      if (toDelete.length >= CLEANUP_BATCH_CAP) break;
-    }
+    const toDelete = snapshot.docs.map((d) => d.id);
     if (toDelete.length === 0) {
       logger.info('cleanupFinishedGames: no expired games');
       return;
     }
 
-    // RTDB: multi-path delete in one atomic update.
-    if (shouldWriteRtdb()) {
-      const rtdbUpdates: Record<string, null> = {};
-      for (const gameId of toDelete) {
-        rtdbUpdates[`games/${gameId}`] = null;
+    // Firestore: batch delete (max 500 per batch).
+    try {
+      for (let i = 0; i < toDelete.length; i += 400) {
+        const chunk = toDelete.slice(i, i + 400);
+        const batch = db.batch();
+        for (const gameId of chunk) {
+          batch.delete(db.doc(`games/${gameId}`));
+        }
+        await batch.commit();
       }
-      try {
-        await rtdb.ref().update(rtdbUpdates);
-        logger.info(
-          `cleanupFinishedGames: deleted ${toDelete.length} expired finished games from RTDB`,
-        );
-      } catch (e) {
-        logger.error('cleanupFinishedGames: RTDB bulk delete failed', e);
-      }
+      logger.info(
+        `cleanupFinishedGames: deleted ${toDelete.length} expired finished games from Firestore`,
+      );
+    } catch (e) {
+      logger.error('cleanupFinishedGames: Firestore batch delete failed', e);
     }
 
-    // Firestore: batch delete (max 500 per batch).
-    if (shouldWriteFirestore()) {
-      const db = getFirestore();
-      try {
-        for (let i = 0; i < toDelete.length; i += 400) {
-          const chunk = toDelete.slice(i, i + 400);
-          const batch = db.batch();
-          for (const gameId of chunk) {
-            batch.delete(db.doc(`games/${gameId}`));
-          }
-          await batch.commit();
-        }
-        logger.info(
-          `cleanupFinishedGames: deleted ${toDelete.length} expired finished games from Firestore`,
-        );
-      } catch (e) {
-        logger.error('cleanupFinishedGames: Firestore batch delete failed', e);
-      }
+    // RTDB: also wipe any lingering legacy nodes (games created pre-Day-5
+    // may still have RTDB siblings; harmless if nothing's there).
+    const rtdbUpdates: Record<string, null> = {};
+    for (const gameId of toDelete) {
+      rtdbUpdates[`games/${gameId}`] = null;
+    }
+    try {
+      await rtdb.ref().update(rtdbUpdates);
+    } catch (e) {
+      logger.warn('cleanupFinishedGames: legacy RTDB delete failed (non-fatal)', e);
     }
   },
 );
@@ -1941,20 +1937,27 @@ export const botFallbackSweep = onSchedule(
 // Trigger on state.current changing — i.e., a turn handoff. If the new
 // active player is a bot, sleep a "thinking" delay then submit a move via
 // pendingMove. validateMove handles it from there (same path as a human).
-export const botMove = onValueWritten(
-  'games/{gameId}/state/current',
+export const botMove = onDocumentUpdated(
+  'games/{gameId}',
   async (event) => {
-    const after = event.data.after.val();
-    if (after !== 1 && after !== 2) return;
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return;
+
+    // Fire only when state.current actually changed — Firestore doc triggers
+    // fire on every write so we filter cheaply.
+    const beforeCurrent = (before.state as { current?: number } | undefined)?.current;
+    const afterCurrent = (after.state as { current?: number } | undefined)?.current;
+    if (afterCurrent !== 1 && afterCurrent !== 2) return;
+    if (beforeCurrent === afterCurrent) return;
+
     const gameId = event.params.gameId;
     const rtdb = getDatabase();
-    const gameRef = rtdb.ref(`games/${gameId}`);
 
-    const initialSnap = await gameRef.get();
-    const initial = initialSnap.val();
-    if (!initial || initial.status !== 'active') return;
-    const currentSlot = String(after);
-    const currentUid = initial.playerUids?.[currentSlot];
+    if (after.status !== 'active') return;
+    const currentSlot = String(afterCurrent);
+    const playerUids = after.playerUids as { '1': string; '2': string } | undefined;
+    const currentUid = playerUids?.[currentSlot as '1' | '2'];
     if (typeof currentUid !== 'string') return;
 
     const botMeta = await getBotMeta(currentUid);
@@ -1962,26 +1965,29 @@ export const botMove = onValueWritten(
 
     // Clock-aware think delay: never spend more than the time-control cap,
     // and never spend more than 25% of the bot's remaining clock.
-    const tc = initial.timeControl as TimeControl;
+    const tc = after.timeControl as TimeControl;
     const cap = BOT_THINK_CAP_MS[tc] ?? botMeta.thinkMsMax;
+    const clock = after.clock as { p1RemainingMs?: number; p2RemainingMs?: number } | undefined;
     const remaining =
       currentSlot === '1'
-        ? Number(initial.clock?.p1RemainingMs ?? cap)
-        : Number(initial.clock?.p2RemainingMs ?? cap);
+        ? Number(clock?.p1RemainingMs ?? cap)
+        : Number(clock?.p2RemainingMs ?? cap);
     const safeCap = Math.min(cap, botMeta.thinkMsMax, Math.floor(remaining * 0.25));
     const safeMin = Math.min(botMeta.thinkMsMin, safeCap);
     const delay = safeMin + Math.random() * Math.max(0, safeCap - safeMin);
     await new Promise((r) => setTimeout(r, delay));
 
-    // Re-read after the sleep: game may have ended, opponent may have
-    // resigned, turn may have changed (shouldn't, but be defensive).
-    const freshSnap = await gameRef.get();
-    const fresh = freshSnap.val();
+    // Re-read from Firestore after the sleep: game may have ended, opponent
+    // may have resigned, turn may have changed (shouldn't, but be defensive).
+    const fresh = await readGameDoc(gameId);
     if (!fresh || fresh.status !== 'active') return;
-    if (String(fresh.state?.current) !== currentSlot) return;
-    if (fresh.pendingMove) return; // a move is already being processed
+    if (String((fresh.state as { current?: number } | undefined)?.current) !== currentSlot) return;
+    // Bot pending-move guard reads RTDB directly because the move bus stays
+    // there. If a pendingMove already exists, another invocation is queueing.
+    const pendingSnap = await rtdb.ref(`games/${gameId}/pendingMove`).get();
+    if (pendingSnap.exists()) return;
 
-    const state = normalizeState(fresh.state ?? {});
+    const state = normalizeState((fresh.state ?? {}) as Record<string, unknown>);
     let action: GameAction;
     try {
       action = pickAIAction(state, botMeta.level, state.current as Player);
@@ -2118,8 +2124,10 @@ async function assertParticipant(
   gameId: string,
   uid: string,
 ): Promise<{ slot: 1 | 2; playerUids: { '1': string; '2': string } }> {
-  const snap = await getDatabase().ref(`games/${gameId}/playerUids`).get();
-  const playerUids = snap.val() as { '1': string; '2': string } | null;
+  // Read from Firestore (state authority after Day 5). Falls through to
+  // 'Game not found' if the doc is missing — same semantics as before.
+  const game = await readGameDoc(gameId);
+  const playerUids = (game?.playerUids as { '1': string; '2': string } | undefined) ?? null;
   if (!playerUids) {
     throw new HttpsError('not-found', 'Game not found.');
   }
@@ -2212,6 +2220,25 @@ export const setBoardLoaded = onCall(
     }
     const { slot } = await assertParticipant(gameId, uid);
     await updateGameNode(gameId, { [`boardLoaded/${slot}`]: true });
+
+    // Clock-start: inlined from the former startClockWhenBoardsLoaded RTDB
+    // trigger. Day 5 removed the RTDB write path, so that trigger no longer
+    // fires. Re-read the game doc to see if THIS write is the one that
+    // completes both-loaded; if yes, set gameStartedAt + turnStartedAt.
+    // Re-entrancy: gameStartedAt is the idempotency key — once set we skip.
+    const game = await readGameDoc(gameId);
+    if (!game) return { ok: true };
+    if (game.gameStartedAt) return { ok: true };
+    const loaded = (game.boardLoaded ?? {}) as Record<string, boolean>;
+    const otherSlot = slot === 1 ? '2' : '1';
+    const bothLoaded = loaded[otherSlot] === true; // this slot was just set
+    if (!bothLoaded) return { ok: true };
+    const now = Date.now();
+    await updateGameNode(gameId, {
+      gameStartedAt: now,
+      'clock/turnStartedAt': now,
+    });
+    logger.info(`setBoardLoaded: game ${gameId} clock started at ${now} (inlined)`);
     return { ok: true };
   },
 );

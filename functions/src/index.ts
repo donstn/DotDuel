@@ -121,29 +121,33 @@ async function createGameNode(args: {
     ...(rematchOf ? { rematchOf } : {}),
   };
 
-  const promises: Promise<unknown>[] = [];
-
-  if (shouldWriteRtdb()) {
-    promises.push(
-      getDatabase().ref(`games/${gameId}`).set({
-        ...gameDoc,
-        state: sanitize(state),
-      }),
-    );
-  }
-  if (shouldWriteFirestore()) {
-    promises.push(
-      getFirestore().doc(`games/${gameId}`).set(gameDoc),
-    );
-  }
-
-  const results = await Promise.allSettled(promises);
-  results.forEach((r, i) => {
-    if (r.status === 'rejected') {
-      const backend = shouldWriteRtdb() && i === 0 ? 'rtdb' : 'firestore';
-      logger.error(`createGameNode: ${backend} write failed for ${gameId}`, r.reason);
+  // Each backend's setup AND write wrapped in its own try/catch.
+  // CRITICAL: getDatabase() throws SYNCHRONOUSLY when no databaseURL is
+  // configured (e.g. staging without an RTDB instance). Without isolation,
+  // that synchronous throw would prevent the Firestore write entirely.
+  const writeRtdb = async (): Promise<void> => {
+    try {
+      const ref = getDatabase().ref(`games/${gameId}`);
+      await ref.set({ ...gameDoc, state: sanitize(state) });
+    } catch (e) {
+      logger.error(`createGameNode: rtdb write failed for ${gameId}`, e);
     }
-  });
+  };
+  const writeFirestore = async (): Promise<void> => {
+    try {
+      // Firestore Admin SDK rejects undefined values (e.g. GameState.difficulty
+      // is undefined in multiplayer mode). sanitize round-trips through JSON
+      // to strip them.
+      await getFirestore().doc(`games/${gameId}`).set(sanitize(gameDoc));
+    } catch (e) {
+      logger.error(`createGameNode: firestore write failed for ${gameId}`, e);
+    }
+  };
+
+  const promises: Promise<void>[] = [];
+  if (shouldWriteRtdb()) promises.push(writeRtdb());
+  if (shouldWriteFirestore()) promises.push(writeFirestore());
+  await Promise.all(promises);
 
   // If we expect both writes and Firestore failed but RTDB succeeded (or vice
   // versa during 'firestore' phase), the canonical write still went through.
@@ -170,32 +174,36 @@ async function updateGameNode(
   gameId: string,
   updates: Record<string, unknown>,
 ): Promise<void> {
-  const promises: Promise<unknown>[] = [];
+  // Each backend's setup AND write wrapped in its own try/catch — see the
+  // detailed note in createGameNode for why this isolation matters.
+  const updateRtdb = async (): Promise<void> => {
+    try {
+      const rtdbUpdates: Record<string, unknown> = { ...updates };
+      if ('state' in updates && updates.state !== undefined) {
+        rtdbUpdates.state = sanitize(updates.state);
+      }
+      await getDatabase().ref(`games/${gameId}`).update(rtdbUpdates);
+    } catch (e) {
+      logger.error(`updateGameNode: rtdb update failed for ${gameId}`, e);
+    }
+  };
+  const updateFirestore = async (): Promise<void> => {
+    try {
+      const firestoreUpdates: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(updates)) {
+        const key = k.replace(/\//g, '.');
+        firestoreUpdates[key] = v === undefined ? v : sanitize(v);
+      }
+      await getFirestore().doc(`games/${gameId}`).update(firestoreUpdates);
+    } catch (e) {
+      logger.error(`updateGameNode: firestore update failed for ${gameId}`, e);
+    }
+  };
 
-  if (shouldWriteRtdb()) {
-    // RTDB takes nested path keys like 'clock/current'.
-    const rtdbUpdates: Record<string, unknown> = { ...updates };
-    if ('state' in updates && updates.state !== undefined) {
-      rtdbUpdates.state = sanitize(updates.state);
-    }
-    promises.push(getDatabase().ref(`games/${gameId}`).update(rtdbUpdates));
-  }
-  if (shouldWriteFirestore()) {
-    // Firestore uses dot-notation for nested fields.
-    const firestoreUpdates: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(updates)) {
-      firestoreUpdates[k.replace(/\//g, '.')] = v;
-    }
-    promises.push(getFirestore().doc(`games/${gameId}`).update(firestoreUpdates));
-  }
-
-  const results = await Promise.allSettled(promises);
-  results.forEach((r, i) => {
-    if (r.status === 'rejected') {
-      const backend = shouldWriteRtdb() && i === 0 ? 'rtdb' : 'firestore';
-      logger.error(`updateGameNode: ${backend} update failed for ${gameId}`, r.reason);
-    }
-  });
+  const promises: Promise<void>[] = [];
+  if (shouldWriteRtdb()) promises.push(updateRtdb());
+  if (shouldWriteFirestore()) promises.push(updateFirestore());
+  await Promise.all(promises);
 }
 
 // Suppress unused-import warnings when MULTIPLAYER_BACKEND is 'rtdb' or

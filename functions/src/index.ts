@@ -2181,6 +2181,18 @@ export const setReady = onCall(
     }
     const { slot } = await assertParticipant(gameId, uid);
     await updateGameNode(gameId, { [`ready/${slot}`]: value });
+    // Post-write readback so we can see in logs whether the Firestore mirror
+    // actually took the update. Cheap (one read) and only fires on Ready
+    // button presses — won't add measurable cost.
+    try {
+      const snap = await getFirestore().doc(`games/${gameId}`).get();
+      const data = snap.data() as { ready?: Record<string, boolean> } | undefined;
+      logger.info(
+        `setReady: gameId=${gameId} slot=${slot} value=${value} → firestore.ready=${JSON.stringify(data?.ready ?? null)}`,
+      );
+    } catch (e) {
+      logger.warn(`setReady: readback failed for ${gameId}`, e);
+    }
     return { ok: true };
   },
 );

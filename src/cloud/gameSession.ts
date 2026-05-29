@@ -34,9 +34,10 @@ export function getSessionId(): string {
 
 // Stale-session threshold. A claim is considered abandoned (other devices
 // may take over) if claimedAt is older than this. Set well above the
-// heartbeat interval so a brief tab-suspended state doesn't free the lock.
-const STALE_MS = 90_000;
-const HEARTBEAT_MS = 30_000;
+// heartbeat interval so a brief tab-suspended state doesn't free the lock,
+// but short enough that a closed mobile tab clears within ~45s.
+const STALE_MS = 45_000;
+const HEARTBEAT_MS = 15_000;
 
 let heartbeatTimer: number | null = null;
 let heartbeatUid: string | null = null;

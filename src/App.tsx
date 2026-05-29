@@ -470,12 +470,11 @@ export default function App() {
     !!activeGameSession && activeGameSession.sessionId !== mySessionId;
 
   const openMultiplayer = () => {
-    if (!user || mpLockedByOther) return;
-    // Fire-and-forget — session lock is best-effort. On privacy-strict
-    // browsers (Brave on mobile, in particular) the RTDB WebSocket can
-    // hang silently; awaiting here would freeze the UI transition. The
-    // server-side onDisconnect handler still cleans up if the write
-    // arrives late and the network later drops.
+    if (!user) return;
+    // claimSession is setDoc-with-merge-overwrite semantics: if another
+    // device holds the lock, tapping Multiplayer here intentionally takes
+    // it over. The other device's watchSession will see the new sessionId
+    // and route back to the menu on its next snapshot.
     void claimSession(user.uid, mySessionId).catch((e) =>
       console.warn('claimSession failed:', e),
     );

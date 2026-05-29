@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.1.4.2',
+    date: '2026-05-29',
+    highlight: 'Session lock recovery',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'If a previous session got stuck holding the multiplayer lock, you can now tap the Multiplayer button to take over here instead of waiting for it to clear.',
+      },
+      {
+        kind: 'changed',
+        text: 'Stuck session locks now clear themselves twice as fast (45s instead of 90s) when the holding tab is gone.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.1.4.1',
     date: '2026-05-29',
     highlight: 'Multiplayer polish',

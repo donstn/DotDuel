@@ -38,10 +38,11 @@ const STAGING_CONFIG = {
   appId: '1:20053192504:web:dc0d9b28dfc724916d9bcd',
 };
 
-const firebaseConfig =
-  import.meta.env.VITE_FIREBASE_ENV === 'staging' ? STAGING_CONFIG : PROD_CONFIG;
+export const IS_STAGING = import.meta.env.VITE_FIREBASE_ENV === 'staging';
 
-if (import.meta.env.VITE_FIREBASE_ENV === 'staging') {
+const firebaseConfig = IS_STAGING ? STAGING_CONFIG : PROD_CONFIG;
+
+if (IS_STAGING) {
   // eslint-disable-next-line no-console
   console.log('%cDotDuel STAGING firebase config loaded', 'color:#f5d27a;font-weight:bold');
 }

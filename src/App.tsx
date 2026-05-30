@@ -75,6 +75,7 @@ import type { Invite } from './cloud/invites';
 import { subscribeIncomingInvites } from './cloud/invites';
 import type { FriendStatus, PresenceStatus } from './cloud/presence';
 import {
+  markPresenceOffline,
   setPresenceEnabled,
   setPresenceStatus,
   stopPresence,
@@ -716,6 +717,12 @@ export default function App() {
       // Firebase Auth state, so awaiting it is safe.
       void releaseSession(user.uid).catch((e) =>
         console.warn('releaseSession on sign-out failed:', e),
+      );
+      // Announce offline NOW so friends don't see a ghost-online state
+      // for up to 90s while the heartbeat times out. Must fire BEFORE
+      // signOut() — the presence rule only allows the owner to write.
+      void markPresenceOffline(user.uid).catch((e) =>
+        console.warn('markPresenceOffline on sign-out failed:', e),
       );
     }
     await signOut();

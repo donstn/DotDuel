@@ -102,6 +102,25 @@ export function stopPresence(): void {
   lastWrittenStatus = null;
 }
 
+// Explicitly mark this user offline NOW (before sign-out) so friends see
+// the change instantly instead of waiting up to STALE_MS for the heartbeat
+// to time out. Writes `lastSeen: 0` which immediately fails the staleness
+// check on friends' reads. Must be called BEFORE Firebase auth signs out —
+// after sign-out the rule "owner write" no longer applies.
+export async function markPresenceOffline(uid: string): Promise<void> {
+  stopHeartbeat();
+  lastWrittenStatus = null;
+  try {
+    await setDoc(
+      doc(db, 'presence', uid),
+      { lastSeen: 0 },
+      { merge: true },
+    );
+  } catch (e) {
+    console.warn('markPresenceOffline failed:', e);
+  }
+}
+
 // Resolve a friend's presence doc to a status. Returns 'offline' when the
 // doc is stale or missing.
 function effectiveStatus(data: PresenceDoc | undefined): FriendStatus {

@@ -4331,7 +4331,10 @@ body:has(.consent-banner) .rules-card {
 }
 .friends-tab-body {
   flex: 1 1 auto;
-  min-height: 0;
+  /* Reserve ~5 rows of breathing room even when the list has one friend.
+     Scrolls when the list overflows. The clamp lets the popover stay
+     comfortable on phones (~4 rows visible) while expanding on desktop. */
+  min-height: clamp(220px, 45vh, 320px);
   overflow-y: auto;
   padding-right: 4px;
 }

@@ -1344,7 +1344,7 @@ export default function App() {
                 : false
             }
             ratingChange={
-              myNum && mpMatchRecord?.eloFinalized
+              myNum && mpMatchRecord?.eloFinalized && mpMatchRecord.ranked
                 ? {
                     before:
                       myNum === 1

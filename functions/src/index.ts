@@ -2802,30 +2802,20 @@ export const acceptInvite = onCall(
         timeControl = inv.timeControl!;
         willBeRanked = Boolean(inv.fromRanked) && ranked;
 
-        // Race cancellation: find sibling pending invites in the same groupId
-        // and mark them cancelled. The accepted one wins.
-        const siblings = await tx.get(
-          db.collection('invites')
-            .where('groupId', '==', inv.groupId)
-            .where('status', '==', 'pending'),
-        );
-        for (const sib of siblings.docs) {
-          if (sib.id === inviteId) {
-            tx.update(sib.ref, { status: 'accepted', matchId });
-          } else {
-            tx.update(sib.ref, { status: 'cancelled' });
-          }
-        }
-
-        // Match record + pairings — same shape as matchmake writes.
-        const matchRef = db.doc(`matches/${matchId}`);
-        const fromPairRef = db.doc(`pairings/${fromUid}`);
-        const toPairRef = db.doc(`pairings/${uid}`);
-        // Look up display names from users/{uid}.
-        const [fromUserSnap, toUserSnap] = await Promise.all([
+        // ALL READS FIRST — Firestore transactions require all reads before
+        // any writes. Pre-Day-5 this code did reads/writes/reads/writes which
+        // throws "Cannot do reads after writes" at runtime (the original cause
+        // of the acceptInvite 500 reported in 0.2.0.0 testing).
+        const [siblings, fromUserSnap, toUserSnap] = await Promise.all([
+          tx.get(
+            db.collection('invites')
+              .where('groupId', '==', inv.groupId)
+              .where('status', '==', 'pending'),
+          ),
           tx.get(db.doc(`users/${fromUid}`)),
           tx.get(db.doc(`users/${uid}`)),
         ]);
+
         const fromDisplay =
           (fromUserSnap.data()?.displayName as string | undefined) ?? 'Player 1';
         const toDisplay =
@@ -2834,6 +2824,21 @@ export const acceptInvite = onCall(
           (fromUserSnap.data()?.rating as number | undefined) ?? 1000;
         const toRating =
           (toUserSnap.data()?.rating as number | undefined) ?? 1000;
+
+        // NOW writes — sibling cancellation + match/pairing creation.
+        // Race cancellation: the accepted invite wins; siblings in the same
+        // groupId go to 'cancelled' so their recipients' toasts disappear.
+        for (const sib of siblings.docs) {
+          if (sib.id === inviteId) {
+            tx.update(sib.ref, { status: 'accepted', matchId });
+          } else {
+            tx.update(sib.ref, { status: 'cancelled' });
+          }
+        }
+
+        const matchRef = db.doc(`matches/${matchId}`);
+        const fromPairRef = db.doc(`pairings/${fromUid}`);
+        const toPairRef = db.doc(`pairings/${uid}`);
 
         tx.set(matchRef, {
           status: 'created',

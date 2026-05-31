@@ -7,6 +7,8 @@ import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
 import { AdBanner } from './AdBanner';
 import { FriendsButton } from './FriendsButton';
 import { TellAFriendButton } from './TellAFriendButton';
+import type { MyDailyAttempt } from '../cloud/dailyLeaderboard';
+import { MAX_ATTEMPTS_PER_DAY } from '../cloud/dailyPuzzleResult';
 
 interface Props {
   progress: Progress;
@@ -28,6 +30,13 @@ interface Props {
   friendsTotal?: number;
   friendsBadgeCount?: number;
   onOpenFriends?: () => void;
+  // Phase 2b (Alpha 0.2.6.0+) — daily puzzle. Signed-in only; anonymous
+  // visitors see the card but it routes to Sign-in. myDailyAttempt drives
+  // the 3-state card (not started / in progress N/3 / done 3/3 with best).
+  onStartDailyPuzzle?: () => void;
+  myDailyAttempt?: MyDailyAttempt | null;
+  // 2b-v2: open the public puzzle leaderboard popover.
+  onOpenPuzzleLeaderboard?: () => void;
 }
 
 export function Menu({
@@ -49,6 +58,9 @@ export function Menu({
   friendsTotal = 0,
   friendsBadgeCount = 0,
   onOpenFriends,
+  onStartDailyPuzzle,
+  myDailyAttempt = null,
+  onOpenPuzzleLeaderboard,
 }: Props) {
   const [mode, setMode] = useState<GameMode | null>(null);
   const [shape, setShape] = useState<ShapeId | null>(null);
@@ -182,6 +194,74 @@ export function Menu({
                 <strong>Multiplayer</strong>
                 <span>Sign in to play.</span>
               </button>
+            )}
+            {user && onStartDailyPuzzle ? (
+              (() => {
+                const attempts = myDailyAttempt?.attempts ?? 0;
+                const best = myDailyAttempt?.best;
+                const exhausted = attempts >= MAX_ATTEMPTS_PER_DAY;
+                if (exhausted) {
+                  return (
+                    <button
+                      className="menu-card disabled"
+                      disabled
+                      title="All 3 attempts used. Come back tomorrow."
+                    >
+                      <strong>Today&rsquo;s puzzle</strong>
+                      <span>
+                        ✓ Done · best {(best ?? 0) > 0 ? '+' : ''}
+                        {best ?? 0} · resets midnight UTC
+                      </span>
+                    </button>
+                  );
+                }
+                if (attempts > 0) {
+                  return (
+                    <button className="menu-card" onClick={onStartDailyPuzzle}>
+                      <strong>Today&rsquo;s puzzle</strong>
+                      <span>
+                        Attempt {attempts + 1}/{MAX_ATTEMPTS_PER_DAY} · best{' '}
+                        {(best ?? 0) > 0 ? '+' : ''}
+                        {best ?? 0}
+                      </span>
+                    </button>
+                  );
+                }
+                return (
+                  <button className="menu-card" onClick={onStartDailyPuzzle}>
+                    <strong>Today&rsquo;s puzzle</strong>
+                    <span>
+                      {MAX_ATTEMPTS_PER_DAY} attempts. Beat the AI by the biggest margin.
+                    </span>
+                  </button>
+                );
+              })()
+            ) : (
+              <button
+                className="menu-card disabled"
+                disabled
+                title="Sign in to play today's puzzle"
+              >
+                <strong>Today&rsquo;s puzzle</strong>
+                <span>Sign in to play.</span>
+              </button>
+            )}
+            {onOpenPuzzleLeaderboard && (
+              user ? (
+                <button className="menu-card" onClick={onOpenPuzzleLeaderboard}>
+                  <strong>Puzzle leaderboard</strong>
+                  <span>Today&rsquo;s best margins.</span>
+                </button>
+              ) : (
+                <button
+                  className="menu-card disabled"
+                  disabled
+                  title="Sign in to view"
+                >
+                  <strong>Puzzle leaderboard</strong>
+                  <span>Sign in to view.</span>
+                </button>
+              )
             )}
           </div>
           <button className="menu-card menu-card-rank" onClick={onOpenRankings}>

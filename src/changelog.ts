@@ -30,6 +30,36 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.2.7.0',
+    date: '2026-05-31',
+    highlight: 'Daily puzzle: 3 tries + leaderboard',
+    changes: [
+      {
+        kind: 'changed',
+        text: "You now get 3 attempts at today's puzzle instead of 1. Your best margin is the one that counts — the streak still bumps after your first finish of the day.",
+      },
+      {
+        kind: 'added',
+        text: "New \"Puzzle leaderboard\" card on the menu. Today's top margins live, sorted from biggest to smallest. Ties broken by who finished first. Historical leaderboards (by day, month, name search) coming soon.",
+      },
+    ],
+  },
+  {
+    version: 'Alpha 0.2.6.0',
+    date: '2026-05-31',
+    highlight: "Today's puzzle",
+    changes: [
+      {
+        kind: 'added',
+        text: "New \"Today's puzzle\" card on the menu. One try per day vs the Hard AI on a rotating shape. Score is your margin (you minus AI), and each win adds a day to your Profile streak. Tomorrow's puzzle unlocks at midnight UTC.",
+      },
+      {
+        kind: 'changed',
+        text: "Sign-in required to play the daily puzzle and build a streak — the streak lives on your account so it works across devices.",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.2.5.0',
     date: '2026-05-31',
     highlight: 'Daily streak plumbing',

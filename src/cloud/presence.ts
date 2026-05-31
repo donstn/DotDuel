@@ -14,7 +14,8 @@ export type PresenceStatus =
   | 'in-ai'
   | 'in-hotseat'
   | 'in-ranked'
-  | 'searching-ranked';
+  | 'searching-ranked'
+  | 'in-daily';
 
 export type FriendStatus = PresenceStatus | 'offline';
 
@@ -191,6 +192,8 @@ export function statusLabel(s: FriendStatus): string {
       return 'Ranked match';
     case 'searching-ranked':
       return 'Searching…';
+    case 'in-daily':
+      return "Today's puzzle";
     case 'offline':
       return 'Offline';
   }

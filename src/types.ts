@@ -2,7 +2,7 @@ export type ShapeId = 'triangle' | 'square' | 'rectangle' | 'rhombus';
 
 export type Player = 1 | 2;
 
-export type GameMode = 'ai' | 'hotseat' | 'multiplayer';
+export type GameMode = 'ai' | 'hotseat' | 'multiplayer' | 'daily';
 
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 

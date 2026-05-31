@@ -64,6 +64,13 @@ import { UsernamePicker } from './components/UsernamePicker';
 import { FriendsPopover } from './components/FriendsPopover';
 import { SendInviteDialog } from './components/SendInviteDialog';
 import { IncomingInviteToast } from './components/IncomingInviteToast';
+import { PuzzleLeaderboardPopover } from './components/PuzzleLeaderboardPopover';
+import {
+  watchMyDailyAttempt,
+  type MyDailyAttempt,
+} from './cloud/dailyLeaderboard';
+import { dateToUtcKey, puzzleForDate } from './dailyPuzzles';
+import { finalizeDailyPuzzle } from './cloud/dailyPuzzleResult';
 import type { Friend, PendingRequest } from './cloud/friends';
 import {
   subscribeFriends,
@@ -254,6 +261,17 @@ export default function App() {
   const [pendingFlash, setPendingFlash] = useState(false);
   const prevPendingLenRef = useRef<number>(0);
   const [activeHint, setActiveHint] = useState<{ text: string; anchorDotId: number } | null>(null);
+  // Phase 2b — daily puzzle. dailyPuzzleIdRef carries today's puzzle id
+  // through the gameplay so the finalize useEffect can pass it back to
+  // Firestore. dailyPuzzleResult holds the post-finalize streak info for
+  // the GameOver variant to display.
+  const dailyPuzzleIdRef = useRef<number | null>(null);
+  const [dailyPuzzleResult, setDailyPuzzleResult] = useState<
+    { margin: number; best: number; attempts: number; attemptsRemaining: number; current: number; longest: number } | null
+  >(null);
+  // 2b-v2: subscribed view of today's per-user attempt doc + popover state.
+  const [myDailyAttempt, setMyDailyAttempt] = useState<MyDailyAttempt | null>(null);
+  const [puzzleLbOpen, setPuzzleLbOpen] = useState(false);
 
   const updateSettings = (next: Settings) => {
     setSettings(next);
@@ -282,7 +300,12 @@ export default function App() {
     }
   };
 
-  const startGame = (mode: GameMode, shape: ShapeId, difficulty?: Difficulty) => {
+  const startGame = (
+    mode: GameMode,
+    shape: ShapeId,
+    difficulty?: Difficulty,
+    openingMoves?: number[],
+  ) => {
     if (aiTimer.current !== null) {
       clearTimeout(aiTimer.current);
       aiTimer.current = null;
@@ -308,11 +331,37 @@ export default function App() {
       saveSettings(nextSettings);
     }
     setConfig({ mode, shape, difficulty });
-    setState(createGame(shape, mode, difficulty));
+    let initial = createGame(shape, mode, difficulty);
+    // Daily-puzzle opening moves get applied here so the player starts
+    // mid-game on a pre-positioned board. applyMove enforces turn-passing
+    // so the player who's "up" after the opening alternates naturally.
+    if (mode === 'daily' && openingMoves && openingMoves.length > 0) {
+      for (const dotId of openingMoves) {
+        try {
+          initial = applyMove(initial, dotId).state;
+        } catch (e) {
+          console.warn('daily-puzzle opening move failed:', e);
+        }
+      }
+    }
+    setState(initial);
     setLastDot(null);
     setUnlockInfo({ shape: null, difficulty: null });
     setThinking(false);
     setScreen('game');
+  };
+
+  // Phase 2b — load today's puzzle (lazy import keeps the library out of
+  // the initial bundle) and hand off to startGame with the puzzle's
+  // configured opening moves. Signed-in only — anonymous callers will see
+  // the disabled "Sign in to play" card on the menu instead.
+  const startDailyPuzzle = () => {
+    if (!user) return;
+    const puzzle = puzzleForDate();
+    dailyPuzzleIdRef.current = puzzle.id;
+    setDailyPuzzleResult(null);
+    trackEvent('daily_puzzle_started', { puzzle_id: puzzle.id, shape: puzzle.shape });
+    startGame('daily', puzzle.shape, puzzle.aiDifficulty, puzzle.openingMoves);
   };
 
   const backToMenu = () => {
@@ -322,6 +371,8 @@ export default function App() {
     }
     winRecorded.current = false;
     gameEndCounted.current = false;
+    setDailyPuzzleResult(null);
+    dailyPuzzleIdRef.current = null;
     setScreen('menu');
     setState(null);
     setConfig(null);
@@ -336,7 +387,7 @@ export default function App() {
   useEffect(() => {
     if (!state || !config) return;
     if (state.finished) return;
-    if (!(config.mode === 'ai' && state.current === 2 && config.difficulty)) return;
+    if (!((config.mode === 'ai' || config.mode === 'daily') && state.current === 2 && config.difficulty)) return;
 
     setThinking(true);
     const diff = config.difficulty;
@@ -528,6 +579,53 @@ export default function App() {
         duration_ms: gameStartedAtRef.current > 0 ? Date.now() - gameStartedAtRef.current : 0,
       });
     }
+
+    // Phase 2b — daily-puzzle finalization. Writes the attempt doc + bumps
+    // the streak. Fires only for vs-AI puzzle wins/losses (signed-in by
+    // construction of the entry point). Result drives the GameOver variant.
+    if (config.mode === 'daily' && user) {
+      const puzzleId = dailyPuzzleIdRef.current ?? -1;
+      const margin = s1 - s2;
+      const dispName =
+        cloudProfile?.displayName ?? user.displayName ?? 'Anonymous';
+      void (async () => {
+        try {
+          const utcDate = dateToUtcKey();
+          const result = await finalizeDailyPuzzle({
+            uid: user.uid,
+            displayName: dispName,
+            utcDate,
+            puzzleId,
+            margin,
+          });
+          setDailyPuzzleResult({
+            margin,
+            best: result.best,
+            attempts: result.attempts,
+            attemptsRemaining: result.attemptsRemaining,
+            current: result.streak.current,
+            longest: result.streak.longest,
+          });
+          trackEvent('daily_puzzle_solved', {
+            puzzle_id: puzzleId,
+            margin,
+            best: result.best,
+            attempts: result.attempts,
+            streak_current: result.streak.current,
+          });
+        } catch (e) {
+          console.warn('finalizeDailyPuzzle failed:', e);
+          setDailyPuzzleResult({
+            margin,
+            best: margin,
+            attempts: 0,
+            attemptsRemaining: 0,
+            current: 0,
+            longest: 0,
+          });
+        }
+      })();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.finished]);
 
@@ -611,6 +709,17 @@ export default function App() {
       setCloudProfileLoaded(true);
     });
     return unsub;
+  }, [user?.uid]);
+
+  // 2b-v2 — subscribe to today's per-user daily-puzzle attempt doc so the
+  // menu card can render the right state (not started / N/3 / 3/3 done)
+  // and finalize can read attempt count without a fresh getDoc.
+  useEffect(() => {
+    if (!user) {
+      setMyDailyAttempt(null);
+      return;
+    }
+    return watchMyDailyAttempt(user.uid, dateToUtcKey(), setMyDailyAttempt);
   }, [user?.uid]);
 
   // Apply colour theme to <html data-theme> and persist on every change.
@@ -743,6 +852,7 @@ export default function App() {
     else if (screen === 'matchFound' || screen === 'mpgame') status = 'in-ranked';
     else if (screen === 'game' && config?.mode === 'ai') status = 'in-ai';
     else if (screen === 'game' && config?.mode === 'hotseat') status = 'in-hotseat';
+    else if (screen === 'game' && config?.mode === 'daily') status = 'in-daily';
     else status = 'menu'; // menu, lobby, fallback
     void setPresenceStatus(user.uid, status);
   }, [user?.uid, screen, config?.mode]);
@@ -1019,7 +1129,7 @@ export default function App() {
     // state.finished effect will record the loss for the human.
     if (
       screen === 'game' &&
-      config?.mode === 'ai' &&
+      (config?.mode === 'ai' || config?.mode === 'daily') &&
       state &&
       !state.finished
     ) {
@@ -1398,7 +1508,7 @@ export default function App() {
   const handleDotClick = (dotId: number) => {
     if (!state || !config || state.finished) return;
     if (thinking) return;
-    if (config.mode === 'ai' && state.current === 2) return;
+    if ((config.mode === 'ai' || config.mode === 'daily') && state.current === 2) return;
     if (state.colored[dotId]) return;
     setActiveHint(null);
     const movingPlayer = state.current;
@@ -1452,7 +1562,7 @@ export default function App() {
   const handleClaimClick = (lineId: string) => {
     if (!state || !config || state.finished) return;
     if (thinking) return;
-    if (config.mode === 'ai' && state.current === 2) return;
+    if ((config.mode === 'ai' || config.mode === 'daily') && state.current === 2) return;
     if (!state.pending.includes(lineId)) return;
     setActiveHint(null);
     const movingPlayer = state.current;
@@ -1872,6 +1982,9 @@ export default function App() {
           friendsTotal={friends.length}
           friendsBadgeCount={friendsBadgeCount}
           onOpenFriends={() => setFriendsOpen(true)}
+          onStartDailyPuzzle={startDailyPuzzle}
+          myDailyAttempt={myDailyAttempt}
+          onOpenPuzzleLeaderboard={user ? () => setPuzzleLbOpen(true) : undefined}
         />
       );
     }
@@ -1955,6 +2068,12 @@ export default function App() {
               setRankingsOpen(false);
               setSignInOpen(true);
             }}
+          />
+        )}
+        {puzzleLbOpen && (
+          <PuzzleLeaderboardPopover
+            myUid={user?.uid ?? null}
+            onClose={() => setPuzzleLbOpen(false)}
           />
         )}
         {signInOpen && <SignInPopover onClose={() => setSignInOpen(false)} />}
@@ -2071,7 +2190,7 @@ export default function App() {
       ? cloudProfile.displayName
       : settings.playerName || 'Player 1';
   const p2Name =
-    config.mode === 'ai'
+    config.mode === 'ai' || config.mode === 'daily'
       ? `AI · ${DIFFICULTY_LABELS[config.difficulty ?? 1]}`
       : settings.opponentName || 'Player 2';
 
@@ -2079,7 +2198,7 @@ export default function App() {
     ? { kind: 'guest', label: p1Name.slice(0, 1).toUpperCase() }
     : 'human';
   const p2Avatar: { kind: 'ai'; level: Difficulty } | { kind: 'guest'; label: string } =
-    config.mode === 'ai' && config.difficulty
+    (config.mode === 'ai' || config.mode === 'daily') && config.difficulty
       ? { kind: 'ai', level: config.difficulty }
       : { kind: 'guest', label: p2Name.slice(0, 1).toUpperCase() };
 
@@ -2087,14 +2206,14 @@ export default function App() {
   const disabled =
     state.finished ||
     thinking ||
-    (config.mode === 'ai' && state.current === 2);
+    ((config.mode === 'ai' || config.mode === 'daily') && state.current === 2);
 
   const remaining = totalPoints - state.scores[1] - state.scores[2];
   const p1Stats = getPlayerRow(p1Name);
   const p2StatsRow = config.mode === 'hotseat' ? getPlayerRow(p2Name) : null;
 
-  const aiResignAvailable = config.mode === 'ai' && !state.finished;
-  const backHandler = config.mode === 'ai' ? onAiBackPressed : backToMenu;
+  const aiResignAvailable = (config.mode === 'ai' || config.mode === 'daily') && !state.finished;
+  const backHandler = config.mode === 'ai' || config.mode === 'daily' ? onAiBackPressed : backToMenu;
 
   return (
     <div className="game-screen">
@@ -2200,9 +2319,12 @@ export default function App() {
           onPlayAgain={playAgain}
           onMenu={backToMenu}
           onStartShape={(s, d) => startGame('ai', s, d)}
+          dailyResult={dailyPuzzleResult}
+          onTryDailyAgain={startDailyPuzzle}
+          onOpenPuzzleLeaderboard={() => setPuzzleLbOpen(true)}
         />
       )}
-      {resignConfirmOpen && config.mode === 'ai' && !state.finished && (
+      {resignConfirmOpen && (config.mode === 'ai' || config.mode === 'daily') && !state.finished && (
         <div
           className="confirm-overlay"
           role="dialog"

@@ -47,6 +47,22 @@ interface Props {
   /** Sends a friend request to the opponent. Undefined to suppress the
    *  button entirely (e.g., in vs-AI mode or when caller isn't signed in). */
   onAddOpponentAsFriend?: () => Promise<void>;
+  /** Phase 2b-v2 — daily-puzzle finalize result. When present + mode='daily',
+   *  renders the daily variant: margin, best, streak, attempts-remaining,
+   *  Try-again / View-leaderboard CTAs. */
+  dailyResult?: {
+    margin: number;
+    best: number;
+    attempts: number;
+    attemptsRemaining: number;
+    current: number;
+    longest: number;
+  } | null;
+  /** Phase 2b-v2 — start another daily-puzzle attempt (only when attempts
+   *  remain). Tied to startDailyPuzzle in App.tsx. */
+  onTryDailyAgain?: () => void;
+  /** Phase 2b-v2 — open the public puzzle leaderboard from GameOver. */
+  onOpenPuzzleLeaderboard?: () => void;
 }
 
 const SHAPE_NEXT: Record<ShapeId, ShapeId | null> = {
@@ -160,6 +176,9 @@ export function GameOver({
   opponentUid,
   opponentIsFriend,
   onAddOpponentAsFriend,
+  dailyResult,
+  onTryDailyAgain,
+  onOpenPuzzleLeaderboard,
 }: Props) {
   const [addFriendState, setAddFriendState] = useState<
     'idle' | 'sending' | 'sent' | 'failed'
@@ -255,6 +274,56 @@ export function GameOver({
           </div>
         )}
         {suggestion}
+        {mode === 'daily' && (
+          <div className="go-daily-result">
+            {dailyResult ? (
+              <>
+                <div className="go-daily-margin">
+                  This run:{' '}
+                  <strong>
+                    {dailyResult.margin > 0 ? '+' : ''}
+                    {dailyResult.margin}
+                  </strong>
+                </div>
+                <div className="go-daily-best">
+                  Best today:{' '}
+                  <strong>
+                    {dailyResult.best > 0 ? '+' : ''}
+                    {dailyResult.best}
+                  </strong>
+                  <span className="go-daily-attempts">
+                    {' '}
+                    · attempt {dailyResult.attempts}/3
+                  </span>
+                </div>
+                {dailyResult.current > 0 && (
+                  <div className="go-daily-streak">
+                    Streak: <strong>Day {dailyResult.current}</strong>
+                    {dailyResult.longest > dailyResult.current && (
+                      <span className="go-daily-longest">
+                        {' '}
+                        (best: Day {dailyResult.longest})
+                      </span>
+                    )}
+                  </div>
+                )}
+                {dailyResult.attemptsRemaining > 0 ? (
+                  <p className="settings-hint">
+                    {dailyResult.attemptsRemaining} attempt
+                    {dailyResult.attemptsRemaining === 1 ? '' : 's'} left today.
+                    Your best counts on the leaderboard.
+                  </p>
+                ) : (
+                  <p className="settings-hint">
+                    All 3 attempts used. Come back tomorrow at midnight UTC.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="settings-hint">Saving result…</p>
+            )}
+          </div>
+        )}
         {mode === 'multiplayer' && onLobby ? (
           <>
             <div className="game-over-buttons">
@@ -299,6 +368,18 @@ export function GameOver({
               </div>
             )}
           </>
+        ) : mode === 'daily' ? (
+          <div className="game-over-buttons">
+            {dailyResult && dailyResult.attemptsRemaining > 0 && onTryDailyAgain && (
+              <button className="primary" onClick={onTryDailyAgain}>
+                Try again ({dailyResult.attemptsRemaining} left)
+              </button>
+            )}
+            {onOpenPuzzleLeaderboard && (
+              <button onClick={onOpenPuzzleLeaderboard}>Leaderboard</button>
+            )}
+            <button onClick={onMenu}>Menu</button>
+          </div>
         ) : (
           <div className="game-over-buttons">
             <button className="primary" onClick={onPlayAgain}>Play again</button>

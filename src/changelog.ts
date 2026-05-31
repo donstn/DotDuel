@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.2.7.1',
+    date: '2026-05-31',
+    highlight: 'Fix: no more flicker on Square/Rectangle',
+    changes: [
+      {
+        kind: 'fixed',
+        text: "The \"See unclaimed lines\" highlight now only appears on the Triangle board. On Square and Rectangle it occasionally caused the screen to flicker and go dark when many lines were unclaimed. The toggle is hidden on those shapes until the underlying visual bug is fixed.",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.2.7.0',
     date: '2026-05-31',
     highlight: 'Daily puzzle: 3 tries + leaderboard',

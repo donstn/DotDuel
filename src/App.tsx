@@ -132,17 +132,22 @@ interface SessionConfig {
 const AI_DELAY_MS = 450;
 
 // Effective "show pending-claim rings" rule (Phase 1b — replaces the old
-// universal gamesPlayed/claimsMade learning window). Tiered by mode:
-//   vs AI L1/L2/L3 — respects settings.showClaimableLines (default ON)
-//   vs AI L4       — respects settings.showClaimableLinesL4 (default OFF)
-//   vs AI L5       — never
-//   hot-seat / MP  — never (perception is part of the game at these tiers)
+// universal gamesPlayed/claimsMade learning window). Tiered by mode AND
+// shape:
+//   vs AI L1/L2/L3 on triangle — respects settings.showClaimableLines (default ON)
+//   vs AI L4 on triangle       — respects settings.showClaimableLinesL4 (default OFF)
+//   vs AI L5 on triangle       — never
+//   square / rectangle         — never (visual bug: many pending rings
+//                                  trigger flicker / crash; deferred)
+//   hot-seat / MP / daily      — never (perception is part of the game)
 function effectiveShowRings(
   settings: Settings,
   mode: GameMode | undefined,
   difficulty: Difficulty | undefined,
+  shape: ShapeId | undefined,
 ): boolean {
   if (mode !== 'ai') return false;
+  if (shape !== 'triangle') return false;
   if (!difficulty) return false;
   if (difficulty === 5) return false;
   if (difficulty === 4) return settings.showClaimableLinesL4;
@@ -150,11 +155,18 @@ function effectiveShowRings(
 }
 
 // Whether the eye-toggle button should be rendered for the current mode.
+// Triangle-only for now — same flicker bug on square/rectangle gates it.
 function ringToggleAvailable(
   mode: GameMode | undefined,
   difficulty: Difficulty | undefined,
+  shape: ShapeId | undefined,
 ): boolean {
-  return mode === 'ai' && difficulty !== undefined && difficulty <= 4;
+  return (
+    mode === 'ai' &&
+    shape === 'triangle' &&
+    difficulty !== undefined &&
+    difficulty <= 4
+  );
 }
 
 // Shown on any mp-flow screen when Firebase RTDB has been unreachable for
@@ -1586,8 +1598,8 @@ export default function App() {
     return getBoard(config.shape).lines.reduce((sum, l) => sum + l.length, 0);
   }, [config]);
 
-  const ringsVisible = effectiveShowRings(settings, config?.mode, config?.difficulty);
-  const showRingsToggle = ringToggleAvailable(config?.mode, config?.difficulty);
+  const ringsVisible = effectiveShowRings(settings, config?.mode, config?.difficulty, config?.shape);
+  const showRingsToggle = ringToggleAvailable(config?.mode, config?.difficulty, config?.shape);
 
   const onToggleRings = () => {
     const next: Settings =

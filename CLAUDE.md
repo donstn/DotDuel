@@ -6,6 +6,8 @@ Live staging: **https://donstn.github.io/DotDuel/** (auto-deployed from `main` v
 
 Notable changes tracked in `CHANGELOG.md`. Current version: see `src/version.ts` (`APP_VERSION`).
 
+Known bugs (fixed + accepted, with root cause and forward-looking notes) tracked in `bugs.md`. **Check there first** if a familiar-looking symptom recurs — we've already burned the diagnosis time once.
+
 ---
 
 ## Tech stack

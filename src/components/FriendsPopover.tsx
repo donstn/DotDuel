@@ -214,7 +214,7 @@ export function FriendsPopover({
         </div>
 
         <div className="friends-tell-a-friend">
-          <TellAFriendButton myUid={myUid} />
+          <TellAFriendButton variant="invite" myUid={myUid} />
         </div>
       </div>
     </div>

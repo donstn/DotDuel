@@ -153,6 +153,11 @@ export function ProfilePopover({
           </section>
 
           <section className="profile-section">
+            <h3>Daily streak</h3>
+            <StreakSection cloudProfile={cloudProfile} />
+          </section>
+
+          <section className="profile-section">
             <h3>Offline history — &ldquo;{localName}&rdquo;</h3>
             {totalAll === 0 ? (
               <p className="settings-hint">
@@ -301,6 +306,51 @@ export function ProfilePopover({
         </div>
       )}
     </div>
+  );
+}
+
+function StreakSection({ cloudProfile }: { cloudProfile: CloudProfile | null }) {
+  const streak = cloudProfile?.streak;
+  if (!streak || streak.current <= 0) {
+    return (
+      <p className="settings-hint">
+        Play today&rsquo;s puzzle to start a streak. (Coming soon.)
+      </p>
+    );
+  }
+  return (
+    <>
+      <div className="profile-row">
+        <span>Current streak</span>
+        <strong className="profile-streak-current">
+          <Flame /> Day {streak.current}
+        </strong>
+      </div>
+      <div className="profile-row">
+        <span>Longest</span>
+        <strong>Day {streak.longest}</strong>
+      </div>
+      <p className="settings-hint">
+        Streak counts daily-puzzle completions. Miss a day and it resets.
+      </p>
+    </>
+  );
+}
+
+function Flame() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      className="profile-streak-flame"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 2c.6 3-1.2 5-2.5 6.5-1.4 1.6-2.5 3.1-2.5 5.3 0 3.7 2.9 6.7 6.5 6.7s6.5-3 6.5-6.7c0-2.5-1.4-4.4-3-6.1.5 1.4-.1 2.6-1 3.1.7-3-1.1-6.4-4-8.8z"
+        fill="currentColor"
+      />
+    </svg>
   );
 }
 

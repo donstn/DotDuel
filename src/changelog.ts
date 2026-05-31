@@ -30,6 +30,28 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.2.5.0',
+    date: '2026-05-31',
+    highlight: 'Daily streak plumbing',
+    changes: [
+      {
+        kind: 'added',
+        text: "New \"Daily streak\" section in your Profile, ready for the daily puzzle (coming next). Once the puzzle ships, completing it each day builds your streak across all your devices — stored on your account, not your browser, so it survives cache clears and device switches.",
+      },
+    ],
+  },
+  {
+    version: 'Alpha 0.2.4.0',
+    date: '2026-05-31',
+    highlight: 'Share + invite from the menu',
+    changes: [
+      {
+        kind: 'added',
+        text: "You can now share DotDuel right from the main menu. Signed-in players get \"Invite a friend\" — links carry your referral so they auto-friend you when they sign up. Anyone not signed in sees a \"Share DotDuel\" link below sign-in for a quick clean share of the game.",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.2.3.0',
     date: '2026-05-31',
     highlight: 'Learning hints + claimable-lines toggle',

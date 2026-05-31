@@ -22,6 +22,15 @@ export interface CloudProfile {
   challengePolicy?: 'everyone' | 'friends-only' | 'nobody';
   showPresence?: boolean;
   friendListHidden?: boolean;
+  // Alpha 0.2.5.0 (Phase 2a) — daily-puzzle streak. Written by the daily
+  // puzzle completion path (ships in Phase 2b). Optional because existing
+  // profile docs predate this field; reader logic surfaces undefined when
+  // the user has never completed a daily puzzle yet.
+  streak?: {
+    current: number;
+    longest: number;
+    lastPlayedUTC: string; // 'YYYY-MM-DD'
+  };
 }
 
 export const USERNAME_RE = /^[a-zA-Z0-9_-]{3,16}$/;
@@ -69,6 +78,18 @@ function usernameDoc(lower: string) {
 }
 
 function shapeProfile(data: DocumentData | undefined): CloudProfile {
+  const rawStreak = data?.streak;
+  const streak =
+    rawStreak &&
+    typeof rawStreak.current === 'number' &&
+    typeof rawStreak.longest === 'number' &&
+    typeof rawStreak.lastPlayedUTC === 'string'
+      ? {
+          current: rawStreak.current,
+          longest: rawStreak.longest,
+          lastPlayedUTC: rawStreak.lastPlayedUTC,
+        }
+      : undefined;
   return {
     displayName: data?.displayName ?? null,
     email: data?.email ?? null,
@@ -79,6 +100,7 @@ function shapeProfile(data: DocumentData | undefined): CloudProfile {
         ? data.placementGamesPlayed
         : 0,
     createdAt: data?.createdAt ?? null,
+    streak,
   };
 }
 

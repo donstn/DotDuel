@@ -6,6 +6,7 @@ import { DIFFICULTY_LABELS, PLAYABLE_SHAPE_META, SHAPE_META } from '../types';
 import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
 import { AdBanner } from './AdBanner';
 import { FriendsButton } from './FriendsButton';
+import { TellAFriendButton } from './TellAFriendButton';
 
 interface Props {
   progress: Progress;
@@ -106,6 +107,11 @@ export function Menu({
                   onClick={onOpenFriends}
                 />
               )}
+              <TellAFriendButton
+                variant="invite"
+                myUid={user.uid}
+                className="menu-auth-btn"
+              />
               <button
                 type="button"
                 className="menu-auth-btn"
@@ -124,6 +130,11 @@ export function Menu({
             </button>
           )}
         </div>
+        {!user && (
+          <div className="menu-share-row">
+            <TellAFriendButton variant="share" className="menu-share-link" />
+          </div>
+        )}
         <div className="menu-section">
           <div className="menu-grid">
             <button className="menu-card" onClick={() => setMode('ai')}>

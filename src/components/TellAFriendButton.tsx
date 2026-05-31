@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { trackEvent } from '../firebase';
 
 const APP_URL = 'https://www.dotduel.com/';
 const SHARE_TITLE = 'DotDuel — fast 2-player dot strategy';
@@ -25,11 +26,13 @@ export function TellAFriendButton({ myUid }: Props) {
 
   const onShare = async () => {
     setFeedback(null);
+    trackEvent('tellafriend_clicked', { has_ref: myUid ? 'true' : 'false' });
 
     // 1. Native share sheet (mobile + some desktop browsers)
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url });
+        trackEvent('tellafriend_share_completed', { share_method: 'native' });
         return;
       } catch (e) {
         // AbortError on user cancel is expected; anything else falls through
@@ -42,7 +45,10 @@ export function TellAFriendButton({ myUid }: Props) {
     const mailto = `mailto:?subject=${encodeURIComponent(SHARE_TITLE)}&body=${encodeURIComponent(body)}`;
     try {
       const w = window.open(mailto, '_self');
-      if (w) return;
+      if (w) {
+        trackEvent('tellafriend_share_completed', { share_method: 'mailto' });
+        return;
+      }
     } catch {
       // ignore — popup blocked etc.
     }
@@ -50,6 +56,7 @@ export function TellAFriendButton({ myUid }: Props) {
     // 3. Copy-to-clipboard final fallback
     try {
       await navigator.clipboard.writeText(url);
+      trackEvent('tellafriend_share_completed', { share_method: 'clipboard' });
       setFeedback('Link copied — paste it anywhere');
       window.setTimeout(() => setFeedback(null), 2500);
     } catch {

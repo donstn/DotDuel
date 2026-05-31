@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { DIFFICULTY_LABELS } from '../types';
 import type { Difficulty, Player } from '../types';
 import {
@@ -63,6 +63,18 @@ export function SidePanel({
     .filter(Boolean)
     .join(' ');
 
+  const prevScoreRef = useRef(score);
+  const [scoreBump, setScoreBump] = useState(false);
+  useEffect(() => {
+    if (prevScoreRef.current === score) return;
+    const increased = score > prevScoreRef.current;
+    prevScoreRef.current = score;
+    if (!increased) return;
+    setScoreBump(true);
+    const t = window.setTimeout(() => setScoreBump(false), 400);
+    return () => window.clearTimeout(t);
+  }, [score]);
+
   return (
     <aside className={cls}>
       <div className="avatar-frame">
@@ -83,7 +95,7 @@ export function SidePanel({
       {(ratingSlot || rating) && (
         <div className="player-rating">{ratingSlot ?? rating}</div>
       )}
-      <div className="player-score">{score}</div>
+      <div className={`player-score${scoreBump ? ' score-bump' : ''}`}>{score}</div>
       {stats && <PointsTotals stats={stats} />}
       {thinking && <div className="thinking-dots" aria-label="Thinking">···</div>}
     </aside>

@@ -250,6 +250,22 @@ For exact change list, read `CHANGELOG.md` or `src/changelog.ts`. The latter is 
 
 ---
 
+## Active strategic plan — adoption + early-churners retention
+
+**Read before starting any user-facing work** on onboarding, retention, virality, or telemetry:
+`C:\Users\onemu\.claude\plans\ok-so-situation-is-eager-key.md`
+
+It contains the multi-phase plan agreed in the 2026-05-31 session covering:
+- Phase 0: telemetry (`trackEvent` at ~15 funnel breakpoints)
+- Phase 1: visible scoring + in-game contextual hints (the rules-skipping / first-line drop-off fix)
+- Phase 2: streak + daily puzzle + Tell-a-friend on menu (retention hooks)
+- Phase 3: after-game share-a-win + challenge-this-opponent CTA (post-game viral)
+- Phase 4 (deferred until Phase 0 data): SSR pre-render + browser push + strategy blog
+
+The 5-approach onboarding rescue plan is folded into Phase 1 (we picked Approach 2: in-game contextual hints). Approaches 1, 3, 4, 5 remain in the backlog inside the plan file.
+
+If the user asks "what's next" on adoption / retention / onboarding without specifying a phase, propose continuing the next unstarted phase in that file.
+
 ## Deferred — do not start without explicit ask
 
 ### Friend list / invites
@@ -281,6 +297,10 @@ Baseline (meta tags, OG, Twitter Card, VideoGame JSON-LD, robots.txt, sitemap.xm
 - `Schema.org AggregateRating` once reviews > 50.
 - Localized pages (`/es`, `/pt`) when non-English MAU justifies.
 - Lighthouse pass + code-split to drop initial bundle < 500 KB gzipped.
+
+### Sounds
+
+Need to create apropriate sunds based on the game. will have to think about this after the retention and gameplay is complete.
 
 ### Monetization (TBD)
 

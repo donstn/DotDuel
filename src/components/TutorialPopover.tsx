@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { trackEvent } from '../firebase';
 
 interface Props {
   onDismiss: () => void;
@@ -60,17 +61,45 @@ const STEPS: Step[] = [
 
 export function TutorialPopover({ onDismiss }: Props) {
   const [step, setStep] = useState(0);
+  const outcomeFiredRef = useRef(false);
+
+  useEffect(() => {
+    trackEvent('tutorial_step_viewed', { step_index: step + 1 });
+  }, [step]);
+
+  const fireOutcome = (result: 'completed' | 'skipped' | 'abandoned') => {
+    if (outcomeFiredRef.current) return;
+    outcomeFiredRef.current = true;
+    trackEvent('tutorial_outcome', { result, last_step_index: step + 1 });
+  };
+
+  useEffect(() => {
+    return () => {
+      // Unmount without an explicit completion path = abandoned (e.g. parent
+      // forced a screen change). Skip/complete handlers fire first and set
+      // outcomeFiredRef, so this only catches the leftover case.
+      fireOutcome('abandoned');
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onDismiss();
+      if (e.key === 'Escape') {
+        fireOutcome('skipped');
+        onDismiss();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onDismiss]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onDismiss, step]);
 
   const onBackdrop = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) onDismiss();
+    if (e.target === e.currentTarget) {
+      fireOutcome('skipped');
+      onDismiss();
+    }
   };
 
   const current = STEPS[step];
@@ -85,7 +114,14 @@ export function TutorialPopover({ onDismiss }: Props) {
       aria-label="DotDuel tutorial"
     >
       <div className="rules-card tutorial-card">
-        <button className="rules-close" onClick={onDismiss} aria-label="Skip tutorial">
+        <button
+          className="rules-close"
+          onClick={() => {
+            fireOutcome('skipped');
+            onDismiss();
+          }}
+          aria-label="Skip tutorial"
+        >
           ✕
         </button>
 
@@ -108,7 +144,13 @@ export function TutorialPopover({ onDismiss }: Props) {
         </div>
 
         <footer className="rules-footer-bar tutorial-footer">
-          <button className="link-btn" onClick={onDismiss}>
+          <button
+            className="link-btn"
+            onClick={() => {
+              fireOutcome('skipped');
+              onDismiss();
+            }}
+          >
             Skip
           </button>
           <div className="tutorial-footer-actions">
@@ -122,7 +164,14 @@ export function TutorialPopover({ onDismiss }: Props) {
             )}
             <button
               className="rules-got-it"
-              onClick={() => (isLast ? onDismiss() : setStep((s) => s + 1))}
+              onClick={() => {
+                if (isLast) {
+                  fireOutcome('completed');
+                  onDismiss();
+                } else {
+                  setStep((s) => s + 1);
+                }
+              }}
             >
               {isLast ? "Let's play" : 'Next'}
             </button>

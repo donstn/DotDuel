@@ -100,8 +100,17 @@ export function resetProgress(): Progress {
 }
 
 // ---------------- Settings (names, color swap, tutorial, counters) ----------------
+//
+// :v2 bump (Phase 1b, 2026-05-31): adds showClaimableLines + per-concept hint
+// flags + lastPlayedAt. Per the resolved Decision 1 in the strategy plan there
+// is NO migration code — existing v1 alpha testers re-default to v2 (lose
+// saved player name + tutorialSeen). Stats (v4) and progress (v3) live in
+// separate keys and are untouched.
 
-const SETTINGS_KEY = 'dotduel:settings:v1';
+const SETTINGS_KEY = 'dotduel:settings:v2';
+
+// Hints reset after this much inactivity so returning players see them again.
+const HINT_INACTIVITY_RESET_MS = 60 * 24 * 60 * 60 * 1000;
 
 export interface Settings {
   playerName: string;
@@ -110,7 +119,30 @@ export interface Settings {
   tutorialSeen: boolean;
   gamesPlayed: number;
   claimsMade: number;
+  showClaimableLines: boolean;
+  showClaimableLinesL4: boolean;
+  lastPlayedAt: number;
+  hintFirstScore: boolean;
+  hintOverlapMiss: boolean;
+  hintBiggestOnly: boolean;
+  hintPendingClaim: boolean;
+  hintNearEnd: boolean;
 }
+
+export type HintKey =
+  | 'hintFirstScore'
+  | 'hintOverlapMiss'
+  | 'hintBiggestOnly'
+  | 'hintPendingClaim'
+  | 'hintNearEnd';
+
+const HINT_KEYS: HintKey[] = [
+  'hintFirstScore',
+  'hintOverlapMiss',
+  'hintBiggestOnly',
+  'hintPendingClaim',
+  'hintNearEnd',
+];
 
 function defaultSettings(): Settings {
   return {
@@ -120,6 +152,14 @@ function defaultSettings(): Settings {
     tutorialSeen: false,
     gamesPlayed: 0,
     claimsMade: 0,
+    showClaimableLines: true,
+    showClaimableLinesL4: false,
+    lastPlayedAt: 0,
+    hintFirstScore: false,
+    hintOverlapMiss: false,
+    hintBiggestOnly: false,
+    hintPendingClaim: false,
+    hintNearEnd: false,
   };
 }
 
@@ -127,19 +167,18 @@ export function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) return defaultSettings();
-    const parsed = JSON.parse(raw) as Partial<Settings> & {
-      hotseatP1Name?: string;
-      hotseatP2Name?: string;
-    };
-    const migrated: Settings = { ...defaultSettings(), ...parsed };
-    // Migrate v1 legacy fields (hotseatP1Name / hotseatP2Name) into the unified fields.
-    if (!parsed.playerName && parsed.hotseatP1Name) {
-      migrated.playerName = parsed.hotseatP1Name;
+    const parsed = JSON.parse(raw) as Partial<Settings>;
+    const merged: Settings = { ...defaultSettings(), ...parsed };
+    // 60-day-inactivity reset: clear all hint-shown flags so returning
+    // players see the captions again (the cohort retention work is meant
+    // to recover them — punishing them with silent UX defeats the point).
+    if (
+      merged.lastPlayedAt > 0 &&
+      Date.now() - merged.lastPlayedAt > HINT_INACTIVITY_RESET_MS
+    ) {
+      for (const k of HINT_KEYS) merged[k] = false;
     }
-    if (!parsed.opponentName && parsed.hotseatP2Name) {
-      migrated.opponentName = parsed.hotseatP2Name;
-    }
-    return migrated;
+    return merged;
   } catch {
     return defaultSettings();
   }

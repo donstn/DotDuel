@@ -752,10 +752,13 @@ button {
   position: relative;
 }
 
-/* Slim top bar with back button + remaining points + pending */
+/* Slim top bar with back button + remaining points + pending.
+   Right column uses minmax(40px, auto) so the topbar-side-cluster (eye
+   toggle + ?) can grow past 40px when both icons are rendered, while
+   the single-button MP topbar still sits at the 40px floor. */
 .game-topbar {
   display: grid;
-  grid-template-columns: 40px 1fr 40px;
+  grid-template-columns: 40px 1fr minmax(40px, auto);
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
@@ -1005,6 +1008,252 @@ button {
   }
   50% {
     box-shadow: 0 0 10px 1px rgba(255, 214, 128, 0.35);
+  }
+}
+
+/* Phase 1a — pending-flash. One-shot bright flare when the pending pool
+   grows. Distinct from the infinite pendingPulse above so the two don't
+   stack. animation-name flip via .pending-flash class triggers the keyframe
+   exactly once per pending-count increase. */
+.pending-indicator.pending-flash {
+  animation: pendingPulse 1.8s ease-in-out infinite,
+             pendingFlash 600ms ease-out;
+}
+
+@keyframes pendingFlash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 214, 128, 0.9);
+    transform: scale(1);
+  }
+  35% {
+    box-shadow: 0 0 18px 4px rgba(255, 214, 128, 0.75);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 214, 128, 0);
+    transform: scale(1);
+  }
+}
+
+/* Phase 1a — floating +N popup on the dot that completes a line.
+   Rendered as SVG <text> inside Board.tsx so the viewBox auto-scaler
+   keeps it positioned across board resizes. var(--accent) for player-
+   agnostic CVD-safe legibility; dark outline via paint-order so it stays
+   readable on both light and dark dots. */
+.score-float {
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.85);
+  stroke-width: 0.11;
+  stroke-linejoin: round;
+  font-family: system-ui, -apple-system, sans-serif;
+  transform-box: fill-box;
+  transform-origin: center;
+  filter: drop-shadow(0 0 0.08px rgba(0, 0, 0, 0.9));
+}
+
+.score-float-above {
+  animation: scoreFloatUp 1050ms ease-out forwards;
+}
+
+.score-float-below {
+  animation: scoreFloatDown 1050ms ease-out forwards;
+}
+
+/* Player-coloured score popups. P1 = bright dark-green, P2 = cream-white
+   (matches the SidePanel score text tokens). The thick dark outline keeps
+   either readable on any board background, including P2's near-white
+   dots. */
+.score-float-p1 {
+  fill: var(--p1-bright);
+}
+
+.score-float-p2 {
+  fill: var(--p2-glow);
+}
+
+@keyframes scoreFloatUp {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.7);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-0.15px) scale(1.08);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-0.45px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-0.7px) scale(1);
+  }
+}
+
+@keyframes scoreFloatDown {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.7);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0.15px) scale(1.08);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(0.45px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0.7px) scale(1);
+  }
+}
+
+/* Phase 1a — score-row pulse. Brief scale + shadow swell when the score
+   value changes. One-shot via class toggle in SidePanel; auto-clears
+   after 400ms. */
+.player-score.score-bump {
+  animation: scoreBump 400ms ease-out;
+}
+
+@keyframes scoreBump {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  40% {
+    transform: scale(1.18);
+    filter: brightness(1.4) drop-shadow(0 0 10px rgba(123, 219, 149, 0.6));
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+/* Phase 1b — in-board speech-bubble hint.
+   Rendered as SVG inside Board.tsx so it scales with the board's
+   viewBox auto-scaler and points at the dot that triggered the hint.
+   Auto-dismisses on next human move; tap-anywhere also dismisses. */
+.hint-bubble {
+  animation: hintBubbleFadeIn 220ms ease-out;
+  transform-origin: center;
+}
+
+.hint-bubble-bg {
+  fill: rgba(10, 22, 16, 0.94);
+  stroke: rgba(123, 219, 149, 0.55);
+  stroke-width: 0.03;
+  filter: drop-shadow(0 0.08px 0.16px rgba(0, 0, 0, 0.45));
+}
+
+.hint-bubble-tail {
+  fill: rgba(10, 22, 16, 0.94);
+  stroke: rgba(123, 219, 149, 0.55);
+  stroke-width: 0.03;
+  stroke-linejoin: round;
+}
+
+.hint-bubble-text {
+  fill: var(--text);
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.6);
+  stroke-width: 0.04;
+  stroke-linejoin: round;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  user-select: none;
+}
+
+@keyframes hintBubbleFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Phase 1b — "See unclaimed lines" labeled toggle pill.
+   Lives inside .topbar-center, below the pending indicator, only when
+   vs-AI L1-L4 (gated by showRingsToggle). iOS-style switch on the right;
+   tap anywhere on the pill toggles state. Discoverable + explicit
+   compared to the original 18px eye icon. */
+.btn-claim-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px 3px 10px;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.btn-claim-toggle:hover {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border-strong);
+}
+
+.btn-claim-toggle.off {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.claim-toggle-switch {
+  display: inline-block;
+  position: relative;
+  width: 26px;
+  height: 14px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.18);
+  transition: background 160ms ease;
+  flex: 0 0 auto;
+}
+
+.btn-claim-toggle.on .claim-toggle-switch {
+  background: var(--accent);
+}
+
+.claim-toggle-knob {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  transition: transform 160ms ease;
+}
+
+.btn-claim-toggle.on .claim-toggle-knob {
+  transform: translateX(12px);
+}
+
+@media (max-width: 720px) {
+  .btn-claim-toggle {
+    font-size: 0.68rem;
+    padding: 2px 6px 2px 9px;
+    gap: 6px;
+  }
+  .claim-toggle-switch {
+    width: 22px;
+    height: 12px;
+  }
+  .claim-toggle-knob {
+    width: 10px;
+    height: 10px;
+  }
+  .btn-claim-toggle.on .claim-toggle-knob {
+    transform: translateX(10px);
   }
 }
 
@@ -2394,7 +2643,7 @@ body:has(.consent-banner) .game-screen {
 @media (orientation: landscape) and (max-height: 500px) {
   .game-topbar {
     padding: 5px 10px;
-    grid-template-columns: 34px 1fr 34px;
+    grid-template-columns: 34px 1fr minmax(34px, auto);
   }
   .btn-back,
   .btn-rules {

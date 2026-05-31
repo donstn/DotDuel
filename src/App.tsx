@@ -91,7 +91,7 @@ import {
   type Consent,
 } from './consent';
 import { pickAIAction } from './ai';
-import { applyAction, applyClaim, applyMove, createGame } from './game';
+import { applyClaim, applyMove, createGame, pointsIfPlayed } from './game';
 import { getBoard } from './geometry';
 import {
   aiOpponentKey,
@@ -105,12 +105,13 @@ import {
   resetProgress,
   saveProgress,
   saveSettings,
+  type HintKey,
   type Settings,
 } from './storage';
 import { DIFFICULTY_LABELS } from './types';
 import type { Difficulty, GameMode, GameState, Progress, ShapeId } from './types';
 import { APP_VERSION } from './version';
-import { app, IS_STAGING } from './firebase';
+import { app, bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './firebase';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound' | 'mpgame';
@@ -122,8 +123,32 @@ interface SessionConfig {
 }
 
 const AI_DELAY_MS = 450;
-const HINT_GAME_LIMIT = 10;
-const HINT_CLAIM_LIMIT = 3;
+
+// Effective "show pending-claim rings" rule (Phase 1b — replaces the old
+// universal gamesPlayed/claimsMade learning window). Tiered by mode:
+//   vs AI L1/L2/L3 — respects settings.showClaimableLines (default ON)
+//   vs AI L4       — respects settings.showClaimableLinesL4 (default OFF)
+//   vs AI L5       — never
+//   hot-seat / MP  — never (perception is part of the game at these tiers)
+function effectiveShowRings(
+  settings: Settings,
+  mode: GameMode | undefined,
+  difficulty: Difficulty | undefined,
+): boolean {
+  if (mode !== 'ai') return false;
+  if (!difficulty) return false;
+  if (difficulty === 5) return false;
+  if (difficulty === 4) return settings.showClaimableLinesL4;
+  return settings.showClaimableLines;
+}
+
+// Whether the eye-toggle button should be rendered for the current mode.
+function ringToggleAvailable(
+  mode: GameMode | undefined,
+  difficulty: Difficulty | undefined,
+): boolean {
+  return mode === 'ai' && difficulty !== undefined && difficulty <= 4;
+}
 
 // Shown on any mp-flow screen when Firebase RTDB has been unreachable for
 // >15s — typically a DNS-level ad/tracker blocker (Whalebone, AdGuard,
@@ -215,10 +240,39 @@ export default function App() {
   const winRecorded = useRef(false);
   const gameEndCounted = useRef(false);
   const claimsInGame = useRef(0);
+  const gameStartedAtRef = useRef<number>(0);
+  const gameStartedFiredRef = useRef(false);
+  const firstScoreFiredRef = useRef(false);
+  const gameFinishedFiredRef = useRef(false);
+  const gameIndexRef = useRef<number>(0);
+  const [scoreEvent, setScoreEvent] = useState<{
+    dotId: number;
+    points: number;
+    player: 1 | 2;
+    seq: number;
+  } | null>(null);
+  const [pendingFlash, setPendingFlash] = useState(false);
+  const prevPendingLenRef = useRef<number>(0);
+  const [activeHint, setActiveHint] = useState<{ text: string; anchorDotId: number } | null>(null);
 
   const updateSettings = (next: Settings) => {
     setSettings(next);
     saveSettings(next);
+  };
+
+  // Phase 1b helper: fires a contextual hint if its per-concept "shown"
+  // flag is unset. Marks the flag immediately so reloads / re-triggers in
+  // the same game don't re-show. trackEvent fires for funnel analysis.
+  // anchorDotId is the dot the speech bubble will point at — the
+  // pedagogical referent (the just-scored dot, the missed empty, the
+  // claimable line's midpoint, etc.).
+  const tryFireHint = (key: HintKey, text: string, anchorDotId: number) => {
+    if (settings[key]) return;
+    const next: Settings = { ...settings, [key]: true };
+    setSettings(next);
+    saveSettings(next);
+    setActiveHint({ text, anchorDotId });
+    trackEvent('hint_shown', { hint_id: key }, 'low');
   };
 
   const dismissTutorial = () => {
@@ -236,6 +290,23 @@ export default function App() {
     winRecorded.current = false;
     gameEndCounted.current = false;
     claimsInGame.current = 0;
+    gameStartedAtRef.current = Date.now();
+    gameStartedFiredRef.current = true;
+    firstScoreFiredRef.current = false;
+    gameFinishedFiredRef.current = false;
+    gameIndexRef.current = bumpAndGetGameIndex();
+    trackEvent('game_started', {
+      mode,
+      shape,
+      difficulty: difficulty ?? 0,
+      game_index: gameIndexRef.current,
+      auth_state: user ? 'signed_in' : 'anon',
+    });
+    if (Date.now() - settings.lastPlayedAt > 60 * 60 * 1000) {
+      const nextSettings: Settings = { ...settings, lastPlayedAt: Date.now() };
+      setSettings(nextSettings);
+      saveSettings(nextSettings);
+    }
     setConfig({ mode, shape, difficulty });
     setState(createGame(shape, mode, difficulty));
     setLastDot(null);
@@ -270,6 +341,7 @@ export default function App() {
     setThinking(true);
     const diff = config.difficulty;
     const snapshot = state;
+    const shape = config.shape;
     aiTimer.current = window.setTimeout(() => {
       aiTimer.current = null;
       if (snapshot.finished || snapshot.current !== 2) {
@@ -281,9 +353,32 @@ export default function App() {
         setThinking(false);
         return;
       }
-      const next = applyAction(snapshot, action);
-      if (action.kind === 'dot') setLastDot(action.dotId);
-      setState(next);
+      if (action.kind === 'dot') {
+        const result = applyMove(snapshot, action.dotId);
+        if (result.pointsGained > 0 || result.newlyPending.length > 0) {
+          setScoreEvent({
+            dotId: action.dotId,
+            points: result.pointsGained,
+            player: 2,
+            seq: Date.now(),
+          });
+        }
+        setLastDot(action.dotId);
+        setState(result.state);
+      } else {
+        const result = applyClaim(snapshot, action.lineId);
+        const line = getBoard(shape).lines.find((l) => l.id === action.lineId);
+        if (line && result.pointsGained > 0) {
+          const midDot = line.dotIds[Math.floor(line.dotIds.length / 2)];
+          setScoreEvent({
+            dotId: midDot,
+            points: result.pointsGained,
+            player: 2,
+            seq: Date.now(),
+          });
+        }
+        setState(result.state);
+      }
       setThinking(false);
     }, AI_DELAY_MS);
 
@@ -294,6 +389,90 @@ export default function App() {
       }
     };
   }, [state, config]);
+
+  // game_first_score telemetry. Fires the first time either player's score
+  // moves above 0 in the local (AI/hotseat) game. Captures time-to-first-
+  // score so we can see how fast the moment-of-truth arrives.
+  useEffect(() => {
+    if (!state || !config) return;
+    if (firstScoreFiredRef.current) return;
+    if (state.scores[1] === 0 && state.scores[2] === 0) return;
+    firstScoreFiredRef.current = true;
+    trackEvent('game_first_score', {
+      mode: config.mode,
+      shape: config.shape,
+      difficulty: config.difficulty ?? 0,
+      game_index: gameIndexRef.current,
+      auth_state: user ? 'signed_in' : 'anon',
+      time_to_first_score_ms: Date.now() - gameStartedAtRef.current,
+      scoring_player: state.scores[1] > 0 ? 1 : 2,
+    });
+  }, [state, config, user]);
+
+  // Phase 1b hint: "first pending-claim opportunity at start of turn".
+  // Anchors the speech bubble to the midpoint dot of the first pending
+  // line — the bubble visually points AT a claimable dot.
+  useEffect(() => {
+    if (!state || !config || state.finished) return;
+    if (config.mode !== 'ai' && config.mode !== 'hotseat') return;
+    if (config.mode === 'ai' && state.current !== 1) return;
+    if (state.pending.length === 0) return;
+    const firstPendingId = state.pending[0];
+    const line = getBoard(config.shape).lines.find((l) => l.id === firstPendingId);
+    if (!line) return;
+    const anchor = line.dotIds[Math.floor(line.dotIds.length / 2)];
+    tryFireHint(
+      'hintPendingClaim',
+      "It's your turn — there's a free line waiting. Tap any of its coloured dots to claim it instead of placing.",
+      anchor,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.current, state?.pending.length, state?.finished, config?.mode]);
+
+  // Phase 1b hint: "near-end" — fires once when ≥90% of dots are coloured
+  // and the game isn't over yet. Anchor: midpoint of first remaining
+  // pending line if any, else any empty dot, else first colored dot.
+  useEffect(() => {
+    if (!state || !config || state.finished) return;
+    if (config.mode !== 'ai' && config.mode !== 'hotseat') return;
+    const board = getBoard(config.shape);
+    const totalDots = board.dots.length;
+    const filled = Object.keys(state.colored).length;
+    if (totalDots === 0) return;
+    if (filled / totalDots < 0.9) return;
+    let anchor = 0;
+    if (state.pending.length > 0) {
+      const line = board.lines.find((l) => l.id === state.pending[0]);
+      if (line) anchor = line.dotIds[Math.floor(line.dotIds.length / 2)];
+    } else {
+      const empty = board.dots.find((d) => !state.colored[d.id]);
+      anchor = empty ? empty.id : 0;
+    }
+    tryFireHint(
+      'hintNearEnd',
+      'Game ends when every line is claimed. Keep claiming.',
+      anchor,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.colored, state?.finished, config?.mode, config?.shape]);
+
+  // pending-flash: one-shot ~600ms class toggle whenever the pending pool
+  // grows. Sources: biggest-only triggers from my move (scoreEvent path),
+  // AI/hotseat opponent moves (also via scoreEvent), and MP opponent moves
+  // (via watchGame state replacement — diff-based detection covers it).
+  const effectivePendingLen =
+    screen === 'mpgame'
+      ? (optimisticMpState?.state.pending.length ?? onlineGame?.state.pending.length ?? 0)
+      : (state?.pending.length ?? 0);
+  useEffect(() => {
+    if (effectivePendingLen > prevPendingLenRef.current) {
+      prevPendingLenRef.current = effectivePendingLen;
+      setPendingFlash(true);
+      const t = window.setTimeout(() => setPendingFlash(false), 600);
+      return () => window.clearTimeout(t);
+    }
+    prevPendingLenRef.current = effectivePendingLen;
+  }, [effectivePendingLen]);
 
   // Increment gamesPlayed exactly once per finished game (any mode, any winner).
   // Also record per-name win/draw/loss stats for active human players.
@@ -332,6 +511,22 @@ export default function App() {
       if (k1 !== k2) {
         recordGameResult(p2, 'hotseat', outcomeFor(2), config.shape, s2, s1, undefined, k1);
       }
+    }
+    if (!gameFinishedFiredRef.current) {
+      gameFinishedFiredRef.current = true;
+      const winnerLabel =
+        winnerSide === 'draw' ? 'draw' : winnerSide === null ? 'none' : `p${winnerSide}`;
+      trackEvent('game_finished', {
+        mode: config.mode,
+        shape: config.shape,
+        difficulty: config.difficulty ?? 0,
+        game_index: gameIndexRef.current,
+        auth_state: user ? 'signed_in' : 'anon',
+        winner: winnerLabel,
+        score_self: s1,
+        score_opp: s2,
+        duration_ms: gameStartedAtRef.current > 0 ? Date.now() - gameStartedAtRef.current : 0,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.finished]);
@@ -556,6 +751,8 @@ export default function App() {
   // consume it once the user has signed up + claimed a username (post-signup
   // auto-friend-request). The pickup runs unconditionally; the consume waits
   // for cloudProfile.displayName to be present so it fires after username claim.
+  // Also mirrors to localStorage with 30-day TTL purely for telemetry
+  // attribution of ref_friend_request_sent — does NOT gate the auto-add.
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -563,6 +760,13 @@ export default function App() {
       if (ref && /^[a-zA-Z0-9_-]{1,128}$/.test(ref)) {
         if (!sessionStorage.getItem('dotduel:pendingFriendRef')) {
           sessionStorage.setItem('dotduel:pendingFriendRef', ref);
+          localStorage.setItem(
+            'dotduel:referrer:v1',
+            JSON.stringify({ uid: ref, landedAt: Date.now() }),
+          );
+          void sha256First8(ref).then((hash) => {
+            trackEvent('ref_param_landed', { referrer_uid_hash: hash });
+          });
         }
       }
     } catch {
@@ -580,9 +784,29 @@ export default function App() {
     }
     if (!ref || ref === user.uid) return;
     sessionStorage.removeItem('dotduel:pendingFriendRef');
-    sendFriendRequestByUid(ref).catch((e) =>
-      console.warn('referral friend-request failed:', e),
-    );
+    const refUid = ref;
+    sendFriendRequestByUid(refUid)
+      .then(() => {
+        let daysSinceLanding = 0;
+        try {
+          const raw = localStorage.getItem('dotduel:referrer:v1');
+          if (raw) {
+            const parsed = JSON.parse(raw) as { uid?: string; landedAt?: number };
+            if (typeof parsed.landedAt === 'number' && parsed.landedAt > 0) {
+              daysSinceLanding = Math.floor((Date.now() - parsed.landedAt) / (24 * 60 * 60 * 1000));
+            }
+          }
+        } catch {
+          // ignore
+        }
+        void sha256First8(refUid).then((hash) => {
+          trackEvent('ref_friend_request_sent', {
+            referrer_uid_hash: hash,
+            days_since_landing: daysSinceLanding,
+          });
+        });
+      })
+      .catch((e) => console.warn('referral friend-request failed:', e));
   }, [user?.uid, cloudProfile?.displayName]);
 
   // When a pairing arrives while waiting (or even while on the menu — handles
@@ -652,6 +876,10 @@ export default function App() {
   }, [mpLockedByOther, screen]);
 
   const openMultiplayer = () => {
+    trackEvent('multiplayer_button_clicked', {
+      auth_state: user ? 'signed_in' : 'anon',
+      session_locked: mpLockedByOther ? 'true' : 'false',
+    });
     if (!user) return;
     // claimSession is setDoc-with-merge-overwrite semantics: if another
     // device holds the lock, tapping Multiplayer here intentionally takes
@@ -1027,7 +1255,70 @@ export default function App() {
     if (boardLoadedMarkedRef.current === onlineGameId) return;
     boardLoadedMarkedRef.current = onlineGameId;
     void markBoardLoaded(onlineGameId, pairing.player);
+    gameStartedAtRef.current = Date.now();
+    firstScoreFiredRef.current = false;
+    gameFinishedFiredRef.current = false;
+    gameIndexRef.current = bumpAndGetGameIndex();
+    trackEvent('game_started', {
+      mode: 'multiplayer',
+      shape: onlineGame.shape,
+      time_control: onlineGame.timeControl,
+      game_index: gameIndexRef.current,
+      auth_state: 'signed_in',
+    });
   }, [screen, onlineGameId, onlineGame, pairing, user]);
+
+  // game_first_score for multiplayer: watch onlineGame.state.scores
+  // transition from 0/0 to >0.
+  useEffect(() => {
+    if (screen !== 'mpgame' || !onlineGame || !user) return;
+    if (firstScoreFiredRef.current) return;
+    const s = onlineGame.state.scores;
+    if (s[1] === 0 && s[2] === 0) return;
+    firstScoreFiredRef.current = true;
+    trackEvent('game_first_score', {
+      mode: 'multiplayer',
+      shape: onlineGame.shape,
+      time_control: onlineGame.timeControl,
+      game_index: gameIndexRef.current,
+      auth_state: 'signed_in',
+      time_to_first_score_ms: Date.now() - gameStartedAtRef.current,
+      scoring_player: s[1] > 0 ? 1 : 2,
+    });
+  }, [screen, onlineGame, user]);
+
+  // game_finished for multiplayer: fire when onlineGame.state.finished
+  // flips true. Includes the server-reported finishedReason for slicing.
+  useEffect(() => {
+    if (screen !== 'mpgame' || !onlineGame || !user) return;
+    if (!onlineGame.state.finished) return;
+    if (gameFinishedFiredRef.current) return;
+    gameFinishedFiredRef.current = true;
+    const myNum = playerNumFor(onlineGame, user.uid);
+    const winnerSide = onlineGame.state.winner;
+    const winnerLabel =
+      winnerSide === 'draw'
+        ? 'draw'
+        : winnerSide == null
+          ? 'none'
+          : winnerSide === myNum
+            ? 'self'
+            : 'opp';
+    const myScore = myNum ? onlineGame.state.scores[myNum] : 0;
+    const oppScore = myNum ? onlineGame.state.scores[myNum === 1 ? 2 : 1] : 0;
+    trackEvent('game_finished', {
+      mode: 'multiplayer',
+      shape: onlineGame.shape,
+      time_control: onlineGame.timeControl,
+      game_index: gameIndexRef.current,
+      auth_state: 'signed_in',
+      winner: winnerLabel,
+      score_self: myScore,
+      score_opp: oppScore,
+      finished_reason: onlineGame.finishedReason ?? 'normal',
+      duration_ms: gameStartedAtRef.current > 0 ? Date.now() - gameStartedAtRef.current : 0,
+    });
+  }, [screen, onlineGame, user]);
 
   const handleMpDotClick = async (dotId: number) => {
     if (!user || !onlineGameId || !onlineGame) return;
@@ -1037,13 +1328,22 @@ export default function App() {
     if (baseState.current !== myNum) return;
     if (moveInFlight) return;
     if (baseState.colored[dotId]) return;
+    setActiveHint(null);
     setMoveInFlight(true);
     // Note: we do NOT setLastDot here. The "last move" highlight is
     // reserved for the OPPONENT's most recent placement, picked up by
     // the state-diff effect below.
     try {
-      const next = applyAction(baseState, { kind: 'dot', dotId });
-      setOptimisticMpState({ baseTurn: baseState.turn, state: next });
+      const result = applyMove(baseState, dotId);
+      setOptimisticMpState({ baseTurn: baseState.turn, state: result.state });
+      if (result.pointsGained > 0 || result.newlyPending.length > 0) {
+        setScoreEvent({
+          dotId,
+          points: result.pointsGained,
+          player: myNum,
+          seq: Date.now(),
+        });
+      }
     } catch (e) {
       console.warn('local applyAction failed:', e);
       setMoveInFlight(false);
@@ -1066,10 +1366,21 @@ export default function App() {
     if (baseState.current !== myNum) return;
     if (moveInFlight) return;
     if (!baseState.pending.includes(lineId)) return;
+    setActiveHint(null);
     setMoveInFlight(true);
     try {
-      const next = applyAction(baseState, { kind: 'claim', lineId });
-      setOptimisticMpState({ baseTurn: baseState.turn, state: next });
+      const result = applyClaim(baseState, lineId);
+      setOptimisticMpState({ baseTurn: baseState.turn, state: result.state });
+      const line = getBoard(onlineGame.shape).lines.find((l) => l.id === lineId);
+      if (line && result.pointsGained > 0) {
+        const midDot = line.dotIds[Math.floor(line.dotIds.length / 2)];
+        setScoreEvent({
+          dotId: midDot,
+          points: result.pointsGained,
+          player: myNum,
+          seq: Date.now(),
+        });
+      }
     } catch (e) {
       console.warn('local applyAction failed:', e);
       setMoveInFlight(false);
@@ -1089,7 +1400,46 @@ export default function App() {
     if (thinking) return;
     if (config.mode === 'ai' && state.current === 2) return;
     if (state.colored[dotId]) return;
+    setActiveHint(null);
+    const movingPlayer = state.current;
     const result = applyMove(state, dotId);
+    if (result.pointsGained > 0 || result.newlyPending.length > 0) {
+      setScoreEvent({
+        dotId,
+        points: result.pointsGained,
+        player: movingPlayer,
+        seq: Date.now(),
+      });
+    }
+    // Phase 1b hint triggers from a human dot placement.
+    if (result.pointsGained > 0 && result.newlyPending.length === 0) {
+      tryFireHint(
+        'hintFirstScore',
+        `+${result.pointsGained} — you completed a line.`,
+        dotId,
+      );
+    } else if (result.pointsGained > 0 && result.newlyPending.length > 0) {
+      tryFireHint(
+        'hintBiggestOnly',
+        `Two lines closed — only the longest (+${result.pointsGained}) scored. The other becomes pending: anyone can claim it on their turn for free points. Wait too long and your opponent will.`,
+        dotId,
+      );
+    } else if (result.pointsGained === 0 && !settings.hintOverlapMiss) {
+      // Overlap-miss detection: any other empty dot that WOULD have scored?
+      const board = getBoard(config.shape);
+      for (const d of board.dots) {
+        if (d.id === dotId) continue;
+        if (state.colored[d.id]) continue;
+        if (pointsIfPlayed(state, board, d.id).gained > 0) {
+          tryFireHint(
+            'hintOverlapMiss',
+            'That empty dot would have scored — scan for almost-full lines before placing.',
+            d.id,
+          );
+          break;
+        }
+      }
+    }
     // Hot-seat both players share the screen, so still flag the last
     // dot. In vs-AI we ONLY highlight the AI's moves (set by the AI
     // scheduler effect), not the user's — opponent-last-move UX.
@@ -1104,8 +1454,20 @@ export default function App() {
     if (thinking) return;
     if (config.mode === 'ai' && state.current === 2) return;
     if (!state.pending.includes(lineId)) return;
+    setActiveHint(null);
+    const movingPlayer = state.current;
     const result = applyClaim(state, lineId);
     claimsInGame.current += 1;
+    const line = getBoard(config.shape).lines.find((l) => l.id === lineId);
+    if (line && result.pointsGained > 0) {
+      const midDot = line.dotIds[Math.floor(line.dotIds.length / 2)];
+      setScoreEvent({
+        dotId: midDot,
+        points: result.pointsGained,
+        player: movingPlayer,
+        seq: Date.now(),
+      });
+    }
     setState(result.state);
   };
 
@@ -1114,8 +1476,17 @@ export default function App() {
     return getBoard(config.shape).lines.reduce((sum, l) => sum + l.length, 0);
   }, [config]);
 
-  const showLearningHints =
-    settings.gamesPlayed < HINT_GAME_LIMIT || settings.claimsMade < HINT_CLAIM_LIMIT;
+  const ringsVisible = effectiveShowRings(settings, config?.mode, config?.difficulty);
+  const showRingsToggle = ringToggleAvailable(config?.mode, config?.difficulty);
+
+  const onToggleRings = () => {
+    const next: Settings =
+      config?.difficulty === 4
+        ? { ...settings, showClaimableLinesL4: !settings.showClaimableLinesL4 }
+        : { ...settings, showClaimableLines: !settings.showClaimableLines };
+    setSettings(next);
+    saveSettings(next);
+  };
 
   const onProgressResetWiped = () => {
     setProgress(resetProgress());
@@ -1218,7 +1589,7 @@ export default function App() {
               <span className="remaining-label">pts left</span>
             </div>
             <div
-              className={`pending-indicator${mpState.pending.length === 0 ? ' pending-indicator-hidden' : ''}`}
+              className={`pending-indicator${mpState.pending.length === 0 ? ' pending-indicator-hidden' : ''}${pendingFlash ? ' pending-flash' : ''}`}
               aria-hidden={mpState.pending.length === 0}
             >
               <span className="pending-icon" aria-hidden="true">◌</span>
@@ -1274,6 +1645,9 @@ export default function App() {
             disabled={mpDisabled}
             lastDot={lastDot}
             showHints={false}
+            scoreEvent={scoreEvent}
+            hint={activeHint}
+            onDismissHint={() => setActiveHint(null)}
           />
           <SidePanel
             side="right"
@@ -1734,7 +2108,7 @@ export default function App() {
             <span className="remaining-label">pts left</span>
           </div>
           <div
-            className={`pending-indicator${state.pending.length === 0 ? ' pending-indicator-hidden' : ''}`}
+            className={`pending-indicator${state.pending.length === 0 ? ' pending-indicator-hidden' : ''}${pendingFlash ? ' pending-flash' : ''}`}
             title={state.pending.length > 0 ? 'Lines waiting to be claimed — tap a coloured dot on one to claim it.' : undefined}
             aria-hidden={state.pending.length === 0}
           >
@@ -1744,6 +2118,20 @@ export default function App() {
               {state.pending.length === 1 ? 'line to claim' : 'lines to claim'}
             </span>
           </div>
+          {showRingsToggle && (
+            <button
+              type="button"
+              className={`btn-claim-toggle${ringsVisible ? ' on' : ' off'}`}
+              onClick={onToggleRings}
+              aria-pressed={ringsVisible}
+              title={`See unclaimed lines: ${ringsVisible ? 'on' : 'off'}`}
+            >
+              <span className="claim-toggle-label">See unclaimed lines</span>
+              <span className="claim-toggle-switch" aria-hidden="true">
+                <span className="claim-toggle-knob" />
+              </span>
+            </button>
+          )}
         </div>
         <button
           className="btn-rules"
@@ -1783,7 +2171,10 @@ export default function App() {
           disabled={disabled}
           lastDot={lastDot}
           colorSwap={colorSwap}
-          showHints={showLearningHints && !disabled}
+          showHints={ringsVisible && !disabled}
+          scoreEvent={scoreEvent}
+          hint={activeHint}
+          onDismissHint={() => setActiveHint(null)}
         />
         <SidePanel
           side="right"

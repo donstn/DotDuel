@@ -6,7 +6,7 @@ import {
   type Timestamp,
 } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { app, db } from '../firebase';
+import { app, db, trackEvent } from '../firebase';
 import type { ShapeId } from '../types';
 import type { TimeControl } from './matchmaking';
 
@@ -159,6 +159,12 @@ export async function sendInvite(args: {
   fromRanked: boolean;
 }): Promise<{ groupId: string; sent: number }> {
   const res = await callSendInvite(args);
+  trackEvent('friend_invite_sent', {
+    shape: args.shape,
+    time_control: args.timeControl,
+    ranked: args.fromRanked ? 'true' : 'false',
+    recipient_count: res.data.sent,
+  });
   return { groupId: res.data.groupId, sent: res.data.sent };
 }
 
@@ -167,6 +173,7 @@ export async function acceptInvite(
   ranked: boolean,
 ): Promise<string> {
   const res = await callAcceptInvite({ inviteId, ranked });
+  trackEvent('friend_invite_accepted', { ranked: ranked ? 'true' : 'false' });
   return res.data.matchId;
 }
 

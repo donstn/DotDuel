@@ -30,6 +30,47 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.2.3.0',
+    date: '2026-05-31',
+    highlight: 'Learning hints + claimable-lines toggle',
+    changes: [
+      {
+        kind: 'added',
+        text: "Contextual hints that appear once as you learn: first time you score, first time a single move closes two lines (biggest-only rule), first time a line is waiting to be claimed at the start of your turn, and near the end of the game.",
+      },
+      {
+        kind: 'added',
+        text: "New \"Show claimable lines\" eye-icon toggle next to the rules button in vs-AI Beginner/Easy/Medium/Hard. Defaults on for Beginner-Medium, off for Hard. Hidden in Impossible, hot-seat, and multiplayer — reading the board is part of the challenge.",
+      },
+      {
+        kind: 'changed',
+        text: "Internal settings storage was upgraded; you'll be asked to re-enter your name and will see the tutorial popover again on first load. Stats, unlocks, and account data are unaffected.",
+      },
+    ],
+  },
+  {
+    version: 'Alpha 0.2.2.0',
+    date: '2026-05-31',
+    highlight: 'Visible scoring',
+    changes: [
+      {
+        kind: 'added',
+        text: "Scoring is now visible: a floating +N pops from the dot that completes the line in your colour, your score badge pulses when it changes, and the \"lines to claim\" badge flashes when a new line goes pending.",
+      },
+    ],
+  },
+  {
+    version: 'Alpha 0.2.1.0',
+    date: '2026-05-31',
+    highlight: 'Behind-the-scenes telemetry',
+    changes: [
+      {
+        kind: 'changed',
+        text: "Internal: added anonymous funnel analytics for players who accepted the cookie banner — helps us see where the game frustrates new players so we can smooth them out. No personal data leaves the device.",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.2.0.0',
     date: '2026-05-29',
     highlight: 'Friends & invites',

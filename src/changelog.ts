@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.2.7.2',
+    date: '2026-05-31',
+    highlight: 'Fix: endgame flicker / black screen',
+    changes: [
+      {
+        kind: 'fixed',
+        text: "The mid-to-late game flicker (and occasional black screen) on busier boards is gone. Each completed line used to render with an additive blend effect for a brighter highlight; on Square and Rectangle this stacked dozens of GPU compositor layers, eventually overflowing mobile graphics memory. Lines now render with simple high-contrast colours instead — the bright \"ribbon\" look is preserved, the crash is not.",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.2.7.1',
     date: '2026-05-31',
     highlight: 'Fix: no more flicker on Square/Rectangle',

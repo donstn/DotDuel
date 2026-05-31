@@ -1724,10 +1724,16 @@ button {
   opacity: 0.96;
 }
 
+/* Inner-stroke highlight on top of the outer base stroke.
+   Previously used mix-blend-mode: screen for an additive "ribbon lift",
+   but at endgame (20-40+ completed lines on the board) each blended
+   element forced its own compositor layer — overflowing mobile GPU
+   memory and triggering flicker / black-screen crashes. The
+   strike-inner CSS variables are already bright enough (#b8f5d3 P1,
+   #ffffff P2) to read as a clear highlight via plain compositing. */
 .crossline-inner {
   stroke-linecap: round;
-  opacity: 0.92;
-  mix-blend-mode: screen;
+  opacity: 1;
 }
 
 /* Player 1 — outer base + inner highlight = 3D cylinder feel. Themed. */

@@ -98,6 +98,34 @@ Entries are dated and grouped by symptom domain. Most recent first within each s
 
 ## 🧠 UX timing
 
+### Ghost +N popup on fresh game after a finished one (2026-06-01)
+
+**Symptom**
+- Finish a game → start a new one (Play again or Menu → new mode) → the previous game's final `+N` scoring popup briefly drifts up over the empty board. Scores in the SidePanel are correctly 0; only the floating popup is stale.
+
+**Root cause**
+- The Board component renders floating `+N` popups in a `useEffect([scoreEvent])` that mounts a float to local state when `scoreEvent` changes. `scoreEvent` is App-level React state.
+- `startGame` (and `backToMenu`) only reset `state`, `config`, and a handful of refs — they did **not** clear `scoreEvent`, `activeHint`, `pendingFlash`, or `prevPendingLenRef`.
+- React unmounts the old Board and mounts a new one when the screen state changes. The new Board's `useEffect` runs with the still-set `scoreEvent`, sees it as a "new" event from its perspective, and re-creates the float.
+- The score number in the SidePanel was unaffected because it reads `state.scores[player]` directly (and `state` IS reset on new-game).
+
+**Fix**
+- In `startGame` and `backToMenu` (`src/App.tsx`), clear all transient visual state explicitly:
+  ```ts
+  setScoreEvent(null);
+  setActiveHint(null);
+  setPendingFlash(false);
+  prevPendingLenRef.current = 0;
+  ```
+- Added an explanatory comment in `startGame` so the cleanup block doesn't get pruned later.
+
+**Forward-looking notes**
+- **General pattern to watch:** any App-level state that drives a `useEffect` inside a child component is at risk of "stale event on next mount". If you add a new transient prop to Board (or any child that mounts/unmounts on screen transitions), reset it in `startGame` AND `backToMenu`.
+- **Affected transient state to track on future cleanup audits:** `scoreEvent`, `activeHint`, `pendingFlash`, `dailyPuzzleResult`, plus the `prevPendingLenRef` diff baseline.
+- **If a similar ghost UI ever appears:** grep for `useEffect(() => { ... }, [propName])` in the relevant child component and check whether `propName` survives screen transitions in the parent.
+
+---
+
 ### Hint stomping during AI turns (KNOWN, not fixed — diagnosed 2026-05-31)
 
 **Status:** **accepted-known**. Diagnosis done; user opted to defer the fix.

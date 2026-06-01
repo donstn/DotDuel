@@ -322,6 +322,14 @@ export default function App() {
       clearTimeout(aiTimer.current);
       aiTimer.current = null;
     }
+    // Clear transient visual state from the previous game so the new
+    // board mounts clean. Without this, the stale scoreEvent from the
+    // last scoring move re-fires Board's float-mount useEffect and a
+    // ghost +N drifts up over the fresh empty board.
+    setScoreEvent(null);
+    setActiveHint(null);
+    setPendingFlash(false);
+    prevPendingLenRef.current = 0;
     winRecorded.current = false;
     gameEndCounted.current = false;
     claimsInGame.current = 0;
@@ -385,6 +393,10 @@ export default function App() {
     gameEndCounted.current = false;
     setDailyPuzzleResult(null);
     dailyPuzzleIdRef.current = null;
+    setScoreEvent(null);
+    setActiveHint(null);
+    setPendingFlash(false);
+    prevPendingLenRef.current = 0;
     setScreen('menu');
     setState(null);
     setConfig(null);

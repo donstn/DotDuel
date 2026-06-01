@@ -22,31 +22,31 @@
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
-    <title>DotDuel — Free Two-Player Dot Strategy Game</title>
+    <title>DotDuel — Free 2-Player Dot Strategy Game (online &amp; vs AI)</title>
 
-    <meta name="description" content="DotDuel is a free two-player strategy game. Take turns coloring dots until the whole board is filled — complete a line and score its length. The player with the most points at the end wins. Play vs AI or live online with global Elo ranking." />
-    <meta name="keywords" content="dot game online, two player dot game, dots and boxes alternative, strategy dot game, free browser board game, online dot strategy, dot duel" />
+    <meta name="description" content="Free two-player dot strategy game — quick like tic-tac-toe, layered like Dots and Boxes, with chess-style thinking depth. Play vs AI across five difficulty levels or live online with global Elo ranking. Daily puzzle with leaderboard. No install, no fee, any browser." />
+    <meta name="keywords" content="dot duel, dot game online, two player dot game, dots and boxes alternative, tic tac toe alternative, online strategy game like chess, free chess alternative, connect four alternative, gomoku-like, five in a row online, othello alternative, reversi-like, daily strategy puzzle, two player browser game, online board game free, free strategy game" />
     <meta name="author" content="DotDuel" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
 
     <link rel="canonical" href="https://www.dotduel.com/" />
 
     <!-- Open Graph (Facebook, LinkedIn, Discord, Slack) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="DotDuel" />
-    <meta property="og:title" content="DotDuel — Free Two-Player Dot Strategy Game" />
-    <meta property="og:description" content="Take turns coloring dots until the whole board is filled. Complete a line, score its length. Most points at the end wins. Free vs AI or live ranked multiplayer in any browser." />
+    <meta property="og:title" content="DotDuel — Free 2-Player Dot Strategy Game" />
+    <meta property="og:description" content="Quick like tic-tac-toe, layered like Dots and Boxes, with chess-style thinking. Play vs AI or live ranked online — free, browser-based, no install." />
     <meta property="og:url" content="https://www.dotduel.com/" />
     <meta property="og:image" content="https://www.dotduel.com/og-card.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="DotDuel — a strategy dot game" />
+    <meta property="og:image:alt" content="DotDuel — a strategy dot game similar to Dots and Boxes, tic-tac-toe and chess" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="DotDuel — Free Two-Player Dot Strategy Game" />
-    <meta name="twitter:description" content="Take turns coloring dots until the whole board is filled. Complete a line, score its length. Most points at the end wins. Free vs AI or live ranked multiplayer." />
+    <meta name="twitter:title" content="DotDuel — Free 2-Player Dot Strategy Game" />
+    <meta name="twitter:description" content="Quick like tic-tac-toe, layered like Dots and Boxes, with chess-style depth. Free, browser-based, vs AI or live ranked online." />
     <meta name="twitter:image" content="https://www.dotduel.com/og-card.png" />
 
     <!-- Structured data — Schema.org VideoGame -->
@@ -55,15 +55,22 @@
       "@context": "https://schema.org",
       "@type": "VideoGame",
       "name": "DotDuel",
+      "alternateName": ["Dot Duel", "DotDuel Online"],
       "url": "https://www.dotduel.com/",
-      "description": "A free two-player strategy game about lines you didn't mean to finish. Take turns coloring dots until the whole board is filled — complete a line and score its length. When one move completes multiple lines, only the longest scores immediately; the rest become claimable. The player with the most points when every dot is colored and every line is claimed wins.",
+      "description": "A free two-player dot strategy game in the spirit of Dots and Boxes, tic-tac-toe and chess — but built for fast online play. Take turns colouring dots until the whole board is filled; complete a line and score its length. When one move completes multiple lines, only the longest scores immediately, the rest become claimable. The player with the most points wins.",
       "image": "https://www.dotduel.com/og-card.png",
-      "genre": ["Strategy", "Board Game", "Casual"],
+      "genre": ["Strategy", "Board Game", "Casual", "Puzzle", "Abstract Strategy"],
+      "keywords": "dot game, two-player strategy, board game online, tic-tac-toe alternative, dots and boxes alternative, chess-like, gomoku-like, connect four alternative, othello-like, reversi alternative, daily puzzle, free browser game",
       "gamePlatform": ["Web Browser", "PWA"],
       "applicationCategory": "GameApplication",
       "operatingSystem": "Any",
       "browserRequirements": "Modern browser with JavaScript enabled",
       "playMode": ["SinglePlayer", "MultiPlayer", "CoOp"],
+      "numberOfPlayers": {
+        "@type": "QuantitativeValue",
+        "minValue": 1,
+        "maxValue": 2
+      },
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -74,6 +81,68 @@
         "@type": "Organization",
         "name": "DotDuel"
       }
+    }
+    </script>
+
+    <!-- Structured data — FAQ rich snippet candidate.
+         Google sometimes surfaces these as expandable answers under the
+         search result, lifting click-through. Questions are framed against
+         comparable-game searches (tic-tac-toe, Dots and Boxes, chess) so
+         users discovering via those queries see relevant context. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is DotDuel free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes — DotDuel is completely free to play. No ads on the gameplay screen, no microtransactions, no premium tier. Optional account for ranked multiplayer and the daily puzzle leaderboard."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is DotDuel different from tic-tac-toe?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "DotDuel uses larger boards (36, 49, or 63 dots), allows multiple line directions (horizontal, vertical, and diagonal), and a single move can complete multiple lines at once — only the longest scores immediately, the rest become claimable on later turns. Games finish in 3–8 minutes versus tic-tac-toe's seconds."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is DotDuel similar to Dots and Boxes?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It shares the dot-grid format but scores completed lines instead of enclosed boxes, and there are no chained loops to grind out at the end. DotDuel is faster and more focused on multi-line tactics and pending claims."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is DotDuel like chess?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "DotDuel borrows chess-style ideas — turn-based perfect information, deep tactical positions, optional time controls (Bullet 1 min, Blitz 3 min, Rapid 5 min), and global Elo ranking with placement matches — but the rules learn in 30 seconds and a game finishes in under 10 minutes."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I play DotDuel against the computer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes — five AI difficulty levels (Beginner, Easy, Medium, Hard, Impossible), no account required. Sign in to play live ranked multiplayer with chess-style time controls, or play the daily puzzle for a position on the global leaderboard."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need to download anything to play DotDuel?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No download. DotDuel runs in any modern web browser on phone, tablet, or desktop, and can be added to your home screen as a PWA (progressive web app) for one-tap launch like a native app."
+          }
+        }
+      ]
     }
     </script>
   </head>
@@ -87,20 +156,75 @@
         a line, you score its length. The twist: when one move
         completes multiple lines at once, only the longest scores
         immediately; the rest become &ldquo;pending&rdquo; and either
-        player can claim them on a later turn by tapping a colored dot
-        on the line. Play continues until every dot is colored and
-        every line is claimed; the player with the most points at the
-        end wins.
+        player can claim them on a later turn by tapping a coloured
+        dot on the line. Play continues until every dot is coloured
+        and every line is claimed; the player with the most points at
+        the end wins.
       </p>
       <p>
-        Play vs AI across five difficulty levels (Beginner through
-        Impossible), or sign in for ranked multiplayer with a global
-        Elo ranking, chess-style time controls (Bullet 1 min / Blitz
-        3 min / Rapid 5 min), and match history. Available board
-        shapes: Triangle (36 dots), Square (49 dots), Rectangle (63
-        dots). No install, no fee, no third-party trackers without
-        consent.
+        Play vs AI across five difficulty levels (Beginner, Easy,
+        Medium, Hard, Impossible), or sign in for ranked multiplayer
+        with a global Elo ranking, chess-style time controls (Bullet
+        1 min, Blitz 3 min, Rapid 5 min), and match history. Available
+        board shapes: Triangle (36 dots), Square (49 dots), Rectangle
+        (63 dots). A daily puzzle with a global leaderboard refreshes
+        every midnight UTC. No install, no fee, no third-party
+        trackers without consent.
       </p>
+
+      <h2>How DotDuel compares to other strategy games</h2>
+      <p>
+        If you enjoy <strong>tic-tac-toe</strong>, DotDuel keeps the
+        quick-turn appeal but on a larger board with more lines and a
+        &ldquo;biggest-only&rdquo; scoring twist that rewards forward
+        thinking. Fans of <strong>Dots and Boxes</strong> will
+        recognise the dot-grid format but find a faster game without
+        chained loops at the end. Players who like
+        <strong>chess</strong> or <strong>checkers</strong> will
+        appreciate the strategic depth of multi-line completions and
+        pending claims — a quick mental workout that finishes in
+        3&ndash;8 minutes. DotDuel sits in the same family as
+        <strong>Connect Four</strong>, <strong>Gomoku
+        (five-in-a-row)</strong>, and
+        <strong>Othello / Reversi</strong>: turn-based, perfect
+        information, no luck — purely strategic.
+      </p>
+
+      <h2>Frequently asked</h2>
+      <p>
+        <strong>Is DotDuel free?</strong> Yes — completely free, no
+        ads on the gameplay screen, no microtransactions, no premium
+        tier.
+      </p>
+      <p>
+        <strong>Do I need an account?</strong> Only for ranked
+        multiplayer and the daily puzzle leaderboard. Vs-AI and
+        hot-seat (two players, one device) work without sign-in.
+      </p>
+      <p>
+        <strong>How is this different from tic-tac-toe?</strong>
+        Boards are larger (36&ndash;63 dots), lines can be horizontal,
+        vertical, or diagonal depending on the shape, and one move can
+        complete multiple lines simultaneously — adding tactical depth
+        without losing tic-tac-toe&rsquo;s &ldquo;play in five
+        minutes&rdquo; accessibility.
+      </p>
+      <p>
+        <strong>Is DotDuel similar to Dots and Boxes?</strong> Same
+        dot-grid format; different scoring. DotDuel scores
+        line-lengths (not enclosed boxes) and uses a
+        &ldquo;biggest-only with pending claims&rdquo; rule so the
+        endgame stays interesting instead of degenerating into
+        forced-chain grinding.
+      </p>
+      <p>
+        <strong>Is DotDuel like chess?</strong> It borrows chess
+        conventions — turn-based perfect information, chess-style time
+        controls, global Elo rating with placement matches, deep
+        tactical positions — but the rules take 30 seconds to learn
+        and a full match finishes in under 10 minutes.
+      </p>
+
       <p>
         DotDuel is a fresh take on classic pen-and-paper games like
         Dots and Boxes — designed for quick mobile sessions on the

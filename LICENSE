@@ -1,0 +1,63 @@
+Copyright © 2026 DotDuel. All rights reserved.
+
+PROPRIETARY SOFTWARE LICENSE
+
+This software and its source code, design, assets, content, and
+accompanying documentation (collectively, "the Work") are the
+proprietary work of DotDuel and are protected by copyright law,
+international copyright treaties, and other intellectual-property
+laws and treaties.
+
+No part of the Work may be reproduced, distributed, modified,
+publicly displayed, publicly performed, used in derivative works,
+incorporated into other software, or transmitted in any form or
+by any means — electronic, mechanical, recording, or otherwise —
+without the prior written permission of the copyright holder.
+
+The names "DotDuel" and "Dot Duel" and any associated logos,
+branding, taglines, and visual identity are claimed as common-law
+trademarks of DotDuel. Registered-trademark protection may be
+sought in additional jurisdictions over time. Use of these marks
+without permission is prohibited.
+
+PERMITTED USES
+
+The following are explicitly permitted without further licence:
+
+  1. Playing the publicly hosted version of DotDuel at
+     https://www.dotduel.com/ (and any official staging URL) for
+     personal, non-commercial enjoyment.
+  2. Viewing the source code of the Work via the public GitHub
+     repository for personal study and reference.
+  3. Submitting bug reports, feature suggestions, or other
+     non-source-code feedback to the copyright holder.
+
+All other uses require prior written permission. Please open an
+issue on the GitHub repository for licensing or commercial-use
+inquiries.
+
+OPEN-SOURCE COMPONENTS
+
+The Work incorporates open-source libraries (including but not
+limited to React, Vite, TypeScript, Firebase SDK, and others
+listed in package.json). Those components are governed by their
+own respective licences (MIT, Apache-2.0, BSD, ISC) which are
+not affected by this licence and continue to apply to those
+components individually.
+
+NO WARRANTY
+
+THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+IN CONNECTION WITH THE WORK OR THE USE OR OTHER DEALINGS IN THE
+WORK.
+
+—
+
+Authored continuously from 2026 onward; commit history on the
+public source repository serves as the authoritative timeline of
+authorship.

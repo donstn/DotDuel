@@ -18,7 +18,12 @@ export function AppFooter({
   return (
     <footer className="app-footer">
       <div className="app-footer-inner">
-        <span className="app-footer-brand">DotDuel © 2026</span>
+        <span
+          className="app-footer-brand"
+          title="© 2026 DotDuel. All rights reserved. DotDuel and the DotDuel logo are claimed trademarks of their author."
+        >
+          DotDuel © 2026
+        </span>
         <span className="sep">·</span>
         <a
           href="#"

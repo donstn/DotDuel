@@ -231,24 +231,39 @@ Audit on 2026-05-26. Three low-severity findings **knowingly accepted**. Don't r
 
 ---
 
-## Current status (2026-05-27)
+## Current status (2026-06-02)
 
-Multiplayer is **live and ranked**. Up to and including Alpha 0.1.2.3 (see CHANGELOG):
+Multiplayer is **live and ranked**. Current version: **Alpha 0.2.7.2** (see `CHANGELOG.md` and `src/changelog.ts`).
 
-- Phase D (server-authoritative multiplayer), E.1 (chess clocks + ready/countdown + timeout), E.2 (Elo finalize + match history) — **shipped**.
-- Session lock (`gameSessions/{uid}`) prevents one user on two devices.
-- Loading-screen auto-recovery on stale `watchGame`.
-- Security audit fixes H-1, H-2, M-1, M-2, M-3, L-3, L-5 — **shipped**.
-- CSP, Apple/Android PWA icons, OG share card, favicon — **shipped**.
+Shipped through the multiplayer + friends foundation (pre-strategic-plan):
+- Phase D (server-authoritative multiplayer), E.1 (chess clocks + ready/countdown + timeout), E.2 (Elo finalize + match history)
+- Session lock (`gameSessions/{uid}`) prevents one user on two devices
+- Loading-screen auto-recovery on stale `watchGame`
+- Security audit fixes H-1, H-2, M-1, M-2, M-3, L-3, L-5
+- CSP, Apple/Android PWA icons, OG share card, favicon
+- Alpha 0.2.0.0: Friends list + invites + presence + tell-a-friend (`?ref=<uid>`) referral
+
+Shipped from the **adoption + retention strategic plan** (May–June 2026):
+- **Phase 0 (0.2.1.0)** — telemetry foundation: `trackEvent` wrapper with PII strip + session cap + dev console logging, ~15 funnel events, SHA-256 referrer hashing, session-boot snapshot
+- **Phase 1a (0.2.2.0)** — visible scoring: floating `+N` SVG popup, score-row pulse, pending-pill flash
+- **Phase 1b (0.2.3.0)** — contextual hints: 5 once-per-lifetime SVG speech bubbles anchored to triggering dot, auto-dismiss on next human move; "See unclaimed lines" toggle pill
+- **Phase 2c (0.2.4.0)** — menu share/invite: signed-in "Invite a friend" pill + anonymous "Share DotDuel" ghost link
+- **Phase 2a (0.2.5.0)** — daily-streak plumbing (signed-in only, server-side authoritative in `users/{uid}.streak`)
+- **Phase 2b (0.2.6.0 / 0.2.7.0)** — daily puzzle: 28-puzzle library rotating by UTC date, best-of-3 attempts, public leaderboard at `dailyLeaderboard/{utcDate}/entries/{uid}`, new "Today's puzzle" + "Puzzle leaderboard" menu cards, GameOver daily variant with try-again CTA
+- **0.2.7.2** — endgame flicker / black-screen fix: removed `mix-blend-mode: screen` from `.crossline-inner` (was creating per-line GPU compositor layers, overflowing budgets at the claim-only endgame). Full diagnosis in `bugs.md`.
+- **LICENSE** at repo root (proprietary, all rights reserved) — explicit IP claim ahead of any commercialisation
+- **SEO** — comparable-game keywords (tic-tac-toe, Dots and Boxes, chess, Connect Four, Gomoku, Othello), FAQPage JSON-LD with 6 Q&As, expanded `<noscript>` body with "How DotDuel compares" + 5 FAQ paragraphs
 
 For exact change list, read `CHANGELOG.md` or `src/changelog.ts`. The latter is the in-app footer changelog modal — keep `version` strings in lock-step with `src/version.ts`.
 
 ### Open threads
 
 - **Move latency.** Clicks take ~300–500ms because of the `validateMove` round-trip. Fix is optimistic UI (apply locally, reconcile via `watchGame`). ~30 lines, deferred.
-- **Bundle size.** ~930 KB raw / ~230 KB gzipped; Firebase SDKs dominate. Code-split `cloud/` + `auth/` behind sign-in for ~150 KB savings before public launch.
+- **Bundle size.** ~1040 KB raw / **~262 KB gzipped** as of 0.2.7.2; Firebase SDKs dominate. Code-split `cloud/` + `auth/` behind sign-in for ~150 KB savings before public launch.
 - **`clockTimeout` scheduled function (E.3).** Fallback sweep for the edge case where both clients crash mid-turn — the client-driven timeout claim doesn't cover that. Cloud Scheduler, 15s sweep.
 - **Provisional badge** until 10 placement games played (UI only).
+- **Hint stomping in vs-AI** — KNOWN, not fixed. Diagnosed in `bugs.md`; recommended fix (Option 1: min-display-time gate inside `tryFireHint`, ~15 LOC) ready when prioritised.
+- **Pending-claim rings flicker on Square / Rectangle** — root cause was `mix-blend-mode: screen` (fixed in 0.2.7.2). The triangle-only gate from 0.2.7.1 is retained as a UX choice (rings only on Triangle for learning), no longer a bug fix.
 
 ---
 
@@ -258,28 +273,20 @@ For exact change list, read `CHANGELOG.md` or `src/changelog.ts`. The latter is 
 `C:\Users\onemu\.claude\plans\ok-so-situation-is-eager-key.md`
 
 It contains the multi-phase plan agreed in the 2026-05-31 session covering:
-- Phase 0: telemetry (`trackEvent` at ~15 funnel breakpoints)
-- Phase 1: visible scoring + in-game contextual hints (the rules-skipping / first-line drop-off fix)
-- Phase 2: streak + daily puzzle + Tell-a-friend on menu (retention hooks)
-- Phase 3: after-game share-a-win + challenge-this-opponent CTA (post-game viral)
-- Phase 4 (deferred until Phase 0 data): SSR pre-render + browser push + strategy blog
+- ✅ **Phase 0** (0.2.1.0): telemetry (`trackEvent` at ~15 funnel breakpoints) — **shipped**
+- ✅ **Phase 1a** (0.2.2.0): visible scoring — **shipped**
+- ✅ **Phase 1b** (0.2.3.0): in-game contextual hints + claimable-lines toggle — **shipped**
+- ✅ **Phase 2a** (0.2.5.0): daily-streak plumbing — **shipped**
+- ✅ **Phase 2b** (0.2.6.0 / 0.2.7.0): daily puzzle + leaderboard — **shipped**
+- ✅ **Phase 2c** (0.2.4.0): menu share / invite — **shipped**
+- ⏳ **Phase 3**: after-game share-a-win + challenge-this-opponent CTA (post-game viral) — **next unstarted**
+- ⏳ **Phase 4** (deferred until Phase 0 telemetry): SSR pre-render + browser push + strategy blog
 
 The 5-approach onboarding rescue plan is folded into Phase 1 (we picked Approach 2: in-game contextual hints). Approaches 1, 3, 4, 5 remain in the backlog inside the plan file.
 
-If the user asks "what's next" on adoption / retention / onboarding without specifying a phase, propose continuing the next unstarted phase in that file.
+If the user asks "what's next" on adoption / retention / onboarding without specifying a phase: **Phase 3** is the next unstarted phase. Phase 4 is deferred until Phase 0 telemetry tells us whether the retention work paid off.
 
 ## Deferred — do not start without explicit ask
-
-### Friend list / invites
-
-Builds on matchmaker + Elo. Est. ~3 days. Sketch:
-
-- Firestore: `friendships/{sortedUids.join('__')}` with `{uids, status: 'pending'|'accepted'|'blocked', requestedBy, requestedAt, acceptedAt}`. `friendInvites/{toUid}/{fromUid}` ephemeral (TTL 10 min) with `{timeControl, shape, ranked, sentAt}`.
-- Callable functions: `sendFriendRequest(username)`, `accept/decline/removeFriendRequest(friendshipId)`, `inviteFriendToGame(uid, tc, shape, ranked)` (reuses `matchmake` pairing code path).
-- Rules: friendships readable only by participants, function-only writes. Invites readable+deletable only by recipient.
-- Client: `src/cloud/friends.ts` (`watchFriends` via `array-contains`), `FriendsPopover.tsx` (pending / friends / add-by-username), App.tsx subscribes to incoming invites for popup.
-- Sub-feature: presence via RTDB `presence/{uid}` + `onDisconnect`. Mirrors `gameSessions/{uid}`.
-- **Open question:** default invite to unranked? Recommended yes, with explicit "play for rating" toggle — friends play casually and surprise demotion is bad UX.
 
 ### Tutorial animations
 
@@ -292,13 +299,22 @@ Replace text-only `TutorialPopover` + enrich Rules popover. Est. ~2 days.
 
 ### SEO refinements (post-launch)
 
-Baseline (meta tags, OG, Twitter Card, VideoGame JSON-LD, robots.txt, sitemap.xml, `<noscript>`) is in place. Future when traffic justifies:
+Baseline (meta tags, OG, Twitter Card, VideoGame JSON-LD, FAQPage JSON-LD, robots.txt, sitemap.xml, expanded `<noscript>` body with comparable-game positioning) is in place as of 2026-06-01. Future when traffic justifies:
 
 - Pre-render menu HTML via `vite-ssg` so Google sees populated DOM (biggest single win).
 - `/blog` route for strategy / design / tournament long-tail.
 - `Schema.org AggregateRating` once reviews > 50.
 - Localized pages (`/es`, `/pt`) when non-English MAU justifies.
 - Lighthouse pass + code-split to drop initial bundle < 500 KB gzipped.
+
+### Trademark filing (decided, not yet acted on)
+
+LICENSE file at repo root declares proprietary, all rights reserved (see [[project_dotduel_copyright]] in user memory). Next step is trademark registration for the "DotDuel" name. Three options in order of value:
+- **EUIPO** (~€850, class 9 + class 41, 4-6 months) — best coverage for the user's location.
+- **LT national VPB** (~€180, LT-only, 4-6 months) — cheapest entry point.
+- **USPTO** ($250-350/class, 8-12 months) — defer until US revenue.
+
+Patent on the biggest-only-with-pending mechanic was explicitly ruled out (€5k-50k+, 2-4 years, not worth it for an alpha). Cheap alternative: file a US provisional patent ($150-300, no lawyer required) for 12 months of "patent pending" status as defensive cover.
 
 ### Sounds
 

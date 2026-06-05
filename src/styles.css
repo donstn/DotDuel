@@ -2251,8 +2251,14 @@ h1, h2, h3,
   border-color: rgba(217, 117, 101, 0.28);
 }
 
-.settings-danger .settings-danger-btn {
-  align-self: flex-start;
+/* Reset progress / Reset stats sit side by side to save vertical space. */
+.settings-danger-row {
+  display: flex;
+  gap: 8px;
+}
+.settings-danger-row .settings-danger-btn {
+  flex: 1;
+  text-align: center;
 }
 
 .settings-danger-btn {
@@ -3332,6 +3338,19 @@ body:has(.consent-banner) .game-screen {
       on narrow portrait (avoids the awkward 2+1 wrap with 3 mode cards).
 */
 
+/* Progressive info density on the desktop side panels: full info on wide
+   screens, then shed the least-important rows as the window narrows, before
+   the ≤720px switch to the compact horizontal card.
+     >1000px      full: avatar · name · stats · rating · score · totals
+     820–1000px   drop the lifetime points totals
+     720–820px    drop the W/D/L stats too (lean: avatar · name · rating · score) */
+@media (max-width: 1000px) {
+  .player-points-totals { display: none; }
+}
+@media (max-width: 820px) {
+  .player-stats { display: none; }
+}
+
 @media (max-width: 720px), (orientation: landscape) and (max-height: 500px) {
   .game-body {
     display: grid;
@@ -3359,19 +3378,22 @@ body:has(.consent-banner) .game-screen {
     min-height: 0;
   }
 
-  /* Mobile card layout: avatar on top, name below, resign below,
-     score at the bottom. Vertical stack inside each card.
-     Cards still sit side-by-side via the game-body grid. */
+  /* Mobile card layout: a compact horizontal row — avatar beside the name
+     (flex:1, truncates), score on the right. Cards sit side-by-side above
+     the board via the game-body grid. Stats/totals are already hidden by the
+     progressive breakpoints above. */
   .side-panel,
   .side-panel-left,
   .side-panel-right {
     width: auto;
     min-width: 0;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: flex-start;
-    gap: 4px;
-    padding: 8px 6px;
+    gap: 9px;
+    row-gap: 5px;
+    padding: 7px 11px;
     border-radius: var(--radius);
     margin: 0;
     border: 1px solid var(--glass-border);
@@ -3381,20 +3403,20 @@ body:has(.consent-banner) .game-screen {
 
   .avatar-frame {
     /* Scale fluidly: tiny on small phones, larger on tablets. */
-    width: clamp(36px, 11vw, 56px);
+    width: clamp(32px, 10vw, 50px);
     flex-shrink: 0;
   }
 
   .player-name {
-    flex: initial;
-    width: 100%;
+    flex: 0 1 auto;
     min-width: 0;
-    font-size: 0.78rem;
-    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: left;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0 2px;
+    padding: 0;
   }
 
   .player-action-slot,
@@ -3410,13 +3432,13 @@ body:has(.consent-banner) .game-screen {
   }
 
   .player-score {
-    font-size: 1.7rem;
-    margin: 2px 0 0;
+    font-size: 1.8rem;
+    margin: 0 0 0 auto;
     line-height: 1;
     flex-shrink: 0;
     min-width: 0;
-    text-align: center;
-    padding: 0;
+    text-align: right;
+    padding: 0 0 0 2px;
   }
 
   .player-stats,

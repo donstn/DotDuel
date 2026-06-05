@@ -111,6 +111,117 @@ function lineEndpoints(
   };
 }
 
+type Pt = { x: number; y: number };
+
+// Convex hull (Andrew's monotone chain). Used to frame the board in its OWN
+// shape — triangle dots hull to a triangle, rhombus to a diamond, square to a
+// square — instead of always boxing it in a rectangle.
+function convexHull(points: Pt[]): Pt[] {
+  const pts = points.slice().sort((a, b) => a.x - b.x || a.y - b.y);
+  if (pts.length < 3) return pts;
+  const cross = (o: Pt, a: Pt, b: Pt) =>
+    (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const lower: Pt[] = [];
+  for (const p of pts) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0)
+      lower.pop();
+    lower.push(p);
+  }
+  const upper: Pt[] = [];
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const p = pts[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0)
+      upper.pop();
+    upper.push(p);
+  }
+  lower.pop();
+  upper.pop();
+  return lower.concat(upper);
+}
+
+// Push each hull edge outward by `margin` (true edge-normal offset, so every
+// edge clears the dots evenly), clamping how far a sharp corner can shoot out
+// so an acute apex (triangle) stays inside the viewBox.
+function offsetPolygon(poly: Pt[], margin: number, maxExt: number): Pt[] {
+  const n = poly.length;
+  if (n < 3) return poly;
+  const cx = poly.reduce((s, p) => s + p.x, 0) / n;
+  const cy = poly.reduce((s, p) => s + p.y, 0) / n;
+  const lines = poly.map((p, i) => {
+    const q = poly[(i + 1) % n];
+    let dx = q.x - p.x;
+    let dy = q.y - p.y;
+    const len = Math.hypot(dx, dy) || 1;
+    dx /= len;
+    dy /= len;
+    let nx = dy;
+    let ny = -dx;
+    const mx = (p.x + q.x) / 2;
+    const my = (p.y + q.y) / 2;
+    if ((cx - mx) * nx + (cy - my) * ny > 0) {
+      nx = -nx;
+      ny = -ny;
+    }
+    return { px: p.x + nx * margin, py: p.y + ny * margin, dx, dy };
+  });
+  const out: Pt[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = lines[(i - 1 + n) % n];
+    const b = lines[i];
+    const det = a.dx * b.dy - a.dy * b.dx;
+    let vx: number;
+    let vy: number;
+    if (Math.abs(det) < 1e-9) {
+      vx = b.px;
+      vy = b.py;
+    } else {
+      const t = ((b.px - a.px) * b.dy - (b.py - a.py) * b.dx) / det;
+      vx = a.px + a.dx * t;
+      vy = a.py + a.dy * t;
+    }
+    const ex = vx - poly[i].x;
+    const ey = vy - poly[i].y;
+    const ext = Math.hypot(ex, ey);
+    if (ext > maxExt) {
+      const s = maxExt / ext;
+      vx = poly[i].x + ex * s;
+      vy = poly[i].y + ey * s;
+    }
+    out.push({ x: vx, y: vy });
+  }
+  return out;
+}
+
+// SVG path for a polygon with rounded corners (quadratic fillets).
+function roundedPolygonPath(poly: Pt[], radius: number): string {
+  const n = poly.length;
+  if (n < 3) return '';
+  const t1: Pt[] = [];
+  const t2: Pt[] = [];
+  for (let i = 0; i < n; i++) {
+    const prev = poly[(i - 1 + n) % n];
+    const cur = poly[i];
+    const next = poly[(i + 1) % n];
+    const v1x = cur.x - prev.x;
+    const v1y = cur.y - prev.y;
+    const l1 = Math.hypot(v1x, v1y) || 1;
+    const v2x = next.x - cur.x;
+    const v2y = next.y - cur.y;
+    const l2 = Math.hypot(v2x, v2y) || 1;
+    const r = Math.min(radius, l1 / 2, l2 / 2);
+    t1.push({ x: cur.x - (v1x / l1) * r, y: cur.y - (v1y / l1) * r });
+    t2.push({ x: cur.x + (v2x / l2) * r, y: cur.y + (v2y / l2) * r });
+  }
+  const f = (v: number) => v.toFixed(3);
+  let d = `M ${f(t1[0].x)} ${f(t1[0].y)}`;
+  for (let i = 0; i < n; i++) {
+    d += ` Q ${f(poly[i].x)} ${f(poly[i].y)} ${f(t2[i].x)} ${f(t2[i].y)}`;
+    const nt1 = t1[(i + 1) % n];
+    d += ` L ${f(nt1.x)} ${f(nt1.y)}`;
+  }
+  return `${d} Z`;
+}
+
 export function Board({
   state,
   onDotClick,
@@ -125,9 +236,24 @@ export function Board({
 }: Props) {
   const board = getBoard(state.shape);
   const vb = board.viewBox;
-  const feltMin = Math.min(vb.w, vb.h);
   const dotRadius = state.shape === 'triangle' ? 0.32 : 0.34;
   const strokeWidth = dotRadius * 0.42;
+  const feltMin = Math.min(vb.w, vb.h);
+  const framePad = dotRadius * 1.3;
+  const vbExp = {
+    x: vb.x - framePad,
+    y: vb.y - framePad,
+    w: vb.w + framePad * 2,
+    h: vb.h + framePad * 2,
+  };
+  const feltPath = roundedPolygonPath(
+    offsetPolygon(
+      convexHull(board.dots.map((d) => ({ x: d.x, y: d.y }))),
+      dotRadius * 1.7,
+      dotRadius * 2.4
+    ),
+    feltMin * 0.05
+  );
   const [floats, setFloats] = useState<FloatingScore[]>([]);
   const [focusedDotId, setFocusedDotId] = useState<number | null>(null);
   const dotRefs = useRef(new Map<number, SVGCircleElement | null>());
@@ -238,7 +364,7 @@ export function Board({
         className="board"
         role="group"
         aria-label={`${board.label} game board`}
-        viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
+        viewBox={`${vbExp.x} ${vbExp.y} ${vbExp.w} ${vbExp.h}`}
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
@@ -286,15 +412,12 @@ export function Board({
           </radialGradient>
         </defs>
 
-        <rect
-          x={vb.x + feltMin * 0.015}
-          y={vb.y + feltMin * 0.015}
-          width={vb.w - feltMin * 0.03}
-          height={vb.h - feltMin * 0.03}
-          rx={feltMin * 0.06}
+        <path
+          d={feltPath}
           fill="url(#board-felt)"
           stroke="var(--board-felt-border)"
           strokeWidth={feltMin * 0.008}
+          strokeLinejoin="round"
         />
 
         {board.dots.map((d) => {

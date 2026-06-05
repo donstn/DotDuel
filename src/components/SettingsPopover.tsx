@@ -168,26 +168,28 @@ export function SettingsPopover({
           )}
 
           <section className="settings-section settings-danger">
-            <button
-              className="settings-danger-btn"
-              onClick={() => {
-                if (confirm('Reset progress? Unlocked shapes and levels will be lost.')) {
-                  onResetProgress();
-                }
-              }}
-            >
-              Reset progress
-            </button>
-            <button
-              className="settings-danger-btn"
-              onClick={() => {
-                if (confirm('Reset stats? Every player\'s W/D/L history on this device will be erased.')) {
-                  resetStats();
-                }
-              }}
-            >
-              Reset stats
-            </button>
+            <div className="settings-danger-row">
+              <button
+                className="settings-danger-btn"
+                onClick={() => {
+                  if (confirm('Reset progress? Unlocked shapes and levels will be lost.')) {
+                    onResetProgress();
+                  }
+                }}
+              >
+                Reset progress
+              </button>
+              <button
+                className="settings-danger-btn"
+                onClick={() => {
+                  if (confirm('Reset stats? Every player\'s W/D/L history on this device will be erased.')) {
+                    resetStats();
+                  }
+                }}
+              >
+                Reset stats
+              </button>
+            </div>
             <p className="settings-hint">
               Note: renaming yourself starts a fresh stats row. Old name's history is kept under that old name.
             </p>

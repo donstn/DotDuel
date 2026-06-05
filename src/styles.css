@@ -2028,7 +2028,11 @@ h1, h2, h3,
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
   display: block;
-  margin: 0 0 12px;
+  margin: 0 0 10px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
 }
 
 .rules-body section:last-child {
@@ -2086,14 +2090,16 @@ h1, h2, h3,
   font-weight: 700;
 }
 
-.rules-highlight {
-  background: rgba(98, 207, 144, 0.08);
-  border: 1px solid rgba(98, 207, 144, 0.32);
-  border-radius: 12px;
-  padding: 10px 13px;
+/* Higher specificity than `.rules-body section` so the accent highlight keeps
+   its tinted card look instead of inheriting the plain glass card. */
+.rules-body .rules-highlight {
+  background: rgba(98, 207, 144, 0.1);
+  border: 1px solid rgba(98, 207, 144, 0.4);
+  border-radius: var(--radius);
+  padding: 12px 14px;
 }
 
-.rules-highlight h3 {
+.rules-body .rules-highlight h3 {
   color: var(--p1-bright);
 }
 
@@ -2782,9 +2788,12 @@ body:has(.consent-banner) .game-screen {
 }
 
 .privacy-body h3 {
-  margin-top: 18px;
-  font-size: 1.02rem;
-  color: var(--text);
+  margin: 0 0 1px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
 .privacy-body p,
@@ -2804,11 +2813,9 @@ body:has(.consent-banner) .game-screen {
 }
 
 .privacy-consent-block {
-  margin-top: 10px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
+  margin-top: 11px;
+  padding-top: 11px;
+  border-top: 1px solid var(--glass-border);
 }
 
 .privacy-consent-actions {

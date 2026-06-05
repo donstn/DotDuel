@@ -24,6 +24,7 @@ import {
   cancelQueue,
   clearPairing,
   joinQueue,
+  requestBotMatch,
   watchPairing,
   type PairingDoc,
   type TimeControl,
@@ -806,6 +807,19 @@ export default function App() {
     }
     return watchPairing(user.uid, (p) => setPairing(p));
   }, [user?.uid]);
+
+  // Fast bot fallback. botFallbackSweep only ticks once a minute (Cloud
+  // Scheduler's floor), so a lone player can wait ~60s for a bot. Once we've
+  // searched 15s with no pairing, ask the server to spawn one now. Re-running
+  // on `pairing` clears the timer the moment a real match arrives; the sweep
+  // stays as the backstop for clients that close the tab before this fires.
+  useEffect(() => {
+    if (screen !== 'matchmaking' || pairing || !user) return;
+    const t = window.setTimeout(() => {
+      void requestBotMatch().catch((e) => console.warn('requestBotMatch failed:', e));
+    }, 15_000);
+    return () => window.clearTimeout(t);
+  }, [screen, pairing, user?.uid]);
 
   // Live subscription to gameSessions/{uid} — drives the "active on another
   // device" lockout state. The lock auto-releases on disconnect (see

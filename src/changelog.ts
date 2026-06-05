@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.2.8.0',
+    date: '2026-06-05',
+    highlight: 'Full keyboard play',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Full keyboard play: Tab to the board, arrow keys to move between dots, Enter or Space to place or claim a line.',
+      },
+      {
+        kind: 'changed',
+        text: 'Ranked matches now find you a bot opponent in about 15 seconds when no human is available, instead of up to a minute.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.2.7.2',
     date: '2026-05-31',
     highlight: 'Fix: endgame flicker / black screen',

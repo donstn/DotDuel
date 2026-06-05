@@ -146,6 +146,27 @@ Entries are dated and grouped by symptom domain. Most recent first within each s
 
 ---
 
+## ⌨️ Input / focus
+
+### Stray focus ring ("egg") on mouse-claim (Alpha 0.2.8.0 — 2026-06-05)
+
+**Symptom**
+- A round accent outline (the "egg") appeared around a dot on a plain mouse click — no keyboard involved. Reproduced specifically in the Square endgame (~43–44 points left), the claim-heavy phase; not on early-game dot placement.
+
+**Root cause**
+- The accessibility branch added `:focus-visible` rings and made every dot a focusable `role="button"` circle.
+- Empty dots carry a transparent hit-area circle layered on top (`Board.tsx`, rendered only for `!cd`) which is **not** focusable — so placing a dot never focuses anything, no ring.
+- Claimable colored dots have **no** such overlay, so a mouse click to *claim* lands directly on the focusable visible `<circle>` and focuses it. The browser then paints the `:focus-visible` ring. Only the claim path clicks a focusable dot directly, which is why it correlated with "late-game square" (most pending lines, claim-heavy).
+
+**Fix**
+- `onMouseDown={(e) => e.preventDefault()}` on the dot circle (`Board.tsx`). `preventDefault` on mousedown blocks the focus without canceling the `click`, so claiming still fires and keyboard focus (Tab / arrow-key roving nav) is unaffected — those focus programmatically, not via mousedown.
+
+**Forward-looking notes**
+- Any focusable SVG element that is *directly* clickable (no non-focusable hit-layer on top) will flash a `:focus-visible` ring on mouse click. Either layer a non-focusable hit target over it, or `preventDefault` on its mousedown.
+- The ring CSS itself is correct and intended (WCAG 2.4.7 keyboard focus). The bug was unintended focus-on-pointer, not the ring.
+
+---
+
 ## ☁️ Backend / sync
 
 ### `acceptInvite` 500 error (Alpha 0.2.0.0 polish, commit ff9dda7)

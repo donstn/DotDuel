@@ -1934,6 +1934,111 @@ export const botFallbackSweep = onSchedule(
   },
 );
 
+// Client-triggered fast path for the bot fallback. botFallbackSweep only ticks
+// once a minute (Cloud Scheduler's granularity floor), so a lone player can
+// wait up to ~60s for a bot even though the threshold is short. The
+// matchmaking screen calls this after ~15s of no pairing to get a bot
+// promptly. Mirrors the sweep's per-entry logic (human-first, then bot) and is
+// idempotent: if the caller is no longer queued (already paired, or a bot was
+// just spawned) it no-ops. The sweep remains the backstop for clients that
+// close the tab before this fires.
+export const requestBotMatch = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+
+    const db = getFirestore();
+    const targetSnap = await db.doc(`matchmakingQueue/${uid}`).get();
+    if (!targetSnap.exists) return { matched: 'skip' as const };
+    const target = { ...(targetSnap.data() as QueueEntry), uid };
+
+    const now = Date.now();
+    const targetJoinedMs = target.joinedAt?.toMillis?.() ?? now;
+    const targetWaitedSec = Math.max(0, (now - targetJoinedMs) / 1000);
+    const targetRange = Math.min(
+      MAX_RANGE,
+      target.initialRange + RANGE_PER_SECOND * targetWaitedSec,
+    );
+
+    // Human priority: if a compatible partner is already waiting, pair them
+    // rather than handing the caller a bot.
+    const allSnap = await db.collection('matchmakingQueue').get();
+    type QE = QueueEntry & { uid: string };
+    const allEntries: QE[] = allSnap.docs.map((d) => ({
+      ...(d.data() as QueueEntry),
+      uid: d.id,
+    }));
+    let bestPartner: QE | null = null;
+    let bestPartnerDelta = Infinity;
+    for (const cand of allEntries) {
+      if (cand.uid === target.uid) continue;
+      if (cand.timeControl !== target.timeControl) continue;
+      const candJoinedMs = cand.joinedAt?.toMillis?.() ?? now;
+      const candWaitedSec = Math.max(0, (now - candJoinedMs) / 1000);
+      const candRange = Math.min(
+        MAX_RANGE,
+        cand.initialRange + RANGE_PER_SECOND * candWaitedSec,
+      );
+      const delta = Math.abs(cand.rating - target.rating);
+      if (delta > Math.max(targetRange, candRange)) continue;
+      if (delta < bestPartnerDelta) {
+        bestPartnerDelta = delta;
+        bestPartner = cand;
+      }
+    }
+
+    if (bestPartner) {
+      const [aUserSnap, bUserSnap] = await Promise.all([
+        db.doc(`users/${target.uid}`).get(),
+        db.doc(`users/${bestPartner.uid}`).get(),
+      ]);
+      const aData = aUserSnap.data() ?? {};
+      const bData = bUserSnap.data() ?? {};
+      const partner: QE = bestPartner;
+      const paired = await pairTwoHumans({
+        a: {
+          uid: target.uid,
+          rating: target.rating,
+          displayName: (aData.displayName as string) ?? 'Player',
+          placementGames:
+            typeof aData.placementGamesPlayed === 'number'
+              ? aData.placementGamesPlayed
+              : 0,
+          joinedAtMs: targetJoinedMs,
+        },
+        b: {
+          uid: partner.uid,
+          rating: partner.rating,
+          displayName: (bData.displayName as string) ?? 'Player',
+          placementGames:
+            typeof bData.placementGamesPlayed === 'number'
+              ? bData.placementGamesPlayed
+              : 0,
+          joinedAtMs: partner.joinedAt?.toMillis?.() ?? now,
+        },
+        timeControl: target.timeControl,
+      });
+      if (paired) return { matched: 'human' as const };
+      // else fall through to bot fallback
+    }
+
+    const userSnap = await db.doc(`users/${uid}`).get();
+    const userData = userSnap.data() ?? {};
+    await spawnBotMatch({
+      humanUid: uid,
+      humanRating: target.rating,
+      humanDisplayName: (userData.displayName as string) ?? 'Player',
+      humanPlacementGames:
+        typeof userData.placementGamesPlayed === 'number'
+          ? userData.placementGamesPlayed
+          : 0,
+      timeControl: target.timeControl,
+    });
+    return { matched: 'bot' as const };
+  },
+);
+
 // Trigger on state.current changing — i.e., a turn handoff. If the new
 // active player is a bot, sleep a "thinking" delay then submit a move via
 // pendingMove. validateMove handles it from there (same path as a human).

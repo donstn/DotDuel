@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getBoard } from '../geometry';
 import type { GameState, Line, Player } from '../types';
 
@@ -128,6 +128,8 @@ export function Board({
   const dotRadius = state.shape === 'triangle' ? 0.32 : 0.34;
   const strokeWidth = dotRadius * 0.42;
   const [floats, setFloats] = useState<FloatingScore[]>([]);
+  const [focusedDotId, setFocusedDotId] = useState<number | null>(null);
+  const dotRefs = useRef(new Map<number, SVGCircleElement | null>());
 
   useEffect(() => {
     if (!scoreEvent) return;
@@ -165,16 +167,76 @@ export function Board({
     return arr.slice().sort((a, b) => b.length - a.length)[0];
   };
 
+  const isInteractiveDot = (dotId: number): boolean => {
+    const cd = state.colored[dotId];
+    if (!cd) return !disabled;
+    if (disabled || !onClaimClick) return false;
+    return !!claimableLineForDot(dotId);
+  };
+
+  const activateDot = (dotId: number) => {
+    if (disabled) return;
+    const cd = state.colored[dotId];
+    if (!cd) {
+      onDotClick?.(dotId);
+      return;
+    }
+    const claim = claimableLineForDot(dotId);
+    if (claim && onClaimClick) onClaimClick(claim.id);
+  };
+
+  // Roving-tabindex grid navigation: the board is a single Tab stop; arrow keys
+  // move focus to the nearest dot in that direction. Without this every dot is
+  // its own Tab stop (up to 49 on the square) and the focus ring appears to
+  // jump in DOM order rather than spatially toward where the player is looking.
+  const moveFocus = (fromId: number, dirX: number, dirY: number) => {
+    const from = board.dots[fromId];
+    if (!from) return;
+    let best: number | null = null;
+    let bestScore = Infinity;
+    for (const o of board.dots) {
+      if (o.id === fromId) continue;
+      const vx = o.x - from.x;
+      const vy = o.y - from.y;
+      const along = vx * dirX + vy * dirY;
+      if (along <= 1e-6) continue;
+      const perp = Math.abs(vx * dirY - vy * dirX);
+      const score = along + perp * 2;
+      if (score < bestScore) {
+        bestScore = score;
+        best = o.id;
+      }
+    }
+    if (best === null) return;
+    setFocusedDotId(best);
+    dotRefs.current.get(best)?.focus();
+  };
+
+  const firstInteractiveId =
+    board.dots.find((d) => isInteractiveDot(d.id))?.id ?? board.dots[0]?.id ?? null;
+  const rovingId =
+    focusedDotId !== null && board.dots.some((d) => d.id === focusedDotId)
+      ? focusedDotId
+      : firstInteractiveId;
+
   const overshoot = (dotRadius * 5) / 3;
   const hlRx = dotRadius * 0.42;
   const hlRy = dotRadius * 0.26;
   const hlDx = dotRadius * 0.3;
   const hlDy = dotRadius * 0.38;
 
+  const liveMessage = state.finished
+    ? state.winner === 'draw'
+      ? `Game over. It's a draw, ${state.scores[1]} to ${state.scores[2]}.`
+      : `Game over. Player ${state.winner} wins, ${state.scores[1]} to ${state.scores[2]}.`
+    : `Player ${state.current} to move. Score: Player 1, ${state.scores[1]}; Player 2, ${state.scores[2]}.`;
+
   return (
     <div className="board-wrap">
       <svg
         className="board"
+        role="group"
+        aria-label={`${board.label} game board`}
         viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
         preserveAspectRatio="xMidYMid meet"
       >
@@ -241,6 +303,20 @@ export function Board({
 
           const showHighlight = !!owner;
 
+          const interactive = (!cd && !disabled) || canClaim;
+          const rowNum = d.row + 1;
+          const posNum = d.col + 1;
+          let ariaLabel: string;
+          if (!cd && !disabled) {
+            ariaLabel = `Row ${rowNum}, position ${posNum}, empty. Place your dot.`;
+          } else if (canClaim && claimLine) {
+            const pts = claimLine.length;
+            ariaLabel = `Row ${rowNum}, position ${posNum}, Player ${owner}. Claim line worth ${pts} point${pts === 1 ? '' : 's'}.`;
+          } else if (owner) {
+            ariaLabel = `Row ${rowNum}, position ${posNum}, Player ${owner}.`;
+          } else {
+            ariaLabel = `Row ${rowNum}, position ${posNum}, empty.`;
+          }
           return (
             <g key={d.id} className="dot-group">
               {hintGlow && (
@@ -260,12 +336,33 @@ export function Board({
                 fill={`url(#${fillId})`}
                 className={cls}
                 filter={owner ? 'url(#dot-shadow)' : undefined}
-                onClick={() => {
-                  if (disabled) return;
-                  if (!cd) {
-                    onDotClick?.(d.id);
-                  } else if (canClaim && claimLine) {
-                    onClaimClick?.(claimLine.id);
+                role={interactive ? 'button' : 'img'}
+                aria-label={ariaLabel}
+                tabIndex={d.id === rovingId ? 0 : -1}
+                ref={(el) => {
+                  dotRefs.current.set(d.id, el);
+                }}
+                onClick={() => activateDot(d.id)}
+                onMouseDown={(e) => e.preventDefault()}
+                onFocus={() => setFocusedDotId(d.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    moveFocus(d.id, 0, -1);
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    moveFocus(d.id, 0, 1);
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    moveFocus(d.id, -1, 0);
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    moveFocus(d.id, 1, 0);
+                  } else if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                    if (interactive) {
+                      e.preventDefault();
+                      activateDot(d.id);
+                    }
                   }
                 }}
                 style={{
@@ -300,6 +397,7 @@ export function Board({
                   cy={d.y}
                   r={dotRadius * 1.4}
                   fill="transparent"
+                  aria-hidden="true"
                   onClick={() => onDotClick?.(d.id)}
                   style={{ cursor: 'pointer' }}
                 />
@@ -449,6 +547,9 @@ export function Board({
           );
         })()}
       </svg>
+      <div className="sr-only" role="status" aria-live="polite">
+        {liveMessage}
+      </div>
     </div>
   );
 }

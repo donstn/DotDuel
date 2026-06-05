@@ -5,8 +5,15 @@ import {
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { app, db } from '../firebase';
 import type { Difficulty, ShapeId } from '../types';
+
+const functionsEW1 = getFunctions(app, 'europe-west1');
+const callRequestBotMatch = httpsCallable<
+  void,
+  { matched: 'human' | 'bot' | 'skip' }
+>(functionsEW1, 'requestBotMatch');
 
 export type TimeControl = '1min' | '3min' | '5min';
 
@@ -39,6 +46,14 @@ export async function joinQueue(
     joinedAt: serverTimestamp(),
     initialRange: 50,
   });
+}
+
+// Ask the server to spawn a bot match for the caller now (they've waited long
+// enough on the matchmaking screen). Idempotent server-side: no-ops if the
+// caller has already been paired. Returns who they got matched with, or 'skip'.
+export async function requestBotMatch(): Promise<'human' | 'bot' | 'skip'> {
+  const res = await callRequestBotMatch();
+  return res.data.matched;
 }
 
 export async function cancelQueue(uid: string): Promise<void> {

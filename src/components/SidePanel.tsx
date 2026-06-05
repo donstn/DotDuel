@@ -202,7 +202,7 @@ function HumanAvatar({ player }: { player: Player }) {
   const fg = player === 1 ? 'var(--avatar-p1-fg)' : 'var(--avatar-p2-fg)';
   const bgGrad = player === 1 ? 'avbg-p1' : 'avbg-p2';
   return (
-    <svg viewBox="0 0 100 100" className="avatar-svg">
+    <svg viewBox="0 0 100 100" className="avatar-svg" aria-hidden="true">
       <defs>
         <radialGradient id={bgGrad} cx="35%" cy="30%" r="80%">
           {player === 1 ? (
@@ -236,7 +236,7 @@ function GuestAvatar({ label, player }: { label: string; player: Player }) {
   const fg = player === 1 ? 'var(--avatar-p1-fg)' : 'var(--avatar-p2-fg)';
   const bgGrad = player === 1 ? 'gv-p1' : 'gv-p2';
   return (
-    <svg viewBox="0 0 100 100" className="avatar-svg">
+    <svg viewBox="0 0 100 100" className="avatar-svg" aria-hidden="true">
       <defs>
         <radialGradient id={bgGrad} cx="35%" cy="30%" r="80%">
           {player === 1 ? (
@@ -271,24 +271,25 @@ function GuestAvatar({ label, player }: { label: string; player: Player }) {
 }
 
 function AIAvatar({ level }: { level: Difficulty }) {
+  const label = `AI opponent, ${DIFFICULTY_LABELS[level]} difficulty`;
   switch (level) {
     case 1:
-      return <RobotL1 />;
+      return <RobotL1 label={label} />;
     case 2:
-      return <RobotL2 />;
+      return <RobotL2 label={label} />;
     case 3:
-      return <RobotL3 />;
+      return <RobotL3 label={label} />;
     case 4:
-      return <RobotL4 />;
+      return <RobotL4 label={label} />;
     case 5:
-      return <RobotL5 />;
+      return <RobotL5 label={label} />;
   }
 }
 
 /* L1 Beginner — silliest, asymmetric, drooly smile, biggest cheeks */
-function RobotL1() {
+function RobotL1({ label }: { label: string }) {
   return (
-    <svg viewBox="0 0 100 100" className="avatar-svg">
+    <svg viewBox="0 0 100 100" className="avatar-svg" role="img" aria-label={label}>
       <defs>
         <radialGradient id="rb1-head" cx="40%" cy="30%" r="80%">
           <stop offset="0%" stopColor="#bff7d3" />
@@ -345,9 +346,9 @@ function RobotL1() {
 }
 
 /* L2 Easy — round happy, symmetric eyes, big smile, heart antenna */
-function RobotL2() {
+function RobotL2({ label }: { label: string }) {
   return (
-    <svg viewBox="0 0 100 100" className="avatar-svg">
+    <svg viewBox="0 0 100 100" className="avatar-svg" role="img" aria-label={label}>
       <defs>
         <radialGradient id="rb2-head" cx="40%" cy="30%" r="80%">
           <stop offset="0%" stopColor="#9bf5b8" />
@@ -405,9 +406,9 @@ function RobotL2() {
 }
 
 /* L3 Medium — calmer, rounded square, closed-mouth smile, chest indicator */
-function RobotL3() {
+function RobotL3({ label }: { label: string }) {
   return (
-    <svg viewBox="0 0 100 100" className="avatar-svg">
+    <svg viewBox="0 0 100 100" className="avatar-svg" role="img" aria-label={label}>
       <defs>
         <radialGradient id="rb3-head" cx="40%" cy="30%" r="80%">
           <stop offset="0%" stopColor="#7bd49d" />
@@ -456,9 +457,9 @@ function RobotL3() {
 }
 
 /* L4 Hard — square head, narrow eyes, two antennae, slight frown */
-function RobotL4() {
+function RobotL4({ label }: { label: string }) {
   return (
-    <svg viewBox="0 0 100 100" className="avatar-svg">
+    <svg viewBox="0 0 100 100" className="avatar-svg" role="img" aria-label={label}>
       <defs>
         <radialGradient id="rb4-head" cx="40%" cy="30%" r="80%">
           <stop offset="0%" stopColor="#4a8068" />
@@ -501,9 +502,9 @@ function RobotL4() {
 }
 
 /* L5 Impossible — angular, glowing red eyes, frown, sharp horns + scar */
-function RobotL5() {
+function RobotL5({ label }: { label: string }) {
   return (
-    <svg viewBox="0 0 100 100" className="avatar-svg">
+    <svg viewBox="0 0 100 100" className="avatar-svg" role="img" aria-label={label}>
       <defs>
         <radialGradient id="rb5-head" cx="40%" cy="30%" r="80%">
           <stop offset="0%" stopColor="#2e3a32" />

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DotDuel — Visualization Revamp Preview</title>
+<!--
+  STANDALONE DESIGN PREVIEW — not wired into the app build.
+  Demonstrates the proposed game-visualization revamp using the real
+  Forest & Pearl colour tokens from src/styles.css. Fonts are loaded from
+  Google Fonts (OFL / self-hostable) FOR PREVIEW ONLY — must be self-hosted
+  if adopted, per the zero-cost / no-proprietary-fonts constraint.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   TOKENS — Forest & Pearl (default theme, kept EXACT from styles.css)
+   plus a few NEW tokens that fix dot contrast across light/dark.
+   ============================================================ */
+:root {
+  --p1: #0d4a23;  --p1-glow: #1c7a3d;  --p1-bright: #62cf90;  --p1-deep: #021608;
+  --p2: #d3ecaa;  --p2-glow: #f0fbcf;  --p2-bright: #ffffff;  --p2-deep: #5a7045;
+  --strike-p1-outer:#2b8a4c; --strike-p1-inner:#b8f5d3;
+  --strike-p2-outer:#c8c878; --strike-p2-inner:#ffffff;
+  --accent: #7bdb95;
+  --bg-center:#15291e; --bg-edge:#02090b;
+
+  --glass-bg: rgba(255,255,255,0.05);
+  --glass-bg-strong: rgba(255,255,255,0.09);
+  --glass-border: rgba(255,255,255,0.10);
+  --glass-border-strong: rgba(255,255,255,0.18);
+
+  --text:#eaf3e3; --text-dim:#9fb6a6; --text-mute:#7c9486; --text-bright:#ffffff;
+
+  /* NEW — empty-dot "socket" tokens. The whole point: an empty dot is a
+     RECESSED WELL with a defined rim, so it never dissolves into the bg. */
+  --dot-empty-core:  #081008;          /* deepest centre — near-black so green reads */
+  --dot-empty-mid:   #16261c;          /* body, desaturated so it won't mimic a P1 dot */
+  --dot-empty-rim:   rgba(150,180,164,0.30); /* subtle neutral rim — visible, not "placed" */
+  --dot-empty-spec:  rgba(255,255,255,0.10);
+  --score-pop:#9bffc2; --score-pop-glow:rgba(98,207,144,.85);
+
+  --board-felt-1:#173024; --board-felt-2:#0b1a13;
+  --radius:18px; --radius-sm:12px;
+}
+
+/* ---- LIGHT THEME (representative "Vintage / cream") — the case the user
+        flagged: light-green empty dots used to vanish. Here they read as
+        crisp pressed sockets thanks to the rim + inset shadow. ---- */
+[data-theme="cream"] {
+  --p1:#1f6b39; --p1-glow:#2f8f4e; --p1-bright:#56c47f; --p1-deep:#0c3a1f;
+  --p2:#caa23a; --p2-glow:#e6c25a; --p2-bright:#fff1c0; --p2-deep:#7a5e15;
+  --strike-p1-outer:#2f8f4e; --strike-p1-inner:#bdf0cf;
+  --strike-p2-outer:#caa23a; --strike-p2-inner:#fff6da;
+  --accent:#1f6b39;
+  --bg-center:#efe6d2; --bg-edge:#d8cbb0;
+
+  --glass-bg: rgba(40,28,12,0.05);
+  --glass-bg-strong: rgba(40,28,12,0.09);
+  --glass-border: rgba(40,28,12,0.16);
+  --glass-border-strong: rgba(40,28,12,0.30);
+
+  --text:#2a2014; --text-dim:#5e503c; --text-mute:#7d6e56; --text-bright:#1a1208;
+
+  --dot-empty-core:#d7c9ac; --dot-empty-mid:#cabb98;
+  --dot-empty-rim: rgba(60,44,20,0.45);
+  --dot-empty-spec: rgba(255,255,255,0.6);
+  --board-felt-1:#e6dcc4; --board-felt-2:#d4c6a6;
+  /* dark green pop with a white halo so scored points read on the light board */
+  --score-pop:#0b3a1e; --score-pop-glow:rgba(255,255,255,.9);
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+
+body {
+  min-height:100vh;
+  font-family:'Outfit',system-ui,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 800px at 20% -10%, #1b3327 0%, transparent 55%),
+    radial-gradient(1000px 900px at 110% 120%, #112019 0%, transparent 50%),
+    #05100b;
+  display:flex; flex-direction:column; align-items:center;
+  gap:26px; padding:30px 16px 70px;
+  -webkit-font-smoothing:antialiased;
+}
+body::before { /* film grain */
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- page header / pitch ---------- */
+.pitch { text-align:center; max-width:560px; }
+.pitch .eyebrow {
+  font-family:'Chakra Petch'; letter-spacing:.34em; text-transform:uppercase;
+  font-size:11px; color:var(--accent); font-weight:600;
+}
+.pitch h1 {
+  font-family:'Chakra Petch'; font-weight:700; font-size:30px; margin:.3em 0 .25em;
+  color:#fff; letter-spacing:-.01em;
+}
+.pitch p { color:#9fb6a6; font-size:14.5px; line-height:1.55; }
+
+/* ---------- control deck ---------- */
+.deck {
+  display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+  padding:10px; border-radius:16px; backdrop-filter:blur(10px);
+}
+.deck button {
+  font-family:'Chakra Petch'; font-weight:600; font-size:12px; letter-spacing:.04em;
+  color:#cfe6d6; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+  padding:9px 14px; border-radius:11px; cursor:pointer; transition:.18s;
+  text-transform:uppercase;
+}
+.deck button:hover { background:rgba(123,219,149,.14); border-color:rgba(123,219,149,.4); color:#fff; }
+.deck button.on { background:var(--accent); color:#05210f; border-color:transparent; box-shadow:0 4px 16px rgba(123,219,149,.4); }
+
+/* ============================================================
+   PHONE FRAME
+   ============================================================ */
+.phone {
+  width:390px; max-width:100%; height:760px; position:relative;
+  border-radius:42px; padding:11px;
+  background:linear-gradient(160deg,#243a2e,#0c1812);
+  box-shadow:0 40px 90px -20px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.05),
+             inset 0 1px 0 rgba(255,255,255,.12);
+}
+.screen {
+  position:relative; width:100%; height:100%; border-radius:32px; overflow:hidden;
+  background:
+    radial-gradient(120% 80% at 50% -10%, var(--bg-center) 0%, var(--bg-edge) 70%);
+  display:flex; flex-direction:column;
+  transition:background .5s ease;
+}
+[data-theme="cream"] .screen {
+  background:radial-gradient(130% 90% at 50% -5%, var(--bg-center), var(--bg-edge));
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  display:flex; align-items:center; gap:10px; padding:16px 16px 10px;
+  z-index:5;
+}
+.icon-btn {
+  width:38px; height:38px; flex:0 0 auto; border-radius:12px;
+  display:grid; place-items:center; cursor:pointer;
+  background:var(--glass-bg); border:1px solid var(--glass-border); color:var(--text);
+  transition:.16s;
+}
+.icon-btn:hover { background:var(--glass-bg-strong); border-color:var(--glass-border-strong); }
+.icon-btn svg { width:18px; height:18px; }
+.wordmark {
+  flex:1; text-align:center; font-family:'Chakra Petch'; font-weight:700;
+  font-size:17px; letter-spacing:.02em; color:var(--text-bright);
+}
+.wordmark b { color:var(--accent); }
+
+/* ============================================================
+   PLAYER BAR — two compact tabs (avatar BESIDE name), collapsible
+   ============================================================ */
+.players { padding:4px 14px 6px; }
+.players-row { display:flex; gap:10px; align-items:stretch; }
+
+.ptab {
+  flex:1; display:flex; align-items:center; gap:10px; position:relative;
+  padding:9px 11px; border-radius:16px; overflow:hidden;
+  background:var(--glass-bg); border:1px solid var(--glass-border);
+  transition:.25s;
+}
+.ptab .ava {
+  width:38px; height:38px; flex:0 0 auto; border-radius:12px; position:relative;
+  display:grid; place-items:center;
+}
+.ptab.p1 .ava { background:radial-gradient(circle at 34% 28%, var(--p1-bright), var(--p1) 70%, var(--p1-deep)); }
+.ptab.p2 .ava { background:radial-gradient(circle at 34% 28%, var(--p2-bright), var(--p2) 72%, var(--p2-deep)); }
+.ava svg { width:24px; height:24px; }
+.ptab.p1 .ava svg { color:#06160d; }
+.ptab.p2 .ava svg { color:#2a3a1c; }
+
+.ptab .who { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+.ptab .who .nm {
+  font-weight:600; font-size:14px; color:var(--text-bright);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.ptab .who .meta { font-size:10.5px; color:var(--text-mute); font-weight:500; letter-spacing:.02em; }
+.ptab .score {
+  font-family:'Chakra Petch'; font-weight:700; font-size:32px; line-height:1;
+  font-variant-numeric:tabular-nums; color:var(--text-bright);
+  padding-left:4px; text-shadow:0 0 16px rgba(123,219,149,.35);
+}
+[data-theme="cream"] .ptab .score { text-shadow:none; }
+
+/* active player — alive: gradient energy rail + breathing rim */
+.ptab.active { border-color:transparent; background:var(--glass-bg-strong); }
+.ptab.p1.active { box-shadow:0 0 0 1.5px var(--p1-bright), 0 8px 26px -8px rgba(var(--p1-bright),.4); animation:breathe 2.4s ease-in-out infinite; }
+.ptab.p2.active { box-shadow:0 0 0 1.5px var(--p2-glow), 0 8px 26px -8px rgba(0,0,0,.4); animation:breathe 2.4s ease-in-out infinite; }
+.ptab.active::after {
+  content:""; position:absolute; left:0; right:0; bottom:0; height:3px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  background-size:200% 100%; animation:rail 1.8s linear infinite;
+}
+@keyframes rail { from{background-position:200% 0} to{background-position:-200% 0} }
+@keyframes breathe { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.12)} }
+
+.ptab .turn-dot {
+  position:absolute; top:9px; right:11px; width:7px; height:7px; border-radius:50%;
+  background:var(--accent); box-shadow:0 0 10px var(--accent); opacity:0;
+}
+.ptab.active .turn-dot { opacity:1; }
+
+/* collapsed state — slim single strip, max board room */
+.players.collapsed .ptab { padding:5px 11px; }
+.players.collapsed .ptab .who .meta { display:none; }
+.players.collapsed .ptab .ava { width:26px; height:26px; border-radius:9px; }
+.players.collapsed .ptab .ava svg { width:16px; height:16px; }
+.players.collapsed .ptab .score { font-size:26px; }
+.players.collapsed .ptab .who .nm { font-size:12.5px; }
+
+.collapse-tab {
+  display:block; margin:5px auto 0; width:46px; height:5px; border-radius:3px;
+  background:var(--glass-border-strong); border:none; cursor:pointer; opacity:.7;
+}
+.collapse-tab:hover { opacity:1; }
+
+/* ============================================================
+   BOARD — the hero. Maximised, lit like an arena.
+   ============================================================ */
+.board-zone { flex:1; position:relative; display:grid; place-items:center; padding:6px 14px 2px; min-height:0; }
+.board-glow { /* arena spotlight behind the board — ambient life, NOT on dots */
+  position:absolute; width:80%; aspect-ratio:1; border-radius:50%;
+  background:radial-gradient(circle, rgba(123,219,149,.16), transparent 62%);
+  filter:blur(8px); animation:pulseGlow 5s ease-in-out infinite;
+}
+[data-theme="cream"] .board-glow { background:radial-gradient(circle, rgba(31,107,57,.12), transparent 62%); }
+@keyframes pulseGlow { 0%,100%{opacity:.7; transform:scale(.98)} 50%{opacity:1; transform:scale(1.03)} }
+
+.board-felt {
+  position:relative; width:100%; max-width:330px; aspect-ratio:1;
+  border-radius:24px; padding:14px;
+  background:radial-gradient(120% 120% at 30% 20%, var(--board-felt-1), var(--board-felt-2));
+  border:1px solid var(--glass-border);
+  box-shadow:0 20px 50px -15px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08),
+             inset 0 0 60px rgba(0,0,0,.35);
+}
+svg.board { width:100%; height:100%; display:block; overflow:visible; }
+
+/* dot pop-in (one-shot, staggered — liveness without infinite board animation) */
+@keyframes pop { 0%{transform:scale(0)} 70%{transform:scale(1.14)} 100%{transform:scale(1)} }
+.board circle.dot, .board g.cell { transform-box:fill-box; transform-origin:center; }
+.board g.cell { animation:pop .5s cubic-bezier(.2,1.3,.5,1) backwards; }
+
+.float-score {
+  position:absolute; left:50%; top:38%; transform:translateX(-50%);
+  font-family:'Chakra Petch'; font-weight:700; font-size:42px; color:var(--score-pop);
+  text-shadow:0 0 24px var(--score-pop-glow), 0 0 5px var(--score-pop-glow); pointer-events:none;
+  animation:floatUp 1.6s ease-out infinite;
+}
+@keyframes floatUp { 0%{opacity:0; transform:translate(-50%,8px) scale(.7)} 18%{opacity:1; transform:translate(-50%,-2px) scale(1)} 70%{opacity:1} 100%{opacity:0; transform:translate(-50%,-26px) scale(1)} }
+
+/* ---------- status strip ---------- */
+.status {
+  display:flex; align-items:center; justify-content:center; gap:14px;
+  padding:8px 14px 6px; font-family:'Chakra Petch'; font-weight:600;
+  font-size:12px; letter-spacing:.04em; color:var(--text-dim);
+}
+.status .chip {
+  display:inline-flex; align-items:center; gap:7px;
+  background:var(--glass-bg); border:1px solid var(--glass-border);
+  padding:6px 11px; border-radius:10px;
+}
+.status .chip b { color:var(--accent); font-size:14px; }
+.status .chip.claim b { color:var(--p2-glow); }
+[data-theme="cream"] .status .chip.claim b { color:var(--p2-deep); }
+
+/* ---------- AD SLOT — reserved, framed, never overlaps the board ---------- */
+.adslot {
+  margin:8px 12px 12px; height:56px; flex:0 0 auto; border-radius:14px;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  background:repeating-linear-gradient(135deg, rgba(255,255,255,.025) 0 10px, rgba(255,255,255,.05) 10px 20px);
+  border:1px dashed var(--glass-border-strong); color:var(--text-mute);
+  font-size:11px; letter-spacing:.16em; text-transform:uppercase; font-family:'Chakra Petch';
+}
+.adslot span { opacity:.8; }
+.adslot .tag {
+  font-size:9px; padding:3px 7px; border-radius:6px; letter-spacing:.1em;
+  background:var(--glass-bg-strong); border:1px solid var(--glass-border);
+}
+
+/* ============================================================
+   SHEETS — tidied Rules & Settings (slide-up)
+   ============================================================ */
+.scrim { position:absolute; inset:0; background:rgba(2,9,7,.55); backdrop-filter:blur(3px);
+  opacity:0; pointer-events:none; transition:.25s; z-index:20; }
+.scrim.show { opacity:1; pointer-events:auto; }
+.sheet {
+  position:absolute; left:0; right:0; bottom:0; z-index:21; max-height:86%;
+  transform:translateY(102%); transition:transform .32s cubic-bezier(.2,.9,.3,1);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--bg-center) 92%, #000) , var(--bg-edge));
+  border-top:1px solid var(--glass-border-strong); border-radius:26px 26px 0 0;
+  box-shadow:0 -20px 50px rgba(0,0,0,.5); display:flex; flex-direction:column; overflow:hidden;
+}
+[data-theme="cream"] .sheet { background:linear-gradient(180deg,#f3ecda,#e3d8bf); }
+.sheet.show { transform:translateY(0); }
+.sheet-grip { width:42px; height:5px; border-radius:3px; background:var(--glass-border-strong); margin:10px auto 4px; }
+.sheet-head { display:flex; align-items:center; justify-content:space-between; padding:6px 20px 12px; }
+.sheet-head h2 { font-family:'Chakra Petch'; font-weight:700; font-size:18px; color:var(--text-bright); letter-spacing:.01em; }
+.sheet-body { overflow-y:auto; padding:4px 20px 26px; }
+
+/* tidy rules */
+.rule-step { display:flex; gap:13px; padding:13px 0; border-bottom:1px solid var(--glass-border); }
+.rule-step:last-child { border-bottom:none; }
+.rule-step .num {
+  flex:0 0 auto; width:30px; height:30px; border-radius:10px; display:grid; place-items:center;
+  font-family:'Chakra Petch'; font-weight:700; font-size:14px; color:#05210f;
+  background:var(--accent);
+}
+.rule-step .txt h3 { font-size:14.5px; font-weight:600; color:var(--text-bright); margin-bottom:3px; }
+.rule-step .txt p { font-size:12.8px; line-height:1.5; color:var(--text-dim); }
+.rule-callout {
+  margin-top:14px; padding:13px 15px; border-radius:14px;
+  background:var(--glass-bg); border:1px solid var(--glass-border); border-left:3px solid var(--accent);
+}
+.rule-callout h3 { font-family:'Chakra Petch'; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); margin-bottom:5px; }
+.rule-callout p { font-size:12.8px; line-height:1.5; color:var(--text-dim); }
+
+/* tidy settings */
+.set-group { margin-top:16px; }
+.set-group:first-child { margin-top:4px; }
+.set-group .label {
+  font-family:'Chakra Petch'; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--text-mute); margin-bottom:8px; padding-left:2px;
+}
+.set-card { background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:14px; overflow:hidden; }
+.set-row { display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--glass-border); }
+.set-row:last-child { border-bottom:none; }
+.set-row .ico { width:30px; height:30px; flex:0 0 auto; border-radius:9px; display:grid; place-items:center;
+  background:var(--glass-bg-strong); color:var(--accent); }
+.set-row .ico svg { width:16px; height:16px; }
+.set-row .rt { flex:1; min-width:0; }
+.set-row .rt .t { font-size:13.5px; font-weight:600; color:var(--text-bright); }
+.set-row .rt .s { font-size:11px; color:var(--text-mute); margin-top:1px; }
+.set-row .val { font-size:12.5px; color:var(--text-dim); font-weight:500; }
+.switch { width:42px; height:25px; border-radius:13px; background:var(--glass-border-strong); position:relative; cursor:pointer; transition:.2s; flex:0 0 auto; }
+.switch.on { background:var(--accent); }
+.switch::after { content:""; position:absolute; top:3px; left:3px; width:19px; height:19px; border-radius:50%; background:#fff; transition:.2s; box-shadow:0 2px 5px rgba(0,0,0,.3); }
+.switch.on::after { left:20px; }
+.seg { display:flex; gap:4px; background:var(--glass-bg-strong); padding:3px; border-radius:10px; }
+.seg button { font-family:'Outfit'; font-size:11.5px; font-weight:600; color:var(--text-dim); background:transparent; border:none; padding:5px 10px; border-radius:8px; cursor:pointer; }
+.seg button.on { background:var(--accent); color:#05210f; }
+
+.caption { color:#7c9486; font-size:12px; text-align:center; max-width:380px; line-height:1.5; }
+.legend { display:flex; flex-wrap:wrap; gap:7px 16px; justify-content:center; max-width:560px; }
+.legend div { display:flex; align-items:center; gap:7px; font-size:12px; color:#9fb6a6; }
+.legend i { width:11px; height:11px; border-radius:3px; display:inline-block; }
+</style>
+</head>
+<body>
+
+<div class="pitch">
+  <div class="eyebrow">DotDuel · Visualization Revamp</div>
+  <h1>From "AI demo" → living arena</h1>
+  <p>Same Forest&nbsp;&amp; Pearl palette, more alive. Bigger board, collapsible player tabs, fixed empty-dot contrast, tidied panels, and ad slots designed into the layout. Use the controls below.</p>
+</div>
+
+<div class="deck">
+  <button id="t-forest" class="on" onclick="setTheme('forest')">Forest (main)</button>
+  <button id="t-cream" onclick="setTheme('cream')">Light theme</button>
+  <button id="b-collapse" onclick="toggleCollapse()">Collapse tabs</button>
+  <button onclick="openSheet('rules')">Rules</button>
+  <button onclick="openSheet('settings')">Settings</button>
+  <button onclick="replayPop()">▸ Replay</button>
+</div>
+
+<div class="phone">
+  <div class="screen" id="screen" data-theme="forest">
+
+    <!-- top bar -->
+    <div class="topbar">
+      <div class="icon-btn" title="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="wordmark">Dot<b>Duel</b></div>
+      <div class="icon-btn" title="Settings" onclick="openSheet('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.61.74 1.05 1.4 1.1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+      <div class="icon-btn" title="Rules" onclick="openSheet('rules')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12" y2="17"/></svg></div>
+    </div>
+
+    <!-- player bar -->
+    <div class="players" id="players">
+      <div class="players-row">
+        <div class="ptab p1 active">
+          <span class="turn-dot"></span>
+          <div class="ava"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="10" r="1.6"/><circle cx="15" cy="10" r="1.6"/><path d="M8 15c1 1.2 2.4 1.8 4 1.8s3-.6 4-1.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <div class="who"><div class="nm">You</div><div class="meta">1240 · ●●●○○</div></div>
+          <div class="score">12</div>
+        </div>
+        <div class="ptab p2">
+          <div class="ava"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="7.5" y="8.5" width="2.6" height="3.4" rx="1.1"/><rect x="13.9" y="8.5" width="2.6" height="3.4" rx="1.1"/><path d="M9 15.4h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <div class="who"><div class="nm">Ranger</div><div class="meta">1198 · BOT L3</div></div>
+          <div class="score">9</div>
+        </div>
+      </div>
+      <button class="collapse-tab" onclick="toggleCollapse()" title="Collapse / expand"></button>
+    </div>
+
+    <!-- board -->
+    <div class="board-zone">
+      <div class="board-glow"></div>
+      <div class="board-felt">
+        <svg class="board" id="board" viewBox="0 0 100 100"></svg>
+        <div class="float-score">+5</div>
+      </div>
+    </div>
+
+    <!-- status strip -->
+    <div class="status">
+      <span class="chip">Points left <b>8</b></span>
+      <span class="chip claim">Lines to claim <b>2</b></span>
+    </div>
+
+    <!-- designed-in ad slot -->
+    <div class="adslot"><span class="tag">AD</span><span>Reserved banner · 320×50 · never overlaps the board</span></div>
+
+    <!-- sheets -->
+    <div class="scrim" id="scrim" onclick="closeSheet()"></div>
+
+    <div class="sheet" id="sheet-rules">
+      <div class="sheet-grip"></div>
+      <div class="sheet-head"><h2>How to play</h2><div class="icon-btn" onclick="closeSheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div></div>
+      <div class="sheet-body">
+        <div class="rule-step"><div class="num">1</div><div class="txt"><h3>Take your turn</h3><p>On each turn, colour one empty dot — or claim a pending line. Then it's the other player's move.</p></div></div>
+        <div class="rule-step"><div class="num">2</div><div class="txt"><h3>Complete a line, score it</h3><p>Fill a full run of dots in any valid direction to score points equal to its length.</p></div></div>
+        <div class="rule-step"><div class="num">3</div><div class="txt"><h3>Biggest line wins the move</h3><p>If a move completes several lines, only the <b>longest</b> scores now. The rest become <b>pending</b> — claim them on a later turn.</p></div></div>
+        <div class="rule-callout"><h3>Winning</h3><p>The game ends when every dot is filled and every line is claimed. Highest score wins — equal scores draw.</p></div>
+      </div>
+    </div>
+
+    <div class="sheet" id="sheet-settings">
+      <div class="sheet-grip"></div>
+      <div class="sheet-head"><h2>Settings</h2><div class="icon-btn" onclick="closeSheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div></div>
+      <div class="sheet-body">
+        <div class="set-group">
+          <div class="label">Profile</div>
+          <div class="set-card">
+            <div class="set-row"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div><div class="rt"><div class="t">Display name</div><div class="s">Shown to opponents</div></div><div class="val">You ›</div></div>
+            <div class="set-row"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div><div class="rt"><div class="t">Signed in</div><div class="s">donstn@gmail.com</div></div><div class="val">Manage ›</div></div>
+          </div>
+        </div>
+        <div class="set-group">
+          <div class="label">Appearance</div>
+          <div class="set-card">
+            <div class="set-row"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div><div class="rt"><div class="t">Theme</div><div class="s">Forest &amp; Pearl</div></div><div class="seg"><button class="on">Dark</button><button>Light</button></div></div>
+            <div class="set-row"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg></div><div class="rt"><div class="t">Reduce motion</div><div class="s">Calmer animations</div></div><div class="switch" onclick="this.classList.toggle('on')"></div></div>
+          </div>
+        </div>
+        <div class="set-group">
+          <div class="label">Gameplay</div>
+          <div class="set-card">
+            <div class="set-row"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="rt"><div class="t">Show unclaimed lines</div><div class="s">Highlight what you can claim</div></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+            <div class="set-row"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/></svg></div><div class="rt"><div class="t">Sound effects</div><div class="s">Pops, claims, win sting</div></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="legend">
+  <div><i style="background:radial-gradient(circle at 34% 28%,#62cf90,#0d4a23)"></i> P1 claimed (lit gem)</div>
+  <div><i style="background:radial-gradient(circle at 34% 28%,#fff,#d3ecaa)"></i> P2 claimed</div>
+  <div><i style="background:#1f3a2c;border:1.5px solid rgba(123,219,149,.55)"></i> Empty — rimmed socket (never vanishes)</div>
+  <div><i style="background:#1f3a2c;box-shadow:0 0 0 1.5px #f0fbcf"></i> Pending (claimable)</div>
+</div>
+<p class="caption">Toggle <b>Light theme</b> to see the empty-dot fix: instead of pale dots dissolving into a cream background, every empty dot reads as a crisp pressed socket with a defined rim. The board stays the biggest element on screen; <b>Collapse tabs</b> shows how much more board you get on small phones.</p>
+
+<script>
+/* ---- board generator: 7×7 square, mid-game, contrast-first dots ---- */
+const SVG='http://www.w3.org/2000/svg';
+const N=7, M=8, GAP=(100-2*M)/(N-1), R=5.4;
+// owner map: 1=P1, 2=P2, 'pend'=P2 pending (claimable), 0=empty
+const owners={};
+[['0,0',1],['0,1',1],['0,2',1],['0,3',1],['0,4',1],['0,5',1],['0,6',1], // top row: completed P1 line
+ ['2,2',2],['3,2',2],['4,2',2], // partial P2 column
+ ['4,4','pend'],['5,5','pend'],['6,6','pend'], // pending P2 diagonal
+ ['2,5',1],['3,4',1],['6,1',2],['5,1',2]].forEach(([k,v])=>owners[k]=v);
+
+function buildBoard(){
+  const b=document.getElementById('board'); b.innerHTML='';
+  const defs=document.createElementNS(SVG,'defs');
+  defs.innerHTML=`
+    <radialGradient id="g1" cx="34%" cy="28%" r="74%"><stop offset="0%" stop-color="var(--p1-bright)"/><stop offset="42%" stop-color="var(--p1-glow)"/><stop offset="84%" stop-color="var(--p1)"/><stop offset="100%" stop-color="var(--p1-deep)"/></radialGradient>
+    <radialGradient id="g2" cx="34%" cy="28%" r="72%"><stop offset="0%" stop-color="var(--p2-bright)"/><stop offset="34%" stop-color="var(--p2-glow)"/><stop offset="80%" stop-color="var(--p2)"/><stop offset="100%" stop-color="var(--p2-deep)"/></radialGradient>
+    <radialGradient id="ge" cx="36%" cy="30%" r="75%"><stop offset="0%" stop-color="var(--dot-empty-mid)"/><stop offset="60%" stop-color="var(--dot-empty-core)"/><stop offset="100%" stop-color="var(--dot-empty-core)"/></radialGradient>
+    <filter id="lit" x="-70%" y="-70%" width="240%" height="240%"><feDropShadow dx="0" dy="0" stdDeviation="2.9" flood-color="var(--p1-bright)" flood-opacity="0.9"/></filter>
+    <filter id="lit2" x="-70%" y="-70%" width="240%" height="240%"><feDropShadow dx="0" dy="0" stdDeviation="2.4" flood-color="var(--p2-glow)" flood-opacity="0.6"/></filter>`;
+  b.appendChild(defs);
+
+  // strike behind dots for the completed top row (P1 ribbon)
+  function strike(x1,y1,x2,y2,outer,inner){
+    const o=document.createElementNS(SVG,'line'); o.setAttribute('x1',x1);o.setAttribute('y1',y1);o.setAttribute('x2',x2);o.setAttribute('y2',y2);
+    o.setAttribute('stroke',outer); o.setAttribute('stroke-width',R*0.62); o.setAttribute('stroke-linecap','round'); b.appendChild(o);
+    const i=document.createElementNS(SVG,'line'); i.setAttribute('x1',x1);i.setAttribute('y1',y1);i.setAttribute('x2',x2);i.setAttribute('y2',y2);
+    i.setAttribute('stroke',inner); i.setAttribute('stroke-width',R*0.22); i.setAttribute('stroke-linecap','round'); b.appendChild(i);
+  }
+  const y0=M, xA=M-R*1.6, xB=100-M+R*1.6;
+  strike(xA,y0,xB,y0,'var(--strike-p1-outer)','var(--strike-p1-inner)');
+
+  let idx=0;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const x=M+c*GAP, y=M+r*GAP, who=owners[r+','+c]||0;
+    const g=document.createElementNS(SVG,'g'); g.setAttribute('class','cell');
+    g.style.animationDelay=(idx*8)+'ms'; idx++;
+
+    if(who===0||who==='pend'){
+      // empty socket: inset well + defined rim → visible on any background
+      // empty well is SMALLER than a placed dot — so a placed dot clearly reads
+      // as a raised token sitting proud of the socket, not just a colour change.
+      const re=R*0.8;
+      const well=document.createElementNS(SVG,'circle');
+      well.setAttribute('cx',x);well.setAttribute('cy',y);well.setAttribute('r',re);
+      well.setAttribute('fill','url(#ge)');
+      well.setAttribute('stroke','var(--dot-empty-rim)'); well.setAttribute('stroke-width',0.8);
+      g.appendChild(well);
+      // tiny top specular so it reads as 3D, not a flat hole
+      const sp=document.createElementNS(SVG,'ellipse');
+      sp.setAttribute('cx',x-re*0.28);sp.setAttribute('cy',y-re*0.34);
+      sp.setAttribute('rx',re*0.34);sp.setAttribute('ry',re*0.2);
+      sp.setAttribute('fill','var(--dot-empty-spec)'); g.appendChild(sp);
+      if(who==='pend'){ // pending ring — claimable
+        const ring=document.createElementNS(SVG,'circle');
+        ring.setAttribute('cx',x);ring.setAttribute('cy',y);ring.setAttribute('r',R*1.34);
+        ring.setAttribute('fill','none'); ring.setAttribute('stroke','var(--p2-glow)');
+        ring.setAttribute('stroke-width',0.7); ring.setAttribute('opacity','0.85'); g.appendChild(ring);
+        const core=document.createElementNS(SVG,'circle');
+        core.setAttribute('cx',x);core.setAttribute('cy',y);core.setAttribute('r',R);
+        core.setAttribute('fill','url(#g2)'); core.setAttribute('opacity','0.92'); g.appendChild(core);
+      }
+    } else {
+      const dot=document.createElementNS(SVG,'circle'); dot.setAttribute('class','dot');
+      dot.setAttribute('cx',x);dot.setAttribute('cy',y);dot.setAttribute('r',R);
+      dot.setAttribute('fill', who===1?'url(#g1)':'url(#g2)');
+      dot.setAttribute('filter', who===1?'url(#lit)':'url(#lit2)');
+      // rim light defines the sphere edge so a dark-green P1 dot pops off the dark board
+      dot.setAttribute('stroke', who===1?'rgba(123,219,149,0.45)':'rgba(255,255,255,0.4)');
+      dot.setAttribute('stroke-width',0.45);
+      g.appendChild(dot);
+      const sp=document.createElementNS(SVG,'ellipse');
+      sp.setAttribute('cx',x-R*0.3);sp.setAttribute('cy',y-R*0.36);
+      sp.setAttribute('rx',R*0.36);sp.setAttribute('ry',R*0.22);
+      sp.setAttribute('fill','rgba(255,255,255,0.55)'); g.appendChild(sp);
+    }
+    b.appendChild(g);
+  }
+}
+buildBoard();
+
+function setTheme(t){
+  document.getElementById('screen').setAttribute('data-theme',t);
+  document.getElementById('t-forest').classList.toggle('on',t==='forest');
+  document.getElementById('t-cream').classList.toggle('on',t==='cream');
+}
+function toggleCollapse(){
+  const p=document.getElementById('players'), b=document.getElementById('b-collapse');
+  p.classList.toggle('collapsed'); b.classList.toggle('on');
+}
+function openSheet(which){
+  document.getElementById('scrim').classList.add('show');
+  document.getElementById('sheet-'+which).classList.add('show');
+}
+function closeSheet(){
+  document.getElementById('scrim').classList.remove('show');
+  document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('show'));
+}
+function replayPop(){ buildBoard(); }
+</script>
+</body>
+</html>

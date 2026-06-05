@@ -318,7 +318,11 @@ Patent on the biggest-only-with-pending mechanic was explicitly ruled out (€5k
 
 ### Sounds
 
-Need to create apropriate sunds based on the game. will have to think about this after the retention and gameplay is complete.
+Need to create appropriate sounds based on the game. Surfaced again in the 2026-06-05 visualization revamp — the new Settings design exposes a **Sound effects** toggle, so the audio engine (dot pop, line claim, win sting) needs building before that toggle ships. Still gated behind retention/gameplay work.
+
+### Replay
+
+Game **replay / watch-back**, surfaced in the 2026-06-05 visualization revamp. Scope TBD — likely re-watching a finished game move-by-move from stored move history, possibly shareable. Define the feature before building. Future, not now.
 
 ### Monetization (TBD)
 

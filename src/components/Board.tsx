@@ -125,6 +125,7 @@ export function Board({
 }: Props) {
   const board = getBoard(state.shape);
   const vb = board.viewBox;
+  const feltMin = Math.min(vb.w, vb.h);
   const dotRadius = state.shape === 'triangle' ? 0.32 : 0.34;
   const strokeWidth = dotRadius * 0.42;
   const [floats, setFloats] = useState<FloatingScore[]>([]);
@@ -253,15 +254,15 @@ export function Board({
             <stop offset="78%" stopColor="var(--p2)" />
             <stop offset="100%" stopColor="var(--p2-deep)" />
           </radialGradient>
-          <radialGradient id="dot-empty" cx="35%" cy="30%" r="72%">
-            <stop offset="0%" stopColor="#6b8a78" stopOpacity="0.85" />
-            <stop offset="55%" stopColor="#2c4434" />
-            <stop offset="100%" stopColor="#0c1a14" />
+          <radialGradient id="dot-empty" cx="36%" cy="30%" r="75%">
+            <stop offset="0%" stopColor="var(--dot-empty-mid)" />
+            <stop offset="58%" stopColor="var(--dot-empty-core)" />
+            <stop offset="100%" stopColor="var(--dot-empty-core)" />
           </radialGradient>
-          <radialGradient id="dot-empty-hover" cx="35%" cy="30%" r="72%">
-            <stop offset="0%" stopColor="#8ab098" stopOpacity="0.95" />
-            <stop offset="55%" stopColor="#3c5b46" />
-            <stop offset="100%" stopColor="#10231a" />
+          <radialGradient id="dot-empty-hover" cx="36%" cy="30%" r="75%">
+            <stop offset="0%" stopColor="var(--dot-empty-rim)" />
+            <stop offset="55%" stopColor="var(--dot-empty-mid)" />
+            <stop offset="100%" stopColor="var(--dot-empty-core)" />
           </radialGradient>
           <radialGradient id="dot-highlight" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
@@ -279,7 +280,22 @@ export function Board({
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <radialGradient id="board-felt" cx="32%" cy="22%" r="92%">
+            <stop offset="0%" stopColor="var(--board-felt-1)" />
+            <stop offset="100%" stopColor="var(--board-felt-2)" />
+          </radialGradient>
         </defs>
+
+        <rect
+          x={vb.x + feltMin * 0.015}
+          y={vb.y + feltMin * 0.015}
+          width={vb.w - feltMin * 0.03}
+          height={vb.h - feltMin * 0.03}
+          rx={feltMin * 0.06}
+          fill="url(#board-felt)"
+          stroke="var(--board-felt-border)"
+          strokeWidth={feltMin * 0.008}
+        />
 
         {board.dots.map((d) => {
           const cd = state.colored[d.id];
@@ -332,7 +348,7 @@ export function Board({
               <circle
                 cx={d.x}
                 cy={d.y}
-                r={dotRadius}
+                r={owner ? dotRadius : dotRadius * 0.82}
                 fill={`url(#${fillId})`}
                 className={cls}
                 filter={owner ? 'url(#dot-shadow)' : undefined}

@@ -1,3 +1,28 @@
+/* Self-hosted fonts (OFL, served from 'self' per CSP font-src). Outfit is a
+   variable font (one file covers all weights); Chakra Petch ships per-weight.
+   Display font = Chakra Petch (HUD/scores/headings); body = Outfit. */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./assets/fonts/outfit-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/chakra-petch-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/chakra-petch-700.woff2') format('woff2');
+}
+
 /*
  * THEME SYSTEM
  * Each theme owns the full var set below. :root holds the default
@@ -53,6 +78,21 @@
   /* Misc */
   --accent: #7bdb95;
   --danger: #d97565;
+
+  /* Empty-dot "socket" — a recessed well with a defined rim so an unplayed
+     dot never dissolves into the board (especially on light themes). Light
+     themes override these below; placed dots read as raised tokens by contrast. */
+  --dot-empty-core: #0a1210;
+  --dot-empty-mid: #21302a;
+  --dot-empty-rim: rgba(170, 195, 182, 0.32);
+
+  /* Board "felt" — the framed playing surface behind the dots. */
+  --board-felt-1: #16291e;
+  --board-felt-2: #0a1812;
+  --board-felt-border: rgba(255, 255, 255, 0.10);
+
+  --font-body: 'Outfit', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Chakra Petch', 'Outfit', system-ui, sans-serif;
   --radius: 16px;
   --radius-lg: 22px;
 }
@@ -250,6 +290,13 @@
 [data-theme="monochrome-pro"] {
   /* Player 1 — deep black */
   --p1: #1a1a1c;
+  /* light theme — parchment-grey socket with dark rim */
+  --dot-empty-core: #cfcfcf;
+  --dot-empty-mid: #e8e8e8;
+  --dot-empty-rim: rgba(20, 20, 22, 0.40);
+  --board-felt-1: #f0f0f0;
+  --board-felt-2: #e2e2e2;
+  --board-felt-border: rgba(20, 20, 22, 0.18);
   --p1-glow: #2c2c2e;
   --p1-bright: #5a5a5c;
   --p1-deep: #000000;
@@ -302,6 +349,13 @@
 [data-theme="vintage-press"] {
   /* Player 1 — burgundy ink */
   --p1: #8b1a2b;
+  /* light theme — warm parchment socket with dark rim */
+  --dot-empty-core: #cabb98;
+  --dot-empty-mid: #ddd0b4;
+  --dot-empty-rim: rgba(55, 40, 18, 0.42);
+  --board-felt-1: #ece1c8;
+  --board-felt-2: #ddd0b0;
+  --board-felt-border: rgba(55, 40, 18, 0.24);
   --p1-glow: #a82a3e;
   --p1-bright: #c54d62;
   --p1-deep: #3a0810;
@@ -371,7 +425,7 @@ body,
   margin: 0;
   padding: 0;
   color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-body);
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
 }
@@ -1581,8 +1635,8 @@ button {
 }
 
 .player-score {
-  font-size: clamp(1.4rem, 4.6vw, 2rem);
-  font-weight: 700;
+  font-size: clamp(1.7rem, 5.4vw, 2.35rem);
+  font-weight: 800;
   letter-spacing: 0.01em;
   margin-top: 2px;
   line-height: 1;
@@ -1596,6 +1650,16 @@ button {
 .side-panel-p2 .player-score {
   color: var(--p2-glow);
   text-shadow: 0 0 14px rgba(var(--p2-rgb-bright), 0.35);
+}
+
+/* Light themes: a light player colour (white/cream P2) would vanish on the
+   light board, so outline the score digits in dark ink for legibility while
+   keeping the player-colour fill. */
+[data-theme="monochrome-pro"] .player-score,
+[data-theme="vintage-press"] .player-score {
+  -webkit-text-stroke: 0.7px rgba(35, 24, 12, 0.55);
+  paint-order: stroke fill;
+  text-shadow: none;
 }
 
 .player-points-totals {
@@ -1675,6 +1739,13 @@ button {
 
 /* ---------------- Board ---------------- */
 
+/* Display font for HUD numbers + headings — gives the "gamelike" identity. */
+h1, h2, h3,
+.player-score,
+.remaining-points {
+  font-family: var(--font-display);
+}
+
 .board-wrap {
   flex: 1;
   display: flex;
@@ -1683,7 +1754,22 @@ button {
   min-height: 0;
   min-width: 0;
   padding: 12px;
+  position: relative;
 }
+
+/* Arena spotlight behind the board — static (no animation, respects the
+   "no infinite animation on board content" rule), pure ambient depth. */
+.board-wrap::before {
+  content: "";
+  position: absolute;
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--p1-rgb-bright), 0.10), transparent 62%);
+  pointer-events: none;
+  z-index: 0;
+}
+.board { position: relative; z-index: 1; }
 
 .board {
   width: 100%;
@@ -1702,12 +1788,26 @@ button {
 }
 
 .dot-empty {
-  opacity: 0.78;
+  opacity: 1;
+  stroke: var(--dot-empty-rim);
+  stroke-width: 0.05;
 }
 
 .dot-empty:hover {
   opacity: 1;
-  filter: brightness(1.25);
+  filter: brightness(1.3);
+}
+
+/* Rim light on placed dots — defines the sphere edge so a dark P1 token reads
+   clearly against a dark board. Cheap stroke, NOT a GPU filter, so it doesn't
+   add to the endgame compositor budget (see bugs.md — Rendering/GPU). */
+.dot-p1 {
+  stroke: rgba(var(--p1-rgb-bright), 0.42);
+  stroke-width: 0.04;
+}
+.dot-p2 {
+  stroke: rgba(var(--p2-rgb-bright), 0.5);
+  stroke-width: 0.04;
 }
 
 .dot-last {
@@ -2054,7 +2154,11 @@ button {
 .settings-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 9px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 13px 15px;
 }
 
 .settings-section h3 {
@@ -2100,26 +2204,51 @@ button {
 
 .settings-toggle {
   display: flex;
+  flex-direction: row-reverse;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 12px;
   font-size: 0.86rem;
   color: var(--text);
   cursor: pointer;
 }
 
+/* iOS-style switch (replaces the default checkbox) */
 .settings-toggle input[type="checkbox"] {
-  accent-color: var(--accent);
-  width: 18px;
-  height: 18px;
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 42px;
+  height: 25px;
+  border-radius: 13px;
+  background: var(--glass-border-strong);
+  position: relative;
   cursor: pointer;
+  transition: background 160ms;
+}
+.settings-toggle input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 160ms;
+}
+.settings-toggle input[type="checkbox"]:checked {
+  background: var(--accent);
+}
+.settings-toggle input[type="checkbox"]:checked::after {
+  transform: translateX(17px);
 }
 
 .settings-danger {
-  border-top: 1px solid var(--glass-border);
-  padding-top: 14px;
-  margin-top: 4px;
   align-items: stretch;
   gap: 8px;
+  border-color: rgba(217, 117, 101, 0.28);
 }
 
 .settings-danger .settings-danger-btn {
@@ -3281,7 +3410,7 @@ body:has(.consent-banner) .game-screen {
   }
 
   .player-score {
-    font-size: 1.4rem;
+    font-size: 1.7rem;
     margin: 2px 0 0;
     line-height: 1;
     flex-shrink: 0;
@@ -3462,7 +3591,7 @@ body:has(.consent-banner) .rules-card {
     font-size: 0.74rem;
   }
   .player-score {
-    font-size: 1.15rem;
+    font-size: 1.4rem;
   }
 
   .menu {

@@ -1559,15 +1559,13 @@ button {
 }
 
 .side-panel-left {
-  border-left: none;
-  border-radius: 0 var(--radius) var(--radius) 0;
-  margin-left: -1px;
+  border-radius: var(--radius);
+  margin-left: 8px;
 }
 
 .side-panel-right {
-  border-right: none;
-  border-radius: var(--radius) 0 0 var(--radius);
-  margin-right: -1px;
+  border-radius: var(--radius);
+  margin-right: 8px;
 }
 
 .side-panel.active {

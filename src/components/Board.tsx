@@ -255,10 +255,12 @@ export function Board({
   const feltPoly = offsetPolygon(
     convexHull(board.dots.map((d) => ({ x: d.x, y: d.y }))),
     dotRadius * 1.7,
-    dotRadius * 2.4
+    // Keep corner miter close to the edge margin so sharp shapes (triangle)
+    // don't bulge a big gap at the points — even spacing all the way round.
+    dotRadius * 1.95
   );
   const feltPath = roundedPolygonPath(feltPoly, feltRound);
-  const rimPoly = offsetPolygon(feltPoly, rimWidth, rimWidth * 1.6);
+  const rimPoly = offsetPolygon(feltPoly, rimWidth, rimWidth * 1.1);
   const rimPath = roundedPolygonPath(rimPoly, feltRound + rimWidth * 0.6);
   const [floats, setFloats] = useState<FloatingScore[]>([]);
   const [focusedDotId, setFocusedDotId] = useState<number | null>(null);

@@ -30,6 +30,25 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.3.3.0',
+    date: '2026-06-06',
+    highlight: 'A cleaner, more polished board — beta-ready',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Redesigned the board frame: the felt now sits in an evenly-spaced, smooth rounded-corner bezel with a subtle recessed 3D look — and it frames every shape correctly, including the triangle’s sharp point (previously the outline looked uneven).',
+      },
+      {
+        kind: 'fixed',
+        text: 'Player cards in a game now sit fully on screen as rounded cards instead of bleeding off the edges.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Fixed an in-game tip popup whose text could overflow the board.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.3.2.0',
     date: '2026-06-06',
     highlight: 'A more premium look · win celebrations',

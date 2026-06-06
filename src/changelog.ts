@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.3.0.0',
+    date: '2026-06-06',
+    highlight: 'Ads support the free game · multiplayer no-show protection',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Small ads now appear on the menu and free single-player screens (Vs-AI, Hot-seat, Daily) to keep DotDuel free to run. No ads during ranked multiplayer games. Consent is handled by a Google privacy prompt.',
+      },
+      {
+        kind: 'added',
+        text: 'Multiplayer no-show protection: if a player doesn’t make their first move within 10 seconds, the game aborts with no rating change for either side — so a disconnect or distraction at the start never costs you.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.2.9.0',
     date: '2026-06-06',
     highlight: 'Visual revamp + readable on every theme',

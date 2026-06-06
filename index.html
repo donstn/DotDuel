@@ -18,9 +18,18 @@
       no equivalent need for scripts. frame-ancestors 'none' blocks
       clickjacking via iframe embedding.
     -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.firebaseapp.com https://apis.google.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.cloudfunctions.net https://*.run.app https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.google-analytics.com https://region1.google-analytics.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https://*.googleusercontent.com https://www.google-analytics.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none';" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.firebaseapp.com https://apis.google.com https://pagead2.googlesyndication.com https://fundingchoicesmessages.google.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.cloudfunctions.net https://*.run.app https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.google-analytics.com https://region1.google-analytics.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net wss://*.firebaseio.com wss://*.firebasedatabase.app; img-src 'self' data: https://*.googleusercontent.com https://www.google-analytics.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://fundingchoicesmessages.google.com https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none';" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Google Consent Mode defaults (all denied) + AdSense tag. The defaults
+         MUST run before the AdSense tag so Google's certified CMP gates ad and
+         analytics storage until the user consents. consent-default.js is
+         self-hosted (CSP script-src 'self') because inline scripts are blocked
+         by our CSP. The AdSense tag both serves ads and renders the CMP. -->
+    <script src="/consent-default.js"></script>
+    <script async crossorigin="anonymous"
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1268043579532481"></script>
 
     <title>DotDuel — Free 2-Player Dot Strategy Game (online &amp; vs AI)</title>
 

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { loadConsent } from '../consent';
 import {
   ADSENSE_CLIENT,
   ADSENSE_SLOT,
@@ -29,11 +28,12 @@ interface Props {
 }
 
 /**
- * Renders a single AdSense ad unit. Triple-gated:
+ * Renders a single AdSense ad unit. Gated by our own switches:
  *   - ADS_ENABLED master switch (in src/ads.ts).
  *   - Early-adopter grandfather (firstLoadMs < ADS_GRANDFATHER_BEFORE_MS).
- *   - GDPR consent === 'accepted'.
- * If any gate is closed, the component renders NOTHING in production.
+ * GDPR/ePrivacy consent is handled by Google's certified CMP (loaded in
+ * index.html), NOT our old homemade banner — so this component no longer
+ * checks a local consent flag. If a gate is closed it renders NOTHING.
  *
  * EXCEPTION — ADS_PREVIEW_PLACEHOLDER (monetization branch): when the gates are
  * closed but the preview flag is on, render a visible, numbered mock box so the
@@ -45,9 +45,8 @@ interface Props {
  * Remounting the component (e.g. keyed by screen) yields a fresh ad.
  */
 export function AdBanner({ slot = ADSENSE_SLOT, placement = 'menu' }: Props) {
-  const consent = loadConsent();
   const initializedRef = useRef(false);
-  const allowed = isAdsAllowedForThisUser() && consent === 'accepted';
+  const allowed = isAdsAllowedForThisUser();
 
   // One stable id per mounted instance (preview labelling only). The increment
   // lives in an effect, NOT a useState initializer: initializers are impure-

@@ -3533,7 +3533,12 @@ body:has(.consent-banner) .game-screen {
   .side-panel-right { grid-area: p2; }
   .board-wrap {
     grid-area: board;
-    padding: 14px 0 10px;
+    /* Top-align the board so it sits up near the player cards instead of
+       centring in the tall grid area (which left a big gap above on mobile,
+       worst on the width-limited triangle). Spare room falls below for the
+       ad band. */
+    align-items: flex-start;
+    padding: 18px 0 10px;
     min-height: 0;
   }
 
@@ -4486,6 +4491,28 @@ body:has(.consent-banner) .rules-card {
 
 .auth-toggle a:hover {
   text-decoration: underline;
+}
+
+/* Login gate: "New here?" enlarged ~2 steps; the anonymous escape link sits
+   below it at the toggle's normal (pre-enlargement) size. */
+.auth-card.is-gate .auth-toggle {
+  font-size: 1.08rem;
+}
+.auth-anon {
+  display: block;
+  margin: 12px auto 0;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-mute);
+  text-decoration: underline;
+  font-family: inherit;
+}
+.auth-anon:hover:not(:disabled) {
+  color: var(--accent);
 }
 
 .app-footer-account {

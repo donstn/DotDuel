@@ -10,6 +10,10 @@ import { auth } from '../firebase';
 
 interface Props {
   onClose: () => void;
+  /** Login-gate mode (shown on load when signed out): no backdrop/ESC/✕
+   *  dismiss, "Sign in to play" framing, plus a "play anonymous" escape link. */
+  gate?: boolean;
+  onPlayAnonymous?: () => void;
 }
 
 const googleProvider = new GoogleAuthProvider();
@@ -29,7 +33,7 @@ const FRIENDLY_ERRORS: Record<string, string> = {
   'auth/network-request-failed': 'Network error. Check your connection and try again.',
 };
 
-export function SignInPopover({ onClose }: Props) {
+export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,14 +44,16 @@ export function SignInPopover({ onClose }: Props) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !busy) onClose();
+      if (e.key === 'Escape' && !busy && !gate) onClose();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [busy, onClose]);
+  }, [busy, onClose, gate]);
 
+  // In gate mode the popover can't be dismissed by clicking around — the only
+  // exits are signing in or the explicit "play anonymous" link.
   const onBackdrop = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && !busy) onClose();
+    if (e.target === e.currentTarget && !busy && !gate) onClose();
   };
 
   async function run(fn: () => Promise<unknown>, { closeOnSuccess = true } = {}) {
@@ -100,14 +106,17 @@ export function SignInPopover({ onClose }: Props) {
       aria-modal="true"
       aria-label="Sign in"
     >
-      <div className="rules-card auth-card">
-        <button className="rules-close" onClick={onClose} aria-label="Close" disabled={busy}>
-          ✕
-        </button>
+      <div className={`rules-card auth-card${gate ? ' is-gate' : ''}`}>
+        {!gate && (
+          <button className="rules-close" onClick={onClose} aria-label="Close" disabled={busy}>
+            ✕
+          </button>
+        )}
 
         <header className="rules-header">
-          <h2>{mode === 'signin' ? 'Sign in' : 'Create account'}</h2>
-          <p className="rules-tagline">For multiplayer + cloud-synced progress.</p>
+          <h2>
+            {mode === 'signin' ? (gate ? 'Sign in to play' : 'Sign in') : 'Create account'}
+          </h2>
         </header>
 
         <div className="auth-body">
@@ -201,6 +210,17 @@ export function SignInPopover({ onClose }: Props) {
               </span>
             )}
           </div>
+
+          {gate && onPlayAnonymous && (
+            <button
+              type="button"
+              className="auth-anon"
+              onClick={onPlayAnonymous}
+              disabled={busy}
+            >
+              Want to try anonymous without signing in?
+            </button>
+          )}
         </div>
       </div>
     </div>

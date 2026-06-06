@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.3.6.0',
+    date: '2026-06-06',
+    highlight: 'Sign in to play',
+    changes: [
+      {
+        kind: 'added',
+        text: 'First load now opens with a “Sign in to play” screen — sign in for multiplayer + cloud-synced progress, or pick “play anonymous” to jump straight in.',
+      },
+      {
+        kind: 'fixed',
+        text: 'On phones the board now sits up near the player cards instead of leaving a big gap above it.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.3.5.0',
     date: '2026-06-06',
     highlight: 'Past puzzle winners + tidier rankings',

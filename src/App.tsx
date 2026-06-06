@@ -219,6 +219,9 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rankingsOpen, setRankingsOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
+  // Login gate shown on first load while signed out, until the user signs in
+  // or explicitly chooses to play anonymously (session-scoped).
+  const [gateDismissed, setGateDismissed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [cloudProfile, setCloudProfile] = useState<CloudProfile | null>(null);
@@ -255,7 +258,7 @@ export default function App() {
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [sendInviteFor, setSendInviteFor] = useState<Friend | null>(null);
 
-  const { user, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const aiTimer = useRef<number | null>(null);
   const winRecorded = useRef(false);
   const gameEndCounted = useRef(false);
@@ -2157,6 +2160,13 @@ export default function App() {
           />
         )}
         {signInOpen && <SignInPopover onClose={() => setSignInOpen(false)} />}
+        {!authLoading && !user && !gateDismissed && (
+          <SignInPopover
+            gate
+            onClose={() => setGateDismissed(true)}
+            onPlayAnonymous={() => setGateDismissed(true)}
+          />
+        )}
         {profileOpen && user && (
           <ProfilePopover
             user={user}

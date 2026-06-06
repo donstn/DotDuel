@@ -50,10 +50,6 @@ function wrapText(text: string, maxCharsPerLine: number, maxLines: number): stri
     } else {
       lines.push(current);
       current = w;
-      if (lines.length === maxLines - 1) {
-        current = words.slice(words.indexOf(w)).join(' ');
-        break;
-      }
     }
   }
   if (current) lines.push(current);
@@ -663,8 +659,8 @@ export function Board({
         {hint && (() => {
           const anchor = board.dots[hint.anchorDotId];
           if (!anchor) return null;
-          const lines = wrapText(hint.text, 24, 4);
-          const fontSize = dotRadius * 1.05;
+          const lines = wrapText(hint.text, 30, 7);
+          const fontSize = dotRadius * 0.8;
           const lineHeight = fontSize * 1.25;
           const padX = dotRadius * 0.7;
           const padY = dotRadius * 0.5;

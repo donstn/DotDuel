@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { DIFFICULTY_LABELS, SHAPE_LABEL } from '../types';
 import type { Difficulty, GameMode, GameState, Player, ShapeId } from '../types';
+import { WinCelebration } from './WinCelebration';
 
 interface UnlockResult {
   shape: ShapeId | null;
@@ -207,6 +208,22 @@ export function GameOver({
   const isFinalShape = SHAPE_NEXT[shape] === null;
   const nextShape = SHAPE_NEXT[shape];
 
+  // Win celebration: standard green show on any local win; the full gold show
+  // when the Impossible AI is defeated. No celebration on a loss/draw/abort.
+  const localWin =
+    (mode === 'ai' && state.winner === 1) ||
+    (mode === 'hotseat' && (state.winner === 1 || state.winner === 2)) ||
+    (mode === 'daily' && state.winner === 1) ||
+    (mode === 'multiplayer' &&
+      myPlayer !== undefined &&
+      state.winner === myPlayer &&
+      finishedReason !== 'aborted');
+  const celebration: 'standard' | 'impossible' | null = beatImpossible
+    ? 'impossible'
+    : localWin
+      ? 'standard'
+      : null;
+
   let title = 'Draw';
   let subtitle: string | null = null;
   if (myPlayer !== undefined && mode === 'multiplayer') {
@@ -243,6 +260,7 @@ export function GameOver({
 
   return (
     <div className="game-over">
+      {celebration && <WinCelebration variant={celebration} />}
       <div className="game-over-card">
         <h2 className={titleClass}>{title}</h2>
         {subtitle && <p className="go-subtitle">{subtitle}</p>}

@@ -5588,3 +5588,18 @@ body:has(.consent-banner) .rules-card {
   -webkit-background-clip: text;
   background-clip: text;
 }
+
+/* ---- Win celebration canvas: transparent, click-through overlay that sits
+   over the GameOver scrim but BEHIND the glass card (card stays readable). */
+.win-celebration {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.game-over > .game-over-card {
+  position: relative;
+  z-index: 2;
+}

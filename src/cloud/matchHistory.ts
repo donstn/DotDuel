@@ -16,7 +16,8 @@ export type MatchFinishedReason =
   | 'normal'
   | 'timeout'
   | 'resign'
-  | 'disconnect';
+  | 'disconnect'
+  | 'aborted';
 
 export interface MatchRecord {
   matchId: string;

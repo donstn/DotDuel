@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { AdBanner } from './components/AdBanner';
 import { AppFooter } from './components/AppFooter';
 import { Board } from './components/Board';
 import { ChangelogPopover } from './components/ChangelogPopover';
@@ -30,6 +31,7 @@ import {
   type TimeControl,
 } from './cloud/matchmaking';
 import {
+  claimAbort,
   claimTimeout,
   markBoardLoaded,
   markReady,
@@ -1104,6 +1106,19 @@ export default function App() {
     await signOut();
   };
 
+  // Clear transient visual state whenever the multiplayer game INSTANCE changes
+  // (new match, rematch, post-abort game). Without this a stale +N popup from
+  // the previous game ghosts over the fresh board — the multiplayer analog of
+  // the startGame/backToMenu cleanup. startGame/backToMenu only covered the
+  // vs-AI paths; MP enters via onStartPlaying and swaps onlineGameId on rematch,
+  // so keying on onlineGameId catches them all. See bugs.md "Ghost +N popup".
+  useEffect(() => {
+    setScoreEvent(null);
+    setActiveHint(null);
+    setPendingFlash(false);
+    prevPendingLenRef.current = 0;
+  }, [onlineGameId]);
+
   const onStartPlaying = () => {
     setMoveInFlight(false);
     setScreen('mpgame');
@@ -1384,6 +1399,38 @@ export default function App() {
     const timer = window.setTimeout(() => {
       void claimTimeout(onlineGameId!, user.uid);
     }, msToExpire + 500);
+    return () => window.clearTimeout(timer);
+  }, [screen, onlineGame, onlineGameId, user]);
+
+  // First-move abort timer. While a multiplayer game is still on someone's
+  // FIRST move, schedule a claim 10s after that turn began. Both clients run
+  // it; the present player's fires (a backgrounded/left player's setTimeout is
+  // throttled). The server only accepts it if still first-move + >10s
+  // (ABORT_FIRST_MOVE_MS) — no winner, no rating change for either side.
+  useEffect(() => {
+    if (
+      screen !== 'mpgame' ||
+      !onlineGame ||
+      !onlineGameId ||
+      !user ||
+      onlineGame.state.finished
+    )
+      return;
+    const movesPlaced = Object.keys(onlineGame.state.colored ?? {}).length;
+    if (movesPlaced > 1) return; // past the first-move window for both players
+    const startedAt =
+      (onlineGame.clock?.turnStartedAt ?? 0) || (onlineGame.gameStartedAt ?? 0);
+    if (startedAt <= 0) return; // clock not started yet
+    const claim = () =>
+      void claimAbort(onlineGameId!, user.uid).catch((e) =>
+        console.warn('claimAbort failed:', e),
+      );
+    const msToFire = startedAt + 10_000 - Date.now();
+    if (msToFire <= 0) {
+      claim();
+      return;
+    }
+    const timer = window.setTimeout(claim, msToFire + 300);
     return () => window.clearTimeout(timer);
   }, [screen, onlineGame, onlineGameId, user]);
 
@@ -2029,6 +2076,9 @@ export default function App() {
     return (
       <>
         {mainContent}
+        {(screen === 'menu' || screen === 'lobby' || screen === 'matchmaking') && (
+          <AdBanner placement="menu" />
+        )}
         <AppFooter
           onOpenRules={() => setRulesOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -2345,6 +2395,7 @@ export default function App() {
           stats={p2StatsRow}
         />
       </div>
+      <AdBanner placement="ingame" />
       {showOver && (
         <GameOver
           state={state}

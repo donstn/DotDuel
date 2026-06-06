@@ -34,7 +34,16 @@
 // ----------------------------------------------------------------------
 
 /** Master kill switch. When false, NO AdSense code runs anywhere. */
-export const ADS_ENABLED: boolean = false;
+export const ADS_ENABLED: boolean = true;
+
+/**
+ * Preview/dev only (monetization branch): when true, an AdBanner whose real
+ * gates are closed renders a VISIBLE placeholder box instead of nothing, so
+ * ad placement can be eyeballed in dev. AdSense never fills on localhost /
+ * unapproved hosts, so this mock is the only way to see the layout.
+ * MUST be set back to false before merging to main.
+ */
+export const ADS_PREVIEW_PLACEHOLDER: boolean = false;
 
 /**
  * Cutoff for the early-adopter grandfather rule. When ADS_ENABLED flips
@@ -44,7 +53,7 @@ export const ADS_ENABLED: boolean = false;
  * without updating this value, EVERYONE is grandfathered — the safe
  * silent-failure direction.
  */
-export const ADS_GRANDFATHER_BEFORE_MS: number = Date.UTC(2099, 0, 1);
+export const ADS_GRANDFATHER_BEFORE_MS: number = Date.UTC(2026, 0, 1);
 
 // ----------------------------------------------------------------------
 // AdSense account credentials (active once ADS_ENABLED is true)

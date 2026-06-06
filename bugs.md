@@ -124,6 +124,11 @@ Entries are dated and grouped by symptom domain. Most recent first within each s
 - **Affected transient state to track on future cleanup audits:** `scoreEvent`, `activeHint`, `pendingFlash`, `dailyPuzzleResult`, plus the `prevPendingLenRef` diff baseline.
 - **If a similar ghost UI ever appears:** grep for `useEffect(() => { ... }, [propName])` in the relevant child component and check whether `propName` survives screen transitions in the parent.
 
+**Recurrence — multiplayer (monetization branch, 2026-06-06)**
+- The 2026-06-01 fix only patched `startGame` + `backToMenu`, i.e. the **vs-AI/hot-seat/daily** paths. **Multiplayer never entered through those** — it enters via `onStartPlaying` → `mpgame` and swaps `onlineGameId` on rematch — so a stale `+N` ghosted onto a fresh MP board (surfaced while rapidly starting/aborting MP games during first-move-abort testing).
+- **Fix:** a single `useEffect(() => { clear transient state }, [onlineGameId])` in `App.tsx` so EVERY new MP game instance (new match, rematch, post-abort) clears `scoreEvent`/`activeHint`/`pendingFlash`/`prevPendingLenRef` — more robust than patching each handler.
+- **Lesson:** when fixing "stale transient state on new game," cover **all** game-entry paths, not just the one that reproduced. Keying the reset on the game-instance id is bulletproof vs. per-handler resets.
+
 ---
 
 ### Hint stomping during AI turns (KNOWN, not fixed — diagnosed 2026-05-31)

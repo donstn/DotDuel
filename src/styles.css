@@ -2969,10 +2969,52 @@ body:has(.consent-banner) .game-screen {
     min-height: 90px;
   }
 }
-@media (orientation: landscape) {
+/* Hide ad slots only on SHORT landscape (phone held sideways) per the
+   no-scroll viewport rule. Desktop (tall landscape) and portrait show them. */
+@media (orientation: landscape) and (max-height: 560px) {
   .ad-slot {
     display: none;
   }
+}
+
+/* In-game ad band — a flex child of .game-screen between the board and the
+   footer, on untimed single-player only. Fills the dead space under the board. */
+.ad-slot--ingame {
+  flex-shrink: 0;
+  width: auto;
+  margin: 4px 12px 8px;
+}
+@media (max-width: 720px) {
+  .ad-slot--ingame {
+    margin: 2px 8px 4px;
+  }
+}
+
+/* Branch preview placeholder — a visible, NUMBERED mock ad (AD #N) so each ad
+   load is distinguishable in dev (no live AdSense fill on localhost). The
+   number makes refresh-vs-persist obvious as you navigate. */
+.ad-slot--preview {
+  flex-direction: column;
+  gap: 1px;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.03) 0 12px,
+    rgba(255, 255, 255, 0.06) 12px 24px
+  );
+  border: 1px dashed var(--glass-border-strong);
+}
+.ad-slot-preview-id {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text);
+}
+.ad-slot-preview-text {
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-mute);
 }
 
 /* ---------------- Rankings popover ---------------- */

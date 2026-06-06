@@ -122,7 +122,7 @@ export interface OnlineGame {
   clock?: GameClock;
   winner?: Player | 'draw' | null;
   finishedAt?: number;
-  finishedReason?: 'normal' | 'timeout' | 'resign';
+  finishedReason?: 'normal' | 'timeout' | 'resign' | 'aborted';
   gameStartedAt?: number;
 }
 
@@ -275,6 +275,9 @@ const callSetBoardLoaded = httpsCallable<{ gameId: string }, { ok: boolean }>(
 const callClaimTimeout = httpsCallable<{ gameId: string }, { ok: boolean }>(
   functionsEW1, 'claimTimeoutCallable',
 );
+const callClaimAbort = httpsCallable<{ gameId: string }, { ok: boolean }>(
+  functionsEW1, 'claimAbortCallable',
+);
 const callResign = httpsCallable<{ gameId: string }, { ok: boolean }>(
   functionsEW1, 'resignCallable',
 );
@@ -343,6 +346,22 @@ export async function claimTimeout(
   await set(r, {
     from: uid,
     action: { kind: 'timeout' },
+    clientTime: Date.now(),
+  });
+}
+
+// Claim a first-move abort. Either participant may call it; the server only
+// accepts it if the game is still on someone's first move and >10s have passed
+// (see ABORT_FIRST_MOVE_MS). No winner, no rating change.
+export async function claimAbort(gameId: string, uid: string): Promise<void> {
+  if (CLIENT_FIRESTORE_TRANSPORT) {
+    await callClaimAbort({ gameId });
+    return;
+  }
+  const r = ref(rtdb, `games/${gameId}/pendingMove`);
+  await set(r, {
+    from: uid,
+    action: { kind: 'abort' },
     clientTime: Date.now(),
   });
 }

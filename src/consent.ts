@@ -1,5 +1,4 @@
 import { enableAnalyticsIfSupported } from './firebase';
-import { enableAdSenseIfAccepted } from './ads';
 
 /**
  * GDPR / ePrivacy analytics-consent gate.
@@ -38,6 +37,7 @@ export function saveConsent(value: Consent): void {
 export function applyConsent(value: Consent | null): void {
   if (value === 'accepted') {
     void enableAnalyticsIfSupported();
-    enableAdSenseIfAccepted();
   }
+  // AdSense now loads via the tag in index.html and is gated by Google's CMP +
+  // Consent Mode, not this homemade consent path.
 }

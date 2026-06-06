@@ -30,6 +30,33 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.2.9.0',
+    date: '2026-06-06',
+    highlight: 'Visual revamp + readable on every theme',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Fresh look: new typography, a framed board that matches each shape (triangle, diamond, square), brighter pieces, and clearer scores.',
+      },
+      {
+        kind: 'changed',
+        text: 'Player panels scale down gracefully as the screen shrinks — on phones they collapse to a compact card with the avatar beside the name, giving the board more room.',
+      },
+      {
+        kind: 'changed',
+        text: 'Settings, Rules, and Privacy are tidied into clean cards that are easier to scan.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Empty dots now read clearly on every theme instead of fading into the board — especially on the light themes.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Buttons, the Game-Over screen, and popovers are no longer hard to read on the light themes (Monochrome Pro, Vintage Press) — text and backgrounds keep proper contrast everywhere now.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.2.8.0',
     date: '2026-06-05',
     highlight: 'Full keyboard play',

@@ -78,6 +78,15 @@
   /* Misc */
   --accent: #7bdb95;
   --danger: #d97565;
+  /* Text colour for buttons whose background is var(--accent). Dark here (the
+     6 themes have a LIGHT accent); the 2 light themes flip it to light because
+     their accent is dark. Without this, hard-coded dark text went invisible
+     on accent buttons in monochrome-pro / vintage-press. */
+  --on-accent: #062812;
+  /* Modal/overlay scrim behind cards. Dark by default; the 2 LIGHT themes flip
+     it light so translucent glass cards over it don't render dark-on-dark
+     (the Game-Over / popover invisibility bug on light themes). */
+  --scrim: rgba(2, 9, 11, 0.66);
 
   /* Empty-dot "socket" — a recessed well with a defined rim so an unplayed
      dot never dissolves into the board (especially on light themes). Light
@@ -297,6 +306,9 @@
   --board-felt-1: #f0f0f0;
   --board-felt-2: #e2e2e2;
   --board-felt-border: rgba(20, 20, 22, 0.18);
+  --on-accent: #f5f5f5;
+  --danger: #b0301f;
+  --scrim: rgba(228, 222, 210, 0.78);
   --p1-glow: #2c2c2e;
   --p1-bright: #5a5a5c;
   --p1-deep: #000000;
@@ -356,6 +368,9 @@
   --board-felt-1: #ece1c8;
   --board-felt-2: #ddd0b0;
   --board-felt-border: rgba(55, 40, 18, 0.24);
+  --on-accent: #fdf2e6;
+  --danger: #9e2a1c;
+  --scrim: rgba(238, 229, 208, 0.78);
   --p1-glow: #a82a3e;
   --p1-bright: #c54d62;
   --p1-deep: #3a0810;
@@ -408,6 +423,39 @@
   background: rgba(160, 110, 30, 0.22);
   border: 1px solid rgba(160, 110, 30, 0.45);
   color: #6b4708;
+}
+
+/* Light themes (cream backgrounds): status chips that hard-code LIGHT text
+   (yellow/pink) wash out on a light page. Re-tone them to dark ink on a
+   stronger tint so they read. Dark themes keep their original light-on-dark. */
+[data-theme="monochrome-pro"] .pending-indicator,
+[data-theme="vintage-press"] .pending-indicator {
+  color: #6b4e00;
+  background: rgba(190, 140, 30, 0.22);
+  border-color: rgba(150, 100, 20, 0.5);
+}
+[data-theme="monochrome-pro"] .btn-resign-inline,
+[data-theme="vintage-press"] .btn-resign-inline {
+  color: #8a1f1f;
+  background: rgba(190, 70, 70, 0.16);
+  border-color: rgba(150, 40, 40, 0.42);
+}
+[data-theme="monochrome-pro"] .clock-badge.is-low,
+[data-theme="vintage-press"] .clock-badge.is-low {
+  color: #8a1f1f;
+  background: rgba(190, 70, 70, 0.16);
+  border-color: rgba(150, 40, 40, 0.45);
+}
+[data-theme="monochrome-pro"] .theme-swatch-tag,
+[data-theme="vintage-press"] .theme-swatch-tag {
+  color: #6b4708;
+  background: rgba(190, 140, 30, 0.2);
+  border-color: rgba(150, 100, 20, 0.45);
+}
+[data-theme="monochrome-pro"] .provisional-badge {
+  color: #6b4708;
+  background: rgba(190, 140, 30, 0.2);
+  border: 1px solid rgba(150, 100, 20, 0.45);
 }
 
 * {
@@ -996,7 +1044,7 @@ button {
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(2, 9, 11, 0.7);
+  background: var(--scrim);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   z-index: 200;
@@ -1904,7 +1952,7 @@ h1, h2, h3,
 .rules-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(2, 9, 11, 0.65);
+  background: var(--scrim);
   backdrop-filter: blur(10px) saturate(1.2);
   -webkit-backdrop-filter: blur(10px) saturate(1.2);
   display: flex;
@@ -2354,7 +2402,7 @@ h1, h2, h3,
 .game-over {
   position: absolute;
   inset: 0;
-  background: rgba(2, 9, 11, 0.7);
+  background: var(--scrim);
   backdrop-filter: blur(14px) saturate(1.2);
   -webkit-backdrop-filter: blur(14px) saturate(1.2);
   display: flex;
@@ -3016,7 +3064,7 @@ body:has(.consent-banner) .game-screen {
 }
 
 .rankings-pill.active {
-  color: #0f1c14;
+  color: var(--on-accent);
   background: linear-gradient(180deg, var(--accent), #4fb87a);
   border-color: rgba(255, 255, 255, 0.2);
   font-weight: 600;
@@ -3800,7 +3848,7 @@ body:has(.consent-banner) .rules-card {
   height: 22px;
   border-radius: 50%;
   background: var(--accent);
-  color: #0f1c14;
+  color: var(--on-accent);
   font-weight: 700;
   font-size: 0.78rem;
   display: flex;
@@ -4850,7 +4898,7 @@ body:has(.consent-banner) .rules-card {
   padding: 0 4px;
   border-radius: 999px;
   background: var(--accent);
-  color: #062812;
+  color: var(--on-accent);
   font-size: 0.65rem;
   font-weight: 700;
   line-height: 16px;
@@ -4899,7 +4947,7 @@ body:has(.consent-banner) .rules-card {
   padding: 0 4px;
   border-radius: 999px;
   background: var(--accent);
-  color: #062812;
+  color: var(--on-accent);
   font-size: 0.65rem;
   font-weight: 700;
   line-height: 16px;
@@ -5052,7 +5100,7 @@ body:has(.consent-banner) .rules-card {
 .friends-add-input:focus { outline: 1px solid var(--accent); }
 .friends-add-btn {
   background: var(--accent);
-  color: #062812;
+  color: var(--on-accent);
   border: none;
   border-radius: 8px;
   padding: 8px 14px;
@@ -5251,7 +5299,7 @@ body:has(.consent-banner) .rules-card {
 }
 .invite-toast-accept {
   background: var(--accent);
-  color: #062812;
+  color: var(--on-accent);
 }
 .invite-toast-decline:disabled,
 .invite-toast-accept:disabled,

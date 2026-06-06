@@ -38,7 +38,11 @@ interface QueueEntry {
   initialRange: number;
 }
 
-type WireAction = GameAction | { kind: 'timeout' } | { kind: 'resign' };
+type WireAction =
+  | GameAction
+  | { kind: 'timeout' }
+  | { kind: 'resign' }
+  | { kind: 'abort' };
 
 interface PendingMove {
   from: string;
@@ -231,7 +235,13 @@ async function readGameDoc(gameId: string): Promise<Record<string, unknown> | nu
   }
 }
 
-type FinishedReason = 'normal' | 'timeout' | 'resign' | 'disconnect';
+type FinishedReason = 'normal' | 'timeout' | 'resign' | 'disconnect' | 'aborted';
+
+// First-move abort window: if the player to move hasn't placed their first dot
+// within this long of their turn starting (P1 from game start, then P2 after
+// P1's first move), either client can claim an abort — no winner, no rating
+// change, both return to the lobby. chess.com-style safety net for no-shows.
+const ABORT_FIRST_MOVE_MS = 10_000;
 
 // Persist game outcome metadata to Firestore matches/{matchId} so we can
 // count how games end (points / time / resign / disconnect). Match doc was
@@ -518,6 +528,34 @@ export const validateMove = onValueWritten(
       return;
     }
 
+    // First-move abort: if the game is still on someone's FIRST move (0 dots,
+    // or just P1's) more than 10s after that turn began, either participant can
+    // claim an abort. No winner, no rating change — both return to the lobby.
+    if (after.action.kind === 'abort') {
+      const clock = (game.clock ?? {}) as Record<string, number | undefined>;
+      const movesPlaced = Object.keys(state.colored ?? {}).length;
+      const ref =
+        (clock.turnStartedAt ?? 0) || ((game.gameStartedAt as number | undefined) ?? 0);
+      if (movesPlaced > 1 || ref === 0 || Date.now() - ref < ABORT_FIRST_MOVE_MS) {
+        // Past the first-move window, clock not started, or not yet 10s.
+        await moveRef.remove();
+        return;
+      }
+      const finishedAt = Date.now();
+      await updateGameNode(gameId, {
+        'state/finished': true,
+        'state/winner': null,
+        status: 'finished',
+        winner: null,
+        finishedAt,
+        finishedReason: 'aborted',
+      });
+      await moveRef.remove();
+      await recordMatchFinished(gameId, null, 'aborted', finishedAt);
+      logger.info(`validateMove: abort accepted in ${gameId} at ${movesPlaced} move(s)`);
+      return;
+    }
+
     if (state.current !== playerNum) {
       // Client UI prevents this; if we still see it, just discard the
       // move. (Pre-Day-5 we wrote a transient error sub-node to RTDB so
@@ -665,7 +703,7 @@ export const finalizeGame = onDocumentUpdated(
     const durationMs = Math.max(0, finishedAt - gameStartedAt);
     const p1Score = (state.scores?.[1] ?? 0) as number;
     const p2Score = (state.scores?.[2] ?? 0) as number;
-    const ranked = matchData.ranked !== false;
+    const ranked = matchData.ranked !== false && finishedReason !== 'aborted';
 
     try {
       await db.runTransaction(async (tx) => {
@@ -2365,6 +2403,27 @@ export const claimTimeoutCallable = onCall(
     await getDatabase()
       .ref(`games/${gameId}/pendingMove`)
       .set({ from: uid, action: { kind: 'timeout' }, clientTime: Date.now() });
+    return { ok: true };
+  },
+);
+
+interface ClaimAbortReq {
+  gameId: string;
+}
+
+export const claimAbortCallable = onCall(
+  { region: 'europe-west1' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.');
+    const { gameId } = (request.data ?? {}) as ClaimAbortReq;
+    if (typeof gameId !== 'string' || !gameId) {
+      throw new HttpsError('invalid-argument', 'gameId required.');
+    }
+    await assertParticipant(gameId, uid);
+    await getDatabase()
+      .ref(`games/${gameId}/pendingMove`)
+      .set({ from: uid, action: { kind: 'abort' }, clientTime: Date.now() });
     return { ok: true };
   },
 );

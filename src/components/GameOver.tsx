@@ -7,7 +7,7 @@ interface UnlockResult {
   difficulty: Difficulty | null;
 }
 
-export type FinishedReason = 'normal' | 'timeout' | 'resign' | 'disconnect';
+export type FinishedReason = 'normal' | 'timeout' | 'resign' | 'disconnect' | 'aborted';
 
 interface RatingChange {
   before: number;
@@ -135,6 +135,9 @@ function multiplayerOutcome(
   winner: GameState['winner'],
   reason: FinishedReason | undefined,
 ): { title: string; subtitle: string | null } {
+  if (reason === 'aborted') {
+    return { title: 'Game aborted', subtitle: 'no first move · no rating change' };
+  }
   if (winner === 'draw' || winner == null) {
     return { title: 'Game ended in a draw', subtitle: null };
   }

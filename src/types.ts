@@ -161,7 +161,7 @@ export interface FirestoreGame {
   createdAt: number;
   gameStartedAt?: number;
   finishedAt?: number;
-  finishedReason?: 'normal' | 'timeout' | 'resign';
+  finishedReason?: 'normal' | 'timeout' | 'resign' | 'aborted';
   winner?: Player | 'draw' | null;
 
   state: GameState;

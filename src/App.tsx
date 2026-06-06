@@ -31,6 +31,7 @@ import {
   type TimeControl,
 } from './cloud/matchmaking';
 import {
+  claimAbort,
   claimTimeout,
   markBoardLoaded,
   markReady,
@@ -1385,6 +1386,38 @@ export default function App() {
     const timer = window.setTimeout(() => {
       void claimTimeout(onlineGameId!, user.uid);
     }, msToExpire + 500);
+    return () => window.clearTimeout(timer);
+  }, [screen, onlineGame, onlineGameId, user]);
+
+  // First-move abort timer. While a multiplayer game is still on someone's
+  // FIRST move, schedule a claim 10s after that turn began. Both clients run
+  // it; the present player's fires (a backgrounded/left player's setTimeout is
+  // throttled). The server only accepts it if still first-move + >10s
+  // (ABORT_FIRST_MOVE_MS) — no winner, no rating change for either side.
+  useEffect(() => {
+    if (
+      screen !== 'mpgame' ||
+      !onlineGame ||
+      !onlineGameId ||
+      !user ||
+      onlineGame.state.finished
+    )
+      return;
+    const movesPlaced = Object.keys(onlineGame.state.colored ?? {}).length;
+    if (movesPlaced > 1) return; // past the first-move window for both players
+    const startedAt =
+      (onlineGame.clock?.turnStartedAt ?? 0) || (onlineGame.gameStartedAt ?? 0);
+    if (startedAt <= 0) return; // clock not started yet
+    const claim = () =>
+      void claimAbort(onlineGameId!, user.uid).catch((e) =>
+        console.warn('claimAbort failed:', e),
+      );
+    const msToFire = startedAt + 10_000 - Date.now();
+    if (msToFire <= 0) {
+      claim();
+      return;
+    }
+    const timer = window.setTimeout(claim, msToFire + 300);
     return () => window.clearTimeout(timer);
   }, [screen, onlineGame, onlineGameId, user]);
 

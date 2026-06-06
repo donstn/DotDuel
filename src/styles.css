@@ -104,6 +104,26 @@
   --font-display: 'Chakra Petch', 'Outfit', system-ui, sans-serif;
   --radius: 16px;
   --radius-lg: 22px;
+
+  /* ---------- Depth / elevation system (theme-driven 3D) ----------
+     Three ambient elevations (key + ambient shadow pairs), a bevel pair
+     (top specular highlight + bottom inner shade) for the extruded look,
+     and accent-derived body shades so primary buttons follow every theme's
+     accent instead of hardcoded green. Light themes override the shadows. */
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.28);
+  --elev-2: 0 2px 4px rgba(0, 0, 0, 0.32), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --elev-3: 0 6px 12px rgba(0, 0, 0, 0.36), 0 18px 50px rgba(0, 0, 0, 0.52);
+  --bevel-light: rgba(255, 255, 255, 0.22);
+  --bevel-shade: rgba(0, 0, 0, 0.28);
+  --press-translate: 2px;
+  --press-scale: 0.985;
+  --accent-hi: color-mix(in srgb, var(--accent), white 20%);
+  --accent-lo: color-mix(in srgb, var(--accent), black 26%);
+  --accent-edge: color-mix(in srgb, var(--accent), white 42%);
+  --accent-shadow: var(--accent);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+  --t-press: 90ms;
+  --t-lift: 180ms;
 }
 
 /* ---------- THEME 2: Royal Court (violet + gold) ---------- */
@@ -308,6 +328,12 @@
   --board-felt-border: rgba(20, 20, 22, 0.18);
   --on-accent: #f5f5f5;
   --danger: #b0301f;
+  /* light stock: warm, far weaker shadows + brighter top highlight */
+  --elev-1: 0 1px 2px rgba(60, 40, 20, 0.1), 0 2px 8px rgba(60, 40, 20, 0.1);
+  --elev-2: 0 2px 5px rgba(60, 40, 20, 0.12), 0 10px 28px rgba(60, 40, 20, 0.16);
+  --elev-3: 0 6px 14px rgba(60, 40, 20, 0.14), 0 20px 50px rgba(60, 40, 20, 0.22);
+  --bevel-light: rgba(255, 255, 255, 0.55);
+  --bevel-shade: rgba(40, 28, 12, 0.16);
   --scrim: rgba(228, 222, 210, 0.78);
   --p1-glow: #2c2c2e;
   --p1-bright: #5a5a5c;
@@ -370,6 +396,12 @@
   --board-felt-border: rgba(55, 40, 18, 0.24);
   --on-accent: #fdf2e6;
   --danger: #9e2a1c;
+  /* light stock: warm brown, far weaker shadows + brighter top highlight */
+  --elev-1: 0 1px 2px rgba(80, 50, 24, 0.1), 0 2px 8px rgba(80, 50, 24, 0.11);
+  --elev-2: 0 2px 5px rgba(80, 50, 24, 0.13), 0 10px 28px rgba(80, 50, 24, 0.17);
+  --elev-3: 0 6px 14px rgba(80, 50, 24, 0.15), 0 20px 50px rgba(80, 50, 24, 0.24);
+  --bevel-light: rgba(255, 250, 232, 0.6);
+  --bevel-shade: rgba(55, 40, 18, 0.16);
   --scrim: rgba(238, 229, 208, 0.78);
   --p1-glow: #a82a3e;
   --p1-bright: #c54d62;
@@ -5398,4 +5430,147 @@ body:has(.consent-banner) .rules-card {
   .friends-row { padding: 8px 10px; }
   .friends-row-name { font-size: 0.88rem; }
   .invite-toast-text { font-size: 0.86rem; }
+}
+
+/* ================================================================
+   3D / "Elevated Glass" upgrade   (branch: 3D)
+   Tactile depth via a four-layer light model on every pressable
+   surface: (1) inset top specular edge, (2) inset bottom inner shade,
+   (3) tight contact shadow, (4) soft ambient drop. On :active the
+   surface drops to meet the page and the shadows collapse — that
+   inversion reads as "pushed in." All theme-driven via the depth
+   tokens in :root; light themes override the shadow tokens. The
+   global prefers-reduced-motion clamp turns presses into instant
+   snaps, so no new animation is introduced.
+   ================================================================ */
+
+/* ---- Primary / accent buttons: accent-derived body that follows every
+   theme's accent (replaces the hardcoded green that was dead on light themes) */
+.hotseat-start,
+.rules-got-it,
+.go-cta-primary,
+.game-over-buttons .primary {
+  position: relative;
+  border: 1px solid var(--accent-edge);
+  color: var(--on-accent);
+  background: linear-gradient(
+    180deg,
+    var(--accent-hi) 0%,
+    var(--accent) 46%,
+    var(--accent-lo) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 var(--bevel-light),
+    inset 0 -2px 4px var(--bevel-shade),
+    0 2px 4px rgba(0, 0, 0, 0.28),
+    0 8px 20px -4px color-mix(in srgb, var(--accent-shadow) 45%, transparent);
+  transition:
+    transform var(--t-press) var(--ease-spring),
+    box-shadow var(--t-press) ease,
+    filter var(--t-lift) ease;
+}
+.hotseat-start::before,
+.rules-got-it::before,
+.go-cta-primary::before,
+.game-over-buttons .primary::before {
+  content: "";
+  position: absolute;
+  inset: 1px 1px auto 1px;
+  height: 46%;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0)
+  );
+  pointer-events: none;
+}
+.hotseat-start:hover:not(:disabled),
+.rules-got-it:hover:not(:disabled),
+.go-cta-primary:hover:not(:disabled),
+.game-over-buttons .primary:hover:not(:disabled) {
+  filter: brightness(1.06) saturate(1.05);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 var(--bevel-light),
+    inset 0 -2px 4px var(--bevel-shade),
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    0 14px 30px -6px color-mix(in srgb, var(--accent-shadow) 55%, transparent);
+}
+.hotseat-start:active:not(:disabled),
+.rules-got-it:active:not(:disabled),
+.go-cta-primary:active:not(:disabled),
+.game-over-buttons .primary:active:not(:disabled) {
+  transform: translateY(var(--press-translate)) scale(var(--press-scale));
+  filter: brightness(0.97);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 3px 8px var(--bevel-shade),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ---- Neutral / glass buttons: same depth grammar on the theme's glass body
+   (works on dark AND light themes because it uses the glass + bevel tokens) */
+.btn-back,
+.btn-rules,
+.go-cta:not(.go-cta-primary),
+.game-over-buttons button:not(.primary) {
+  background: linear-gradient(180deg, var(--glass-bg-strong), var(--glass-bg));
+  box-shadow:
+    inset 0 1px 0 var(--bevel-light),
+    inset 0 -2px 3px var(--bevel-shade),
+    var(--elev-1);
+  transition:
+    transform var(--t-press) var(--ease-spring),
+    box-shadow var(--t-lift) ease,
+    border-color var(--t-lift) ease,
+    background var(--t-lift) ease,
+    color var(--t-lift) ease;
+}
+.btn-back:hover,
+.btn-rules:hover,
+.go-cta:not(.go-cta-primary):hover,
+.game-over-buttons button:not(.primary):hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 var(--bevel-light),
+    inset 0 -2px 3px var(--bevel-shade),
+    var(--elev-2);
+}
+.btn-back:active,
+.btn-rules:active,
+.go-cta:not(.go-cta-primary):active,
+.game-over-buttons button:not(.primary):active {
+  transform: translateY(var(--press-translate)) scale(var(--press-scale));
+  box-shadow: inset 0 2px 6px var(--bevel-shade), var(--elev-1);
+}
+
+/* ---- Menu mode cards: promote to the elevation tokens + a deeper hover lift.
+   Only transform + box-shadow are overridden; the existing rules keep the
+   background/border-strong hover and the disabled guard. */
+.menu-card {
+  box-shadow: inset 0 1px 0 var(--bevel-light), var(--elev-1);
+}
+.menu-card:hover:not(.disabled):not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: inset 0 1px 0 var(--bevel-light), var(--elev-2);
+}
+.menu-card:active:not(.disabled):not(:disabled) {
+  transform: translateY(-1px) scale(var(--press-scale));
+  box-shadow: inset 0 1px 0 var(--bevel-light), var(--elev-1);
+}
+
+/* ---- Title wordmark: a static specular sweep over the gradient text so the
+   brand reads like polished lacquer (no animation — pure layered gradient). */
+.title-text {
+  background:
+    linear-gradient(
+      105deg,
+      transparent 38%,
+      rgba(255, 255, 255, 0.42) 50%,
+      transparent 62%
+    ),
+    linear-gradient(180deg, var(--title-grad-top), var(--title-grad-bottom));
+  -webkit-background-clip: text;
+  background-clip: text;
 }

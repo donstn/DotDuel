@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.3.2.0',
+    date: '2026-06-06',
+    highlight: 'A more premium look · win celebrations',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Visual polish pass — buttons and the Vs-AI / shape / difficulty cards now have real tactile 3D depth (they lift on hover and press in on click), and primary buttons match each theme’s colour instead of always being green.',
+      },
+      {
+        kind: 'added',
+        text: 'Win celebrations! Finishing a game with a win sets off fireworks and confetti — with an over-the-top gold show for defeating the Impossible AI.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.3.1.0',
     date: '2026-06-06',
     highlight: 'Straight into the game · clearer home-screen how-to',

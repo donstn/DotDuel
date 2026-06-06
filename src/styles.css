@@ -3542,6 +3542,14 @@ body:has(.consent-banner) .game-screen {
     min-height: 0;
   }
 
+  /* The svg is height:100% by default, which fills the board-wrap and defeats
+     the top-align above. On mobile let it size to its aspect height so the
+     flex container can actually pull it to the top (max-height:100% from the
+     base rule still caps it for short landscape). */
+  .board {
+    height: auto;
+  }
+
   /* Mobile card layout: a compact horizontal row — avatar beside the name
      (flex:1, truncates), score on the right. Cards sit side-by-side above
      the board via the game-body grid. Stats/totals are already hidden by the

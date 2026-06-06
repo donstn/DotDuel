@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.3.6.1',
+    date: '2026-06-06',
+    highlight: 'Mobile board position',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'The mobile board now actually pulls up near the player cards (the previous attempt didn’t take effect).',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.3.6.0',
     date: '2026-06-06',
     highlight: 'Sign in to play',

@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.3.1.0',
+    date: '2026-06-06',
+    highlight: 'Straight into the game · clearer home-screen how-to',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Removed the intro tutorial pop-up — the game now opens straight to the menu. The how-to-play is a single clear line right on the home screen, and the full rules are always one tap away via the ? button.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.3.0.0',
     date: '2026-06-06',
     highlight: 'Ads support the free game · multiplayer no-show protection',

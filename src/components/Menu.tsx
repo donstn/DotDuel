@@ -92,11 +92,11 @@ export function Menu({
           {user && welcomeName ? (
             <>
               Welcome, <strong className="menu-welcome-name">{welcomeName}</strong> —{' '}
-              players take turns coloring dots. Finish a line to score its length. Win by earning the most points while filling the board.
+              take turns placing dots, finish a line to score points for its length. Win by scoring most points while coloring the whole board.
             </>
           ) : (
             <>
-              Players take turns coloring dots. Finish a line to score its length. Win by earning the most points while filling the board.
+              Take turns placing dots, finish a line to score points for its length. Win by scoring most points while coloring the whole board.
             </>
           )}
         </p>

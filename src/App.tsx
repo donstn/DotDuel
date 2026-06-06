@@ -12,7 +12,6 @@ import { RankingsPopover } from './components/RankingsPopover';
 import { RulesPopover } from './components/RulesPopover';
 import { SettingsPopover } from './components/SettingsPopover';
 import { SidePanel } from './components/SidePanel';
-import { TutorialPopover } from './components/TutorialPopover';
 import { SignInPopover } from './auth/SignInPopover';
 import { useAuth } from './auth/useAuth';
 import { saveCloudProgress, syncOnSignIn } from './cloud/progressSync';
@@ -238,7 +237,6 @@ export default function App() {
   const mySessionIdRef = useRef<string>(getSessionId());
   const [activeGameSession, setActiveGameSession] =
     useState<GameSession | null>(null);
-  const [tutorialOpen, setTutorialOpen] = useState(() => !loadSettings().tutorialSeen);
   const [resignConfirmOpen, setResignConfirmOpen] = useState(false);
   const [theme, setThemeState] = useState<ThemeId>(loadTheme);
   const [themeOpen, setThemeOpen] = useState(false);
@@ -308,12 +306,6 @@ export default function App() {
     trackEvent('hint_shown', { hint_id: key }, 'low');
   };
 
-  const dismissTutorial = () => {
-    setTutorialOpen(false);
-    if (!settings.tutorialSeen) {
-      updateSettings({ ...settings, tutorialSeen: true });
-    }
-  };
 
   const startGame = (
     mode: GameMode,
@@ -2225,7 +2217,6 @@ export default function App() {
             onCancel={() => setRenameOpen(false)}
           />
         )}
-        {tutorialOpen && <TutorialPopover onDismiss={dismissTutorial} />}
         {/* IncomingInviteToast renders only on the menu (or lobby) — the
             invite UI should NOT distract during gameplay or matchmaking.
             Server delivers the invite immediately; we just hold off displaying

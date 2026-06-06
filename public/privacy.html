@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — DotDuel</title>
+  <meta name="description" content="DotDuel privacy policy — what we collect, why, the lawful bases, who it's shared with, how long we keep it, and your GDPR rights." />
+  <link rel="canonical" href="https://www.dotduel.com/privacy.html" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    :root { --ink:#1f2a24; --muted:#5b6b62; --accent:#1c7a3d; --line:#e3e8e3; --bg:#fbfdfb; }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      line-height:1.6; font-size:16px;
+    }
+    .wrap { max-width:760px; margin:0 auto; padding:40px 22px 80px; }
+    header { border-bottom:2px solid var(--line); padding-bottom:18px; margin-bottom:8px; }
+    h1 { font-size:1.9rem; margin:0 0 6px; letter-spacing:-.01em; }
+    .sub { color:var(--muted); font-size:.95rem; margin:0; }
+    h2 { font-size:1.18rem; margin:34px 0 8px; }
+    p, li { color:var(--ink); }
+    ul { padding-left:22px; }
+    li { margin:5px 0; }
+    a { color:var(--accent); }
+    .note {
+      background:#f0f7f1; border:1px solid #cfe6d4; border-left:4px solid var(--accent);
+      border-radius:10px; padding:12px 16px; margin:16px 0;
+    }
+    .back { display:inline-block; margin-bottom:24px; color:var(--accent); text-decoration:none; font-weight:600; }
+    footer { margin-top:48px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:.88rem; }
+    strong { color:#142019; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="/">‹ Back to DotDuel</a>
+    <header>
+      <h1>Privacy Policy</h1>
+      <p class="sub">What we collect, why we collect it, how to delete it. Effective 6 June 2026.</p>
+    </header>
+
+    <h2>Who we are</h2>
+    <p>DotDuel is an independent two-player dot-coloring game. The controller of your personal data under the GDPR is the developer. Contact: <a href="mailto:donstn@gmail.com">donstn@gmail.com</a>.</p>
+
+    <h2>What we collect</h2>
+    <p>Only what's needed to make the game work, stay fair, and (with your consent) support the free service with advertising.</p>
+    <ul>
+      <li><strong>Account:</strong> email, display name, sign-in provider (Google or password), account creation date. Source: you, via Firebase Authentication at sign-up.</li>
+      <li><strong>Multiplayer rating:</strong> your current Elo, placement-games counter, and last-played timestamp. Computed server-side at the end of every ranked match.</li>
+      <li><strong>Match history:</strong> each ranked match stores both players' user IDs, display names, final scores, rating changes, board shape, time control, duration, and how the game ended (normal / timeout / resign / aborted).</li>
+      <li><strong>Live game state:</strong> while a multiplayer game is in progress we store the board, clock, and whose turn it is. Deleted shortly after the game ends.</li>
+      <li><strong>Device-only data:</strong> your single-player progress, vs-AI / hot-seat stats, theme preference, and tutorial-seen flag. Stored in your browser's localStorage and never transmitted to us.</li>
+      <li><strong>Analytics (only if you accept):</strong> Google Analytics auto-collected events — page views, device model, locale, screen size, anonymous session ID. Not tied to your account in our system.</li>
+      <li><strong>Advertising (only if you accept):</strong> Google AdSense serves ads on free single-player and menu screens. To do so, Google may set cookies / read device identifiers and use them to select and measure ads. We never see ranked multiplayer game screens carry ads, and we do not receive your individual ad-profile from Google.</li>
+    </ul>
+
+    <h2>Why we collect it (lawful bases)</h2>
+    <ul>
+      <li><strong>Contract (Art. 6.1.b):</strong> account, rating, match history, live game state — all required to operate the multiplayer service you signed up for.</li>
+      <li><strong>Legitimate interest (Art. 6.1.f):</strong> leaderboard and ranked play — to provide a fair, competitive environment for all players.</li>
+      <li><strong>Consent (Art. 6.1.a):</strong> Google Analytics <em>and</em> Google AdSense advertising — both only load after you accept the consent prompt. Decline or no decision means neither starts.</li>
+    </ul>
+
+    <h2>Who it's shared with</h2>
+    <p>We use Google's Firebase platform (Authentication, Firestore, Realtime Database, Cloud Functions, Hosting, Analytics) as our infrastructure provider, and Google AdSense to serve ads on free screens. Analytics and AdSense load only after you accept the consent prompt. Google processes data under its standard terms / Data Processing Addendum. We do not sell your data, and we do not share it with any other third party.</p>
+
+    <h2>How long we keep it</h2>
+    <ul>
+      <li><strong>Account + leaderboard:</strong> until you delete your account.</li>
+      <li><strong>Match history:</strong> up to 24 months after the match ended, then permanently deleted.</li>
+      <li><strong>Live game state:</strong> deleted within ~24 hours of game end.</li>
+      <li><strong>Analytics &amp; advertising:</strong> per Google's defaults (currently 14 months for event data); ad cookies per Google's published retention.</li>
+      <li><strong>Device-only data:</strong> stays until you clear your browser data.</li>
+    </ul>
+
+    <h2>Your rights</h2>
+    <p>Under the GDPR you have the right to:</p>
+    <ul>
+      <li><strong>Access</strong> the personal data we hold about you — use <em>Download my data</em> in your Profile.</li>
+      <li><strong>Rectify</strong> inaccurate data — use <em>Rename</em> in your Profile.</li>
+      <li><strong>Erase</strong> your account ("right to be forgotten") — use <em>Delete my account</em> in your Profile. Effect is immediate.</li>
+      <li><strong>Port</strong> your data — the download above is a machine-readable JSON file you can take elsewhere.</li>
+      <li><strong>Object</strong> to analytics and advertising — decline the consent prompt, or change your choice at any time from the Privacy panel in the app.</li>
+      <li><strong>Lodge a complaint</strong> with your national data protection authority if you believe we've mishandled your data.</li>
+    </ul>
+    <div class="note">
+      <strong>Note on rankings.</strong> If you delete your account, your display name and account identifier are scrubbed from all public records. However, the rating changes you caused on other players' Elo are not reversed — past matches are immutable. Opponents keep their rating gains and losses; their match history shows "Deleted player" where your name used to be.
+    </div>
+
+    <h2>Cookies, consent, and advertising</h2>
+    <p>We do not set tracking cookies ourselves. Firebase Authentication uses first-party session storage to keep you signed in. Google Analytics and Google AdSense use cookies / identifiers, but only after you accept.</p>
+    <p>If you are in the European Economic Area, the United Kingdom, or Switzerland, you are shown a Google-certified consent message before any advertising or analytics cookies are used, in line with the IAB Transparency &amp; Consent Framework. You can grant or refuse consent, and change it at any time.</p>
+
+    <h2>How to contact us</h2>
+    <p>For any privacy question, data-access request, or complaint: <a href="mailto:donstn@gmail.com">donstn@gmail.com</a>.</p>
+
+    <h2>Effective date</h2>
+    <p>This policy is effective from 6 June 2026. We'll update it here if anything material changes.</p>
+
+    <footer>
+      DotDuel © 2026 · <a href="/">Play DotDuel</a> · <a href="mailto:donstn@gmail.com">Contact</a>
+    </footer>
+  </div>
+</body>
+</html>

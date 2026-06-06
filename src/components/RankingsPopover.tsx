@@ -701,8 +701,8 @@ function GlobalLeaderboard({
         <thead>
           <tr>
             <th className="col-rank">#</th>
+            <th className="col-num">Elo</th>
             <th className="col-name">Player</th>
-            <th className="col-num">Rating</th>
             <th className="col-num">Games</th>
           </tr>
         </thead>
@@ -713,6 +713,7 @@ function GlobalLeaderboard({
             return (
               <tr key={r.uid} className={isMe ? 'rankings-row-me' : ''}>
                 <td className="col-rank">{i + 1}</td>
+                <td className="col-num rankings-rating-cell">{r.rating}</td>
                 <td className="col-name">
                   <span className="rankings-global-name">
                     {r.displayName}
@@ -736,7 +737,6 @@ function GlobalLeaderboard({
                     )}
                   </span>
                 </td>
-                <td className="col-num rankings-rating-cell">{r.rating}</td>
                 <td className="col-num">{r.placementGamesPlayed}</td>
               </tr>
             );

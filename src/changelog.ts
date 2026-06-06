@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.3.5.0',
+    date: '2026-06-06',
+    highlight: 'Past puzzle winners + tidier rankings',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Puzzle leaderboard now has a “Recent winners” tab — who won each of the last 30 days, with the date next to each name.',
+      },
+      {
+        kind: 'changed',
+        text: 'Global Elo rankings now lead with the rating: rank, Elo, then player name.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.3.4.0',
     date: '2026-06-06',
     highlight: 'Win celebrations scale with difficulty',

@@ -4632,6 +4632,22 @@ body:has(.consent-banner) .rules-card {
   margin-top: 14px;
   text-align: center;
 }
+.puzzle-lb-tabs {
+  margin: 0 0 12px;
+}
+/* Recent-winners view: a wider first column for the date label. */
+.puzzle-lb-winners .puzzle-lb-row {
+  grid-template-columns: 58px 1fr auto;
+}
+.puzzle-lb-date {
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.puzzle-lb-empty {
+  color: var(--text-mute);
+  font-style: italic;
+}
 
 /* Phase 2b — daily-puzzle result block in GameOver. */
 .go-daily-result {

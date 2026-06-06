@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
@@ -76,6 +77,48 @@ export function watchTodaysLeaderboard(
       console.warn('watchTodaysLeaderboard error:', err);
       onChange([]);
     },
+  );
+}
+
+// Daily winners history — the top entry (winner) for each of the last `days`
+// UTC dates. One getDocs per day (top-1 by the same best DESC / firstCompletedAt
+// ASC ordering as the live board), fired only when the history tab is opened.
+export interface DailyWinner {
+  date: string; // YYYY-MM-DD (UTC)
+  winner: LeaderboardEntry | null; // null = nobody played that day
+}
+
+export async function fetchRecentDailyWinners(
+  days: number = 30,
+): Promise<DailyWinner[]> {
+  const now = new Date();
+  const dates: string[] = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i),
+    );
+    dates.push(d.toISOString().slice(0, 10));
+  }
+  return Promise.all(
+    dates.map(async (date): Promise<DailyWinner> => {
+      try {
+        const q = query(
+          collection(db, 'dailyLeaderboard', date, 'entries'),
+          orderBy('best', 'desc'),
+          orderBy('firstCompletedAt', 'asc'),
+          limit(1),
+        );
+        const snap = await getDocs(q);
+        const top = snap.docs[0];
+        return {
+          date,
+          winner: top ? shapeEntry(top.id, top.data() as RawEntry) : null,
+        };
+      } catch (err) {
+        console.warn('fetchRecentDailyWinners error for', date, err);
+        return { date, winner: null };
+      }
+    }),
   );
 }
 

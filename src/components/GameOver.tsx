@@ -218,11 +218,14 @@ export function GameOver({
       myPlayer !== undefined &&
       state.winner === myPlayer &&
       finishedReason !== 'aborted');
-  const celebration: 'standard' | 'impossible' | null = beatImpossible
-    ? 'impossible'
-    : localWin
-      ? 'standard'
-      : null;
+  // Celebration scales with difficulty: a vs-AI win passes the level you beat
+  // (1-5; L5 = the gold Impossible show). Hot-seat / multiplayer / daily wins
+  // get a solid mid-level (3) celebration.
+  const celebrationLevel: number | null = !localWin
+    ? null
+    : mode === 'ai'
+      ? difficulty ?? 1
+      : 3;
 
   let title = 'Draw';
   let subtitle: string | null = null;
@@ -260,7 +263,7 @@ export function GameOver({
 
   return (
     <div className="game-over">
-      {celebration && <WinCelebration variant={celebration} />}
+      {celebrationLevel !== null && <WinCelebration level={celebrationLevel} />}
       <div className="game-over-card">
         <h2 className={titleClass}>{title}</h2>
         {subtitle && <p className="go-subtitle">{subtitle}</p>}

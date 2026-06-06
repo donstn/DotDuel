@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.3.4.0',
+    date: '2026-06-06',
+    highlight: 'Win celebrations scale with difficulty',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Your win celebration now grows with the challenge — a small flurry for a Beginner win, building level by level up to the full gold show for defeating Impossible.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.3.3.0',
     date: '2026-06-06',
     highlight: 'A cleaner, more polished board — beta-ready',

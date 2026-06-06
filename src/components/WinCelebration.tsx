@@ -26,7 +26,7 @@ interface Confetto {
   vy: number; sway: number; phase: number; rot: number; vrot: number;
 }
 
-export function WinCelebration({ variant }: { variant: 'standard' | 'impossible' }) {
+export function WinCelebration({ level }: { level: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -42,7 +42,8 @@ export function WinCelebration({ variant }: { variant: 'standard' | 'impossible'
     let running = true;
     const timers: number[] = [];
     const startedAt = performance.now();
-    const SHOW_MS = variant === 'impossible' ? 5200 : 3200;
+    const lvl = Math.max(1, Math.min(5, Math.round(level)));
+    const SHOW_MS = [2200, 2700, 3300, 4100, 5200][lvl - 1];
 
     const resize = () => {
       DPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -153,14 +154,19 @@ export function WinCelebration({ variant }: { variant: 'standard' | 'impossible'
       raf = requestAnimationFrame(frame);
     };
 
-    if (variant === 'impossible') {
-      rain(GOLD, 200);
-      for (let i = 0; i < 12; i++) timers.push(window.setTimeout(() => launchShell(GOLD), i * 230));
+    // Celebration scales with the difficulty you beat: L1 small -> L5 biggest.
+    // L5 (Impossible) also switches to GOLD + an extra central burst.
+    const isGold = lvl === 5;
+    const set = isGold ? GOLD : GREEN;
+    const confettiN = [45, 80, 120, 165, 210][lvl - 1];
+    const shellN = [2, 3, 5, 7, 12][lvl - 1];
+    rain(set, confettiN);
+    for (let i = 0; i < shellN; i++) {
+      timers.push(window.setTimeout(() => launchShell(set), i * 300));
+    }
+    if (isGold) {
       timers.push(window.setTimeout(() => burst(W * 0.5, H * 0.3, GOLD, 150, 13), 400));
       timers.push(window.setTimeout(() => rain(GREEN, 120), 1400));
-    } else {
-      rain(GREEN, 130);
-      for (let i = 0; i < 5; i++) timers.push(window.setTimeout(() => launchShell(GREEN), i * 340));
     }
     raf = requestAnimationFrame(frame);
 
@@ -170,7 +176,7 @@ export function WinCelebration({ variant }: { variant: 'standard' | 'impossible'
       timers.forEach((id) => clearTimeout(id));
       window.removeEventListener('resize', resize);
     };
-  }, [variant]);
+  }, [level]);
 
   return <canvas ref={ref} className="win-celebration" aria-hidden="true" />;
 }

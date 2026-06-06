@@ -139,87 +139,77 @@ function convexHull(points: Pt[]): Pt[] {
   return lower.concat(upper);
 }
 
-// Push each hull edge outward by `margin` (true edge-normal offset, so every
-// edge clears the dots evenly), clamping how far a sharp corner can shoot out
-// so an acute apex (triangle) stays inside the viewBox.
-function offsetPolygon(poly: Pt[], margin: number, maxExt: number): Pt[] {
+// Drop only COLLINEAR hull vertices. The inverted-triangle hull emits one
+// spurious mid-edge point with turn-sine ~0; 0.02 is a collinearity epsilon,
+// NOT an angular cull (real 60/90deg corners have sine 0.866/1.0 and survive).
+function simplifyHull(poly: Pt[], angleEps: number): Pt[] {
+  const p = poly.slice();
+  let changed = true;
+  while (changed && p.length > 3) {
+    changed = false;
+    for (let i = 0; i < p.length; i++) {
+      const a = p[(i - 1 + p.length) % p.length];
+      const b = p[i];
+      const c = p[(i + 1) % p.length];
+      const v1x = b.x - a.x, v1y = b.y - a.y, v2x = c.x - b.x, v2y = c.y - b.y;
+      const l1 = Math.hypot(v1x, v1y) || 1, l2 = Math.hypot(v2x, v2y) || 1;
+      if (Math.abs((v1x * v2y - v1y * v2x) / (l1 * l2)) < angleEps) {
+        p.splice(i, 1);
+        changed = true;
+        break;
+      }
+    }
+  }
+  return p;
+}
+
+// True Minkowski round-offset of a CONVEX polygon: each edge pushed straight out
+// along its outward normal by a CONSTANT `gap`; adjacent offset edges joined by a
+// CONSTANT-radius (=gap) circular ARC centred on the ORIGINAL vertex. Identical
+// rounding at every corner (60deg apex == 90deg corner), uniform perpendicular
+// clearance, no miter, no clamp.
+//
+// SWEEP = 1, HARDCODED. convexHull returns these hulls CLOCKWISE on screen
+// (geometry y grows DOWNWARD, so all four shapes have signedArea > 0 in y-down
+// space). For a CW-on-screen convex traversal the OUTWARD/convex corner arc is
+// the SVG sweep-flag=1 arc (verified via the true endpoint->center conversion:
+// at the triangle apex sweep=1 puts the arc midpoint OUTSIDE the apex = convex;
+// sweep=0 collapses it onto the apex = concave notch). Do NOT re-derive this from
+// signedArea's sign at runtime — that sign is y-down and would pick sweep=0.
+function minkowskiHullPath(poly: Pt[], gap: number): string {
   const n = poly.length;
-  if (n < 3) return poly;
+  if (n < 3) return '';
+  const f = (v: number) => v.toFixed(3);
   const cx = poly.reduce((s, p) => s + p.x, 0) / n;
   const cy = poly.reduce((s, p) => s + p.y, 0) / n;
-  const lines = poly.map((p, i) => {
+  const sweep = 1;
+  const edges = poly.map((p, i) => {
     const q = poly[(i + 1) % n];
-    let dx = q.x - p.x;
-    let dy = q.y - p.y;
+    let dx = q.x - p.x, dy = q.y - p.y;
     const len = Math.hypot(dx, dy) || 1;
     dx /= len;
     dy /= len;
-    let nx = dy;
-    let ny = -dx;
-    const mx = (p.x + q.x) / 2;
-    const my = (p.y + q.y) / 2;
+    let nx = dy, ny = -dx;
+    const mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2;
     if ((cx - mx) * nx + (cy - my) * ny > 0) {
       nx = -nx;
       ny = -ny;
     }
-    return { px: p.x + nx * margin, py: p.y + ny * margin, dx, dy };
+    return { p, q, nx, ny };
   });
-  const out: Pt[] = [];
+  const g = gap.toFixed(4);
+  let d = '';
   for (let i = 0; i < n; i++) {
-    const a = lines[(i - 1 + n) % n];
-    const b = lines[i];
-    const det = a.dx * b.dy - a.dy * b.dx;
-    let vx: number;
-    let vy: number;
-    if (Math.abs(det) < 1e-9) {
-      vx = b.px;
-      vy = b.py;
-    } else {
-      const t = ((b.px - a.px) * b.dy - (b.py - a.py) * b.dx) / det;
-      vx = a.px + a.dx * t;
-      vy = a.py + a.dy * t;
-    }
-    const ex = vx - poly[i].x;
-    const ey = vy - poly[i].y;
-    const ext = Math.hypot(ex, ey);
-    if (ext > maxExt) {
-      const s = maxExt / ext;
-      vx = poly[i].x + ex * s;
-      vy = poly[i].y + ey * s;
-    }
-    out.push({ x: vx, y: vy });
+    const a = edges[i];
+    const sx = a.p.x + a.nx * gap, sy = a.p.y + a.ny * gap;
+    const ex = a.q.x + a.nx * gap, ey = a.q.y + a.ny * gap;
+    if (i === 0) d += 'M ' + f(sx) + ' ' + f(sy) + ' ';
+    d += 'L ' + f(ex) + ' ' + f(ey) + ' ';
+    const k = edges[(i + 1) % n];
+    d += 'A ' + g + ' ' + g + ' 0 0 ' + sweep + ' ' +
+         f(k.p.x + k.nx * gap) + ' ' + f(k.p.y + k.ny * gap) + ' ';
   }
-  return out;
-}
-
-// SVG path for a polygon with rounded corners (quadratic fillets).
-function roundedPolygonPath(poly: Pt[], radius: number): string {
-  const n = poly.length;
-  if (n < 3) return '';
-  const t1: Pt[] = [];
-  const t2: Pt[] = [];
-  for (let i = 0; i < n; i++) {
-    const prev = poly[(i - 1 + n) % n];
-    const cur = poly[i];
-    const next = poly[(i + 1) % n];
-    const v1x = cur.x - prev.x;
-    const v1y = cur.y - prev.y;
-    const l1 = Math.hypot(v1x, v1y) || 1;
-    const v2x = next.x - cur.x;
-    const v2y = next.y - cur.y;
-    const l2 = Math.hypot(v2x, v2y) || 1;
-    const r = Math.min(radius, l1 / 2, l2 / 2);
-    t1.push({ x: cur.x - (v1x / l1) * r, y: cur.y - (v1y / l1) * r });
-    t2.push({ x: cur.x + (v2x / l2) * r, y: cur.y + (v2y / l2) * r });
-  }
-  const f = (v: number) => v.toFixed(3);
-  let d = `M ${f(t1[0].x)} ${f(t1[0].y)}`;
-  for (let i = 0; i < n; i++) {
-    d += ` Q ${f(poly[i].x)} ${f(poly[i].y)} ${f(t2[i].x)} ${f(t2[i].y)}`;
-    const nt1 = t1[(i + 1) % n];
-    d += ` L ${f(nt1.x)} ${f(nt1.y)}`;
-  }
-  return `${d} Z`;
+  return d + 'Z';
 }
 
 export function Board({
@@ -239,22 +229,28 @@ export function Board({
   const dotRadius = state.shape === 'triangle' ? 0.32 : 0.34;
   const strokeWidth = dotRadius * 0.42;
   const feltMin = Math.min(vb.w, vb.h);
-  const framePad = dotRadius * 1.5;
+  const feltGap = dotRadius * 1.64; // outer felt edge — even perpendicular gap
+  const facetW = dotRadius * 0.34; // dark contact-band radial width
+  const innerGap = feltGap - facetW; // 1.30*dotRadius — strictly outside dot rim
+  const litWidth = dotRadius * 0.22; // lit inner-facet stroke width
+  const recessBlur = feltMin * 0.013;
+  const recessOff = feltMin * 0.0065;
+  const framePad = feltGap + dotRadius * 0.25; // outer arc stays inside vbExp
   const vbExp = {
     x: vb.x - framePad,
     y: vb.y - framePad,
     w: vb.w + framePad * 2,
     h: vb.h + framePad * 2,
   };
-  // Original shape-matched felt outline (unchanged from before the bezel work).
-  const feltPath = roundedPolygonPath(
-    offsetPolygon(
-      convexHull(board.dots.map((d) => ({ x: d.x, y: d.y }))),
-      dotRadius * 1.7,
-      dotRadius * 2.4
-    ),
-    feltMin * 0.05
+  // Minkowski round-offset frame: constant gap + constant-radius arc corners, so
+  // every shape (triangle apex included) frames with an even margin and identical
+  // corner rounding. Two gaps -> a uniform-width annulus = the bevel facet.
+  const hull = simplifyHull(
+    convexHull(board.dots.map((d) => ({ x: d.x, y: d.y }))),
+    0.02,
   );
+  const feltPathOuter = minkowskiHullPath(hull, feltGap);
+  const feltPathInner = minkowskiHullPath(hull, innerGap);
   const [floats, setFloats] = useState<FloatingScore[]>([]);
   const [focusedDotId, setFocusedDotId] = useState<number | null>(null);
   const dotRefs = useRef(new Map<number, SVGCircleElement | null>());
@@ -432,8 +428,8 @@ export function Board({
           <filter id="felt-recess" x="-20%" y="-20%" width="140%" height="140%">
             <feFlood floodColor="#000" floodOpacity="0.5" result="flood" />
             <feComposite in="flood" in2="SourceAlpha" operator="out" result="ring" />
-            <feGaussianBlur in="ring" stdDeviation={feltMin * 0.012} result="blur" />
-            <feOffset in="blur" dx="0" dy={feltMin * 0.006} result="drop" />
+            <feGaussianBlur in="ring" stdDeviation={recessBlur} result="blur" />
+            <feOffset in="blur" dx="0" dy={recessOff} result="drop" />
             <feComposite in="drop" in2="SourceAlpha" operator="in" result="innerShadow" />
             <feMerge>
               <feMergeNode in="SourceGraphic" />
@@ -442,22 +438,36 @@ export function Board({
           </filter>
         </defs>
 
-        {/* Drop shadow floats the whole board above the vignette. */}
+        {/* 1. Drop shadow — floats the board above the vignette. */}
         <path
-          d={feltPath}
+          d={feltPathOuter}
           fill="url(#board-felt)"
+          pointerEvents="none"
           style={{ filter: 'var(--rim-drop)' }}
         />
-        {/* Recessed felt — the inner shadow makes the playing surface sit below
-            its surrounding lip (shape-matched, no blend modes). */}
-        <path d={feltPath} fill="url(#board-felt)" filter="url(#felt-recess)" />
-        {/* Bright lip on the felt's top edge for the bezel highlight. */}
+        {/* 2. Felt fill + recessed inner shadow (shape-matched, no blend modes). */}
         <path
-          d={feltPath}
+          d={feltPathOuter}
+          fill="url(#board-felt)"
+          pointerEvents="none"
+          filter="url(#felt-recess)"
+        />
+        {/* 3. Dark contact band — the evenodd annulus between the two offset
+            paths: the recessed valley where the bevel meets the felt. */}
+        <path
+          d={`${feltPathOuter} ${feltPathInner}`}
+          fillRule="evenodd"
+          fill="var(--rim-contact)"
+          pointerEvents="none"
+        />
+        {/* 4. Lit inner facet (raised bevel lip) — top-lit gradient stroke on the
+            inner path, inboard of the dark band, outboard of every dot. */}
+        <path
+          d={feltPathInner}
           fill="none"
-          stroke="var(--felt-lip)"
-          strokeWidth={feltMin * 0.006}
-          strokeLinejoin="round"
+          stroke="url(#board-rim)"
+          strokeWidth={litWidth}
+          pointerEvents="none"
         />
 
         {board.dots.map((d) => {

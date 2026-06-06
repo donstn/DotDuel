@@ -125,13 +125,12 @@
   --t-press: 90ms;
   --t-lift: 180ms;
 
-  /* Board bezel (Direction A): rim derives from the felt so it harmonizes with
-     every theme; edge/lip/drop tuned for dark stock (light themes override). */
-  --rim-hi: color-mix(in srgb, var(--board-felt-1), white 16%);
+  /* Board bezel: rim derives from the felt so it harmonizes with every theme.
+     Lit lip (rim-hi/mid/lo gradient stroke) + dark interior contact band. */
+  --rim-hi: color-mix(in srgb, var(--board-felt-1), white 14%);
   --rim-mid: var(--board-felt-1);
-  --rim-lo: color-mix(in srgb, var(--board-felt-2), black 30%);
-  --rim-edge: rgba(255, 255, 255, 0.12);
-  --felt-lip: rgba(255, 255, 255, 0.16);
+  --rim-lo: color-mix(in srgb, var(--board-felt-2), black 34%);
+  --rim-contact: rgba(0, 0, 0, 0.5);
   --rim-drop: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
 }
 
@@ -343,6 +342,12 @@
   --elev-3: 0 6px 14px rgba(60, 40, 20, 0.14), 0 20px 50px rgba(60, 40, 20, 0.22);
   --bevel-light: rgba(255, 255, 255, 0.55);
   --bevel-shade: rgba(40, 28, 12, 0.16);
+  /* Board bezel — felt-toned lit lip (never brighter than the near-white felt);
+     depth carried by the crisp dark contact band. */
+  --rim-hi: var(--board-felt-1);
+  --rim-mid: color-mix(in srgb, var(--board-felt-1), #b9b9bd 35%);
+  --rim-lo: color-mix(in srgb, var(--board-felt-2), #2a2a2c 22%);
+  --rim-contact: rgba(20, 20, 22, 0.42);
   --scrim: rgba(228, 222, 210, 0.78);
   --p1-glow: #2c2c2e;
   --p1-bright: #5a5a5c;
@@ -411,6 +416,11 @@
   --elev-3: 0 6px 14px rgba(80, 50, 24, 0.15), 0 20px 50px rgba(80, 50, 24, 0.24);
   --bevel-light: rgba(255, 250, 232, 0.6);
   --bevel-shade: rgba(55, 40, 18, 0.16);
+  /* Board bezel — warm felt-toned lit lip; depth via the dark contact band. */
+  --rim-hi: var(--board-felt-1);
+  --rim-mid: color-mix(in srgb, var(--board-felt-1), #c8b88f 35%);
+  --rim-lo: color-mix(in srgb, var(--board-felt-2), #5a4326 22%);
+  --rim-contact: rgba(70, 48, 22, 0.42);
   --scrim: rgba(238, 229, 208, 0.78);
   --p1-glow: #a82a3e;
   --p1-bright: #c54d62;
@@ -5611,15 +5621,16 @@ body:has(.consent-banner) .rules-card {
   z-index: 2;
 }
 
-/* ---- Board bezel: light-theme rim tuning + a softer inner-recess so the
-   felt doesn't go muddy on the two light stocks. */
-[data-theme="monochrome-pro"],
-[data-theme="vintage-press"] {
-  --rim-edge: rgba(40, 28, 12, 0.18);
-  --felt-lip: rgba(255, 255, 255, 0.7);
-  --rim-drop: drop-shadow(0 5px 12px rgba(80, 50, 24, 0.22));
-}
+/* ---- Board bezel — light-theme tuning: softer drop + a softer inner recess so
+   the felt doesn't go muddy on the two light stocks. Depth there is carried by
+   the crisp dark contact band (--rim-contact, set per light theme), not a white
+   lip. flood-opacity is a CSS property on feFlood (the mechanism that resolves —
+   never a var() in attribute position). */
 [data-theme="monochrome-pro"] #felt-recess feFlood,
 [data-theme="vintage-press"] #felt-recess feFlood {
   flood-opacity: 0.34;
+}
+[data-theme="monochrome-pro"],
+[data-theme="vintage-press"] {
+  --rim-drop: drop-shadow(0 5px 12px rgba(80, 50, 24, 0.22));
 }

@@ -92,7 +92,7 @@ export function AdBanner({ slot = ADSENSE_SLOT, placement = 'menu' }: Props) {
         style={{ display: 'block', width: '100%' }}
         data-ad-client={ADSENSE_CLIENT}
         data-ad-slot={slot}
-        data-ad-format="auto"
+        data-ad-format="horizontal"
         data-full-width-responsive="true"
       />
     </div>

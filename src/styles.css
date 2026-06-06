@@ -2952,6 +2952,10 @@ body:has(.consent-banner) .game-screen {
   border-radius: var(--radius);
   overflow: hidden;
   min-height: 50px;
+  max-height: 90px;
+}
+.ad-slot .adsbygoogle {
+  max-height: 90px;
 }
 .ad-slot::before {
   content: "Ad";
@@ -2967,6 +2971,10 @@ body:has(.consent-banner) .game-screen {
 @media (min-width: 768px) {
   .ad-slot {
     min-height: 90px;
+    max-height: 110px;
+  }
+  .ad-slot .adsbygoogle {
+    max-height: 110px;
   }
 }
 /* Hide ad slots only on SHORT landscape (phone held sideways) per the

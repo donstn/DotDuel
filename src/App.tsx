@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { AdBanner } from './components/AdBanner';
 import { AppFooter } from './components/AppFooter';
 import { Board } from './components/Board';
 import { ChangelogPopover } from './components/ChangelogPopover';
@@ -2029,6 +2030,9 @@ export default function App() {
     return (
       <>
         {mainContent}
+        {(screen === 'menu' || screen === 'lobby' || screen === 'matchmaking') && (
+          <AdBanner placement="menu" />
+        )}
         <AppFooter
           onOpenRules={() => setRulesOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -2345,6 +2349,7 @@ export default function App() {
           stats={p2StatsRow}
         />
       </div>
+      <AdBanner placement="ingame" />
       {showOver && (
         <GameOver
           state={state}

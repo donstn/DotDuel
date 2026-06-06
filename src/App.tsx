@@ -1106,6 +1106,19 @@ export default function App() {
     await signOut();
   };
 
+  // Clear transient visual state whenever the multiplayer game INSTANCE changes
+  // (new match, rematch, post-abort game). Without this a stale +N popup from
+  // the previous game ghosts over the fresh board — the multiplayer analog of
+  // the startGame/backToMenu cleanup. startGame/backToMenu only covered the
+  // vs-AI paths; MP enters via onStartPlaying and swaps onlineGameId on rematch,
+  // so keying on onlineGameId catches them all. See bugs.md "Ghost +N popup".
+  useEffect(() => {
+    setScoreEvent(null);
+    setActiveHint(null);
+    setPendingFlash(false);
+    prevPendingLenRef.current = 0;
+  }, [onlineGameId]);
+
   const onStartPlaying = () => {
     setMoveInFlight(false);
     setScreen('mpgame');

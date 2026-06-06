@@ -239,21 +239,27 @@ export function Board({
   const dotRadius = state.shape === 'triangle' ? 0.32 : 0.34;
   const strokeWidth = dotRadius * 0.42;
   const feltMin = Math.min(vb.w, vb.h);
-  const framePad = dotRadius * 1.3;
+  const rimWidth = dotRadius * 0.7;
+  // Extra headroom so the bezel rim lives in the margin without clipping or
+  // shrinking the play area more than a hair.
+  const framePad = dotRadius * 1.3 + rimWidth * 0.7;
   const vbExp = {
     x: vb.x - framePad,
     y: vb.y - framePad,
     w: vb.w + framePad * 2,
     h: vb.h + framePad * 2,
   };
-  const feltPath = roundedPolygonPath(
-    offsetPolygon(
-      convexHull(board.dots.map((d) => ({ x: d.x, y: d.y }))),
-      dotRadius * 1.7,
-      dotRadius * 2.4
-    ),
-    feltMin * 0.05
+  // Single source of truth for the board outline, then derive the bezel rim
+  // from the same hull so every shape (triangle/square/rectangle) frames true.
+  const feltRound = feltMin * 0.05;
+  const feltPoly = offsetPolygon(
+    convexHull(board.dots.map((d) => ({ x: d.x, y: d.y }))),
+    dotRadius * 1.7,
+    dotRadius * 2.4
   );
+  const feltPath = roundedPolygonPath(feltPoly, feltRound);
+  const rimPoly = offsetPolygon(feltPoly, rimWidth, rimWidth * 1.6);
+  const rimPath = roundedPolygonPath(rimPoly, feltRound + rimWidth * 0.6);
   const [floats, setFloats] = useState<FloatingScore[]>([]);
   const [focusedDotId, setFocusedDotId] = useState<number | null>(null);
   const dotRefs = useRef(new Map<number, SVGCircleElement | null>());
@@ -410,13 +416,55 @@ export function Board({
             <stop offset="0%" stopColor="var(--board-felt-1)" />
             <stop offset="100%" stopColor="var(--board-felt-2)" />
           </radialGradient>
+          {/* Bezel rim: top-lit gradient down the expanded viewBox so the top
+              edge catches light and the bottom falls into shade. */}
+          <linearGradient
+            id="board-rim"
+            x1="0"
+            y1={vbExp.y}
+            x2="0"
+            y2={vbExp.y + vbExp.h}
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop offset="0%" stopColor="var(--rim-hi)" />
+            <stop offset="50%" stopColor="var(--rim-mid)" />
+            <stop offset="100%" stopColor="var(--rim-lo)" />
+          </linearGradient>
+          {/* Shape-matched inner shadow: flood OUT the felt silhouette, blur +
+              offset it back across the edge, then clip IN to the felt — so only
+              the inner border darkens and the felt reads as recessed. No blend
+              modes (bugs.md endgame crash was mix-blend-mode). */}
+          <filter id="felt-recess" x="-20%" y="-20%" width="140%" height="140%">
+            <feFlood floodColor="#000" floodOpacity="0.5" result="flood" />
+            <feComposite in="flood" in2="SourceAlpha" operator="out" result="ring" />
+            <feGaussianBlur in="ring" stdDeviation={feltMin * 0.012} result="blur" />
+            <feOffset in="blur" dx="0" dy={feltMin * 0.006} result="drop" />
+            <feComposite in="drop" in2="SourceAlpha" operator="in" result="innerShadow" />
+            <feMerge>
+              <feMergeNode in="SourceGraphic" />
+              <feMergeNode in="innerShadow" />
+            </feMerge>
+          </filter>
         </defs>
 
+        {/* Raised lacquer rim (shape-matched), drawn under the felt; CSS
+            drop-shadow floats the whole board above the vignette. */}
+        <path
+          d={rimPath}
+          fill="url(#board-rim)"
+          stroke="var(--rim-edge)"
+          strokeWidth={feltMin * 0.004}
+          strokeLinejoin="round"
+          style={{ filter: 'var(--rim-drop)' }}
+        />
+        {/* Felt, recessed below the rim lip via the shape-matched inner shadow. */}
+        <path d={feltPath} fill="url(#board-felt)" filter="url(#felt-recess)" />
+        {/* Bright lip on the felt's top edge. */}
         <path
           d={feltPath}
-          fill="url(#board-felt)"
-          stroke="var(--board-felt-border)"
-          strokeWidth={feltMin * 0.008}
+          fill="none"
+          stroke="var(--felt-lip)"
+          strokeWidth={feltMin * 0.006}
           strokeLinejoin="round"
         />
 

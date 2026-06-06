@@ -124,6 +124,15 @@
   --ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
   --t-press: 90ms;
   --t-lift: 180ms;
+
+  /* Board bezel (Direction A): rim derives from the felt so it harmonizes with
+     every theme; edge/lip/drop tuned for dark stock (light themes override). */
+  --rim-hi: color-mix(in srgb, var(--board-felt-1), white 16%);
+  --rim-mid: var(--board-felt-1);
+  --rim-lo: color-mix(in srgb, var(--board-felt-2), black 30%);
+  --rim-edge: rgba(255, 255, 255, 0.12);
+  --felt-lip: rgba(255, 255, 255, 0.16);
+  --rim-drop: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
 }
 
 /* ---------- THEME 2: Royal Court (violet + gold) ---------- */
@@ -5602,4 +5611,17 @@ body:has(.consent-banner) .rules-card {
 .game-over > .game-over-card {
   position: relative;
   z-index: 2;
+}
+
+/* ---- Board bezel: light-theme rim tuning + a softer inner-recess so the
+   felt doesn't go muddy on the two light stocks. */
+[data-theme="monochrome-pro"],
+[data-theme="vintage-press"] {
+  --rim-edge: rgba(40, 28, 12, 0.18);
+  --felt-lip: rgba(255, 255, 255, 0.7);
+  --rim-drop: drop-shadow(0 5px 12px rgba(80, 50, 24, 0.22));
+}
+[data-theme="monochrome-pro"] #felt-recess feFlood,
+[data-theme="vintage-press"] #felt-recess feFlood {
+  flood-opacity: 0.34;
 }

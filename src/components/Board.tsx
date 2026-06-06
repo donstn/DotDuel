@@ -239,29 +239,22 @@ export function Board({
   const dotRadius = state.shape === 'triangle' ? 0.32 : 0.34;
   const strokeWidth = dotRadius * 0.42;
   const feltMin = Math.min(vb.w, vb.h);
-  const rimWidth = dotRadius * 0.7;
-  // Extra headroom so the bezel rim lives in the margin without clipping or
-  // shrinking the play area more than a hair.
-  const framePad = dotRadius * 1.3 + rimWidth * 0.7;
+  const framePad = dotRadius * 1.5;
   const vbExp = {
     x: vb.x - framePad,
     y: vb.y - framePad,
     w: vb.w + framePad * 2,
     h: vb.h + framePad * 2,
   };
-  // Single source of truth for the board outline, then derive the bezel rim
-  // from the same hull so every shape (triangle/square/rectangle) frames true.
-  const feltRound = feltMin * 0.05;
-  const feltPoly = offsetPolygon(
-    convexHull(board.dots.map((d) => ({ x: d.x, y: d.y }))),
-    dotRadius * 1.7,
-    // Keep corner miter close to the edge margin so sharp shapes (triangle)
-    // don't bulge a big gap at the points — even spacing all the way round.
-    dotRadius * 1.95
+  // Original shape-matched felt outline (unchanged from before the bezel work).
+  const feltPath = roundedPolygonPath(
+    offsetPolygon(
+      convexHull(board.dots.map((d) => ({ x: d.x, y: d.y }))),
+      dotRadius * 1.7,
+      dotRadius * 2.4
+    ),
+    feltMin * 0.05
   );
-  const feltPath = roundedPolygonPath(feltPoly, feltRound);
-  const rimPoly = offsetPolygon(feltPoly, rimWidth, rimWidth * 1.1);
-  const rimPath = roundedPolygonPath(rimPoly, feltRound + rimWidth * 0.6);
   const [floats, setFloats] = useState<FloatingScore[]>([]);
   const [focusedDotId, setFocusedDotId] = useState<number | null>(null);
   const dotRefs = useRef(new Map<number, SVGCircleElement | null>());
@@ -449,19 +442,16 @@ export function Board({
           </filter>
         </defs>
 
-        {/* Raised lacquer rim (shape-matched), drawn under the felt; CSS
-            drop-shadow floats the whole board above the vignette. */}
+        {/* Drop shadow floats the whole board above the vignette. */}
         <path
-          d={rimPath}
-          fill="url(#board-rim)"
-          stroke="var(--rim-edge)"
-          strokeWidth={feltMin * 0.004}
-          strokeLinejoin="round"
+          d={feltPath}
+          fill="url(#board-felt)"
           style={{ filter: 'var(--rim-drop)' }}
         />
-        {/* Felt, recessed below the rim lip via the shape-matched inner shadow. */}
+        {/* Recessed felt — the inner shadow makes the playing surface sit below
+            its surrounding lip (shape-matched, no blend modes). */}
         <path d={feltPath} fill="url(#board-felt)" filter="url(#felt-recess)" />
-        {/* Bright lip on the felt's top edge. */}
+        {/* Bright lip on the felt's top edge for the bezel highlight. */}
         <path
           d={feltPath}
           fill="none"

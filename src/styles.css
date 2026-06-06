@@ -630,6 +630,15 @@ button {
   overflow-y: auto;
 }
 
+/* Don't let the menu's children (esp. .menu-section) shrink below their content
+   — otherwise the content spills out of a too-short box, the menu sees no
+   overflow, and the last card (Rankings) gets clipped with no way to scroll to
+   it. flex-shrink:0 keeps real heights so .menu's overflow-y:auto actually
+   scrolls. */
+.menu > * {
+  flex-shrink: 0;
+}
+
 .title {
   display: flex;
   align-items: center;

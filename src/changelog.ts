@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.3.7.0',
+    date: '2026-06-06',
+    highlight: 'Auto-updating app + menu scroll fix',
+    changes: [
+      {
+        kind: 'added',
+        text: 'The app now auto-updates — if you’ve added DotDuel to your home screen, it picks up new versions on its own instead of getting stuck on an old cached build.',
+      },
+      {
+        kind: 'fixed',
+        text: 'On phones the menu now scrolls properly so the Rankings card at the bottom is fully visible.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.3.6.1',
     date: '2026-06-06',
     highlight: 'Mobile board position',

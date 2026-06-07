@@ -74,6 +74,7 @@ import {
 } from './cloud/dailyLeaderboard';
 import { dateToUtcKey, puzzleForDate } from './dailyPuzzles';
 import { finalizeDailyPuzzle } from './cloud/dailyPuzzleResult';
+import { syncProfileName } from './cloud/supabaseProfile';
 import type { Friend, PendingRequest } from './cloud/friends';
 import {
   subscribeFriends,
@@ -694,16 +695,16 @@ export default function App() {
 
   // On sign-in: merge cloud progress with local (max-union), save back.
   useEffect(() => {
-    if (!user) return;
+    if (!sbUser) return;
     let cancelled = false;
-    void syncOnSignIn(user.uid).then((merged) => {
+    void syncOnSignIn(sbUser.uid).then((merged) => {
       if (cancelled || !merged) return;
       setProgress(merged);
     });
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [sbUser?.uid]);
 
   // Admin-only debug helpers — exposed on window for the project owner so
   // we can invoke admin-gated callables (seedBots, countStuckSignups) from
@@ -756,6 +757,14 @@ export default function App() {
     }
     return watchMyDailyAttempt(sbUser.uid, dateToUtcKey(), setMyDailyAttempt);
   }, [sbUser?.uid]);
+
+  // Keep the Supabase profile name aligned with the player's DotDuel name once
+  // the Supabase session + cloud name are both available.
+  useEffect(() => {
+    if (sbUser && cloudProfile?.displayName) {
+      void syncProfileName(cloudProfile.displayName);
+    }
+  }, [sbUser?.uid, cloudProfile?.displayName]);
 
   // Apply colour theme to <html data-theme> and persist on every change.
   useEffect(() => {

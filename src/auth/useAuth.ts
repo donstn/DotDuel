@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut as fbSignOut, type User } from 'firebase/auth';
 import { auth } from '../firebase';
+import { signOutSupabase } from './supabaseAuth';
 
 export interface AuthState {
   user: User | null;
@@ -23,6 +24,9 @@ export function useAuth(): AuthState {
   return {
     user,
     loading,
-    signOut: () => fbSignOut(auth),
+    // Dual-auth bridge: clear BOTH sessions on sign-out.
+    signOut: async () => {
+      await Promise.allSettled([fbSignOut(auth), signOutSupabase()]);
+    },
   };
 }

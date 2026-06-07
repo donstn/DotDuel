@@ -7,6 +7,7 @@ import {
   signInWithPopup,
 } from 'firebase/auth';
 import { auth } from '../firebase';
+import { signInWithGoogleIdToken } from './supabaseAuth';
 
 interface Props {
   onClose: () => void;
@@ -72,7 +73,23 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
     }
   }
 
-  const onGoogle = () => run(() => signInWithPopup(auth, googleProvider));
+  const onGoogle = () =>
+    run(async () => {
+      const result = await signInWithPopup(auth, googleProvider);
+      // Dual-auth bridge: establish a Supabase session from the same Google
+      // login so the migration's Supabase surfaces are authenticated while
+      // Firebase keeps driving live multiplayer. Non-blocking — a Supabase
+      // failure must not break the (working) Firebase sign-in.
+      const idToken = GoogleAuthProvider.credentialFromResult(result)?.idToken;
+      if (idToken) {
+        try {
+          await signInWithGoogleIdToken(idToken);
+          console.info('[auth-bridge] Supabase session established from Google login');
+        } catch (err) {
+          console.warn('[auth-bridge] Supabase sign-in failed (Firebase OK):', err);
+        }
+      }
+    });
 
   const onEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -10,11 +10,23 @@ Known bugs (fixed + accepted, with root cause and forward-looking notes) tracked
 
 ---
 
+## ⚠️ ACTIVE MIGRATION: Firebase → Supabase (branch `supabase-migration`)
+
+The backend is mid-migration **Firebase → Supabase** (Postgres + Auth + Realtime + Edge Functions). **Vite stays; Next.js was rejected.** Production `main` is **still 100% Firebase and untouched** — all migration work is on branch **`supabase-migration`**. Supabase project ref `ggyjxayazxbjvjbeecxa`.
+
+**Before touching backend code, read `SUPABASE_MIGRATION.md` (repo root)** — full status, deployed Edge Functions, applied migrations, conventions.
+
+- **Done on Supabase:** Phase 0 (schema/RLS/triggers), Phase 1 (daily puzzle, profile name-sync, cloud-progress), **dual-auth Google bridge** (one Google login → both Firebase + Supabase), Phase 3 server side (`finalize_game` Elo RPC; `submit-move` + `matchmake` Edge Functions deployed; `set_ready`/`set_board_loaded`/`set_rematch` RPCs; `pairings`; Realtime on `games`).
+- **Next:** client `SUPABASE` transport in `src/cloud/onlineGame.ts` + `matchmaking.ts` behind a `CLIENT_SUPABASE_TRANSPORT` flag (default off) → 2-browser test → bots + coupled modules (usernames/friends/invites/presence/leaderboard/match-history) → Phase 4 cutover. **Campaign (Phase 2) deferred** (needs its own planning).
+- **Conventions:** apply SQL via the dashboard **SQL Editor** (NOT `db push` — CLI migration history is intentionally out of sync); any `SECURITY DEFINER` RPC writing fn-only cols (rating/streak) must `perform set_config('app.allow_protected_write','on',true)` first or the guard trigger reverts it; `clock.turnStartedAt` is epoch-ms; run `node scripts/copy-engine-supabase.cjs` before deploying engine-dependent Edge Functions; rotate the non-expiring Supabase access token before launch.
+
+---
+
 ## Tech stack
 
 - **React 18** + **Vite 5** + **TypeScript** (strict mode)
 - SVG board (auto-scales via `viewBox`)
-- **Firebase** (Auth, Firestore, RTDB, Cloud Functions `europe-west1`) for multiplayer + accounts
+- **Firebase** (Auth, Firestore, RTDB, Cloud Functions `europe-west1`) for multiplayer + accounts — *being migrated to Supabase; see the Active Migration section above*
 - **localStorage** for offline progression
 - `tsx` for headless simulation scripts (dev-only)
 - No runtime UI framework

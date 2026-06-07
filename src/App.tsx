@@ -14,6 +14,7 @@ import { SettingsPopover } from './components/SettingsPopover';
 import { SidePanel } from './components/SidePanel';
 import { SignInPopover } from './auth/SignInPopover';
 import { useAuth } from './auth/useAuth';
+import { useSupabaseUser } from './auth/useSupabaseUser';
 import { saveCloudProgress, syncOnSignIn } from './cloud/progressSync';
 import {
   suggestUsername,
@@ -259,6 +260,9 @@ export default function App() {
   const [sendInviteFor, setSendInviteFor] = useState<Friend | null>(null);
 
   const { user, loading: authLoading, signOut } = useAuth();
+  // Supabase identity (established by the dual-auth bridge). Migrated features
+  // key off this, not the Firebase uid.
+  const { user: sbUser } = useSupabaseUser();
   const aiTimer = useRef<number | null>(null);
   const winRecorded = useRef(false);
   const gameEndCounted = useRef(false);
@@ -609,7 +613,11 @@ export default function App() {
       const puzzleId = dailyPuzzleIdRef.current ?? -1;
       const margin = s1 - s2;
       const dispName =
-        cloudProfile?.displayName ?? user.displayName ?? 'Anonymous';
+        cloudProfile?.displayName ??
+        settings.playerName ??
+        user.displayName ??
+        user.email?.split('@')[0] ??
+        'Anonymous';
       void (async () => {
         try {
           const utcDate = dateToUtcKey();
@@ -627,6 +635,11 @@ export default function App() {
             attemptsRemaining: result.attemptsRemaining,
             current: result.streak.current,
             longest: result.streak.longest,
+          });
+          setMyDailyAttempt({
+            puzzleId,
+            attempts: result.attempts,
+            best: result.best,
           });
           trackEvent('daily_puzzle_solved', {
             puzzle_id: puzzleId,
@@ -737,12 +750,12 @@ export default function App() {
   // menu card can render the right state (not started / N/3 / 3/3 done)
   // and finalize can read attempt count without a fresh getDoc.
   useEffect(() => {
-    if (!user) {
+    if (!sbUser) {
       setMyDailyAttempt(null);
       return;
     }
-    return watchMyDailyAttempt(user.uid, dateToUtcKey(), setMyDailyAttempt);
-  }, [user?.uid]);
+    return watchMyDailyAttempt(sbUser.uid, dateToUtcKey(), setMyDailyAttempt);
+  }, [sbUser?.uid]);
 
   // Apply colour theme to <html data-theme> and persist on every change.
   useEffect(() => {
@@ -2155,7 +2168,7 @@ export default function App() {
         )}
         {puzzleLbOpen && (
           <PuzzleLeaderboardPopover
-            myUid={user?.uid ?? null}
+            myUid={sbUser?.uid ?? null}
             onClose={() => setPuzzleLbOpen(false)}
           />
         )}
@@ -2412,6 +2425,12 @@ export default function App() {
           dailyResult={dailyPuzzleResult}
           onTryDailyAgain={startDailyPuzzle}
           onOpenPuzzleLeaderboard={() => setPuzzleLbOpen(true)}
+        />
+      )}
+      {puzzleLbOpen && (
+        <PuzzleLeaderboardPopover
+          myUid={sbUser?.uid ?? null}
+          onClose={() => setPuzzleLbOpen(false)}
         />
       )}
       {resignConfirmOpen && (config.mode === 'ai' || config.mode === 'daily') && !state.finished && (

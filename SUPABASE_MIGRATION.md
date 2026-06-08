@@ -33,8 +33,8 @@ init schema · rpcs (finalize_daily/complete_level) · finalize_daily_v2 · prof
 ## COUPLED-MODULE AUDIT (2026-06-08) — what's left for Phase 4
 Live games are fully Supabase + verified. The remaining gaps are **coupled read modules + social**, which still read from Firebase even though their data now writes to Supabase (so updates render stale). Status: ✅ done · 🟡 needs check · 🔴 still Firebase.
 - **Rating display** (`watchProfile`/`loadProfile` in `usernames.ts`) — ✅ **#1 DONE** (2026-06-08): now reads Supabase `profiles` + Realtime (migration `20260608040000_profiles_realtime.sql`); `claimUsername`/`renameUsername` push name via `syncProfileName` so renames propagate while usernames stay Firebase. **NOTE:** new users now keep their Google name (handle_new_user sets `display_name`) instead of being forced to claim — revisit when usernames migrate. **Needs 2-browser check** that rating updates live post-game.
-- **Global Elo leaderboard** (`leaderboard.ts`) — 🔴 reads Firebase; Supabase `leaderboard` table populated but unread. (#2)
-- **Match history** (`matchHistory.ts`) — 🔴 reads Firebase; Supabase `matches` populated but unread. (#2)
+- **Global Elo leaderboard** (`leaderboard.ts`) — ✅ **#2 DONE** (2026-06-08): `watchLeaderboard` reads Supabase `leaderboard` + Realtime. Rankings shows Supabase ratings + bots (user-confirmed).
+- **Match history + GameOver Elo delta** (`matchHistory.ts`) — ✅ **#2 DONE**: `watchMatch`/`watchRecentMatches` read Supabase `matches` + Realtime (migration `20260608050000_leaderboard_matches_realtime.sql`).
 - **Usernames** claim/availability (`usernames.ts` writes) — 🔴 Firebase. (#3)
 - **Friends** (`friends.ts`), **Invites** (`invites.ts` → needs `accept-invite` Edge Fn so invite-to-match works), **Presence** (`presence.ts`) — 🔴 Firebase. (#4)
 - **Session lock** (`gameSession.ts`, one-device) — 🔴 Firebase; still *works* via Firebase, migrate for cutover. **Account delete** (`account.ts`) — 🔴 Firebase. (#5)

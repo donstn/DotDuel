@@ -40,6 +40,9 @@ Live games are fully Supabase + verified. The remaining gaps are **coupled read 
 - **Session lock** (`gameSession.ts`, one-device) — 🔴 Firebase; still *works* via Firebase, migrate for cutover. **Account delete** (`account.ts`) — 🔴 Firebase. (#5)
 - **Server backstops not built:** `botFallbackSweep` (pg_cron, closed-tab bot backstop), shape-unlock in `matchmake` (currently triangle-only MVP), `clockTimeout` sweep (both-crash edge — deferred on Firebase too). (#6)
 
+### ▶ RESUME HERE next session
+Suggested order: **#3 usernames** (claim/availability → Supabase; also resolves the #1 onboarding note — new Google users currently skip the claim prompt) → **#4 friends/invites/presence** (the big social chunk; build an `accept-invite` Edge Fn so "invite a friend to match" works again) → **#5 session-lock + account-delete** → **#6 backstops** → **Phase 4 cutover**. Scope each against its Firebase original in `functions/src/index.ts` first. The flag is ON, all SQL migrations through `20260608050000` are applied to the live DB, Edge Functions `submit-move`/`matchmake`/`request-bot-match` are deployed. `npm run dev` (Supabase transport active). 2 test accounts: ArV3eikiaTikrai + Donce3 (Google). Session-end commit: `52f2fdd` on branch `supabase-migration`.
+
 ## Phase 4 — cutover (after Phase 3 passes the gauntlet)
 - Hand-migrate the 2 real players' `display_name` + Elo + leaderboard (map by email).
 - Flip `CLIENT_SUPABASE_TRANSPORT` (and retire Firebase MP). Quiet window (no active games) is the target.

@@ -112,6 +112,18 @@ async function doBotMove(admin: Admin, gameId: string, level: number, delayMs: n
 
   const state = game.state as GameState;
   const slot = state.current;
+
+  // Safety: only ever apply a move on a BOT's turn. The MVP has the bot as P2,
+  // but if the turn somehow advanced during the think-delay (or this fires for a
+  // non-bot game), never move on a human's slot.
+  const turnUid = slot === 1 ? game.p1_uid : game.p2_uid;
+  const { data: botRow } = await admin
+    .from('bots')
+    .select('uid')
+    .eq('uid', turnUid)
+    .maybeSingle();
+  if (!botRow) return;
+
   const clock = game.clock as {
     p1RemainingMs: number;
     p2RemainingMs: number;
@@ -128,16 +140,16 @@ async function doBotMove(admin: Admin, gameId: string, level: number, delayMs: n
     return;
   }
 
-  let action;
-  try {
-    action = pickAIAction(state, level as Parameters<typeof pickAIAction>[1], slot as Player);
-  } catch (_e) {
-    return;
-  }
   let newState: GameState;
   try {
+    const action = pickAIAction(state, level as Parameters<typeof pickAIAction>[1], slot as Player);
     newState = applyAction(state, action);
-  } catch (_e) {
+  } catch (e) {
+    // The bot engine failed on this state. Rather than strand the human (who'd
+    // otherwise wait out their own clock against a bot that never moves), end
+    // the game rating-neutral (aborted ⇒ finalize_game applies no Elo change).
+    console.error(`doBotMove engine failure for game ${gameId}:`, e);
+    await finish(admin, gameId, state, null, 'aborted', now);
     return;
   }
 
@@ -154,7 +166,12 @@ async function doBotMove(admin: Admin, gameId: string, level: number, delayMs: n
     updates.finished_reason = 'normal';
     updates.finished_at = new Date(now).toISOString();
   }
-  await admin.from('games').update(updates).eq('id', gameId);
+  const { error: upErr } = await admin.from('games').update(updates).eq('id', gameId);
+  if (upErr) {
+    // Don't finalize against a state we failed to persist.
+    console.error(`doBotMove update failed for game ${gameId}:`, upErr);
+    return;
+  }
   if (newState.finished) {
     await admin.rpc('finalize_game', { p_game_id: gameId });
   }

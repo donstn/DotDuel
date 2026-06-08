@@ -1079,18 +1079,16 @@ export default function App() {
 
   const onSignOutSafe = async () => {
     if (user) {
-      // Fire-and-forget — sign-out must never be blocked by a hung RTDB
-      // write (see openMultiplayer note). signOut() itself is mostly local
-      // Firebase Auth state, so awaiting it is safe.
-      void releaseSession(user.uid).catch((e) =>
-        console.warn('releaseSession on sign-out failed:', e),
-      );
-      // Announce offline NOW so friends don't see a ghost-online state
-      // for up to 90s while the heartbeat times out. Must fire BEFORE
-      // signOut() — the presence rule only allows the owner to write.
-      void markPresenceOffline(user.uid).catch((e) =>
-        console.warn('markPresenceOffline on sign-out failed:', e),
-      );
+      // Stop the heartbeat and announce offline NOW, BEFORE signOut() clears the
+      // session — presence/session RLS only lets the owner write, so these must
+      // land while still authenticated (otherwise friends see a ghost-online
+      // state for up to 90s). Awaited via allSettled so both complete first but
+      // a single failure/slow write can't wedge sign-out.
+      stopPresence();
+      await Promise.allSettled([
+        releaseSession(user.uid),
+        markPresenceOffline(user.uid),
+      ]);
     }
     await signOut();
   };

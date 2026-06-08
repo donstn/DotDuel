@@ -138,7 +138,6 @@ export function watchProfile(
       void supabase.removeChannel(channel);
       channel = null;
     }
-    void emit(sid);
     channel = supabase
       .channel(`profile:${sid}`)
       .on(
@@ -148,7 +147,9 @@ export function watchProfile(
           if (!cancelled) void emit(sid);
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED' && !cancelled) void emit(sid);
+      });
   };
 
   void profileSid().then(attach);

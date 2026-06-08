@@ -86,6 +86,18 @@ Deno.serve(async (req) => {
       totalMs,
     };
 
+    // Compare-and-swap: claim the invite by flipping pending→accepted only if
+    // it's still pending. If another concurrent accept already won, 0 rows come
+    // back and we bail — prevents two games being spawned from one invite.
+    const { data: claimed, error: claimErr } = await admin
+      .from('invites')
+      .update({ status: 'accepted' })
+      .eq('id', inviteId)
+      .eq('status', 'pending')
+      .select('id');
+    if (claimErr) return json({ error: 'CLAIM_FAILED', detail: claimErr.message }, 500);
+    if (!claimed || claimed.length === 0) return json({ error: 'ALREADY_HANDLED' }, 409);
+
     const { data: game, error: gErr } = await admin
       .from('games')
       .insert({
@@ -102,14 +114,15 @@ Deno.serve(async (req) => {
       })
       .select('id')
       .single();
-    if (gErr) return json({ error: 'CREATE_FAILED', detail: gErr.message }, 500);
+    if (gErr) {
+      // Roll the claim back so the invite can be retried.
+      await admin.from('invites').update({ status: 'pending' }).eq('id', inviteId);
+      return json({ error: 'CREATE_FAILED', detail: gErr.message }, 500);
+    }
 
-    // Accepted invite wins; siblings in the same group cancel so their
-    // recipients' toasts disappear.
-    await admin
-      .from('invites')
-      .update({ status: 'accepted', match_id: game.id })
-      .eq('id', inviteId);
+    // Record the match on the accepted invite; cancel siblings in the same group
+    // so their recipients' toasts disappear.
+    await admin.from('invites').update({ match_id: game.id }).eq('id', inviteId);
     await admin
       .from('invites')
       .update({ status: 'cancelled' })

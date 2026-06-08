@@ -95,7 +95,6 @@ export function watchMatch(
     }
     onChange(data ? shapeSupabase(data) : null);
   };
-  void fetchOne();
   const channel = supabase
     .channel(`match:${matchId}`)
     .on(
@@ -105,7 +104,9 @@ export function watchMatch(
         if (!cancelled) void fetchOne();
       },
     )
-    .subscribe();
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED' && !cancelled) void fetchOne();
+    });
   return () => {
     cancelled = true;
     void supabase.removeChannel(channel);
@@ -138,10 +139,10 @@ export function watchRecentMatches(
   const attach = (sid: string | null) => {
     if (cancelled || !sid || sid === attachedSid) return;
     attachedSid = sid;
-    void fetchMine(sid);
     if (!channel) {
       // No array-contains filter in Realtime; subscribe broadly and re-run the
       // query (match volume is low). RLS still limits what the re-query reads.
+      // Subscribe FIRST, fetch on SUBSCRIBED (no event lost in the mount gap).
       channel = supabase
         .channel('my-matches')
         .on(
@@ -151,7 +152,12 @@ export function watchRecentMatches(
             if (!cancelled && attachedSid) void fetchMine(attachedSid);
           },
         )
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED' && !cancelled && attachedSid) void fetchMine(attachedSid);
+        });
+    } else {
+      // Channel already live (sid changed on a later auth event) — refetch now.
+      void fetchMine(sid);
     }
   };
   void matchesSid().then(attach);

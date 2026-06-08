@@ -143,21 +143,25 @@ export function watchGame(
   DIAG(`watchGame[${gameId}] subscribing (supabase realtime)`);
   let cancelled = false;
 
-  // Realtime delivers only CHANGES, so fetch the initial snapshot once, then
-  // subscribe. RLS limits delivery to the two participants.
-  void supabase
-    .from('games')
-    .select('*')
-    .eq('id', gameId)
-    .maybeSingle()
-    .then(({ data, error }) => {
-      if (cancelled) return;
-      if (error) {
-        DIAG(`watchGame[${gameId}] initial select error`, error);
-        return;
-      }
-      onChange(data ? supabaseRowToOnlineGame(data) : null);
-    });
+  // Realtime delivers only CHANGES, not the current row. Subscribe FIRST, then
+  // fetch the initial snapshot on SUBSCRIBED — closes the race where an opponent
+  // move lands between an initial select and the subscription attaching (that
+  // first move would otherwise be missed). RLS limits delivery to the two players.
+  const fetchSnapshot = () => {
+    void supabase
+      .from('games')
+      .select('*')
+      .eq('id', gameId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          DIAG(`watchGame[${gameId}] initial select error`, error);
+          return;
+        }
+        onChange(data ? supabaseRowToOnlineGame(data) : null);
+      });
+  };
 
   const channel = supabase
     .channel(`game:${gameId}`)
@@ -174,7 +178,9 @@ export function watchGame(
         onChange(supabaseRowToOnlineGame(payload.new as Record<string, unknown>));
       },
     )
-    .subscribe();
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED' && !cancelled) fetchSnapshot();
+    });
 
   return () => {
     cancelled = true;

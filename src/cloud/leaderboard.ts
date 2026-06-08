@@ -53,7 +53,6 @@ export function watchLeaderboard(
     }
     onChange((data ?? []).map(shapeSupabase));
   };
-  void fetchTop();
   const channel = supabase
     .channel('leaderboard')
     .on(
@@ -63,7 +62,9 @@ export function watchLeaderboard(
         if (!cancelled) void fetchTop();
       },
     )
-    .subscribe();
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED' && !cancelled) void fetchTop();
+    });
   return () => {
     cancelled = true;
     void supabase.removeChannel(channel);

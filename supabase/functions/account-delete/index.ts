@@ -37,14 +37,24 @@ Deno.serve(async (req) => {
     const sentinel = `deleted_${uid.slice(0, 8)}`;
 
     // Step 1: remove live game state that references this user (NO ACTION FK
-    // would otherwise block the profile cascade). The opponent's client sees
-    // the row vanish; an in-progress game effectively aborts.
-    await admin.from('games').delete().or(`p1_uid.eq.${uid},p2_uid.eq.${uid}`);
+    // would otherwise block the profile cascade). Also delete BOTH sides'
+    // pairing rows for those matches — the opponent's pairing only cascades off
+    // the opponent's own profile, so without this it would dangle (pointing at a
+    // deleted game/profile) and break their MatchFound/reconnect view.
+    const { data: myGames } = await admin
+      .from('games')
+      .select('id')
+      .or(`p1_uid.eq.${uid},p2_uid.eq.${uid}`);
+    const myGameIds = (myGames ?? []).map((g) => g.id);
+    if (myGameIds.length > 0) {
+      await admin.from('pairings').delete().in('match_id', myGameIds);
+      await admin.from('games').delete().in('id', myGameIds);
+    }
 
     // Step 2: anonymise match history (kept for the opponent's record).
     const { data: myMatches } = await admin
       .from('matches')
-      .select('id, p1_uid, p2_uid')
+      .select('id, p1_uid, p2_uid, player_uids')
       .or(`p1_uid.eq.${uid},p2_uid.eq.${uid}`)
       .limit(1000);
     for (const m of myMatches ?? []) {
@@ -56,6 +66,10 @@ Deno.serve(async (req) => {
       if (m.p2_uid === uid) {
         updates.p2_uid = null;
         updates.p2_display = DELETED_DISPLAY;
+      }
+      // Scrub the uid out of the player_uids array too (drives recent-matches).
+      if (Array.isArray(m.player_uids)) {
+        updates.player_uids = m.player_uids.map((u: string) => (u === uid ? null : u));
       }
       await admin.from('matches').update(updates).eq('id', m.id);
     }

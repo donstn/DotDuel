@@ -8,6 +8,9 @@ import {
 } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { app, db, trackEvent } from '../firebase';
+import { supabase, currentSupabaseUid } from '../supabase';
+import { CLIENT_SUPABASE_TRANSPORT } from '../types';
+import { syncProfileName } from './supabaseProfile';
 
 export interface CloudProfile {
   displayName: string | null;
@@ -104,7 +107,60 @@ function shapeProfile(data: DocumentData | undefined): CloudProfile {
   };
 }
 
+// Map a Supabase `profiles` row (snake_case) to the CloudProfile the app
+// consumes. The rating-bearing profile lives in Supabase under the transport;
+// the read path used to point at the Firebase users/{uid} doc, so a Supabase
+// Elo update never reached the UI (the "ratings don't update" bug).
+function shapeSupabaseProfile(row: Record<string, unknown>): CloudProfile {
+  const hasStreak =
+    typeof row.streak_current === 'number' &&
+    typeof row.streak_longest === 'number' &&
+    typeof row.streak_last_played_utc === 'string';
+  return {
+    displayName: (row.display_name ?? null) as string | null,
+    email: (row.email ?? null) as string | null,
+    authProvider: (row.auth_provider ?? null) as string | null,
+    rating: typeof row.rating === 'number' ? row.rating : 1000,
+    placementGamesPlayed:
+      typeof row.placement_games_played === 'number' ? row.placement_games_played : 0,
+    createdAt: row.created_at ?? null,
+    challengePolicy: (row.challenge_policy ?? undefined) as CloudProfile['challengePolicy'],
+    showPresence: (row.show_presence ?? undefined) as boolean | undefined,
+    friendListHidden: (row.friend_list_hidden ?? undefined) as boolean | undefined,
+    streak: hasStreak
+      ? {
+          current: row.streak_current as number,
+          longest: row.streak_longest as number,
+          lastPlayedUTC: row.streak_last_played_utc as string,
+        }
+      : undefined,
+  };
+}
+
+// The app's `user.uid` is the Firebase uid, but Supabase profiles key on the
+// Supabase auth uuid. Resolve it from the session (cache first, then getSession).
+async function profileSid(): Promise<string | null> {
+  const cached = currentSupabaseUid();
+  if (cached) return cached;
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user.id ?? null;
+}
+
 export async function loadProfile(uid: string): Promise<CloudProfile | null> {
+  if (CLIENT_SUPABASE_TRANSPORT) {
+    const sid = await profileSid();
+    if (!sid) return null;
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', sid)
+      .maybeSingle();
+    if (error) {
+      console.warn('loadProfile (supabase) failed:', error);
+      return null;
+    }
+    return data ? shapeSupabaseProfile(data) : null;
+  }
   try {
     const snap = await getDoc(userDoc(uid));
     if (!snap.exists()) return null;
@@ -119,6 +175,60 @@ export function watchProfile(
   uid: string,
   onChange: (p: CloudProfile | null) => void,
 ): () => void {
+  if (CLIENT_SUPABASE_TRANSPORT) {
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let attachedSid: string | null = null;
+
+    const emit = async (sid: string) => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', sid)
+        .maybeSingle();
+      if (cancelled) return;
+      if (error) {
+        console.warn('watchProfile (supabase) error:', error);
+        return;
+      }
+      onChange(data ? shapeSupabaseProfile(data) : null);
+    };
+
+    // Same late-session resilience as watchPairing: the Supabase uuid may not be
+    // ready at mount, so (re)attach when the session resolves. Subscribe first,
+    // then fetch on SUBSCRIBED; re-fetch on any change (rating/name/streak).
+    const attach = (sid: string | null) => {
+      if (cancelled || !sid || sid === attachedSid) return;
+      attachedSid = sid;
+      if (channel) {
+        void supabase.removeChannel(channel);
+        channel = null;
+      }
+      channel = supabase
+        .channel(`profile:${sid}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${sid}` },
+          () => {
+            if (!cancelled) void emit(sid);
+          },
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED' && !cancelled) void emit(sid);
+        });
+    };
+
+    void profileSid().then(attach);
+    const { data: authSub } = supabase.auth.onAuthStateChange((_event, session) => {
+      attach(session?.user?.id ?? null);
+    });
+
+    return () => {
+      cancelled = true;
+      authSub.subscription.unsubscribe();
+      if (channel) void supabase.removeChannel(channel);
+    };
+  }
   return onSnapshot(
     userDoc(uid),
     (snap) => {
@@ -196,6 +306,9 @@ export async function claimUsername(
         { merge: true },
       );
     });
+    // The profile read is Supabase-sourced under the transport; push the name
+    // there directly so it doesn't wait on the (still-Firebase) username path.
+    if (CLIENT_SUPABASE_TRANSPORT) await syncProfileName(display);
   } catch (e) {
     const code = (e as { code?: string; message?: string })?.code
       ?? (e as { message?: string })?.message
@@ -223,6 +336,7 @@ export async function renameUsername(
         });
         tx.set(userDoc(uid), { displayName: newDisplay }, { merge: true });
       });
+      if (CLIENT_SUPABASE_TRANSPORT) await syncProfileName(newDisplay);
       return;
     }
     await runTransaction(db, async (tx) => {
@@ -238,6 +352,7 @@ export async function renameUsername(
       tx.delete(usernameDoc(oldLower));
       tx.set(userDoc(uid), { displayName: newDisplay }, { merge: true });
     });
+    if (CLIENT_SUPABASE_TRANSPORT) await syncProfileName(newDisplay);
   } catch (e) {
     const code = (e as { code?: string; message?: string })?.code
       ?? (e as { message?: string })?.message

@@ -171,24 +171,26 @@ export function watchPairing(
   if (CLIENT_SUPABASE_TRANSPORT) {
     let cancelled = false;
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let attachedSid: string | null = null;
 
-    // The Supabase uuid must be resolved from the session (the `uid` arg is the
-    // Firebase uid). Do it async, then attach the initial select + Realtime sub.
-    void (async () => {
-      const sid = await supaUid();
-      if (!sid || cancelled) return;
-
-      // Realtime delivers only changes; fetch the current pairing once first
-      // (covers a pairing written before this subscription attached).
-      const { data, error } = await supabase
-        .from('pairings')
-        .select('*')
-        .eq('uid', sid)
-        .maybeSingle();
-      if (cancelled) return;
-      if (error) console.warn('watchPairing initial select error:', error);
-      else onPair(data ? rowToPairing(data) : null);
-
+    // The Supabase uuid (the `uid` arg is the Firebase uid) may not be resolved
+    // yet when this mounts: on a fresh load the Google→Supabase auth bridge can
+    // finish AFTER watchPairing mounts. The original code resolved it once and
+    // bailed if null, so that tab got NO pairing subscription for the whole
+    // session and sat on "searching" forever while the opponent entered the game.
+    // Re-attach whenever the session resolves/changes instead.
+    const attach = (sid: string | null) => {
+      if (cancelled || !sid || sid === attachedSid) return;
+      attachedSid = sid;
+      if (channel) {
+        void supabase.removeChannel(channel);
+        channel = null;
+      }
+      // Subscribe FIRST, then run the catch-up select once the channel is live —
+      // this closes the race where a pairing INSERT lands between an initial
+      // select and the subscription attaching. The select only delivers a
+      // positive (an existing/just-written pairing); "no row" stays as the
+      // default null state, and clears come from DELETE events.
       channel = supabase
         .channel(`pairing:${sid}`)
         .on(
@@ -203,11 +205,29 @@ export function watchPairing(
             onPair(rowToPairing(payload.new as Record<string, unknown>));
           },
         )
-        .subscribe();
-    })();
+        .subscribe((status) => {
+          if (status !== 'SUBSCRIBED' || cancelled) return;
+          void supabase
+            .from('pairings')
+            .select('*')
+            .eq('uid', sid)
+            .maybeSingle()
+            .then(({ data, error }) => {
+              if (cancelled) return;
+              if (error) console.warn('watchPairing initial select error:', error);
+              else if (data) onPair(rowToPairing(data));
+            });
+        });
+    };
+
+    void supaUid().then(attach);
+    const { data: authSub } = supabase.auth.onAuthStateChange((_event, session) => {
+      attach(session?.user?.id ?? null);
+    });
 
     return () => {
       cancelled = true;
+      authSub.subscription.unsubscribe();
       if (channel) void supabase.removeChannel(channel);
     };
   }

@@ -8,6 +8,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Difficulty } from '../types';
+import { CLIENT_SUPABASE_TRANSPORT } from '../types';
+import { supabase } from '../supabase';
 
 /**
  * Global Elo leaderboard. Denormalised public view of users/{uid} —
@@ -42,10 +44,60 @@ function shape(uid: string, d: DocumentData): LeaderboardEntry {
   };
 }
 
+// Supabase `leaderboard` row (snake_case) → LeaderboardEntry.
+function shapeSupabase(d: Record<string, unknown>): LeaderboardEntry {
+  const isBot = d.is_bot === true;
+  return {
+    uid: (d.uid ?? '') as string,
+    displayName: (d.display_name ?? 'Player') as string,
+    rating: typeof d.rating === 'number' ? d.rating : 1000,
+    placementGamesPlayed:
+      typeof d.placement_games_played === 'number' ? d.placement_games_played : 0,
+    lastPlayedAt:
+      typeof d.last_played_at === 'string' ? Date.parse(d.last_played_at) || 0 : 0,
+    isBot,
+    botLevel:
+      isBot && typeof d.bot_level === 'number' ? (d.bot_level as Difficulty) : null,
+  };
+}
+
 export function watchLeaderboard(
   onChange: (rows: LeaderboardEntry[]) => void,
   max: number = 50,
 ): () => void {
+  if (CLIENT_SUPABASE_TRANSPORT) {
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    const fetchTop = async () => {
+      const { data, error } = await supabase
+        .from('leaderboard')
+        .select('*')
+        .order('rating', { ascending: false })
+        .limit(max);
+      if (cancelled) return;
+      if (error) {
+        console.warn('watchLeaderboard (supabase) error:', error);
+        onChange([]);
+        return;
+      }
+      onChange((data ?? []).map(shapeSupabase));
+    };
+    void fetchTop();
+    channel = supabase
+      .channel('leaderboard')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'leaderboard' },
+        () => {
+          if (!cancelled) void fetchTop();
+        },
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      if (channel) void supabase.removeChannel(channel);
+    };
+  }
   const q = query(
     collection(db, 'leaderboard'),
     orderBy('rating', 'desc'),

@@ -204,6 +204,10 @@ export function watchProfile(
         void supabase.removeChannel(channel);
         channel = null;
       }
+      // Fetch the current profile immediately — independent of Realtime — so
+      // the rating loads even if the channel never reaches SUBSCRIBED (e.g.
+      // profiles not yet in the publication). Realtime only adds live updates.
+      void emit(sid);
       channel = supabase
         .channel(`profile:${sid}`)
         .on(
@@ -213,9 +217,7 @@ export function watchProfile(
             if (!cancelled) void emit(sid);
           },
         )
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED' && !cancelled) void emit(sid);
-        });
+        .subscribe();
     };
 
     void profileSid().then(attach);

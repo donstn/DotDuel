@@ -88,7 +88,9 @@ function watchFriendships<T>(
       void supabase.removeChannel(channel);
       channel = null;
     }
-    void emit(me);
+    // Subscribe FIRST, then run the catch-up fetch on SUBSCRIBED — closes the
+    // race where a change lands between an initial fetch and the subscription
+    // attaching (the first event would otherwise be lost).
     channel = supabase
       .channel(`${tag}:${me}`)
       .on(
@@ -98,7 +100,9 @@ function watchFriendships<T>(
           if (!cancelled) void emit(me);
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED' && !cancelled) void emit(me);
+      });
   };
 
   void sid().then(attach);

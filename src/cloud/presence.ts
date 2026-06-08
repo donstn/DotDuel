@@ -139,7 +139,8 @@ export function subscribePresence(
     cb(next);
   };
 
-  void emit();
+  // Subscribe FIRST, then run the catch-up fetch on SUBSCRIBED so no presence
+  // change is lost in the mount gap.
   const channel = supabase
     .channel(`presence:${uidList.slice(0, 3).join('-')}:${uidList.length}`)
     .on(
@@ -149,7 +150,9 @@ export function subscribePresence(
         if (!cancelled) void emit();
       },
     )
-    .subscribe();
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED' && !cancelled) void emit();
+    });
 
   return () => {
     cancelled = true;

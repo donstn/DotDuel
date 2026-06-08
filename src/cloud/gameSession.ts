@@ -125,7 +125,8 @@ export function watchSession(
       void supabase.removeChannel(channel);
       channel = null;
     }
-    void emit(me);
+    // Subscribe FIRST, then run the catch-up fetch on SUBSCRIBED so a takeover
+    // that lands in the mount gap still bumps this tab.
     channel = supabase
       .channel(`session:${me}`)
       .on(
@@ -135,7 +136,9 @@ export function watchSession(
           if (!cancelled) void emit(me);
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED' && !cancelled) void emit(me);
+      });
   };
 
   void sid().then(attach);

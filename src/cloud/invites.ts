@@ -92,7 +92,9 @@ function watchInvites(
       void supabase.removeChannel(channel);
       channel = null;
     }
-    void emit(me);
+    // Subscribe FIRST, then run the catch-up fetch on SUBSCRIBED — closes the
+    // race where an invite INSERT lands between an initial fetch and the
+    // subscription attaching (the first invite would otherwise be missed).
     channel = supabase
       .channel(`${tag}:${me}`)
       .on(
@@ -102,7 +104,9 @@ function watchInvites(
           if (!cancelled) void emit(me);
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED' && !cancelled) void emit(me);
+      });
   };
 
   void sid().then(attach);

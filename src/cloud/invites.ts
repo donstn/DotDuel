@@ -1,16 +1,7 @@
-import {
-  collection,
-  onSnapshot,
-  query,
-  where,
-  type Timestamp,
-} from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { app, db, trackEvent } from '../firebase';
+import { supabase, currentSupabaseUid } from '../supabase';
+import { trackEvent } from '../firebase';
 import type { ShapeId } from '../types';
 import type { TimeControl } from './matchmaking';
-
-const functionsEW1 = getFunctions(app, 'europe-west1');
 
 export interface Invite {
   inviteId: string;
@@ -26,131 +17,119 @@ export interface Invite {
   matchId?: string;
 }
 
-interface InviteDoc {
-  from: string;
-  to: string;
-  groupId: string;
+interface InviteRow {
+  id: string;
+  from_uid: string;
+  to_uid: string;
+  group_id: string;
   shape: ShapeId;
-  timeControl: TimeControl;
-  fromRanked: boolean;
+  time_control: TimeControl;
+  from_ranked: boolean;
   status: Invite['status'];
-  createdAt: Timestamp | null;
-  expiresAt: number;
-  matchId?: string;
+  created_at: string | null;
+  expires_at: string | null;
+  match_id: string | null;
 }
 
-function rowToInvite(id: string, data: InviteDoc): Invite {
+async function sid(): Promise<string | null> {
+  const cached = currentSupabaseUid();
+  if (cached) return cached;
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user.id ?? null;
+}
+
+function rowToInvite(row: InviteRow): Invite {
   return {
-    inviteId: id,
-    from: data.from,
-    to: data.to,
-    groupId: data.groupId,
-    shape: data.shape,
-    timeControl: data.timeControl,
-    fromRanked: data.fromRanked,
-    status: data.status,
-    createdAt: data.createdAt?.toDate?.() ?? null,
-    expiresAt: data.expiresAt,
-    matchId: data.matchId,
+    inviteId: row.id,
+    from: row.from_uid,
+    to: row.to_uid,
+    groupId: row.group_id,
+    shape: row.shape,
+    timeControl: row.time_control,
+    fromRanked: row.from_ranked,
+    status: row.status,
+    createdAt: row.created_at ? new Date(row.created_at) : null,
+    expiresAt: row.expires_at ? new Date(row.expires_at).getTime() : 0,
+    matchId: row.match_id ?? undefined,
   };
 }
 
-// Live subscription to invites where `to == myUid` and the invite is still
-// actionable (`pending` + not past expiresAt). The expiresAt filter is
-// client-side because Firestore can't combine `to == X` AND `status == pending`
-// AND `expiresAt > now` without a composite index AND the now value changes
-// every render. Filtering in the snapshot handler is fine — small N.
-export function subscribeIncomingInvites(
-  myUid: string,
+// Shared subscription: initial select + Realtime refetch on any invites change.
+// expiresAt is filtered client-side (the cutoff moves every render).
+function watchInvites(
+  tag: string,
+  column: 'to_uid' | 'from_uid',
   cb: (invites: Invite[]) => void,
 ): () => void {
-  const q = query(
-    collection(db, 'invites'),
-    where('to', '==', myUid),
-    where('status', '==', 'pending'),
-  );
-  return onSnapshot(
-    q,
-    (snap) => {
-      const now = Date.now();
-      const rows: Invite[] = [];
-      for (const d of snap.docs) {
-        const data = d.data() as InviteDoc;
-        if (typeof data.expiresAt === 'number' && data.expiresAt < now) continue;
-        rows.push(rowToInvite(d.id, data));
-      }
-      rows.sort((a, b) => {
-        const at = a.createdAt?.getTime() ?? 0;
-        const bt = b.createdAt?.getTime() ?? 0;
-        return bt - at; // newest first
-      });
-      cb(rows);
-    },
-    (err) => {
-      console.warn('subscribeIncomingInvites error:', err);
+  let cancelled = false;
+  let channel: ReturnType<typeof supabase.channel> | null = null;
+  let attached: string | null = null;
+
+  const emit = async (me: string) => {
+    const { data, error } = await supabase
+      .from('invites')
+      .select('*')
+      .eq(column, me)
+      .eq('status', 'pending');
+    if (cancelled) return;
+    if (error) {
+      console.warn(`${tag} error:`, error);
       cb([]);
-    },
-  );
+      return;
+    }
+    const now = Date.now();
+    const rows = (data ?? [])
+      .map((r) => rowToInvite(r as InviteRow))
+      .filter((inv) => !inv.expiresAt || inv.expiresAt >= now)
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+    cb(rows);
+  };
+
+  const attach = (me: string | null) => {
+    if (cancelled || !me || me === attached) return;
+    attached = me;
+    if (channel) {
+      void supabase.removeChannel(channel);
+      channel = null;
+    }
+    void emit(me);
+    channel = supabase
+      .channel(`${tag}:${me}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'invites' },
+        () => {
+          if (!cancelled) void emit(me);
+        },
+      )
+      .subscribe();
+  };
+
+  void sid().then(attach);
+  const { data: authSub } = supabase.auth.onAuthStateChange((_e, session) => {
+    attach(session?.user?.id ?? null);
+  });
+
+  return () => {
+    cancelled = true;
+    authSub.subscription.unsubscribe();
+    if (channel) void supabase.removeChannel(channel);
+  };
+}
+
+export function subscribeIncomingInvites(
+  _myUid: string,
+  cb: (invites: Invite[]) => void,
+): () => void {
+  return watchInvites('invites-in', 'to_uid', cb);
 }
 
 export function subscribeOutgoingInvites(
-  myUid: string,
+  _myUid: string,
   cb: (invites: Invite[]) => void,
 ): () => void {
-  const q = query(
-    collection(db, 'invites'),
-    where('from', '==', myUid),
-    where('status', '==', 'pending'),
-  );
-  return onSnapshot(
-    q,
-    (snap) => {
-      const now = Date.now();
-      const rows: Invite[] = [];
-      for (const d of snap.docs) {
-        const data = d.data() as InviteDoc;
-        if (typeof data.expiresAt === 'number' && data.expiresAt < now) continue;
-        rows.push(rowToInvite(d.id, data));
-      }
-      rows.sort((a, b) => {
-        const at = a.createdAt?.getTime() ?? 0;
-        const bt = b.createdAt?.getTime() ?? 0;
-        return bt - at;
-      });
-      cb(rows);
-    },
-    (err) => {
-      console.warn('subscribeOutgoingInvites error:', err);
-      cb([]);
-    },
-  );
+  return watchInvites('invites-out', 'from_uid', cb);
 }
-
-// Callable wrappers
-const callSendInvite = httpsCallable<
-  {
-    toUids: string[];
-    shape: ShapeId;
-    timeControl: TimeControl;
-    fromRanked: boolean;
-  },
-  { ok: boolean; groupId: string; sent: number }
->(functionsEW1, 'sendInvite');
-
-const callAcceptInvite = httpsCallable<
-  { inviteId: string; ranked: boolean },
-  { ok: boolean; matchId: string }
->(functionsEW1, 'acceptInvite');
-
-const callDeclineInvite = httpsCallable<
-  { inviteId: string },
-  { ok: boolean }
->(functionsEW1, 'declineInvite');
-
-const callCancelInvite = httpsCallable<
-  { inviteId: string },
-  { ok: boolean }
->(functionsEW1, 'cancelInvite');
 
 export async function sendInvite(args: {
   toUids: string[];
@@ -158,29 +137,43 @@ export async function sendInvite(args: {
   timeControl: TimeControl;
   fromRanked: boolean;
 }): Promise<{ groupId: string; sent: number }> {
-  const res = await callSendInvite(args);
+  const { data, error } = await supabase.rpc('send_invite', {
+    p_to_uids: args.toUids,
+    p_shape: args.shape,
+    p_time_control: args.timeControl,
+    p_from_ranked: args.fromRanked,
+  });
+  if (error) throw new Error(error.message);
+  const res = data as { groupId: string; sent: number };
   trackEvent('friend_invite_sent', {
     shape: args.shape,
     time_control: args.timeControl,
     ranked: args.fromRanked ? 'true' : 'false',
-    recipient_count: res.data.sent,
+    recipient_count: res.sent,
   });
-  return { groupId: res.data.groupId, sent: res.data.sent };
+  return { groupId: res.groupId, sent: res.sent };
 }
 
 export async function acceptInvite(
   inviteId: string,
   ranked: boolean,
 ): Promise<string> {
-  const res = await callAcceptInvite({ inviteId, ranked });
+  const { data, error } = await supabase.functions.invoke('accept-invite', {
+    body: { inviteId, ranked },
+  });
+  if (error) throw new Error(error.message);
+  const res = data as { ok: boolean; matchId: string; error?: string };
+  if (!res?.ok) throw new Error(res?.error ?? 'Accept failed.');
   trackEvent('friend_invite_accepted', { ranked: ranked ? 'true' : 'false' });
-  return res.data.matchId;
+  return res.matchId;
 }
 
 export async function declineInvite(inviteId: string): Promise<void> {
-  await callDeclineInvite({ inviteId });
+  const { error } = await supabase.rpc('decline_invite', { p_invite_id: inviteId });
+  if (error) throw new Error(error.message);
 }
 
 export async function cancelInvite(inviteId: string): Promise<void> {
-  await callCancelInvite({ inviteId });
+  const { error } = await supabase.rpc('cancel_invite', { p_invite_id: inviteId });
+  if (error) throw new Error(error.message);
 }

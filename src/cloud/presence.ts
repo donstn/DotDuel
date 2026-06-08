@@ -1,13 +1,4 @@
-import {
-  collection,
-  doc,
-  onSnapshot,
-  query,
-  setDoc,
-  where,
-  documentId,
-} from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase, currentSupabaseUid } from '../supabase';
 
 export type PresenceStatus =
   | 'menu'
@@ -19,39 +10,38 @@ export type PresenceStatus =
 
 export type FriendStatus = PresenceStatus | 'offline';
 
-interface PresenceDoc {
-  status?: PresenceStatus;
-  statusUpdatedAt?: number;
-  lastSeen?: number;
+interface PresenceRow {
+  uid: string;
+  status?: PresenceStatus | null;
+  status_updated_at?: string | null;
+  last_seen?: string | null;
 }
 
-// How long a presence record stays "fresh" before friends should treat it
-// as offline. Slightly above the heartbeat interval (60s) so a brief network
-// blip doesn't flash users into offline state.
+// How long a presence record stays "fresh" before friends treat it as offline.
+// Slightly above the heartbeat interval (60s) so a brief blip doesn't flicker.
 const STALE_MS = 90_000;
-
-// How often the active client refreshes lastSeen on its own presence doc.
-// Status itself is only written on screen transitions; this keeps "online"
-// alive between transitions so a friend who's sat on the menu for 5 minutes
-// is still shown as online.
 const HEARTBEAT_MS = 60_000;
 
 let lastWrittenStatus: PresenceStatus | null = null;
 let heartbeatTimer: number | null = null;
-let heartbeatUid: string | null = null;
 let presenceEnabled = true;
+
+async function sid(): Promise<string | null> {
+  const cached = currentSupabaseUid();
+  if (cached) return cached;
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user.id ?? null;
+}
 
 function stopHeartbeat() {
   if (heartbeatTimer !== null) {
     window.clearInterval(heartbeatTimer);
     heartbeatTimer = null;
   }
-  heartbeatUid = null;
 }
 
 // Settings → Privacy → "Show my status to friends". When OFF, no presence
-// writes happen and friends see this user as offline. App.tsx calls this
-// from the consent / settings load path.
+// writes happen and friends see this user as offline.
 export function setPresenceEnabled(enabled: boolean): void {
   presenceEnabled = enabled;
   if (!enabled) {
@@ -61,39 +51,32 @@ export function setPresenceEnabled(enabled: boolean): void {
 }
 
 export async function setPresenceStatus(
-  uid: string,
+  _uid: string,
   status: PresenceStatus,
 ): Promise<void> {
   if (!presenceEnabled) return;
-  if (lastWrittenStatus === status) {
-    // Status hasn't changed; lastSeen heartbeat is enough.
-    return;
-  }
+  if (lastWrittenStatus === status) return; // heartbeat keeps lastSeen alive
   lastWrittenStatus = status;
-  try {
-    await setDoc(
-      doc(db, 'presence', uid),
-      {
-        status,
-        statusUpdatedAt: Date.now(),
-        lastSeen: Date.now(),
-      },
-      { merge: true },
-    );
-  } catch (e) {
-    console.warn('setPresenceStatus failed:', e);
-  }
-  // Restart heartbeat tied to this uid so lastSeen keeps the status alive.
-  if (heartbeatUid !== uid) {
-    stopHeartbeat();
-    heartbeatUid = uid;
+  const me = await sid();
+  if (!me) return;
+  const nowIso = new Date().toISOString();
+  const { error } = await supabase
+    .from('presence')
+    .upsert({ uid: me, status, status_updated_at: nowIso, last_seen: nowIso });
+  if (error) console.warn('setPresenceStatus failed:', error.message);
+
+  if (heartbeatTimer === null) {
     heartbeatTimer = window.setInterval(() => {
-      if (heartbeatUid !== uid || !presenceEnabled) return;
-      setDoc(
-        doc(db, 'presence', uid),
-        { lastSeen: Date.now() },
-        { merge: true },
-      ).catch((e) => console.warn('presence heartbeat failed:', e));
+      if (!presenceEnabled) return;
+      void (async () => {
+        const u = await sid();
+        if (!u) return;
+        const { error: e } = await supabase
+          .from('presence')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('uid', u);
+        if (e) console.warn('presence heartbeat failed:', e.message);
+      })();
     }, HEARTBEAT_MS);
   }
 }
@@ -103,38 +86,31 @@ export function stopPresence(): void {
   lastWrittenStatus = null;
 }
 
-// Explicitly mark this user offline NOW (before sign-out) so friends see
-// the change instantly instead of waiting up to STALE_MS for the heartbeat
-// to time out. Writes `lastSeen: 0` which immediately fails the staleness
-// check on friends' reads. Must be called BEFORE Firebase auth signs out —
-// after sign-out the rule "owner write" no longer applies.
-export async function markPresenceOffline(uid: string): Promise<void> {
+// Explicitly mark offline NOW (before sign-out) so friends see it instantly
+// instead of waiting out STALE_MS. Writes an epoch last_seen which immediately
+// fails the staleness check. Must run BEFORE auth sign-out (owner-write RLS).
+export async function markPresenceOffline(_uid: string): Promise<void> {
   stopHeartbeat();
   lastWrittenStatus = null;
-  try {
-    await setDoc(
-      doc(db, 'presence', uid),
-      { lastSeen: 0 },
-      { merge: true },
-    );
-  } catch (e) {
-    console.warn('markPresenceOffline failed:', e);
-  }
+  const me = await sid();
+  if (!me) return;
+  const { error } = await supabase
+    .from('presence')
+    .update({ last_seen: '1970-01-01T00:00:00Z' })
+    .eq('uid', me);
+  if (error) console.warn('markPresenceOffline failed:', error.message);
 }
 
-// Resolve a friend's presence doc to a status. Returns 'offline' when the
-// doc is stale or missing.
-function effectiveStatus(data: PresenceDoc | undefined): FriendStatus {
-  if (!data?.status) return 'offline';
-  const ts = data.lastSeen ?? data.statusUpdatedAt ?? 0;
+function effectiveStatus(row: PresenceRow | undefined): FriendStatus {
+  if (!row?.status) return 'offline';
+  const tsRaw = row.last_seen ?? row.status_updated_at;
+  const ts = tsRaw ? new Date(tsRaw).getTime() : 0;
   if (Date.now() - ts > STALE_MS) return 'offline';
-  return data.status;
+  return row.status;
 }
 
-// Live subscription to the presence/{uid} docs of a friend list. Returns a
-// map { uid → status } that updates whenever any friend's status changes
-// or the list itself changes. Firestore's `where in` is limited to 30
-// values per query so we chunk if necessary.
+// Live subscription to friends' presence rows (RLS lets us read rows that list
+// us in friend_uids). Returns a map { uid → status }, refetched on any change.
 export function subscribePresence(
   uidList: string[],
   cb: (map: Record<string, FriendStatus>) => void,
@@ -143,40 +119,41 @@ export function subscribePresence(
     cb({});
     return () => {};
   }
-  const chunks: string[][] = [];
-  for (let i = 0; i < uidList.length; i += 30) {
-    chunks.push(uidList.slice(i, i + 30));
-  }
-  const partials = chunks.map(() => ({}) as Record<string, FriendStatus>);
-  const emit = () => {
-    const merged: Record<string, FriendStatus> = {};
-    for (const p of partials) Object.assign(merged, p);
-    cb(merged);
+  let cancelled = false;
+
+  const emit = async () => {
+    const next: Record<string, FriendStatus> = {};
+    for (const u of uidList) next[u] = 'offline';
+    const { data, error } = await supabase
+      .from('presence')
+      .select('uid, status, status_updated_at, last_seen')
+      .in('uid', uidList);
+    if (cancelled) return;
+    if (!error) {
+      for (const row of (data ?? []) as PresenceRow[]) {
+        next[row.uid] = effectiveStatus(row);
+      }
+    } else {
+      console.warn('subscribePresence error:', error.message);
+    }
+    cb(next);
   };
-  const unsubs = chunks.map((chunk, idx) =>
-    onSnapshot(
-      query(collection(db, 'presence'), where(documentId(), 'in', chunk)),
-      (snap) => {
-        const next: Record<string, FriendStatus> = {};
-        // Default all chunk uids to offline so absent docs surface correctly.
-        for (const u of chunk) next[u] = 'offline';
-        for (const d of snap.docs) {
-          next[d.id] = effectiveStatus(d.data() as PresenceDoc);
-        }
-        partials[idx] = next;
-        emit();
+
+  void emit();
+  const channel = supabase
+    .channel(`presence:${uidList.slice(0, 3).join('-')}:${uidList.length}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'presence' },
+      () => {
+        if (!cancelled) void emit();
       },
-      (err) => {
-        console.warn('subscribePresence chunk error:', err);
-        const next: Record<string, FriendStatus> = {};
-        for (const u of chunk) next[u] = 'offline';
-        partials[idx] = next;
-        emit();
-      },
-    ),
-  );
+    )
+    .subscribe();
+
   return () => {
-    for (const u of unsubs) u();
+    cancelled = true;
+    void supabase.removeChannel(channel);
   };
 }
 

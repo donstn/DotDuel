@@ -1,15 +1,5 @@
-import {
-  doc,
-  getDoc,
-  onSnapshot,
-  runTransaction,
-  serverTimestamp,
-  type DocumentData,
-} from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { app, db, trackEvent } from '../firebase';
 import { supabase, currentSupabaseUid } from '../supabase';
-import { CLIENT_SUPABASE_TRANSPORT } from '../types';
+import { trackEvent } from '../firebase';
 import { syncProfileName } from './supabaseProfile';
 
 export interface CloudProfile {
@@ -19,16 +9,9 @@ export interface CloudProfile {
   rating: number;
   placementGamesPlayed: number;
   createdAt: unknown;
-  // Alpha 0.2.0.0 — friends & invites privacy fields. Optional in the type
-  // because existing pre-0.2 profile docs won't have them; reader logic
-  // defaults them.
   challengePolicy?: 'everyone' | 'friends-only' | 'nobody';
   showPresence?: boolean;
   friendListHidden?: boolean;
-  // Alpha 0.2.5.0 (Phase 2a) — daily-puzzle streak. Written by the daily
-  // puzzle completion path (ships in Phase 2b). Optional because existing
-  // profile docs predate this field; reader logic surfaces undefined when
-  // the user has never completed a daily puzzle yet.
   streak?: {
     current: number;
     longest: number;
@@ -72,45 +55,8 @@ export function validateUsername(name: string): string | null {
   return null;
 }
 
-function userDoc(uid: string) {
-  return doc(db, 'users', uid);
-}
-
-function usernameDoc(lower: string) {
-  return doc(db, 'usernames', lower);
-}
-
-function shapeProfile(data: DocumentData | undefined): CloudProfile {
-  const rawStreak = data?.streak;
-  const streak =
-    rawStreak &&
-    typeof rawStreak.current === 'number' &&
-    typeof rawStreak.longest === 'number' &&
-    typeof rawStreak.lastPlayedUTC === 'string'
-      ? {
-          current: rawStreak.current,
-          longest: rawStreak.longest,
-          lastPlayedUTC: rawStreak.lastPlayedUTC,
-        }
-      : undefined;
-  return {
-    displayName: data?.displayName ?? null,
-    email: data?.email ?? null,
-    authProvider: data?.authProvider ?? null,
-    rating: typeof data?.rating === 'number' ? data.rating : 1000,
-    placementGamesPlayed:
-      typeof data?.placementGamesPlayed === 'number'
-        ? data.placementGamesPlayed
-        : 0,
-    createdAt: data?.createdAt ?? null,
-    streak,
-  };
-}
-
 // Map a Supabase `profiles` row (snake_case) to the CloudProfile the app
-// consumes. The rating-bearing profile lives in Supabase under the transport;
-// the read path used to point at the Firebase users/{uid} doc, so a Supabase
-// Elo update never reached the UI (the "ratings don't update" bug).
+// consumes. The rating-bearing profile lives in Supabase.
 function shapeSupabaseProfile(row: Record<string, unknown>): CloudProfile {
   const hasStreak =
     typeof row.streak_current === 'number' &&
@@ -146,132 +92,98 @@ async function profileSid(): Promise<string | null> {
   return data.session?.user.id ?? null;
 }
 
-export async function loadProfile(uid: string): Promise<CloudProfile | null> {
-  if (CLIENT_SUPABASE_TRANSPORT) {
-    const sid = await profileSid();
-    if (!sid) return null;
+export async function loadProfile(_uid: string): Promise<CloudProfile | null> {
+  const sid = await profileSid();
+  if (!sid) return null;
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', sid)
+    .maybeSingle();
+  if (error) {
+    console.warn('loadProfile (supabase) failed:', error);
+    return null;
+  }
+  return data ? shapeSupabaseProfile(data) : null;
+}
+
+export function watchProfile(
+  _uid: string,
+  onChange: (p: CloudProfile | null) => void,
+): () => void {
+  let cancelled = false;
+  let channel: ReturnType<typeof supabase.channel> | null = null;
+  let attachedSid: string | null = null;
+
+  const emit = async (sid: string) => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', sid)
       .maybeSingle();
+    if (cancelled) return;
     if (error) {
-      console.warn('loadProfile (supabase) failed:', error);
-      return null;
+      console.warn('watchProfile (supabase) error:', error);
+      return;
     }
-    return data ? shapeSupabaseProfile(data) : null;
-  }
-  try {
-    const snap = await getDoc(userDoc(uid));
-    if (!snap.exists()) return null;
-    return shapeProfile(snap.data());
-  } catch (e) {
-    console.warn('loadProfile failed:', e);
-    return null;
-  }
+    onChange(data ? shapeSupabaseProfile(data) : null);
+  };
+
+  // The Supabase uuid may not be ready at mount, so (re)attach when the session
+  // resolves. Fetch immediately (independent of Realtime) then live-update.
+  const attach = (sid: string | null) => {
+    if (cancelled || !sid || sid === attachedSid) return;
+    attachedSid = sid;
+    if (channel) {
+      void supabase.removeChannel(channel);
+      channel = null;
+    }
+    void emit(sid);
+    channel = supabase
+      .channel(`profile:${sid}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${sid}` },
+        () => {
+          if (!cancelled) void emit(sid);
+        },
+      )
+      .subscribe();
+  };
+
+  void profileSid().then(attach);
+  const { data: authSub } = supabase.auth.onAuthStateChange((_event, session) => {
+    attach(session?.user?.id ?? null);
+  });
+
+  return () => {
+    cancelled = true;
+    authSub.subscription.unsubscribe();
+    if (channel) void supabase.removeChannel(channel);
+  };
 }
 
-export function watchProfile(
-  uid: string,
-  onChange: (p: CloudProfile | null) => void,
-): () => void {
-  if (CLIENT_SUPABASE_TRANSPORT) {
-    let cancelled = false;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-    let attachedSid: string | null = null;
-
-    const emit = async (sid: string) => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', sid)
-        .maybeSingle();
-      if (cancelled) return;
-      if (error) {
-        console.warn('watchProfile (supabase) error:', error);
-        return;
-      }
-      onChange(data ? shapeSupabaseProfile(data) : null);
-    };
-
-    // Same late-session resilience as watchPairing: the Supabase uuid may not be
-    // ready at mount, so (re)attach when the session resolves. Subscribe first,
-    // then fetch on SUBSCRIBED; re-fetch on any change (rating/name/streak).
-    const attach = (sid: string | null) => {
-      if (cancelled || !sid || sid === attachedSid) return;
-      attachedSid = sid;
-      if (channel) {
-        void supabase.removeChannel(channel);
-        channel = null;
-      }
-      // Fetch the current profile immediately — independent of Realtime — so
-      // the rating loads even if the channel never reaches SUBSCRIBED (e.g.
-      // profiles not yet in the publication). Realtime only adds live updates.
-      void emit(sid);
-      channel = supabase
-        .channel(`profile:${sid}`)
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${sid}` },
-          () => {
-            if (!cancelled) void emit(sid);
-          },
-        )
-        .subscribe();
-    };
-
-    void profileSid().then(attach);
-    const { data: authSub } = supabase.auth.onAuthStateChange((_event, session) => {
-      attach(session?.user?.id ?? null);
-    });
-
-    return () => {
-      cancelled = true;
-      authSub.subscription.unsubscribe();
-      if (channel) void supabase.removeChannel(channel);
-    };
-  }
-  return onSnapshot(
-    userDoc(uid),
-    (snap) => {
-      if (!snap.exists()) {
-        onChange(null);
-        return;
-      }
-      onChange(shapeProfile(snap.data()));
-    },
-    (err) => {
-      console.warn('watchProfile error:', err);
-      onChange(null);
-    },
-  );
-}
-
-// Calls the checkUsernameAvailable Cloud Function. Going through the
-// function (rather than reading usernames/{lower} directly) lets us
-// rate-limit availability checks server-side so the global usernames
-// collection can't be cheaply enumerated. The transactional claim in
-// claimUsername/renameUsername still does direct reads — those are
-// inherently bounded by one read per claim attempt.
-const functions = getFunctions(app, 'europe-west1');
-
+// Username availability. The usernames table is publicly selectable (RLS
+// usernames_select_all = true) and rate-limiting moved to the DB layer; a
+// name is available if no row holds it, or the row is already ours.
 export async function checkAvailability(
   desired: string,
   _ownUid: string,
 ): Promise<boolean> {
   const trimmed = desired.trim();
-  if (!trimmed) return false;
-  try {
-    const fn = httpsCallable<
-      { name: string },
-      { available: boolean; reason?: string }
-    >(functions, 'checkUsernameAvailable');
-    const result = await fn({ name: trimmed });
-    return result.data.available === true;
-  } catch (e) {
-    console.warn('checkAvailability failed:', e);
+  if (!USERNAME_RE.test(trimmed)) return false;
+  const sid = await profileSid();
+  const lower = normName(trimmed);
+  const { data, error } = await supabase
+    .from('usernames')
+    .select('uid')
+    .eq('lower', lower)
+    .maybeSingle();
+  if (error) {
+    console.warn('checkAvailability failed:', error);
     return false;
   }
+  return !data || data.uid === sid;
 }
 
 interface ClaimSeed {
@@ -280,85 +192,62 @@ interface ClaimSeed {
 }
 
 export async function claimUsername(
-  uid: string,
+  _uid: string,
   desired: string,
-  seed: ClaimSeed,
+  _seed: ClaimSeed,
 ): Promise<void> {
+  const sid = await profileSid();
+  if (!sid) throw new Error('NOT_SIGNED_IN');
   const lower = normName(desired);
   const display = desired.trim();
   try {
-    await runTransaction(db, async (tx) => {
-      const existing = await tx.get(usernameDoc(lower));
-      if (existing.exists() && existing.data().uid !== uid) {
-        throw new Error('USERNAME_TAKEN');
-      }
-      tx.set(usernameDoc(lower), {
-        uid,
-        displayName: display,
-        createdAt: serverTimestamp(),
-      });
-      tx.set(
-        userDoc(uid),
-        {
-          displayName: display,
-          email: seed.email,
-          authProvider: seed.authProvider,
-          createdAt: serverTimestamp(),
-        },
-        { merge: true },
-      );
-    });
-    // The profile read is Supabase-sourced under the transport; push the name
-    // there directly so it doesn't wait on the (still-Firebase) username path.
-    if (CLIENT_SUPABASE_TRANSPORT) await syncProfileName(display);
+    const { data: existing } = await supabase
+      .from('usernames')
+      .select('uid')
+      .eq('lower', lower)
+      .maybeSingle();
+    if (existing && existing.uid !== sid) throw new Error('USERNAME_TAKEN');
+    const { error } = await supabase
+      .from('usernames')
+      .upsert({ lower, uid: sid, display_name: display });
+    if (error) throw new Error(error.code === '23505' ? 'USERNAME_TAKEN' : error.message);
+    await syncProfileName(display);
   } catch (e) {
-    const code = (e as { code?: string; message?: string })?.code
-      ?? (e as { message?: string })?.message
-      ?? 'unknown';
+    const code = (e as { message?: string })?.message ?? 'unknown';
     trackEvent('username_claim_failed', { mode: 'claim', error_code: code });
     throw e;
   }
 }
 
 export async function renameUsername(
-  uid: string,
+  _uid: string,
   oldName: string,
   newName: string,
 ): Promise<void> {
+  const sid = await profileSid();
+  if (!sid) throw new Error('NOT_SIGNED_IN');
   const oldLower = normName(oldName);
   const newLower = normName(newName);
   const newDisplay = newName.trim();
   try {
-    if (oldLower === newLower) {
-      await runTransaction(db, async (tx) => {
-        tx.set(usernameDoc(newLower), {
-          uid,
-          displayName: newDisplay,
-          createdAt: serverTimestamp(),
-        });
-        tx.set(userDoc(uid), { displayName: newDisplay }, { merge: true });
-      });
-      if (CLIENT_SUPABASE_TRANSPORT) await syncProfileName(newDisplay);
-      return;
+    if (oldLower !== newLower) {
+      const { data: existing } = await supabase
+        .from('usernames')
+        .select('uid')
+        .eq('lower', newLower)
+        .maybeSingle();
+      if (existing && existing.uid !== sid) throw new Error('USERNAME_TAKEN');
     }
-    await runTransaction(db, async (tx) => {
-      const existing = await tx.get(usernameDoc(newLower));
-      if (existing.exists() && existing.data().uid !== uid) {
-        throw new Error('USERNAME_TAKEN');
-      }
-      tx.set(usernameDoc(newLower), {
-        uid,
-        displayName: newDisplay,
-        createdAt: serverTimestamp(),
-      });
-      tx.delete(usernameDoc(oldLower));
-      tx.set(userDoc(uid), { displayName: newDisplay }, { merge: true });
-    });
-    if (CLIENT_SUPABASE_TRANSPORT) await syncProfileName(newDisplay);
+    const { error: upErr } = await supabase
+      .from('usernames')
+      .upsert({ lower: newLower, uid: sid, display_name: newDisplay });
+    if (upErr) throw new Error(upErr.code === '23505' ? 'USERNAME_TAKEN' : upErr.message);
+    if (oldLower !== newLower) {
+      await supabase.from('usernames').delete().eq('lower', oldLower).eq('uid', sid);
+    }
+    await syncProfileName(newDisplay);
   } catch (e) {
-    const code = (e as { code?: string; message?: string })?.code
-      ?? (e as { message?: string })?.message
-      ?? 'unknown';
+    const code = (e as { message?: string })?.message ?? 'unknown';
     trackEvent('username_claim_failed', { mode: 'rename', error_code: code });
     throw e;
   }

@@ -3,11 +3,24 @@
 // game end, and triggers Elo finalize. Clients never write `games` directly.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { applyAction } from '../_shared/engine/game.ts';
-import type { GameState } from '../_shared/engine/types.ts';
+import { pickAIAction } from '../_shared/engine/ai.ts';
+import type { GameState, Player } from '../_shared/engine/types.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const ABORT_FIRST_MOVE_MS = 10000;
+
+// Per-time-control caps on bot think delay (ms) so Bullet bots don't burn their
+// own clock. Mirrors Firebase BOT_THINK_CAP_MS.
+const BOT_THINK_CAP_MS: Record<string, number> = {
+  '1min': 1200,
+  '3min': 2200,
+  '5min': 3500,
+};
+
+// Supabase Edge runtime: keep the instance alive for a fire-and-forget task
+// (the bot's delayed move) after the HTTP response has been sent.
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -49,6 +62,102 @@ async function finish(
     })
     .eq('id', gameId);
   await admin.rpc('finalize_game', { p_game_id: gameId });
+}
+
+// If the player whose turn it now is happens to be a bot, return its think
+// delay (ms) and level; otherwise null. Bot moves are NEVER the first move
+// (request-bot-match makes the human P1), so this is only reached after a human
+// move, and a bot move always passes the turn back to the human — no chaining.
+async function botToMove(
+  admin: Admin,
+  game: Record<string, unknown>,
+): Promise<{ uid: string; level: number; delayMs: number } | null> {
+  const state = game.state as GameState;
+  const slot = state.current;
+  const botUid = slot === 1 ? game.p1_uid : game.p2_uid;
+  const { data: bot } = await admin
+    .from('bots')
+    .select('uid, bot_level, active, think_delay_range')
+    .eq('uid', botUid)
+    .eq('active', true)
+    .maybeSingle();
+  if (!bot) return null;
+
+  const clock = game.clock as { p1RemainingMs: number; p2RemainingMs: number };
+  const remaining = slot === 1 ? clock.p1RemainingMs : clock.p2RemainingMs;
+  const range = (bot.think_delay_range ?? { min: 800, max: 2500 }) as {
+    min: number;
+    max: number;
+  };
+  const tc = String(game.time_control);
+  // Cap by time-control AND never spend >25% of the bot's remaining clock.
+  const safeCap = Math.min(BOT_THINK_CAP_MS[tc] ?? range.max, range.max, Math.floor(remaining * 0.25));
+  const safeMin = Math.min(range.min, safeCap);
+  const delayMs = safeMin + Math.random() * Math.max(0, safeCap - safeMin);
+  return { uid: bot.uid as string, level: bot.bot_level as number, delayMs };
+}
+
+// Background task: wait the think delay, re-read the game (it may have ended or
+// the turn may have moved on), then apply the bot's move with the same clock /
+// finish / finalize logic the human path uses.
+async function doBotMove(admin: Admin, gameId: string, level: number, delayMs: number) {
+  await new Promise((r) => setTimeout(r, delayMs));
+
+  const { data: game, error } = await admin
+    .from('games')
+    .select('*')
+    .eq('id', gameId)
+    .single();
+  if (error || !game || game.status !== 'active') return;
+
+  const state = game.state as GameState;
+  const slot = state.current;
+  const clock = game.clock as {
+    p1RemainingMs: number;
+    p2RemainingMs: number;
+    turnStartedAt: number;
+    current: 1 | 2;
+    totalMs: number;
+  };
+  const now = Date.now();
+  const curKey = slot === 1 ? 'p1RemainingMs' : 'p2RemainingMs';
+  const elapsed = clock.turnStartedAt > 0 ? now - clock.turnStartedAt : 0;
+  const newRemaining = clock[curKey] - elapsed;
+  if (newRemaining <= 0) {
+    await finish(admin, gameId, state, slot === 1 ? 2 : 1, 'timeout', now);
+    return;
+  }
+
+  let action;
+  try {
+    action = pickAIAction(state, level as Parameters<typeof pickAIAction>[1], slot as Player);
+  } catch (_e) {
+    return;
+  }
+  let newState: GameState;
+  try {
+    newState = applyAction(state, action);
+  } catch (_e) {
+    return;
+  }
+
+  const newClock = {
+    ...clock,
+    [curKey]: newRemaining,
+    turnStartedAt: now,
+    current: newState.current,
+  };
+  const updates: Record<string, unknown> = { state: newState, clock: newClock };
+  if (newState.finished) {
+    updates.status = 'finished';
+    updates.winner = newState.winner === null ? null : String(newState.winner);
+    updates.finished_reason = 'normal';
+    updates.finished_at = new Date(now).toISOString();
+  }
+  await admin.from('games').update(updates).eq('id', gameId);
+  if (newState.finished) {
+    await admin.rpc('finalize_game', { p_game_id: gameId });
+  }
 }
 
 Deno.serve(async (req) => {
@@ -152,6 +261,15 @@ Deno.serve(async (req) => {
 
     if (newState.finished) {
       await admin.rpc('finalize_game', { p_game_id: gameId });
+    } else {
+      // If it's now a bot's turn, schedule its (delayed) reply as a background
+      // task so this response returns immediately and the human sees their own
+      // move land without waiting for the bot to "think".
+      const updatedGame = { ...game, state: newState, clock: newClock };
+      const bot = await botToMove(admin, updatedGame);
+      if (bot) {
+        EdgeRuntime.waitUntil(doBotMove(admin, gameId, bot.level, bot.delayMs));
+      }
     }
     return json({ ok: true });
   } catch (e) {

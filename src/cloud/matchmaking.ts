@@ -102,15 +102,16 @@ export async function joinQueue(
 // caller has already been paired. Returns who they got matched with, or 'skip'.
 export async function requestBotMatch(): Promise<'human' | 'bot' | 'skip'> {
   if (CLIENT_SUPABASE_TRANSPORT) {
-    // Bots aren't wired server-side yet (deferred). Use this 15s-mark fallback
-    // as one more human-pairing attempt; report 'human' if it paired, else
-    // 'skip' (never claim a bot we can't actually spawn).
-    const { data, error } = await supabase.functions.invoke('matchmake');
+    // 15s "no human found" fallback: spawn a bot match. request-bot-match picks
+    // the rating-closest bot, makes the human P1, and writes the pairing — the
+    // client routes in via watchPairing exactly like a human match.
+    const { data, error } = await supabase.functions.invoke('request-bot-match');
     if (error) {
-      console.warn('matchmake (bot fallback) failed:', error);
+      console.warn('request-bot-match failed:', error);
       return 'skip';
     }
-    return (data as { matched?: boolean } | null)?.matched ? 'human' : 'skip';
+    const matched = (data as { matched?: string } | null)?.matched;
+    return matched === 'bot' ? 'bot' : matched === 'human' ? 'human' : 'skip';
   }
   const res = await callRequestBotMatch();
   return res.data.matched;

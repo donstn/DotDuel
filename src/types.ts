@@ -142,6 +142,24 @@ export const MULTIPLAYER_BACKEND: MultiplayerBackend = 'firestore';
 // see the same game state in parallel.
 export const CLIENT_FIRESTORE_TRANSPORT: boolean = true;
 
+// =============================================================================
+// SUPABASE TRANSPORT FLAG (Phase 3 migration — Firebase → Supabase)
+// =============================================================================
+// When true, the client routes ALL multiplayer transport through Supabase:
+//   - watchGame / watchPairing → Supabase Realtime (Postgres Changes)
+//   - sendMove / claimTimeout / claimAbort / sendResign → submit-move Edge Fn
+//   - markReady / markBoardLoaded / requestRematch → set_ready/set_board_loaded/
+//     set_rematch RPCs
+//   - joinQueue → insert matchmaking_queue + invoke('matchmake') (+ retry)
+//
+// This flag takes PRECEDENCE over CLIENT_FIRESTORE_TRANSPORT — every cloud/
+// function checks it first and returns before any Firebase path. Default OFF so
+// production (still 100% Firebase) is untouched; flip to true only for the
+// 2-browser Supabase gauntlet and, later, the Phase 4 cutover.
+//
+// Single-line rollback: flip back to false and users resume Firebase on reload.
+export const CLIENT_SUPABASE_TRANSPORT: boolean = true;
+
 // FirestoreGame document shape — what `games/{matchId}` looks like in Firestore.
 // Matches the existing RTDB shape closely so the migration is mechanical, but
 // removes RTDB-only oddities:

@@ -50,11 +50,16 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!me) return json({ matched: false, reason: 'not_in_queue' });
 
-    const { data: others } = await admin
+    // NOTE: filter time_control in JS, NOT via .eq(). time_control is a jsonb
+    // column storing a bare string ("3min"); PostgREST's `eq.3min` tries to cast
+    // `3min` to json and errors (22P02), silently emptying the candidate list.
+    const { data: allOthers } = await admin
       .from('matchmaking_queue')
       .select('*')
-      .eq('time_control', me.time_control)
       .neq('uid', uid);
+    const others = (allOthers ?? []).filter(
+      (o: Row) => o.time_control === me.time_control,
+    );
 
     const now = Date.now();
     const rangeOf = (r: Row) => {

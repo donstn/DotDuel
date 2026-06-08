@@ -28,14 +28,21 @@ type Admin = any;
 async function finish(
   admin: Admin,
   gameId: string,
-  winner: number | null,
+  state: GameState,
+  winner: 1 | 2 | null,
   reason: string,
   now: number,
 ) {
+  // Mirror the top-level finish into the `state` jsonb too. The client keys
+  // GameOver off state.finished (App.tsx: showOver = state.finished), so a
+  // timeout/resign/abort that only flipped the columns would leave both boards
+  // stuck. (applyAction already sets these on a normal end.)
+  const finishedState = { ...state, finished: true, winner };
   await admin
     .from('games')
     .update({
       status: 'finished',
+      state: finishedState,
       winner: winner === null ? null : String(winner),
       finished_reason: reason,
       finished_at: new Date(now).toISOString(),
@@ -85,12 +92,12 @@ Deno.serve(async (req) => {
 
     // ---- special actions ----
     if (action.kind === 'resign') {
-      await finish(admin, gameId, playerNum === 1 ? 2 : 1, 'resign', now);
+      await finish(admin, gameId, state, playerNum === 1 ? 2 : 1, 'resign', now);
       return json({ ok: true });
     }
     if (action.kind === 'timeout') {
       if (clock[curKey] - elapsed > 0) return json({ error: 'NOT_EXPIRED' }, 409);
-      await finish(admin, gameId, state.current === 1 ? 2 : 1, 'timeout', now);
+      await finish(admin, gameId, state, state.current === 1 ? 2 : 1, 'timeout', now);
       return json({ ok: true });
     }
     if (action.kind === 'abort') {
@@ -100,7 +107,7 @@ Deno.serve(async (req) => {
         clock.turnStartedAt > 0 &&
         now - clock.turnStartedAt >= ABORT_FIRST_MOVE_MS;
       if (!ok) return json({ error: 'ABORT_NOT_ALLOWED' }, 409);
-      await finish(admin, gameId, null, 'aborted', now);
+      await finish(admin, gameId, state, null, 'aborted', now);
       return json({ ok: true });
     }
 
@@ -109,7 +116,7 @@ Deno.serve(async (req) => {
 
     const newRemaining = clock[curKey] - elapsed;
     if (newRemaining <= 0) {
-      await finish(admin, gameId, state.current === 1 ? 2 : 1, 'timeout', now);
+      await finish(admin, gameId, state, state.current === 1 ? 2 : 1, 'timeout', now);
       return json({ ok: true });
     }
 

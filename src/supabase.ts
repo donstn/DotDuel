@@ -23,3 +23,20 @@ export const supabase = createClient(url, anonKey, {
     detectSessionInUrl: true,
   },
 });
+
+// The app identifies the local player by their FIREBASE uid, but Supabase tables
+// (games.p1_uid/p2_uid, pairings.uid, …) key on the Supabase auth uuid — a
+// different value for the same person (the dual-auth bridge mints a separate
+// auth.users row). Cache it here so synchronous call sites (e.g. playerNumFor)
+// can resolve "which Supabase uid am I" without an async round-trip.
+let _supabaseUid: string | null = null;
+void supabase.auth.getSession().then(({ data }) => {
+  _supabaseUid = data.session?.user.id ?? null;
+});
+supabase.auth.onAuthStateChange((_event, session) => {
+  _supabaseUid = session?.user.id ?? null;
+});
+
+export function currentSupabaseUid(): string | null {
+  return _supabaseUid;
+}

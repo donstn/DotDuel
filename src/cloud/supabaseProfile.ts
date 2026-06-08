@@ -17,3 +17,24 @@ export async function syncProfileName(name: string): Promise<void> {
     .eq('id', user.id);
   if (error) console.warn('syncProfileName error:', error.message);
 }
+
+// Privacy preferences (challenge policy, presence visibility, hidden friend
+// list). These columns are owner-writable + unguarded, so a plain RLS update
+// works. Replaces the old Firestore users/{uid} write.
+export async function updatePrivacy(next: {
+  challengePolicy?: 'everyone' | 'friends-only' | 'nobody';
+  showPresence?: boolean;
+  friendListHidden?: boolean;
+}): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  const patch: Record<string, unknown> = {};
+  if (next.challengePolicy !== undefined) patch.challenge_policy = next.challengePolicy;
+  if (next.showPresence !== undefined) patch.show_presence = next.showPresence;
+  if (next.friendListHidden !== undefined) patch.friend_list_hidden = next.friendListHidden;
+  if (Object.keys(patch).length === 0) return;
+  const { error } = await supabase.from('profiles').update(patch).eq('id', user.id);
+  if (error) console.warn('updatePrivacy error:', error.message);
+}

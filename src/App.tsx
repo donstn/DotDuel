@@ -92,8 +92,7 @@ import {
   stopPresence,
   subscribePresence,
 } from './cloud/presence';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { updatePrivacy } from './cloud/supabaseProfile';
 import { loadTheme, saveTheme, type ThemeId } from './theme';
 import {
   applyConsent,
@@ -122,8 +121,7 @@ import {
 import { DIFFICULTY_LABELS } from './types';
 import type { Difficulty, GameMode, GameState, Progress, ShapeId } from './types';
 import { APP_VERSION } from './version';
-import { app, bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './firebase';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './telemetry';
 
 type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound' | 'mpgame';
 
@@ -706,33 +704,7 @@ export default function App() {
     };
   }, [sbUser?.uid]);
 
-  // Admin-only debug helpers — exposed on window for the project owner so
-  // we can invoke admin-gated callables (seedBots, countStuckSignups) from
-  // the live app without ad-hoc deploys. Invisible to non-admin users.
-  useEffect(() => {
-    if (user?.email !== 'donstn@gmail.com') return;
-    const fns = getFunctions(app, 'europe-west1');
-    const wnd = window as unknown as {
-      __seedBots?: () => Promise<unknown>;
-      __countStuckSignups?: () => Promise<unknown>;
-    };
-    wnd.__seedBots = async () => {
-      const r = await httpsCallable(fns, 'seedBots')();
-      // eslint-disable-next-line no-console
-      console.log(JSON.stringify(r.data, null, 2));
-      return r.data;
-    };
-    wnd.__countStuckSignups = async () => {
-      const r = await httpsCallable(fns, 'countStuckSignups')();
-      // eslint-disable-next-line no-console
-      console.log(JSON.stringify(r.data, null, 2));
-      return r.data;
-    };
-    // eslint-disable-next-line no-console
-    console.log('[admin] await __seedBots() · await __countStuckSignups()');
-  }, [user?.email]);
-
-  // Live subscription to users/{uid} — auto-updates display name across tabs.
+  // Live subscription to the profile — auto-updates display name across tabs.
   useEffect(() => {
     if (!user) {
       setCloudProfile(null);
@@ -2150,7 +2122,7 @@ export default function App() {
                     if (next.showPresence !== undefined) {
                       setPresenceEnabled(next.showPresence);
                     }
-                    updateDoc(doc(db, 'users', user.uid), next).catch((e) =>
+                    void updatePrivacy(next).catch((e) =>
                       console.warn('privacy update failed', e),
                     );
                   }
@@ -2214,13 +2186,13 @@ export default function App() {
             initialName={suggestUsername(user.displayName, user.email)}
             seed={{
               email: user.email,
-              authProvider: user.providerData[0]?.providerId ?? null,
+              authProvider: user.provider ?? null,
             }}
             onSuccess={(newName) => {
               setCloudProfile((prev) => ({
                 email: prev?.email ?? user.email,
                 authProvider:
-                  prev?.authProvider ?? user.providerData[0]?.providerId ?? null,
+                  prev?.authProvider ?? user.provider ?? null,
                 createdAt: prev?.createdAt ?? null,
                 displayName: newName,
                 rating: prev?.rating ?? 1000,
@@ -2527,13 +2499,13 @@ export default function App() {
           initialName={suggestUsername(user.displayName, user.email)}
           seed={{
             email: user.email,
-            authProvider: user.providerData[0]?.providerId ?? null,
+            authProvider: user.provider ?? null,
           }}
           onSuccess={(newName) => {
             setCloudProfile((prev) => ({
               email: prev?.email ?? user.email,
               authProvider:
-                prev?.authProvider ?? user.providerData[0]?.providerId ?? null,
+                prev?.authProvider ?? user.provider ?? null,
               createdAt: prev?.createdAt ?? null,
               displayName: newName,
               rating: prev?.rating ?? 1000,

@@ -1,16 +1,4 @@
-import {
-  collection,
-  doc,
-  limit as fsLimit,
-  onSnapshot,
-  orderBy,
-  query,
-  where,
-  type DocumentData,
-} from 'firebase/firestore';
-import { db } from '../firebase';
 import type { ShapeId } from '../types';
-import { CLIENT_SUPABASE_TRANSPORT } from '../types';
 import type { TimeControl } from './matchmaking';
 import { supabase, currentSupabaseUid } from '../supabase';
 
@@ -45,40 +33,6 @@ export interface MatchRecord {
   p1RatingDelta: number;
   p2RatingDelta: number;
   eloFinalized: boolean;
-}
-
-function shape(matchId: string, d: DocumentData): MatchRecord {
-  return {
-    matchId,
-    shape: (d.shape ?? 'square') as ShapeId,
-    timeControl: (d.timeControl ?? '3min') as TimeControl,
-    status: (d.status ?? 'finished') as 'created' | 'finished',
-    winner: (d.winner ?? null) as MatchRecord['winner'],
-    finishedReason: (d.finishedReason ?? null) as MatchRecord['finishedReason'],
-    finishedAt: typeof d.finishedAt === 'number' ? d.finishedAt : 0,
-    gameStartedAt: typeof d.gameStartedAt === 'number' ? d.gameStartedAt : 0,
-    durationMs: typeof d.durationMs === 'number' ? d.durationMs : 0,
-    ranked: d.ranked !== false,
-    p1Uid: d.p1Uid ?? '',
-    p2Uid: d.p2Uid ?? '',
-    p1Display: d.p1Display ?? 'Player 1',
-    p2Display: d.p2Display ?? 'Player 2',
-    p1ScoreFinal: typeof d.p1ScoreFinal === 'number' ? d.p1ScoreFinal : 0,
-    p2ScoreFinal: typeof d.p2ScoreFinal === 'number' ? d.p2ScoreFinal : 0,
-    p1RatingBefore:
-      typeof d.p1RatingBefore === 'number' ? d.p1RatingBefore : 1000,
-    p2RatingBefore:
-      typeof d.p2RatingBefore === 'number' ? d.p2RatingBefore : 1000,
-    p1RatingAfter:
-      typeof d.p1RatingAfter === 'number' ? d.p1RatingAfter : 1000,
-    p2RatingAfter:
-      typeof d.p2RatingAfter === 'number' ? d.p2RatingAfter : 1000,
-    p1RatingDelta:
-      typeof d.p1RatingDelta === 'number' ? d.p1RatingDelta : 0,
-    p2RatingDelta:
-      typeof d.p2RatingDelta === 'number' ? d.p2RatingDelta : 0,
-    eloFinalized: d.eloFinalized === true,
-  };
 }
 
 // Supabase `matches` row (snake_case) → MatchRecord. winner is stored as text
@@ -127,125 +81,88 @@ export function watchMatch(
   matchId: string,
   onChange: (m: MatchRecord | null) => void,
 ): () => void {
-  if (CLIENT_SUPABASE_TRANSPORT) {
-    let cancelled = false;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-    const fetchOne = async () => {
-      const { data, error } = await supabase
-        .from('matches')
-        .select('*')
-        .eq('id', matchId)
-        .maybeSingle();
-      if (cancelled) return;
-      if (error) {
-        console.warn('watchMatch (supabase) error:', error);
-        return;
-      }
-      onChange(data ? shapeSupabase(data) : null);
-    };
-    void fetchOne();
-    channel = supabase
-      .channel(`match:${matchId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` },
-        () => {
-          if (!cancelled) void fetchOne();
-        },
-      )
-      .subscribe();
-    return () => {
-      cancelled = true;
-      if (channel) void supabase.removeChannel(channel);
-    };
-  }
-  return onSnapshot(
-    doc(db, 'matches', matchId),
-    (snap) => {
-      if (!snap.exists()) {
-        onChange(null);
-        return;
-      }
-      onChange(shape(snap.id, snap.data()));
-    },
-    (err) => {
-      console.warn('watchMatch error:', err);
-      onChange(null);
-    },
-  );
+  let cancelled = false;
+  const fetchOne = async () => {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .eq('id', matchId)
+      .maybeSingle();
+    if (cancelled) return;
+    if (error) {
+      console.warn('watchMatch (supabase) error:', error);
+      return;
+    }
+    onChange(data ? shapeSupabase(data) : null);
+  };
+  void fetchOne();
+  const channel = supabase
+    .channel(`match:${matchId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` },
+      () => {
+        if (!cancelled) void fetchOne();
+      },
+    )
+    .subscribe();
+  return () => {
+    cancelled = true;
+    void supabase.removeChannel(channel);
+  };
 }
 
 export function watchRecentMatches(
-  uid: string,
+  _uid: string,
   onChange: (matches: MatchRecord[]) => void,
   max: number = 5,
 ): () => void {
-  if (CLIENT_SUPABASE_TRANSPORT) {
-    let cancelled = false;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-    let attachedSid: string | null = null;
-    const fetchMine = async (sid: string) => {
-      const { data, error } = await supabase
-        .from('matches')
-        .select('*')
-        .contains('player_uids', [sid])
-        .order('finished_at', { ascending: false })
-        .limit(max);
-      if (cancelled) return;
-      if (error) {
-        console.warn('watchRecentMatches (supabase) error:', error);
-        onChange([]);
-        return;
-      }
-      onChange((data ?? []).map(shapeSupabase));
-    };
-    const attach = (sid: string | null) => {
-      if (cancelled || !sid || sid === attachedSid) return;
-      attachedSid = sid;
-      void fetchMine(sid);
-      if (!channel) {
-        // No array-contains filter in Realtime; subscribe broadly and re-run the
-        // query (match volume is low). RLS still limits what the re-query reads.
-        channel = supabase
-          .channel('my-matches')
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'matches' },
-            () => {
-              if (!cancelled && attachedSid) void fetchMine(attachedSid);
-            },
-          )
-          .subscribe();
-      }
-    };
-    void matchesSid().then(attach);
-    const { data: authSub } = supabase.auth.onAuthStateChange((_event, session) => {
-      attach(session?.user?.id ?? null);
-    });
-    return () => {
-      cancelled = true;
-      authSub.subscription.unsubscribe();
-      if (channel) void supabase.removeChannel(channel);
-    };
-  }
-  const q = query(
-    collection(db, 'matches'),
-    where('playerUids', 'array-contains', uid),
-    orderBy('finishedAt', 'desc'),
-    fsLimit(max),
-  );
-  return onSnapshot(
-    q,
-    (snap) => {
-      const rows: MatchRecord[] = [];
-      snap.forEach((doc) => rows.push(shape(doc.id, doc.data())));
-      onChange(rows);
-    },
-    (err) => {
-      console.warn('watchRecentMatches error:', err);
+  let cancelled = false;
+  let channel: ReturnType<typeof supabase.channel> | null = null;
+  let attachedSid: string | null = null;
+  const fetchMine = async (sid: string) => {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .contains('player_uids', [sid])
+      .order('finished_at', { ascending: false })
+      .limit(max);
+    if (cancelled) return;
+    if (error) {
+      console.warn('watchRecentMatches (supabase) error:', error);
       onChange([]);
-    },
-  );
+      return;
+    }
+    onChange((data ?? []).map(shapeSupabase));
+  };
+  const attach = (sid: string | null) => {
+    if (cancelled || !sid || sid === attachedSid) return;
+    attachedSid = sid;
+    void fetchMine(sid);
+    if (!channel) {
+      // No array-contains filter in Realtime; subscribe broadly and re-run the
+      // query (match volume is low). RLS still limits what the re-query reads.
+      channel = supabase
+        .channel('my-matches')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'matches' },
+          () => {
+            if (!cancelled && attachedSid) void fetchMine(attachedSid);
+          },
+        )
+        .subscribe();
+    }
+  };
+  void matchesSid().then(attach);
+  const { data: authSub } = supabase.auth.onAuthStateChange((_event, session) => {
+    attach(session?.user?.id ?? null);
+  });
+  return () => {
+    cancelled = true;
+    authSub.subscription.unsubscribe();
+    if (channel) void supabase.removeChannel(channel);
+  };
 }
 
 // Derived view from the perspective of `me`. Useful for rendering rows.
@@ -260,10 +177,7 @@ export interface MatchPerspective {
   result: 'win' | 'loss' | 'draw';
 }
 
-export function fromMyPerspective(
-  m: MatchRecord,
-  me: string,
-): MatchPerspective {
+export function fromMyPerspective(m: MatchRecord, me: string): MatchPerspective {
   const iAmP1 = m.p1Uid === me;
   const opponentUid = iAmP1 ? m.p2Uid : m.p1Uid;
   const opponentDisplay = iAmP1 ? m.p2Display : m.p1Display;
@@ -274,11 +188,8 @@ export function fromMyPerspective(
   const myRatingDelta = iAmP1 ? m.p1RatingDelta : m.p2RatingDelta;
   let result: 'win' | 'loss' | 'draw' = 'draw';
   if (m.winner === 'draw' || m.winner == null) result = 'draw';
-  else if ((iAmP1 && m.winner === 1) || (!iAmP1 && m.winner === 2)) {
-    result = 'win';
-  } else {
-    result = 'loss';
-  }
+  else if ((iAmP1 && m.winner === 1) || (!iAmP1 && m.winner === 2)) result = 'win';
+  else result = 'loss';
   return {
     opponentUid,
     opponentDisplay,

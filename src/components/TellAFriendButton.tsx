@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { trackEvent } from '../firebase';
+import { trackEvent } from '../telemetry';
 
 const APP_URL = 'https://www.dotduel.com/';
 const SHARE_TITLE = 'DotDuel — fast 2-player dot strategy';

@@ -1,5 +1,5 @@
 import { supabase, currentSupabaseUid } from '../supabase';
-import { trackEvent } from '../firebase';
+import { trackEvent } from '../telemetry';
 import type { ShapeId } from '../types';
 import type { TimeControl } from './matchmaking';
 

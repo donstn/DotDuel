@@ -14,6 +14,7 @@ export function mapSupabaseUser(u: User | null): AppUser | null {
       null,
     email: u.email ?? null,
     provider: (u.app_metadata?.provider as string | undefined) ?? 'supabase',
+    emailVerified: Boolean(u.email_confirmed_at),
   };
 }
 

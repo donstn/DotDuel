@@ -1,13 +1,6 @@
 import { useEffect, useState } from 'react';
-import {
-  GoogleAuthProvider,
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-} from 'firebase/auth';
-import { auth } from '../firebase';
-import { signInWithGoogleIdToken } from './supabaseAuth';
+import { supabase } from '../supabase';
+import { signInWithGoogleSupabase } from './supabaseAuth';
 
 interface Props {
   onClose: () => void;
@@ -17,22 +10,19 @@ interface Props {
   onPlayAnonymous?: () => void;
 }
 
-const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
-
-const FRIENDLY_ERRORS: Record<string, string> = {
-  'auth/email-already-in-use': 'That email is already registered. Sign in instead.',
-  'auth/invalid-email': "That email doesn't look right.",
-  'auth/weak-password': 'Password must be at least 6 characters.',
-  'auth/user-not-found': 'No account with that email. Create one below.',
-  'auth/wrong-password': "That password doesn't match.",
-  'auth/invalid-credential': 'Email or password is incorrect.',
-  'auth/popup-closed-by-user': 'Google sign-in cancelled.',
-  'auth/popup-blocked': 'Your browser blocked the Google popup. Allow popups and try again.',
-  'auth/cancelled-popup-request': 'Another sign-in is already in progress.',
-  'auth/too-many-requests': 'Too many attempts. Try again in a minute.',
-  'auth/network-request-failed': 'Network error. Check your connection and try again.',
-};
+// Map Supabase auth error messages to friendly copy (Supabase returns prose,
+// not stable codes, so match on substrings).
+function friendlyError(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes('invalid login credentials')) return 'Email or password is incorrect.';
+  if (m.includes('already registered')) return 'That email is already registered. Sign in instead.';
+  if (m.includes('password should be') || m.includes('weak')) return 'Password must be at least 6 characters.';
+  if (m.includes('invalid email') || m.includes('unable to validate email')) return "That email doesn't look right.";
+  if (m.includes('email not confirmed')) return 'Please confirm your email first (check your inbox).';
+  if (m.includes('rate limit') || m.includes('too many')) return 'Too many attempts. Try again in a minute.';
+  if (m.includes('network')) return 'Network error. Check your connection and try again.';
+  return message || 'Something went wrong.';
+}
 
 export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -51,8 +41,6 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
     return () => window.removeEventListener('keydown', onKey);
   }, [busy, onClose, gate]);
 
-  // In gate mode the popover can't be dismissed by clicking around — the only
-  // exits are signing in or the explicit "play anonymous" link.
   const onBackdrop = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget && !busy && !gate) onClose();
   };
@@ -65,36 +53,24 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
       await fn();
       if (closeOnSuccess) onClose();
     } catch (e) {
-      const code = (e as { code?: string })?.code ?? '';
-      const fallback = (e as { message?: string })?.message ?? 'Something went wrong.';
-      setError(FRIENDLY_ERRORS[code] ?? fallback);
+      setError(friendlyError((e as { message?: string })?.message ?? ''));
     } finally {
       setBusy(false);
     }
   }
 
+  // Google OAuth is a full-page redirect; it navigates away and returns with a
+  // session (detectSessionInUrl). No onClose — the redirect handles it.
   const onGoogle = () =>
-    run(async () => {
-      const result = await signInWithPopup(auth, googleProvider);
-      // Dual-auth bridge: establish a Supabase session from the same Google
-      // login so the migration's Supabase surfaces are authenticated while
-      // Firebase keeps driving live multiplayer. Non-blocking — a Supabase
-      // failure must not break the (working) Firebase sign-in.
-      const idToken = GoogleAuthProvider.credentialFromResult(result)?.idToken;
-      if (idToken) {
-        try {
-          await signInWithGoogleIdToken(idToken);
-          console.info('[auth-bridge] Supabase session established from Google login');
-        } catch (err) {
-          console.warn('[auth-bridge] Supabase sign-in failed (Firebase OK):', err);
-        }
-      }
-    });
+    run(() => signInWithGoogleSupabase(), { closeOnSuccess: false });
 
   const onEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === 'signin') {
-      run(() => signInWithEmailAndPassword(auth, email, password));
+      run(async () => {
+        const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+        if (err) throw err;
+      });
     } else {
       if (password !== confirmPassword) {
         setError("Passwords don't match.");
@@ -103,12 +79,17 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
       }
       run(
         async () => {
-          const cred = await createUserWithEmailAndPassword(auth, email, password);
-          await sendEmailVerification(cred.user, {
-            url: window.location.origin + window.location.pathname,
-            handleCodeInApp: false,
+          const { error: err } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: window.location.origin + window.location.pathname,
+            },
           });
-          setInfo(`Account created. We sent a verification email to ${cred.user.email}. (Check spam if you don't see it.)`);
+          if (err) throw err;
+          setInfo(
+            `Account created. If email confirmation is on, check ${email} (and spam) to verify.`,
+          );
         },
         { closeOnSuccess: false },
       );

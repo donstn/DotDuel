@@ -6,5 +6,6 @@ export interface AppUser {
   uid: string;
   displayName: string | null;
   email: string | null;
-  provider: string; // 'google' | 'password' | ...
+  provider: string; // 'google' | 'email' | ...
+  emailVerified: boolean;
 }

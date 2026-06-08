@@ -5,7 +5,7 @@ import { APP_VERSION } from './version';
 import { DiagOverlay } from './components/DiagOverlay';
 import { isDiagMode } from './diag';
 import { getFirstLoadMs } from './ads';
-import { bootSession } from './firebase';
+import { bootSession } from './telemetry';
 import './styles.css';
 
 // Snapshot session-boot state for analytics BEFORE getFirstLoadMs writes

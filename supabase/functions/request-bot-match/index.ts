@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
       return json({ matched: 'skip', reason: 'already_paired' });
     }
 
-    const shape = 'triangle'; // MVP, matches matchmake
+    const shape = me.shape ?? 'triangle';
     const totalMs = TIME_CONTROL_MS[timeControl] ?? 180000;
 
     const initialState = {

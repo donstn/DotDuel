@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
       .select('*')
       .neq('uid', uid);
     const others = (allOthers ?? []).filter(
-      (o: Row) => o.time_control === me.time_control,
+      (o: Row) => o.time_control === me.time_control && o.shape === me.shape,
     );
 
     const now = Date.now();
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
 
     const timeControl = me.time_control;
     const totalMs = TIME_CONTROL_MS[timeControl] ?? 180000;
-    const shape = 'triangle'; // MVP
+    const shape = me.shape ?? 'triangle';
 
     const initialState = {
       shape,

@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { Capacitor } from '@capacitor/core';
+import { registerSW } from 'virtual:pwa-register';
 import App from './App';
 import { APP_VERSION } from './version';
 import { DiagOverlay } from './components/DiagOverlay';
@@ -7,6 +9,24 @@ import { isDiagMode } from './diag';
 import { getFirstLoadMs } from './ads';
 import { bootSession } from './telemetry';
 import './styles.css';
+
+// Service worker: register on WEB only (auto-update for installed PWAs). In the
+// native Capacitor app, assets are bundled in the APK and a SW only causes
+// stale-asset bugs (serving a previous build's cache over the WebView), so we
+// skip registration AND tear down any SW/caches a prior build may have left.
+if (Capacitor.isNativePlatform()) {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((regs) => regs.forEach((r) => r.unregister()))
+      .catch(() => {});
+  }
+  if (typeof caches !== 'undefined') {
+    caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
+  }
+} else {
+  registerSW({ immediate: true });
+}
 
 // Snapshot session-boot state for analytics BEFORE getFirstLoadMs writes
 // the firstLoad key — otherwise first_visit collapses into

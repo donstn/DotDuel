@@ -15,8 +15,10 @@ export default defineConfig(() => ({
     // stuck on a cached index.html — the GitHub-Pages caching problem.
     VitePWA({
       registerType: 'autoUpdate',
-      // External register script (not inline) so CSP `script-src 'self'` allows it.
-      injectRegister: 'script',
+      // Don't auto-inject the register script — we register manually in main.tsx
+      // so we can register on web only and SKIP it in the native Capacitor app
+      // (where a SW just serves stale cached assets over the APK's bundled ones).
+      injectRegister: null,
       // Keep the hand-authored public/site.webmanifest; the plugin only manages
       // the service worker here.
       manifest: false,

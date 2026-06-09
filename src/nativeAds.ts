@@ -19,46 +19,64 @@ import {
 } from '@capacitor-community/admob';
 import { isAdsAllowedForThisUser } from './ads';
 
-// Real AdMob banner unit (same publisher as the AdSense account). Banner-only v1.
-const BANNER_AD_ID = 'ca-app-pub-1268043579532481/8790879910';
+// Banner ad units. The real unit (same publisher as AdSense) is requested only
+// in production. A BRAND-NEW real unit returns NO_FILL on test devices, and
+// isTesting alone does NOT force test ads onto it — so while developing we must
+// also use Google's sample/test unit, which always fills with a test ad.
+const REAL_BANNER_ID = 'ca-app-pub-1268043579532481/8790879910';
+const TEST_BANNER_ID = 'ca-app-pub-3940256099942544/6300978111'; // Google sample banner
 
 /**
- * Serve TEST ads while developing so we never generate invalid traffic on the
- * real unit (which can get the AdMob account flagged) and dodge policy issues
- * pre-launch. FLIP TO false for the production Play release so real ads serve.
+ * TRUE while developing: use the test unit + flag the device as a test device,
+ * so the real unit never gets fake impressions (which can flag the AdMob
+ * account). FLIP TO false for the production Play release so real ads serve.
  */
 const ADMOB_TESTING = true;
+const BANNER_AD_ID = ADMOB_TESTING ? TEST_BANNER_ID : REAL_BANNER_ID;
 
 export function isNativeApp(): boolean {
   return Capacitor.isNativePlatform();
 }
 
-let initStarted = false;
+// A SHARED init promise so concurrent callers (boot effect + the first screen
+// effect) await the SAME initialization instead of one of them early-returning
+// before init finishes and then never showing the banner.
+let initPromise: Promise<void> | null = null;
 let initDone = false;
 let bannerCreated = false;
 let bannerVisible = false;
 
-/** Initialize AdMob + gather GDPR consent (UMP). Idempotent; native-only. */
-export async function initNativeAds(): Promise<void> {
-  if (!isNativeApp() || initStarted) return;
-  if (!isAdsAllowedForThisUser()) return;
-  initStarted = true;
-  try {
-    const info = await AdMob.requestConsentInfo();
-    if (info.isConsentFormAvailable && info.status === AdmobConsentStatus.REQUIRED) {
-      await AdMob.showConsentForm();
-    }
-    await AdMob.initialize();
-    initDone = true;
-  } catch (e) {
-    console.warn('initNativeAds failed:', e);
+/** Initialize AdMob + gather GDPR consent (UMP). Native-only; runs once. */
+export function initNativeAds(): Promise<void> {
+  if (!isNativeApp() || !isAdsAllowedForThisUser()) return Promise.resolve();
+  if (!initPromise) {
+    initPromise = (async () => {
+      // UMP consent is BEST-EFFORT: a publisher-config error (e.g. no consent
+      // message set up yet in the AdMob console) must not block ad init. EEA
+      // users still need a real message configured before launch.
+      try {
+        const info = await AdMob.requestConsentInfo();
+        if (info.isConsentFormAvailable && info.status === AdmobConsentStatus.REQUIRED) {
+          await AdMob.showConsentForm();
+        }
+      } catch (e) {
+        console.warn('UMP consent unavailable (configure messaging in AdMob):', e);
+      }
+      try {
+        await AdMob.initialize();
+        initDone = true;
+      } catch (e) {
+        console.warn('AdMob initialize failed:', e);
+      }
+    })();
   }
+  return initPromise;
 }
 
 /** Show the bottom banner on ad-eligible screens. No-op on web / when gated. */
 export async function showNativeBanner(): Promise<void> {
   if (!isNativeApp() || !isAdsAllowedForThisUser()) return;
-  if (!initDone) await initNativeAds();
+  await initNativeAds(); // await the shared init (no early-return race)
   if (!initDone || bannerVisible) return;
   try {
     if (!bannerCreated) {

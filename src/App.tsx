@@ -1531,21 +1531,21 @@ export default function App() {
     });
   }, [screen, onlineGame, user]);
 
-  // Synthesize the clock for the instant AFTER the local player's move: freeze
-  // my remaining at the move moment and hand the turn to the opponent with a new
-  // turnStartedAt = serverNow. Returns null if the clock hasn't started yet
-  // (board not loaded) — let the server drive in that case.
+  // Freeze the mover's clock at the move instant. We intentionally do NOT start
+  // the opponent's clock here (no guessed turnStartedAt): while the move is in
+  // flight, BOTH clocks render frozen (see clockRunning in the game view), so the
+  // opponent's clock can't tick down optimistically and then snap back up when
+  // the server's authoritative timestamp lands. That snap — sized to the round-
+  // trip, worst on a cold start — was the "clock flicker on the first few moves"
+  // regression. Authoritative ticking resumes when the server confirms.
   const buildOptimisticClock = (myNum: 1 | 2): GameClock | null => {
     const clock = onlineGame?.clock;
-    if (!clock || clock.turnStartedAt <= 0) return null;
-    const nowServer = Date.now() + serverSkewMs;
-    const elapsed = clock.current === myNum ? Math.max(0, nowServer - clock.turnStartedAt) : 0;
+    if (!clock || clock.turnStartedAt <= 0 || clock.current !== myNum) return null;
+    const elapsed = Math.max(0, Date.now() + serverSkewMs - clock.turnStartedAt);
     return {
       ...clock,
       p1RemainingMs: myNum === 1 ? Math.max(0, clock.p1RemainingMs - elapsed) : clock.p1RemainingMs,
       p2RemainingMs: myNum === 2 ? Math.max(0, clock.p2RemainingMs - elapsed) : clock.p2RemainingMs,
-      turnStartedAt: nowServer,
-      current: myNum === 1 ? 2 : 1,
     };
   };
 
@@ -1792,9 +1792,15 @@ export default function App() {
     // extrapolates from the previous turn's start = wildly wrong low value" bug;
     // the optimistic clock avoids that by carrying its own correct turnStartedAt.)
     // The timeout-claim path below still keys off the authoritative server clock.
+    // While the local move is in flight (optimisticClock present), freeze BOTH
+    // clocks — the mover at its frozen value, the opponent at its last value — so
+    // nothing ticks-then-snaps during the round-trip (the flicker). Authoritative
+    // ticking resumes when the server confirms and optimisticClock clears.
+    const inFlightClock = optimisticClock != null;
     const clock = optimisticClock ?? onlineGame.clock;
-    const clockRunning = !mpState.finished && (clock?.turnStartedAt ?? 0) > 0;
-    const activeCurrent = clock?.current ?? onlineGame.state.current;
+    const clockRunning =
+      !mpState.finished && !inFlightClock && (clock?.turnStartedAt ?? 0) > 0;
+    const activeCurrent = onlineGame.state.current;
     const p1Clock = clock ? (
       <ClockBadge
         remainingAtRefMs={clock.p1RemainingMs}

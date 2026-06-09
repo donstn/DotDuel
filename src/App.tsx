@@ -737,6 +737,17 @@ export default function App() {
     void ensureUsername();
   }, [user?.uid]);
 
+  // Cache the resolved username per-uid so the next load shows it instantly
+  // (see effectiveGameName) instead of flashing the email prefix.
+  useEffect(() => {
+    if (!user || !cloudProfile?.displayName) return;
+    try {
+      localStorage.setItem(`dotduel:username:${user.uid}`, cloudProfile.displayName);
+    } catch {
+      // storage disabled — fine, just no instant-name on next load
+    }
+  }, [user?.uid, cloudProfile?.displayName]);
+
   // 2b-v2 — subscribe to today's per-user daily-puzzle attempt doc so the
   // menu card can render the right state (not started / N/3 / 3/3 done)
   // and finalize can read attempt count without a fresh getDoc.
@@ -1744,8 +1755,22 @@ export default function App() {
     setProgress(resetProgress());
   };
 
-  const effectiveGameName =
-    user && cloudProfile?.displayName ? cloudProfile.displayName : null;
+  // Show the chosen username INSTANTLY on load. cloudProfile (the source of the
+  // username) loads async, so until it arrives we fall back to a per-uid cached
+  // copy of the last-known username — not the Google name / email prefix, which
+  // caused a visible flash from "<email-prefix>" to the real username.
+  const cachedUsername = user
+    ? (() => {
+        try {
+          return localStorage.getItem(`dotduel:username:${user.uid}`);
+        } catch {
+          return null;
+        }
+      })()
+    : null;
+  const effectiveGameName = user
+    ? cloudProfile?.displayName ?? cachedUsername
+    : null;
 
   if (screen === 'mpgame') {
     if (!onlineGame || !onlineGameId || !user || !pairing) {

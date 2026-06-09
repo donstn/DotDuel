@@ -889,13 +889,16 @@ export default function App() {
     }
     let status: PresenceStatus;
     if (screen === 'matchmaking') status = 'searching-ranked';
+    // On the results (GameOver) screen the screen is still 'mpgame' but the game
+    // is over — report 'menu' (available) so friends can invite us again.
+    else if (screen === 'mpgame' && onlineGame?.state.finished) status = 'menu';
     else if (screen === 'matchFound' || screen === 'mpgame') status = 'in-ranked';
     else if (screen === 'game' && config?.mode === 'ai') status = 'in-ai';
     else if (screen === 'game' && config?.mode === 'hotseat') status = 'in-hotseat';
     else if (screen === 'game' && config?.mode === 'daily') status = 'in-daily';
     else status = 'menu'; // menu, lobby, fallback
     void setPresenceStatus(user.uid, status);
-  }, [user?.uid, screen, config?.mode]);
+  }, [user?.uid, screen, config?.mode, onlineGame?.state.finished]);
 
   // Tell-a-friend: pick up ?ref=<uid> on first load, hold it in sessionStorage,
   // consume it once the user has signed up + claimed a username (post-signup
@@ -2319,8 +2322,9 @@ export default function App() {
         {sendInviteFor && user && (
           <SendInviteDialog
             friend={sendInviteFor}
+            friendStatus={friendStatusMap[sendInviteFor.uid] ?? 'offline'}
+            hasActivePairing={pairing != null}
             onClose={() => setSendInviteFor(null)}
-            onSent={() => setSendInviteFor(null)}
           />
         )}
       </>

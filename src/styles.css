@@ -5399,6 +5399,24 @@ body:has(.consent-banner) .rules-card {
   gap: 8px;
 }
 
+.invite-waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 4px 4px;
+  text-align: center;
+}
+.invite-waiting .invite-waiting-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.invite-waiting .invite-actions {
+  justify-content: center;
+  margin-top: 12px;
+}
+
 /* IncomingInviteToast — top-of-menu slide-in stack */
 .invite-toast-stack {
   position: fixed;

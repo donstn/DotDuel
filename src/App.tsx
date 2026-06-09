@@ -1580,7 +1580,7 @@ export default function App() {
       return;
     }
     try {
-      await sendMove(onlineGameId, user.uid, { kind: 'dot', dotId });
+      await sendMove(onlineGameId, user.uid, { kind: 'dot', dotId }, Date.now() + serverSkewMs);
     } catch (e) {
       console.warn('sendMove failed:', e);
       setMoveInFlight(false);
@@ -1619,7 +1619,7 @@ export default function App() {
       return;
     }
     try {
-      await sendMove(onlineGameId, user.uid, { kind: 'claim', lineId });
+      await sendMove(onlineGameId, user.uid, { kind: 'claim', lineId }, Date.now() + serverSkewMs);
     } catch (e) {
       console.warn('sendMove failed:', e);
       setMoveInFlight(false);

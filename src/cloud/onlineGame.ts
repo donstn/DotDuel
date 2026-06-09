@@ -202,9 +202,12 @@ export async function sendMove(
   gameId: string,
   _uid: string,
   action: GameAction,
+  clientSentAtMs?: number,
 ): Promise<void> {
+  // clientSentAtMs is the send time in SERVER time (caller adds its measured
+  // skew); the server uses it for lag compensation (credit network transit).
   await loggedWrite(`sendMove[${gameId} kind=${action.kind}] (supabase)`, () =>
-    invokeFn('submit-move', { gameId, action }),
+    invokeFn('submit-move', { gameId, action, clientSentAt: clientSentAtMs }),
   );
 }
 

@@ -195,7 +195,7 @@ Deno.serve(async (req) => {
     if (uErr || !user) return json({ error: 'UNAUTHENTICATED' }, 401);
     const uid = user.id;
 
-    const { gameId, action } = await req.json();
+    const { gameId, action, clientSentAt } = await req.json();
     if (!gameId || !action?.kind) return json({ error: 'BAD_REQUEST' }, 400);
 
     const { data: game, error: gErr } = await admin
@@ -244,7 +244,19 @@ Deno.serve(async (req) => {
     // ---- normal move ----
     if (state.current !== playerNum) return json({ error: 'NOT_YOUR_TURN' }, 409);
 
-    const newRemaining = clock[curKey] - elapsed;
+    // Lag compensation: credit back the move's network/boot transit so the mover
+    // is billed for thinking time only, not for the move travelling to the
+    // server. `clientSentAt` is the client's send time in SERVER time (it adds
+    // its measured skew); transit = now − clientSentAt. It's client-influenced,
+    // so clamp to [0, CAP] — worst-case abuse is CAP per move. Applied only to
+    // the normal move deduction; the timeout/abort checks above stay strict.
+    const LAG_COMP_CAP_MS = 1000;
+    const transitCredit =
+      typeof clientSentAt === 'number'
+        ? Math.min(Math.max(0, now - clientSentAt), LAG_COMP_CAP_MS)
+        : 0;
+    const moveElapsed = Math.max(0, elapsed - transitCredit);
+    const newRemaining = clock[curKey] - moveElapsed;
     if (newRemaining <= 0) {
       await finish(admin, gameId, state, state.current === 1 ? 2 : 1, 'timeout', now);
       return json({ ok: true });

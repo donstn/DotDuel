@@ -6,15 +6,15 @@ import { createClient } from '@supabase/supabase-js';
 //
 // The anon key is public by design — Row-Level Security enforces access, the
 // same model as the public Firebase web key (security audit L-2).
-const url = import.meta.env.VITE_SUPABASE_URL;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!url || !anonKey) {
-  throw new Error(
-    'Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY. Copy .env.example to ' +
-      '.env.local and fill them in (Supabase dashboard → Settings → API).',
-  );
-}
+// Public client config. The URL + publishable key are PUBLIC by design — they
+// ship in the browser bundle and Row-Level Security enforces access (same model
+// as the old Firebase web config, which was likewise hardcoded). Hardcoded as
+// the default so production CI builds work without env secrets; `.env.local`
+// overrides for local dev or pointing at a different project.
+const url = import.meta.env.VITE_SUPABASE_URL ?? 'https://ggyjxayazxbjvjbeecxa.supabase.co';
+const anonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ??
+  'sb_publishable_wV3b7zFPGVvPt6No3OnJRQ_S7tJA6iY';
 
 export const supabase = createClient(url, anonKey, {
   auth: {

@@ -1986,6 +1986,21 @@ export default function App() {
             }
           />
         )}
+        {/* Invites are actionable from the results screen too (game is over, so
+            it's not a distraction) — accepting routes via watchPairing like a
+            rematch. Hidden during active play. */}
+        {mpShowOver && user && (
+          <IncomingInviteToast
+            invites={incomingInvites}
+            fromNames={Object.fromEntries(
+              friends.map((f) => [f.uid, f.displayName]),
+            )}
+            onAccepted={() => {
+              setFriendsOpen(false);
+              setSendInviteFor(null);
+            }}
+          />
+        )}
         {resignConfirmOpen && !mpState.finished && (
           <div
             className="confirm-overlay"
@@ -2286,10 +2301,10 @@ export default function App() {
             onCancel={() => setRenameOpen(false)}
           />
         )}
-        {/* IncomingInviteToast renders only on the menu (or lobby) — the
-            invite UI should NOT distract during gameplay or matchmaking.
-            Server delivers the invite immediately; we just hold off displaying
-            it until the user is back on a menu-class screen. */}
+        {/* IncomingInviteToast shows on menu/lobby (and on the results screen —
+            see the mpgame branch). NOT during active gameplay or matchmaking, so
+            it doesn't distract. The server delivers invites immediately; we just
+            hold off displaying until the user is on a non-playing screen. */}
         {user && (screen === 'menu' || screen === 'lobby') && (
           <IncomingInviteToast
             invites={incomingInvites}

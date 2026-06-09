@@ -87,6 +87,7 @@ export function watchSession(
   let cancelled = false;
   let channel: ReturnType<typeof supabase.channel> | null = null;
   let attached: string | null = null;
+  let pollTimer: number | null = null;
 
   const emit = async (me: string) => {
     const { data, error } = await supabase
@@ -135,6 +136,14 @@ export function watchSession(
       .subscribe((status) => {
         if (status === 'SUBSCRIBED' && !cancelled) void emit(me);
       });
+    // Passive staleness recovery: a closed/crashed holder stops heartbeating and
+    // emits no Realtime events, so re-check on a timer too — otherwise another
+    // tab would stay locked forever. Re-evaluates the stale cutoff every 15s, so
+    // a dead holder's lock clears within ~STALE_MS.
+    if (pollTimer !== null) window.clearInterval(pollTimer);
+    pollTimer = window.setInterval(() => {
+      if (!cancelled) void emit(me);
+    }, 15_000);
   };
 
   void sid().then(attach);
@@ -145,6 +154,7 @@ export function watchSession(
   return () => {
     cancelled = true;
     authSub.subscription.unsubscribe();
+    if (pollTimer !== null) window.clearInterval(pollTimer);
     if (channel) void supabase.removeChannel(channel);
   };
 }

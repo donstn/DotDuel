@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import {
   ADSENSE_CLIENT,
   ADSENSE_SLOT,
@@ -46,7 +47,10 @@ interface Props {
  */
 export function AdBanner({ slot = ADSENSE_SLOT, placement = 'menu' }: Props) {
   const initializedRef = useRef(false);
-  const allowed = isAdsAllowedForThisUser();
+  // In the native app, AdSense is forbidden — a native AdMob banner is shown
+  // instead (see src/nativeAds.ts). Treating native as "not allowed" makes this
+  // render nothing there, without a hooks-violating early return.
+  const allowed = !Capacitor.isNativePlatform() && isAdsAllowedForThisUser();
 
   // One stable id per mounted instance (preview labelling only). The increment
   // lives in an effect, NOT a useState initializer: initializers are impure-

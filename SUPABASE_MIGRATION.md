@@ -85,3 +85,26 @@ Suggested order: **#3 usernames** (claim/availability → Supabase; also resolve
 - **Clock**: `clock.turnStartedAt` is **epoch-ms** (matches submit-move's `Date.now()`).
 - **CSP** (`index.html`) already allows `https://*.supabase.co` + `wss://*.supabase.co`.
 - Supabase Google provider needs the **Firebase web client ID** in its "Client IDs" list + **"Skip nonce checks" ON** for the id-token bridge.
+
+## Day 1 launch capacity plan
+- **Primary risk**: realtime subscription scale. The live multiplayer path uses Postgres Realtime on `games` and `pairings`, so the number of concurrent active matches is the biggest bottleneck.
+- **Secondary risk**: Edge Function volume. `submit-move`, `matchmake`, `request-bot-match`, and social RPCs are per-action costs. Each active match can generate dozens of function invokes.
+- **Authentication surge**: if many users sign in on launch, Google OAuth and Supabase Auth traffic can spike and cause onboarding latency. This is a separate cost/throughput factor from gameplay.
+- **DB writes**: each move writes `games`; queue and pairing state write `matchmaking_queue` and `pairings`; social actions write invites/friends. High concurrent game volume is the biggest Postgres load.
+- **Launch scenarios**:
+  - 20k downloads with a few hundred active matches: likely manageable on a paid Supabase plan.
+  - 20k downloads with thousands of concurrent active games: likely requires a higher-tier plan and careful Realtime capacity management.
+- **Mitigation priorities**:
+  1. keep non-essential subscriptions off when players are not in-game
+  2. ensure `watchGame()` / `watchPairing()` are torn down cleanly
+  3. avoid excessive `pumpMatchmake()` retries when queue load is high
+  4. monitor Edge Function cold starts and move submit latency
+  5. track sign-in funnel separately from gameplay load
+- **What to watch before launch**:
+  - active realtime connections
+  - Edge Function invoke count for `submit-move`
+  - database write throughput on `games`
+  - authentication throughput for Google sign-in
+  - leaderboard/profile subscription churn
+
+> This plan assumes the app is already on Supabase and Firebase is no longer in the active client path. Use it to scope launch readiness alongside the current migration checklist.

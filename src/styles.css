@@ -5712,3 +5712,10 @@ body:has(.consent-banner) .rules-card {
 [data-theme="vintage-press"] {
   --rim-drop: drop-shadow(0 5px 12px rgba(80, 50, 24, 0.22));
 }
+
+/* Native (Capacitor/AdMob) bottom banner overlays the webview; reserve room at
+   the bottom so it doesn't cover the footer. Toggled by nativeAds.ts. */
+body.has-native-banner #root {
+  padding-bottom: 56px;
+  box-sizing: border-box;
+}

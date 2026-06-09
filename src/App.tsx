@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AdBanner } from './components/AdBanner';
+import {
+  initNativeAds,
+  showNativeBanner,
+  hideNativeBanner,
+  isNativeApp,
+} from './nativeAds';
 import { AppFooter } from './components/AppFooter';
 import { Board } from './components/Board';
 import { ChangelogPopover } from './components/ChangelogPopover';
@@ -747,6 +753,24 @@ export default function App() {
       // storage disabled — fine, just no instant-name on next load
     }
   }, [user?.uid, cloudProfile?.displayName]);
+
+  // Native app (Capacitor/AdMob): initialize ads + UMP consent once at boot.
+  // No-op on web (web uses AdSense via AdBanner). Respects the same ads gates.
+  useEffect(() => {
+    void initNativeAds();
+  }, []);
+
+  // Native banner show/hide by screen — mirrors the AdSense placement policy:
+  // visible on menu + free single-player; HIDDEN during ranked (matchFound/
+  // mpgame). No-op on web.
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    if (screen === 'matchFound' || screen === 'mpgame') {
+      void hideNativeBanner();
+    } else {
+      void showNativeBanner();
+    }
+  }, [screen]);
 
   // 2b-v2 — subscribe to today's per-user daily-puzzle attempt doc so the
   // menu card can render the right state (not started / N/3 / 3/3 done)
@@ -2078,7 +2102,7 @@ export default function App() {
             onClose={() => setThemeOpen(false)}
           />
         )}
-        {consent === null && (
+        {consent === null && !isNativeApp() && (
           <ConsentBanner
             onAccept={acceptAnalytics}
             onDecline={declineAnalytics}
@@ -2208,7 +2232,7 @@ export default function App() {
             onClose={() => setThemeOpen(false)}
           />
         )}
-        {consent === null && (
+        {consent === null && !isNativeApp() && (
           <ConsentBanner
             onAccept={acceptAnalytics}
             onDecline={declineAnalytics}
@@ -2572,7 +2596,7 @@ export default function App() {
           onClose={() => setThemeOpen(false)}
         />
       )}
-      {consent === null && (
+      {consent === null && !isNativeApp() && (
         <ConsentBanner
           onAccept={acceptAnalytics}
           onDecline={declineAnalytics}

@@ -29,6 +29,8 @@
  *     units manually so they only appear on menu screens.
  */
 
+import { Capacitor } from '@capacitor/core';
+
 // ----------------------------------------------------------------------
 // Activation gates
 // ----------------------------------------------------------------------
@@ -127,6 +129,8 @@ let scriptInjected = false;
  */
 export function enableAdSenseIfAccepted(): void {
   if (!ADS_ENABLED) return;
+  // Native app uses AdMob, NOT AdSense (AdSense-in-app violates Google policy).
+  if (Capacitor.isNativePlatform()) return;
   if (scriptInjected) return;
   if (!import.meta.env.PROD) return;
   if (typeof document === 'undefined') return;

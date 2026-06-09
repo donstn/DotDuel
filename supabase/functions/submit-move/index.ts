@@ -180,6 +180,11 @@ async function doBotMove(admin: Admin, gameId: string, level: number, delayMs: n
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   try {
+    // Stamp the move at request ENTRY — before auth + DB reads — so the player
+    // isn't charged clock time for the server's own auth/query/processing
+    // latency. (Was previously captured after getUser + the games select, which
+    // billed ~200–400ms of server round-trips to the mover on every move.)
+    const now = Date.now();
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
     const jwt = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
@@ -212,7 +217,6 @@ Deno.serve(async (req) => {
       current: 1 | 2;
       totalMs: number;
     };
-    const now = Date.now();
     const curKey = state.current === 1 ? 'p1RemainingMs' : 'p2RemainingMs';
     const elapsed = clock.turnStartedAt > 0 ? now - clock.turnStartedAt : 0;
 

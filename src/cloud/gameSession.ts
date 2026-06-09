@@ -1,28 +1,24 @@
 import { supabase, currentSupabaseUid } from '../supabase';
 
-const STORAGE_KEY = 'dotduel:gameSessionId';
-
 export interface GameSession {
   sessionId: string;
   claimedAt: number;
 }
 
-// Per-tab session id, generated once and stored in sessionStorage (cleared
-// when the tab closes). Two tabs of the same browser get different ids.
+// Per-page-load session id, generated ONCE in memory. Deliberately NOT
+// sessionStorage: a duplicated tab COPIES sessionStorage, so both tabs would
+// share the same id and the one-device lock couldn't tell them apart (the
+// takeover never registers as "different session"). An in-memory id is unique
+// per page load, so every tab — even a duplicated one — gets its own. A refresh
+// generates a new id and simply re-claims the lock for itself, which is harmless.
+let _sessionId: string | null = null;
 export function getSessionId(): string {
-  try {
-    let id = sessionStorage.getItem(STORAGE_KEY);
-    if (!id) {
-      id =
-        typeof crypto !== 'undefined' && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `s${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
-      sessionStorage.setItem(STORAGE_KEY, id);
-    }
-    return id;
-  } catch {
-    return `s${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
-  }
+  if (_sessionId) return _sessionId;
+  _sessionId =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `s${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+  return _sessionId;
 }
 
 // Stale-session threshold. A claim is abandoned (other devices may take over)

@@ -187,6 +187,16 @@ export async function checkAvailability(
   return !data || data.uid === sid;
 }
 
+// Auto-provision a username for a signed-in user who lacks one (e.g. a Google
+// sign-up that got a display_name but never claimed a handle), derived from their
+// display name. Idempotent + no-op when they already have one or have no name
+// (those still see the claim picker). Server-side dedup via the ensure_username
+// RPC. Called once on sign-in so the user is findable by username for friends.
+export async function ensureUsername(): Promise<void> {
+  const { error } = await supabase.rpc('ensure_username');
+  if (error) console.warn('ensureUsername failed:', error.message);
+}
+
 interface ClaimSeed {
   email: string | null;
   authProvider: string | null;

@@ -17,6 +17,7 @@ import { useAuth } from './auth/useAuth';
 import { useSupabaseUser } from './auth/useSupabaseUser';
 import { saveCloudProgress, syncOnSignIn } from './cloud/progressSync';
 import {
+  ensureUsername,
   suggestUsername,
   watchProfile,
   type CloudProfile,
@@ -728,6 +729,14 @@ export default function App() {
       setCloudProfileLoaded(true);
     });
     return unsub;
+  }, [user?.uid]);
+
+  // Auto-provision a username for sign-ups that have a display name but never
+  // claimed a handle (Google), so they're findable by friends. No-op otherwise.
+  // watchProfile above picks up any resulting display_name change live.
+  useEffect(() => {
+    if (!user) return;
+    void ensureUsername();
   }, [user?.uid]);
 
   // 2b-v2 — subscribe to today's per-user daily-puzzle attempt doc so the

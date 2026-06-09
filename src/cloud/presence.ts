@@ -139,8 +139,9 @@ export function subscribePresence(
     cb(next);
   };
 
-  // Subscribe FIRST, then run the catch-up fetch on SUBSCRIBED so no presence
-  // change is lost in the mount gap.
+  // Immediate load + catch-up on SUBSCRIBED (don't depend solely on SUBSCRIBED
+  // firing) + refetch on every change.
+  void emit();
   const channel = supabase
     .channel(`presence:${uidList.slice(0, 3).join('-')}:${uidList.length}`)
     .on(

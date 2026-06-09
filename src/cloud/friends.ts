@@ -58,10 +58,22 @@ function rowToPending(row: FriendshipRow, me: string): PendingRequest {
 // Shared subscription: initial select + Realtime refetch on any friendships
 // change (RLS limits delivered rows to the user's own friendships). The
 // Supabase uuid may not be ready at mount, so (re)attach on auth state.
-function watchFriendships<T>(
-  tag: string,
-  build: (me: string, rows: FriendshipRow[]) => T[],
-  cb: (rows: T[]) => void,
+export interface FriendData {
+  friends: Friend[];
+  incoming: PendingRequest[]; // requests sent TO me
+  outgoing: PendingRequest[]; // requests I sent
+}
+
+// ONE subscription on `friendships` that derives friends + incoming + outgoing
+// from a single fetch/channel. Consolidated deliberately: opening three separate
+// postgres_changes channels on the same table is unreliable in Supabase Realtime
+// (some channels may never reach SUBSCRIBED, so their list silently stays empty —
+// the "incoming friend request never appears" bug). Fetches immediately on attach
+// (so the data loads even if the channel is slow/never subscribes), again on
+// SUBSCRIBED (catch-up for the mount-gap race), and on every change.
+export function subscribeFriendData(
+  _myUid: string,
+  cb: (data: FriendData) => void,
 ): () => void {
   let cancelled = false;
   let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -74,11 +86,21 @@ function watchFriendships<T>(
       .or(`uid_a.eq.${me},uid_b.eq.${me}`);
     if (cancelled) return;
     if (error) {
-      console.warn(`${tag} error:`, error);
-      cb([]);
-      return;
+      console.warn('subscribeFriendData error:', error);
+      return; // keep the last good lists rather than blanking them on a transient error
     }
-    cb(build(me, (data ?? []) as FriendshipRow[]));
+    const rows = (data ?? []) as FriendshipRow[];
+    const friends = rows
+      .filter((r) => r.status === 'accepted')
+      .map((r) => rowToFriend(r, me))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+    const incoming = rows
+      .filter((r) => r.status === 'pending' && r.requested_by !== me)
+      .map((r) => rowToPending(r, me));
+    const outgoing = rows
+      .filter((r) => r.status === 'pending' && r.requested_by === me)
+      .map((r) => rowToPending(r, me));
+    cb({ friends, incoming, outgoing });
   };
 
   const attach = (me: string | null) => {
@@ -88,11 +110,9 @@ function watchFriendships<T>(
       void supabase.removeChannel(channel);
       channel = null;
     }
-    // Subscribe FIRST, then run the catch-up fetch on SUBSCRIBED — closes the
-    // race where a change lands between an initial fetch and the subscription
-    // attaching (the first event would otherwise be lost).
+    void emit(me); // immediate load — don't depend solely on SUBSCRIBED firing
     channel = supabase
-      .channel(`${tag}:${me}`)
+      .channel(`frienddata:${me}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'friendships' },
@@ -115,51 +135,6 @@ function watchFriendships<T>(
     authSub.subscription.unsubscribe();
     if (channel) void supabase.removeChannel(channel);
   };
-}
-
-export function subscribeFriends(
-  _myUid: string,
-  cb: (friends: Friend[]) => void,
-): () => void {
-  return watchFriendships(
-    'friends',
-    (me, rows) => {
-      const arr = rows
-        .filter((r) => r.status === 'accepted')
-        .map((r) => rowToFriend(r, me));
-      arr.sort((a, b) => a.displayName.localeCompare(b.displayName));
-      return arr;
-    },
-    cb,
-  );
-}
-
-export function subscribeIncomingRequests(
-  _myUid: string,
-  cb: (rows: PendingRequest[]) => void,
-): () => void {
-  return watchFriendships(
-    'friends-in',
-    (me, rows) =>
-      rows
-        .filter((r) => r.status === 'pending' && r.requested_by !== me)
-        .map((r) => rowToPending(r, me)),
-    cb,
-  );
-}
-
-export function subscribeOutgoingRequests(
-  _myUid: string,
-  cb: (rows: PendingRequest[]) => void,
-): () => void {
-  return watchFriendships(
-    'friends-out',
-    (me, rows) =>
-      rows
-        .filter((r) => r.status === 'pending' && r.requested_by === me)
-        .map((r) => rowToPending(r, me)),
-    cb,
-  );
 }
 
 async function rpc(fn: string, args: Record<string, unknown>): Promise<void> {

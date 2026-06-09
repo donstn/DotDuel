@@ -92,9 +92,10 @@ function watchInvites(
       void supabase.removeChannel(channel);
       channel = null;
     }
-    // Subscribe FIRST, then run the catch-up fetch on SUBSCRIBED — closes the
-    // race where an invite INSERT lands between an initial fetch and the
-    // subscription attaching (the first invite would otherwise be missed).
+    // Immediate load (don't depend solely on SUBSCRIBED firing — multiple
+    // channels on the invites table can leave one un-subscribed), then a
+    // catch-up fetch on SUBSCRIBED for the mount-gap race, plus on every change.
+    void emit(me);
     channel = supabase
       .channel(`${tag}:${me}`)
       .on(

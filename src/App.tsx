@@ -80,9 +80,7 @@ import { finalizeDailyPuzzle } from './cloud/dailyPuzzleResult';
 import { syncProfileName } from './cloud/supabaseProfile';
 import type { Friend, PendingRequest } from './cloud/friends';
 import {
-  subscribeFriends,
-  subscribeIncomingRequests,
-  subscribeOutgoingRequests,
+  subscribeFriendData,
   sendFriendRequestByUid,
 } from './cloud/friends';
 import type { Invite } from './cloud/invites';
@@ -853,14 +851,14 @@ export default function App() {
       setFriendStatusMap({});
       return;
     }
-    const unsubFriends = subscribeFriends(user.uid, setFriends);
-    const unsubIn = subscribeIncomingRequests(user.uid, setIncomingRequests);
-    const unsubOut = subscribeOutgoingRequests(user.uid, setOutgoingRequests);
+    const unsubFriendData = subscribeFriendData(user.uid, ({ friends, incoming, outgoing }) => {
+      setFriends(friends);
+      setIncomingRequests(incoming);
+      setOutgoingRequests(outgoing);
+    });
     const unsubInvites = subscribeIncomingInvites(user.uid, setIncomingInvites);
     return () => {
-      unsubFriends();
-      unsubIn();
-      unsubOut();
+      unsubFriendData();
       unsubInvites();
     };
   }, [user?.uid]);

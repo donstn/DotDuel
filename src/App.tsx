@@ -14,8 +14,10 @@ import { SettingsPopover } from './components/SettingsPopover';
 import { SidePanel } from './components/SidePanel';
 import { SignInPopover } from './auth/SignInPopover';
 import { useAuth } from './auth/useAuth';
+import { useSupabaseUser } from './auth/useSupabaseUser';
 import { saveCloudProgress, syncOnSignIn } from './cloud/progressSync';
 import {
+  ensureUsername,
   suggestUsername,
   watchProfile,
   type CloudProfile,
@@ -43,9 +45,11 @@ import {
   watchError,
   watchGame,
   type ConnectionStatus,
+  type GameClock,
   type OnlineError,
   type OnlineGame,
 } from './cloud/onlineGame';
+import { measureServerSkewMs } from './cloud/serverTime';
 import {
   claimSession,
   getSessionId,
@@ -73,11 +77,10 @@ import {
 } from './cloud/dailyLeaderboard';
 import { dateToUtcKey, puzzleForDate } from './dailyPuzzles';
 import { finalizeDailyPuzzle } from './cloud/dailyPuzzleResult';
+import { syncProfileName } from './cloud/supabaseProfile';
 import type { Friend, PendingRequest } from './cloud/friends';
 import {
-  subscribeFriends,
-  subscribeIncomingRequests,
-  subscribeOutgoingRequests,
+  subscribeFriendData,
   sendFriendRequestByUid,
 } from './cloud/friends';
 import type { Invite } from './cloud/invites';
@@ -90,8 +93,7 @@ import {
   stopPresence,
   subscribePresence,
 } from './cloud/presence';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { updatePrivacy } from './cloud/supabaseProfile';
 import { loadTheme, saveTheme, type ThemeId } from './theme';
 import {
   applyConsent,
@@ -120,8 +122,7 @@ import {
 import { DIFFICULTY_LABELS } from './types';
 import type { Difficulty, GameMode, GameState, Progress, ShapeId } from './types';
 import { APP_VERSION } from './version';
-import { app, bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './firebase';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './telemetry';
 
 type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound' | 'mpgame';
 
@@ -236,6 +237,15 @@ export default function App() {
     baseTurn: number;
     state: GameState;
   } | null>(null);
+  // Optimistic clock, synthesized when the local player moves (mirrors the
+  // optimistic board): freezes the mover's time and starts the opponent with a
+  // FRESH turnStartedAt, so the clock stays consistent with the optimistic board
+  // and doesn't snap back ~1 RTT when the server confirms. Dropped on the same
+  // turn-caught-up / rejection signals as optimisticMpState.
+  const [optimisticClock, setOptimisticClock] = useState<GameClock | null>(null);
+  // Client↔server wall-clock offset (serverNow ≈ Date.now() + skew), measured
+  // once per match so clock extrapolation is accurate on skewed devices.
+  const [serverSkewMs, setServerSkewMs] = useState(0);
   const [mpMatchRecord, setMpMatchRecord] = useState<MatchRecord | null>(null);
   const mySessionIdRef = useRef<string>(getSessionId());
   const [activeGameSession, setActiveGameSession] =
@@ -259,6 +269,9 @@ export default function App() {
   const [sendInviteFor, setSendInviteFor] = useState<Friend | null>(null);
 
   const { user, loading: authLoading, signOut } = useAuth();
+  // Supabase identity (established by the dual-auth bridge). Migrated features
+  // key off this, not the Firebase uid.
+  const { user: sbUser } = useSupabaseUser();
   const aiTimer = useRef<number | null>(null);
   const winRecorded = useRef(false);
   const gameEndCounted = useRef(false);
@@ -609,7 +622,11 @@ export default function App() {
       const puzzleId = dailyPuzzleIdRef.current ?? -1;
       const margin = s1 - s2;
       const dispName =
-        cloudProfile?.displayName ?? user.displayName ?? 'Anonymous';
+        cloudProfile?.displayName ??
+        settings.playerName ??
+        user.displayName ??
+        user.email?.split('@')[0] ??
+        'Anonymous';
       void (async () => {
         try {
           const utcDate = dateToUtcKey();
@@ -627,6 +644,11 @@ export default function App() {
             attemptsRemaining: result.attemptsRemaining,
             current: result.streak.current,
             longest: result.streak.longest,
+          });
+          setMyDailyAttempt({
+            puzzleId,
+            attempts: result.attempts,
+            best: result.best,
           });
           trackEvent('daily_puzzle_solved', {
             puzzle_id: puzzleId,
@@ -681,44 +703,18 @@ export default function App() {
 
   // On sign-in: merge cloud progress with local (max-union), save back.
   useEffect(() => {
-    if (!user) return;
+    if (!sbUser) return;
     let cancelled = false;
-    void syncOnSignIn(user.uid).then((merged) => {
+    void syncOnSignIn(sbUser.uid).then((merged) => {
       if (cancelled || !merged) return;
       setProgress(merged);
     });
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [sbUser?.uid]);
 
-  // Admin-only debug helpers — exposed on window for the project owner so
-  // we can invoke admin-gated callables (seedBots, countStuckSignups) from
-  // the live app without ad-hoc deploys. Invisible to non-admin users.
-  useEffect(() => {
-    if (user?.email !== 'donstn@gmail.com') return;
-    const fns = getFunctions(app, 'europe-west1');
-    const wnd = window as unknown as {
-      __seedBots?: () => Promise<unknown>;
-      __countStuckSignups?: () => Promise<unknown>;
-    };
-    wnd.__seedBots = async () => {
-      const r = await httpsCallable(fns, 'seedBots')();
-      // eslint-disable-next-line no-console
-      console.log(JSON.stringify(r.data, null, 2));
-      return r.data;
-    };
-    wnd.__countStuckSignups = async () => {
-      const r = await httpsCallable(fns, 'countStuckSignups')();
-      // eslint-disable-next-line no-console
-      console.log(JSON.stringify(r.data, null, 2));
-      return r.data;
-    };
-    // eslint-disable-next-line no-console
-    console.log('[admin] await __seedBots() · await __countStuckSignups()');
-  }, [user?.email]);
-
-  // Live subscription to users/{uid} — auto-updates display name across tabs.
+  // Live subscription to the profile — auto-updates display name across tabs.
   useEffect(() => {
     if (!user) {
       setCloudProfile(null);
@@ -733,16 +729,43 @@ export default function App() {
     return unsub;
   }, [user?.uid]);
 
+  // Auto-provision a username for sign-ups that have a display name but never
+  // claimed a handle (Google), so they're findable by friends. No-op otherwise.
+  // watchProfile above picks up any resulting display_name change live.
+  useEffect(() => {
+    if (!user) return;
+    void ensureUsername();
+  }, [user?.uid]);
+
+  // Cache the resolved username per-uid so the next load shows it instantly
+  // (see effectiveGameName) instead of flashing the email prefix.
+  useEffect(() => {
+    if (!user || !cloudProfile?.displayName) return;
+    try {
+      localStorage.setItem(`dotduel:username:${user.uid}`, cloudProfile.displayName);
+    } catch {
+      // storage disabled — fine, just no instant-name on next load
+    }
+  }, [user?.uid, cloudProfile?.displayName]);
+
   // 2b-v2 — subscribe to today's per-user daily-puzzle attempt doc so the
   // menu card can render the right state (not started / N/3 / 3/3 done)
   // and finalize can read attempt count without a fresh getDoc.
   useEffect(() => {
-    if (!user) {
+    if (!sbUser) {
       setMyDailyAttempt(null);
       return;
     }
-    return watchMyDailyAttempt(user.uid, dateToUtcKey(), setMyDailyAttempt);
-  }, [user?.uid]);
+    return watchMyDailyAttempt(sbUser.uid, dateToUtcKey(), setMyDailyAttempt);
+  }, [sbUser?.uid]);
+
+  // Keep the Supabase profile name aligned with the player's DotDuel name once
+  // the Supabase session + cloud name are both available.
+  useEffect(() => {
+    if (sbUser && cloudProfile?.displayName) {
+      void syncProfileName(cloudProfile.displayName);
+    }
+  }, [sbUser?.uid, cloudProfile?.displayName]);
 
   // Apply colour theme to <html data-theme> and persist on every change.
   useEffect(() => {
@@ -839,14 +862,14 @@ export default function App() {
       setFriendStatusMap({});
       return;
     }
-    const unsubFriends = subscribeFriends(user.uid, setFriends);
-    const unsubIn = subscribeIncomingRequests(user.uid, setIncomingRequests);
-    const unsubOut = subscribeOutgoingRequests(user.uid, setOutgoingRequests);
+    const unsubFriendData = subscribeFriendData(user.uid, ({ friends, incoming, outgoing }) => {
+      setFriends(friends);
+      setIncomingRequests(incoming);
+      setOutgoingRequests(outgoing);
+    });
     const unsubInvites = subscribeIncomingInvites(user.uid, setIncomingInvites);
     return () => {
-      unsubFriends();
-      unsubIn();
-      unsubOut();
+      unsubFriendData();
       unsubInvites();
     };
   }, [user?.uid]);
@@ -884,13 +907,16 @@ export default function App() {
     }
     let status: PresenceStatus;
     if (screen === 'matchmaking') status = 'searching-ranked';
+    // On the results (GameOver) screen the screen is still 'mpgame' but the game
+    // is over — report 'menu' (available) so friends can invite us again.
+    else if (screen === 'mpgame' && onlineGame?.state.finished) status = 'menu';
     else if (screen === 'matchFound' || screen === 'mpgame') status = 'in-ranked';
     else if (screen === 'game' && config?.mode === 'ai') status = 'in-ai';
     else if (screen === 'game' && config?.mode === 'hotseat') status = 'in-hotseat';
     else if (screen === 'game' && config?.mode === 'daily') status = 'in-daily';
     else status = 'menu'; // menu, lobby, fallback
     void setPresenceStatus(user.uid, status);
-  }, [user?.uid, screen, config?.mode]);
+  }, [user?.uid, screen, config?.mode, onlineGame?.state.finished]);
 
   // Tell-a-friend: pick up ?ref=<uid> on first load, hold it in sessionStorage,
   // consume it once the user has signed up + claimed a username (post-signup
@@ -993,12 +1019,12 @@ export default function App() {
   const mpLockedByOther =
     !!activeGameSession && activeGameSession.sessionId !== mySessionId;
 
-  // Defensive teardown: when another device takes over our session, we must
-  // unsubscribe from the game we were watching and route off any multiplayer
-  // screen. Otherwise the abandoned tab keeps receiving onSnapshot updates
-  // for a game it no longer owns — when the OTHER device finishes the game,
-  // Firestore flips status to 'finished' and we'd render a GameOver screen
-  // for a match we weren't really playing.
+  // Defensive teardown for the simultaneous-claim race: if two tabs of the same
+  // account claim at nearly the same instant, the loser sees the winner's
+  // sessionId via watchSession and must drop off any multiplayer screen + stop
+  // watching a game it no longer owns. (In the normal case a second tab can't
+  // take over a live session — see the hard lock in openMultiplayer — so the
+  // holder's active game is never torn down by this.)
   useEffect(() => {
     if (!mpLockedByOther) return;
     setPairing(null);
@@ -1026,10 +1052,12 @@ export default function App() {
       session_locked: mpLockedByOther ? 'true' : 'false',
     });
     if (!user) return;
-    // claimSession is setDoc-with-merge-overwrite semantics: if another
-    // device holds the lock, tapping Multiplayer here intentionally takes
-    // it over. The other device's watchSession will see the new sessionId
-    // and route back to the menu on its next snapshot.
+    // HARD LOCK: never steal a live session from another tab/device — the active
+    // game stays where it started; this tab stays locked out until the holder
+    // leaves multiplayer (releaseSession) or its claim goes stale (~45s if the
+    // holding tab was closed/crashed). The menu's Multiplayer card is already
+    // disabled when locked; this guards any other entry path.
+    if (mpLockedByOther) return;
     void claimSession(user.uid, mySessionId).catch((e) =>
       console.warn('claimSession failed:', e),
     );
@@ -1085,18 +1113,16 @@ export default function App() {
 
   const onSignOutSafe = async () => {
     if (user) {
-      // Fire-and-forget — sign-out must never be blocked by a hung RTDB
-      // write (see openMultiplayer note). signOut() itself is mostly local
-      // Firebase Auth state, so awaiting it is safe.
-      void releaseSession(user.uid).catch((e) =>
-        console.warn('releaseSession on sign-out failed:', e),
-      );
-      // Announce offline NOW so friends don't see a ghost-online state
-      // for up to 90s while the heartbeat times out. Must fire BEFORE
-      // signOut() — the presence rule only allows the owner to write.
-      void markPresenceOffline(user.uid).catch((e) =>
-        console.warn('markPresenceOffline on sign-out failed:', e),
-      );
+      // Stop the heartbeat and announce offline NOW, BEFORE signOut() clears the
+      // session — presence/session RLS only lets the owner write, so these must
+      // land while still authenticated (otherwise friends see a ghost-online
+      // state for up to 90s). Awaited via allSettled so both complete first but
+      // a single failure/slow write can't wedge sign-out.
+      stopPresence();
+      await Promise.allSettled([
+        releaseSession(user.uid),
+        markPresenceOffline(user.uid),
+      ]);
     }
     await signOut();
   };
@@ -1341,6 +1367,7 @@ export default function App() {
     if (!optimisticMpState || !onlineGame) return;
     if (onlineGame.state.turn >= optimisticMpState.state.turn) {
       setOptimisticMpState(null);
+      setOptimisticClock(null);
     }
   }, [onlineGame?.state.turn, optimisticMpState]);
 
@@ -1348,8 +1375,25 @@ export default function App() {
   useEffect(() => {
     if (!onlineError) return;
     setOptimisticMpState(null);
+    setOptimisticClock(null);
     setMoveInFlight(false);
   }, [onlineError?.ts]);
+
+  // Measure the client↔server clock offset once per match so the clock badges
+  // extrapolate against the server's turnStartedAt accurately.
+  useEffect(() => {
+    if (!onlineGameId) {
+      setServerSkewMs(0);
+      return;
+    }
+    let cancelled = false;
+    void measureServerSkewMs().then((skew) => {
+      if (!cancelled) setServerSkewMs(skew);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [onlineGameId]);
 
   // Defensive recovery: if the mpgame screen is showing the loading guard
   // for more than 2 seconds (onlineGame is null even though we have a
@@ -1510,6 +1554,27 @@ export default function App() {
     });
   }, [screen, onlineGame, user]);
 
+  // Optimistic clock for the instant AFTER the local player's move: freeze the
+  // mover at its move-time value AND start the opponent ticking from `sentAt`
+  // (the move's send time in server time — the SAME value handed to sendMove, so
+  // the server can stamp turnStartedAt = now - credit ≈ sentAt). Because the
+  // optimistic and authoritative turn-starts reference the same instant, the
+  // opponent's clock starts immediately and reconciles with no snap and no pause.
+  // `sentAt` is also the reference for the mover's frozen value, so its freeze
+  // matches the last displayed value. Returns null if it isn't our ticking turn.
+  const buildOptimisticClock = (myNum: 1 | 2, sentAt: number): GameClock | null => {
+    const clock = onlineGame?.clock;
+    if (!clock || clock.turnStartedAt <= 0 || clock.current !== myNum) return null;
+    const elapsed = Math.max(0, sentAt - clock.turnStartedAt);
+    return {
+      ...clock,
+      p1RemainingMs: myNum === 1 ? Math.max(0, clock.p1RemainingMs - elapsed) : clock.p1RemainingMs,
+      p2RemainingMs: myNum === 2 ? Math.max(0, clock.p2RemainingMs - elapsed) : clock.p2RemainingMs,
+      turnStartedAt: sentAt,
+      current: myNum === 1 ? 2 : 1,
+    };
+  };
+
   const handleMpDotClick = async (dotId: number) => {
     if (!user || !onlineGameId || !onlineGame) return;
     const myNum = playerNumFor(onlineGame, user.uid);
@@ -1520,12 +1585,16 @@ export default function App() {
     if (baseState.colored[dotId]) return;
     setActiveHint(null);
     setMoveInFlight(true);
+    // One send-time (in server time) shared by the optimistic clock and sendMove
+    // so the optimistic and authoritative turn-starts reference the same instant.
+    const sentAt = Date.now() + serverSkewMs;
     // Note: we do NOT setLastDot here. The "last move" highlight is
     // reserved for the OPPONENT's most recent placement, picked up by
     // the state-diff effect below.
     try {
       const result = applyMove(baseState, dotId);
       setOptimisticMpState({ baseTurn: baseState.turn, state: result.state });
+      setOptimisticClock(buildOptimisticClock(myNum, sentAt));
       if (result.pointsGained > 0 || result.newlyPending.length > 0) {
         setScoreEvent({
           dotId,
@@ -1540,11 +1609,12 @@ export default function App() {
       return;
     }
     try {
-      await sendMove(onlineGameId, user.uid, { kind: 'dot', dotId });
+      await sendMove(onlineGameId, user.uid, { kind: 'dot', dotId }, sentAt);
     } catch (e) {
       console.warn('sendMove failed:', e);
       setMoveInFlight(false);
       setOptimisticMpState(null);
+      setOptimisticClock(null);
     }
   };
 
@@ -1558,9 +1628,11 @@ export default function App() {
     if (!baseState.pending.includes(lineId)) return;
     setActiveHint(null);
     setMoveInFlight(true);
+    const sentAt = Date.now() + serverSkewMs;
     try {
       const result = applyClaim(baseState, lineId);
       setOptimisticMpState({ baseTurn: baseState.turn, state: result.state });
+      setOptimisticClock(buildOptimisticClock(myNum, sentAt));
       const line = getBoard(onlineGame.shape).lines.find((l) => l.id === lineId);
       if (line && result.pointsGained > 0) {
         const midDot = line.dotIds[Math.floor(line.dotIds.length / 2)];
@@ -1577,11 +1649,12 @@ export default function App() {
       return;
     }
     try {
-      await sendMove(onlineGameId, user.uid, { kind: 'claim', lineId });
+      await sendMove(onlineGameId, user.uid, { kind: 'claim', lineId }, sentAt);
     } catch (e) {
       console.warn('sendMove failed:', e);
       setMoveInFlight(false);
       setOptimisticMpState(null);
+      setOptimisticClock(null);
     }
   };
 
@@ -1682,8 +1755,22 @@ export default function App() {
     setProgress(resetProgress());
   };
 
-  const effectiveGameName =
-    user && cloudProfile?.displayName ? cloudProfile.displayName : null;
+  // Show the chosen username INSTANTLY on load. cloudProfile (the source of the
+  // username) loads async, so until it arrives we fall back to a per-uid cached
+  // copy of the last-known username — not the Google name / email prefix, which
+  // caused a visible flash from "<email-prefix>" to the real username.
+  const cachedUsername = user
+    ? (() => {
+        try {
+          return localStorage.getItem(`dotduel:username:${user.uid}`);
+        } catch {
+          return null;
+        }
+      })()
+    : null;
+  const effectiveGameName = user
+    ? cloudProfile?.displayName ?? cachedUsername
+    : null;
 
   if (screen === 'mpgame') {
     if (!onlineGame || !onlineGameId || !user || !pairing) {
@@ -1741,29 +1828,35 @@ export default function App() {
     const mpShowOver = mpState.finished;
     const mpDisabled =
       mpState.finished || moveInFlight || (myNum !== null && mpState.current !== myNum);
-    const clock = onlineGame.clock;
+    // Prefer the optimistic clock when the local player has a move in flight: it
+    // freezes the mover's time and hands the turn to the opponent with a FRESH
+    // turnStartedAt, so display stays consistent with the optimistic board and
+    // doesn't snap ~1 RTT when the server confirms. (The old approach used the
+    // server clock + server state.current to dodge the "opponent clock
+    // extrapolates from the previous turn's start = wildly wrong low value" bug;
+    // the optimistic clock avoids that by carrying its own correct turnStartedAt.)
+    // The timeout-claim path below still keys off the authoritative server clock.
+    // Prefer the optimistic clock while a local move is in flight: it freezes the
+    // mover and starts the opponent from `sentAt`. Because submit-move stamps the
+    // authoritative turnStartedAt at the same instant (now - credit ≈ sentAt), the
+    // opponent ticks immediately and reconciles with no snap/pause/flicker.
+    const clock = optimisticClock ?? onlineGame.clock;
     const clockRunning = !mpState.finished && (clock?.turnStartedAt ?? 0) > 0;
-    // Clock display uses SERVER-CONFIRMED state.current, not the optimistic
-    // mpState. Reason: when the local player moves, the optimistic state
-    // flips current to the opponent immediately, but clock.turnStartedAt
-    // only updates when the server confirms. If we used mpState.current
-    // here, the opponent's clock would extrapolate from the previous turn's
-    // start time, showing a wildly wrong (much lower) value for ~500ms–2s
-    // until server confirmation — the "clocks jumping for first few moves"
-    // bug. Using server state keeps the clocks visually stable.
-    const serverCurrent = onlineGame.state.current;
+    const activeCurrent = clock?.current ?? onlineGame.state.current;
     const p1Clock = clock ? (
       <ClockBadge
         remainingAtRefMs={clock.p1RemainingMs}
         refTime={clock.turnStartedAt}
-        isRunning={clockRunning && serverCurrent === 1}
+        isRunning={clockRunning && activeCurrent === 1}
+        skewMs={serverSkewMs}
       />
     ) : null;
     const p2Clock = clock ? (
       <ClockBadge
         remainingAtRefMs={clock.p2RemainingMs}
         refTime={clock.turnStartedAt}
-        isRunning={clockRunning && serverCurrent === 2}
+        isRunning={clockRunning && activeCurrent === 2}
+        skewMs={serverSkewMs}
       />
     ) : null;
 
@@ -1925,6 +2018,21 @@ export default function App() {
                   }
                 : undefined
             }
+          />
+        )}
+        {/* Invites are actionable from the results screen too (game is over, so
+            it's not a distraction) — accepting routes via watchPairing like a
+            rematch. Hidden during active play. */}
+        {mpShowOver && user && (
+          <IncomingInviteToast
+            invites={incomingInvites}
+            fromNames={Object.fromEntries(
+              friends.map((f) => [f.uid, f.displayName]),
+            )}
+            onAccepted={() => {
+              setFriendsOpen(false);
+              setSendInviteFor(null);
+            }}
           />
         )}
         {resignConfirmOpen && !mpState.finished && (
@@ -2128,7 +2236,7 @@ export default function App() {
                     if (next.showPresence !== undefined) {
                       setPresenceEnabled(next.showPresence);
                     }
-                    updateDoc(doc(db, 'users', user.uid), next).catch((e) =>
+                    void updatePrivacy(next).catch((e) =>
                       console.warn('privacy update failed', e),
                     );
                   }
@@ -2155,7 +2263,7 @@ export default function App() {
         )}
         {puzzleLbOpen && (
           <PuzzleLeaderboardPopover
-            myUid={user?.uid ?? null}
+            myUid={sbUser?.uid ?? null}
             onClose={() => setPuzzleLbOpen(false)}
           />
         )}
@@ -2192,13 +2300,13 @@ export default function App() {
             initialName={suggestUsername(user.displayName, user.email)}
             seed={{
               email: user.email,
-              authProvider: user.providerData[0]?.providerId ?? null,
+              authProvider: user.provider ?? null,
             }}
             onSuccess={(newName) => {
               setCloudProfile((prev) => ({
                 email: prev?.email ?? user.email,
                 authProvider:
-                  prev?.authProvider ?? user.providerData[0]?.providerId ?? null,
+                  prev?.authProvider ?? user.provider ?? null,
                 createdAt: prev?.createdAt ?? null,
                 displayName: newName,
                 rating: prev?.rating ?? 1000,
@@ -2227,10 +2335,10 @@ export default function App() {
             onCancel={() => setRenameOpen(false)}
           />
         )}
-        {/* IncomingInviteToast renders only on the menu (or lobby) — the
-            invite UI should NOT distract during gameplay or matchmaking.
-            Server delivers the invite immediately; we just hold off displaying
-            it until the user is back on a menu-class screen. */}
+        {/* IncomingInviteToast shows on menu/lobby (and on the results screen —
+            see the mpgame branch). NOT during active gameplay or matchmaking, so
+            it doesn't distract. The server delivers invites immediately; we just
+            hold off displaying until the user is on a non-playing screen. */}
         {user && (screen === 'menu' || screen === 'lobby') && (
           <IncomingInviteToast
             invites={incomingInvites}
@@ -2263,8 +2371,9 @@ export default function App() {
         {sendInviteFor && user && (
           <SendInviteDialog
             friend={sendInviteFor}
+            friendStatus={friendStatusMap[sendInviteFor.uid] ?? 'offline'}
+            hasActivePairing={pairing != null}
             onClose={() => setSendInviteFor(null)}
-            onSent={() => setSendInviteFor(null)}
           />
         )}
       </>
@@ -2414,6 +2523,12 @@ export default function App() {
           onOpenPuzzleLeaderboard={() => setPuzzleLbOpen(true)}
         />
       )}
+      {puzzleLbOpen && (
+        <PuzzleLeaderboardPopover
+          myUid={sbUser?.uid ?? null}
+          onClose={() => setPuzzleLbOpen(false)}
+        />
+      )}
       {resignConfirmOpen && (config.mode === 'ai' || config.mode === 'daily') && !state.finished && (
         <div
           className="confirm-overlay"
@@ -2499,13 +2614,13 @@ export default function App() {
           initialName={suggestUsername(user.displayName, user.email)}
           seed={{
             email: user.email,
-            authProvider: user.providerData[0]?.providerId ?? null,
+            authProvider: user.provider ?? null,
           }}
           onSuccess={(newName) => {
             setCloudProfile((prev) => ({
               email: prev?.email ?? user.email,
               authProvider:
-                prev?.authProvider ?? user.providerData[0]?.providerId ?? null,
+                prev?.authProvider ?? user.provider ?? null,
               createdAt: prev?.createdAt ?? null,
               displayName: newName,
               rating: prev?.rating ?? 1000,

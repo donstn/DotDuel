@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { User } from 'firebase/auth';
+import type { AppUser } from '../auth/AppUser';
 import { availableDifficulties, isUnlocked } from '../storage';
 import type { Settings } from '../storage';
 import { DIFFICULTY_LABELS, PLAYABLE_SHAPE_META, SHAPE_META } from '../types';
@@ -13,7 +13,7 @@ interface Props {
   progress: Progress;
   settings: Settings;
   gameName: string | null;
-  user: User | null;
+  user: AppUser | null;
   onStart: (mode: GameMode, shape: ShapeId, difficulty?: Difficulty) => void;
   onSettingsUpdate: (next: Settings) => void;
   onOpenRankings: () => void;
@@ -168,12 +168,12 @@ export function Menu({
                 </button>
               ) : mpLockedByOther ? (
                 <button
-                  className="menu-card"
-                  onClick={onOpenMultiplayer}
-                  title="Tap to take over the session on this device"
+                  className="menu-card disabled"
+                  disabled
+                  title="You have a multiplayer session open on another tab or device"
                 >
                   <strong>Multiplayer</strong>
-                  <span>Active on another device — tap to take over here.</span>
+                  <span>Active on another tab/device — finish or close it there.</span>
                 </button>
               ) : (
                 <button

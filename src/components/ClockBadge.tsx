@@ -4,6 +4,9 @@ interface Props {
   remainingAtRefMs: number;
   refTime: number;
   isRunning: boolean;
+  /** clientNow + skewMs ≈ server time, so extrapolation against the server's
+   *  `refTime` (turnStartedAt) is accurate even on a skewed device. */
+  skewMs?: number;
 }
 
 const LOW_TIME_MS = 10_000;
@@ -16,7 +19,7 @@ function format(ms: number): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-export function ClockBadge({ remainingAtRefMs, refTime, isRunning }: Props) {
+export function ClockBadge({ remainingAtRefMs, refTime, isRunning, skewMs = 0 }: Props) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -31,7 +34,7 @@ export function ClockBadge({ remainingAtRefMs, refTime, isRunning }: Props) {
   // appears to be in the FUTURE relative to the client (clock skew between
   // server and client, ~few hundred ms typical), the raw subtraction would
   // ADD to remaining and display values higher than the starting time.
-  const elapsedMs = Math.max(0, now - refTime);
+  const elapsedMs = Math.max(0, now + skewMs - refTime);
   const remaining = isRunning && refTime > 0
     ? remainingAtRefMs - elapsedMs
     : remainingAtRefMs;

@@ -1,75 +1,63 @@
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  where,
-} from 'firebase/firestore';
-import { app, db } from '../firebase';
+import { supabase, currentSupabaseUid } from '../supabase';
 
 /**
  * GDPR Articles 17 (erasure) + 20 (portability).
  * Both flows are user-initiated from the Profile popover.
  */
 
-const functions = getFunctions(app, 'europe-west1');
+async function sid(): Promise<string | null> {
+  const cached = currentSupabaseUid();
+  if (cached) return cached;
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user.id ?? null;
+}
 
 interface ExportPayload {
   exportedAt: string;
-  user: Record<string, unknown> | null;
+  profile: Record<string, unknown> | null;
   leaderboardEntry: Record<string, unknown> | null;
   matches: Array<Record<string, unknown>>;
   localStorage: Record<string, string | null>;
 }
 
 /**
- * Collect every cloud + localStorage record that belongs to this uid and
- * return it as a downloadable Blob. Caller is expected to trigger a
- * browser download via an anchor element.
+ * Collect every cloud + localStorage record that belongs to this user and
+ * return it as a downloadable Blob.
  */
-export async function exportMyData(uid: string): Promise<Blob> {
+export async function exportMyData(_uid: string): Promise<Blob> {
   const payload: ExportPayload = {
     exportedAt: new Date().toISOString(),
-    user: null,
+    profile: null,
     leaderboardEntry: null,
     matches: [],
     localStorage: {},
   };
 
-  try {
-    const userSnap = await getDoc(doc(db, 'users', uid));
-    if (userSnap.exists()) payload.user = { id: userSnap.id, ...userSnap.data() };
-  } catch (e) {
-    console.warn('exportMyData: users read failed', e);
-  }
-
-  try {
-    const lbSnap = await getDoc(doc(db, 'leaderboard', uid));
-    if (lbSnap.exists()) {
-      payload.leaderboardEntry = { id: lbSnap.id, ...lbSnap.data() };
+  const me = await sid();
+  if (me) {
+    try {
+      const { data } = await supabase.from('profiles').select('*').eq('id', me).maybeSingle();
+      if (data) payload.profile = data;
+    } catch (e) {
+      console.warn('exportMyData: profile read failed', e);
     }
-  } catch (e) {
-    console.warn('exportMyData: leaderboard read failed', e);
-  }
-
-  try {
-    const matchesSnap = await getDocs(
-      query(
-        collection(db, 'matches'),
-        where('playerUids', 'array-contains', uid),
-        orderBy('finishedAt', 'desc'),
-        limit(500),
-      ),
-    );
-    matchesSnap.forEach((d) => {
-      payload.matches.push({ id: d.id, ...d.data() });
-    });
-  } catch (e) {
-    console.warn('exportMyData: matches read failed', e);
+    try {
+      const { data } = await supabase.from('leaderboard').select('*').eq('uid', me).maybeSingle();
+      if (data) payload.leaderboardEntry = data;
+    } catch (e) {
+      console.warn('exportMyData: leaderboard read failed', e);
+    }
+    try {
+      const { data } = await supabase
+        .from('matches')
+        .select('*')
+        .or(`p1_uid.eq.${me},p2_uid.eq.${me}`)
+        .order('finished_at', { ascending: false })
+        .limit(500);
+      payload.matches = (data ?? []) as Array<Record<string, unknown>>;
+    } catch (e) {
+      console.warn('exportMyData: matches read failed', e);
+    }
   }
 
   // Device-side data (also belongs to the user under GDPR).
@@ -87,9 +75,7 @@ export async function exportMyData(uid: string): Promise<Blob> {
     // ignore
   }
 
-  return new Blob([JSON.stringify(payload, null, 2)], {
-    type: 'application/json',
-  });
+  return new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
 }
 
 /** Trigger a browser download of the export. */
@@ -103,23 +89,17 @@ export async function downloadMyData(uid: string): Promise<void> {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  // Defer revoke; browsers will hold the blob URL for the active download.
   setTimeout(() => URL.revokeObjectURL(url), 4_000);
 }
 
 /**
- * Calls the deleteAccount Cloud Function. Throws on failure so the
- * UI can show the error. On success, the caller must sign out and
- * leave any active screens.
+ * Calls the account-delete Edge Function. Throws on failure so the UI can
+ * show the error. On success the caller must sign out and leave any screens.
  */
-export async function deleteMyAccount(): Promise<{
-  ok: boolean;
-  sentinel: string;
-}> {
-  const fn = httpsCallable<unknown, { ok: boolean; sentinel: string }>(
-    functions,
-    'deleteAccount',
-  );
-  const result = await fn({});
-  return result.data;
+export async function deleteMyAccount(): Promise<{ ok: boolean; sentinel: string }> {
+  const { data, error } = await supabase.functions.invoke('account-delete', { body: {} });
+  if (error) throw new Error(error.message);
+  const res = data as { ok: boolean; sentinel: string; error?: string };
+  if (!res?.ok) throw new Error(res?.error ?? 'Account deletion failed.');
+  return res;
 }

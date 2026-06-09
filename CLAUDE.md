@@ -10,11 +10,23 @@ Known bugs (fixed + accepted, with root cause and forward-looking notes) tracked
 
 ---
 
+## ⚠️ ACTIVE MIGRATION: Firebase → Supabase (branch `supabase-migration`)
+
+The backend is mid-migration **Firebase → Supabase** (Postgres + Auth + Realtime + Edge Functions). **Vite stays; Next.js was rejected.** Production `main` is **still 100% Firebase and untouched** — all migration work is on branch **`supabase-migration`**. Supabase project ref `ggyjxayazxbjvjbeecxa`.
+
+**Before touching backend code, read `SUPABASE_MIGRATION.md` (repo root)** — full status, deployed Edge Functions, applied migrations, conventions.
+
+- **Done on Supabase (through 2026-06-08):** Phase 0 (schema/RLS/triggers), Phase 1 (daily puzzle, profile name-sync, cloud-progress), **dual-auth Google bridge**, Phase 3 server side, **client `SUPABASE` transport (flag `CLIENT_SUPABASE_TRANSPORT` in `src/types.ts` is flipped ON on the branch) — 2-browser gauntlet PASSED** (pair/ready/moves/clock/resign/timeout/abort/reconnect+Elo), **rematch**, **bots** (5 seeded, `request-bot-match` + `doBotMove` in submit-move), and **coupled reads #1+#2** (profile/rating, leaderboard, match history, GameOver Elo delta all read Supabase).
+- **Next session — see `SUPABASE_MIGRATION.md` "COUPLED-MODULE AUDIT":** #3 usernames (claim/availability), #4 friends+invites(+`accept-invite` Edge Fn)+presence, #5 session-lock+account-delete, #6 server backstops (botFallbackSweep pg_cron, shape-unlock in matchmake = currently triangle-only, clockTimeout sweep), then **Phase 4 cutover** (migrate 2 real players' Elo, retire Firebase). **Campaign (Phase 2) deferred.** Key gotcha that bit us repeatedly: app uses the **Firebase uid** but Supabase tables key on the **Supabase auth uuid** — resolve via cached `currentSupabaseUid()` for any uid-keyed Supabase read/write.
+- **Conventions:** apply SQL via the dashboard **SQL Editor** (NOT `db push` — CLI migration history is intentionally out of sync); any `SECURITY DEFINER` RPC writing fn-only cols (rating/streak) must `perform set_config('app.allow_protected_write','on',true)` first or the guard trigger reverts it; `clock.turnStartedAt` is epoch-ms; run `node scripts/copy-engine-supabase.cjs` before deploying engine-dependent Edge Functions; rotate the non-expiring Supabase access token before launch.
+
+---
+
 ## Tech stack
 
 - **React 18** + **Vite 5** + **TypeScript** (strict mode)
 - SVG board (auto-scales via `viewBox`)
-- **Firebase** (Auth, Firestore, RTDB, Cloud Functions `europe-west1`) for multiplayer + accounts
+- **Firebase** (Auth, Firestore, RTDB, Cloud Functions `europe-west1`) for multiplayer + accounts — *being migrated to Supabase; see the Active Migration section above*
 - **localStorage** for offline progression
 - `tsx` for headless simulation scripts (dev-only)
 - No runtime UI framework

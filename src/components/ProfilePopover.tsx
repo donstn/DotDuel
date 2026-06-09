@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { User } from 'firebase/auth';
+import type { AppUser } from '../auth/AppUser';
 import {
   avgPerGame,
   getPlayerRow,
@@ -22,7 +22,7 @@ import { deleteMyAccount, downloadMyData } from '../cloud/account';
 const PLACEMENT_TOTAL = 10;
 
 interface Props {
-  user: User;
+  user: AppUser;
   settings: Settings;
   cloudProfile: CloudProfile | null;
   onSignOut: () => void;
@@ -74,11 +74,11 @@ export function ProfilePopover({
   const scored = totalPointsScored(row);
   const given = totalPointsGiven(row);
 
-  const providerId = user.providerData[0]?.providerId ?? '';
+  const providerId = user.provider ?? '';
   const providerLabel =
-    providerId === 'google.com'
+    providerId === 'google'
       ? 'Google'
-      : providerId === 'password'
+      : providerId === 'email'
         ? 'Email & password'
         : providerId || 'Unknown';
 
@@ -135,7 +135,7 @@ export function ProfilePopover({
               <span>Sign-in method</span>
               <strong>{providerLabel}</strong>
             </div>
-            {!user.emailVerified && providerId === 'password' && (
+            {!user.emailVerified && providerId === 'email' && (
               <p className="settings-hint">
                 Email not yet verified. Check your inbox (and spam folder) for the
                 link we sent.

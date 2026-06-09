@@ -1,58 +1,41 @@
-import {
-  collection,
-  doc,
-  getDocs,
-  limit,
-  onSnapshot,
-  orderBy,
-  query,
-  type Timestamp,
-} from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 
-// Phase 2b-v2 — daily-puzzle leaderboard reader.
-//
-// Entries are public-readable per Firestore rules; we sort by best margin
-// descending, then by firstCompletedAt ascending (first-to-tie wins).
-// The composite ordering needs a Firestore index (best DESC, firstCompletedAt
-// ASC) — added in firestore.indexes.json when this ships.
+// Daily-puzzle leaderboard reads — Supabase `daily_leaderboard` (public read)
+// and `daily_puzzles` (owner read via RLS). Fetch-based: the leaderboard popover
+// and menu card are transient, and finalize updates the attempt state directly,
+// so we don't need live subscriptions here (kept the watch* signatures so
+// callers are unchanged).
 
 export interface LeaderboardEntry {
   uid: string;
   displayName: string;
   best: number;
-  firstCompletedAt: number | null; // epoch ms, null until server timestamp resolves
+  firstCompletedAt: number | null; // epoch ms
   attempts: number;
   puzzleId: number;
 }
 
-interface RawEntry {
-  uid?: string;
-  displayName?: string;
-  best?: number;
-  firstCompletedAt?: Timestamp | { seconds: number; nanoseconds: number } | null;
-  attempts?: number;
-  puzzleId?: number;
+interface LbRow {
+  uid: string;
+  display_name: string | null;
+  best: number | null;
+  first_completed_at: string | null;
+  attempts: number | null;
+  puzzle_id: number | null;
 }
 
-function tsToMs(t: RawEntry['firstCompletedAt']): number | null {
-  if (!t) return null;
-  if (typeof (t as Timestamp).toMillis === 'function') {
-    return (t as Timestamp).toMillis();
-  }
-  const obj = t as { seconds?: number };
-  if (typeof obj.seconds === 'number') return obj.seconds * 1000;
-  return null;
-}
+const LB_COLS = 'uid, display_name, best, first_completed_at, attempts, puzzle_id';
 
-function shapeEntry(uid: string, raw: RawEntry): LeaderboardEntry {
+function shapeEntry(r: LbRow): LeaderboardEntry {
   return {
-    uid: raw.uid ?? uid,
-    displayName: raw.displayName ?? 'Anonymous',
-    best: typeof raw.best === 'number' ? raw.best : 0,
-    firstCompletedAt: tsToMs(raw.firstCompletedAt),
-    attempts: typeof raw.attempts === 'number' ? raw.attempts : 1,
-    puzzleId: typeof raw.puzzleId === 'number' ? raw.puzzleId : -1,
+    uid: r.uid,
+    displayName: r.display_name ?? 'Anonymous',
+    best: typeof r.best === 'number' ? r.best : 0,
+    firstCompletedAt: r.first_completed_at
+      ? Date.parse(r.first_completed_at)
+      : null,
+    attempts: typeof r.attempts === 'number' ? r.attempts : 1,
+    puzzleId: typeof r.puzzle_id === 'number' ? r.puzzle_id : -1,
   };
 }
 
@@ -61,31 +44,31 @@ export function watchTodaysLeaderboard(
   onChange: (entries: LeaderboardEntry[]) => void,
   topN: number = 50,
 ): () => void {
-  const q = query(
-    collection(db, 'dailyLeaderboard', utcDate, 'entries'),
-    orderBy('best', 'desc'),
-    orderBy('firstCompletedAt', 'asc'),
-    limit(topN),
-  );
-  return onSnapshot(
-    q,
-    (snap) => {
-      const entries = snap.docs.map((d) => shapeEntry(d.id, d.data() as RawEntry));
-      onChange(entries);
-    },
-    (err) => {
-      console.warn('watchTodaysLeaderboard error:', err);
-      onChange([]);
-    },
-  );
+  let alive = true;
+  void supabase
+    .from('daily_leaderboard')
+    .select(LB_COLS)
+    .eq('utc_date', utcDate)
+    .order('best', { ascending: false })
+    .order('first_completed_at', { ascending: true })
+    .limit(topN)
+    .then(({ data, error }) => {
+      if (!alive) return;
+      if (error) {
+        console.warn('watchTodaysLeaderboard error:', error.message);
+        onChange([]);
+        return;
+      }
+      onChange((data as LbRow[]).map(shapeEntry));
+    });
+  return () => {
+    alive = false;
+  };
 }
 
-// Daily winners history — the top entry (winner) for each of the last `days`
-// UTC dates. One getDocs per day (top-1 by the same best DESC / firstCompletedAt
-// ASC ordering as the live board), fired only when the history tab is opened.
 export interface DailyWinner {
   date: string; // YYYY-MM-DD (UTC)
-  winner: LeaderboardEntry | null; // null = nobody played that day
+  winner: LeaderboardEntry | null;
 }
 
 export async function fetchRecentDailyWinners(
@@ -99,31 +82,31 @@ export async function fetchRecentDailyWinners(
     );
     dates.push(d.toISOString().slice(0, 10));
   }
-  return Promise.all(
-    dates.map(async (date): Promise<DailyWinner> => {
-      try {
-        const q = query(
-          collection(db, 'dailyLeaderboard', date, 'entries'),
-          orderBy('best', 'desc'),
-          orderBy('firstCompletedAt', 'asc'),
-          limit(1),
-        );
-        const snap = await getDocs(q);
-        const top = snap.docs[0];
-        return {
-          date,
-          winner: top ? shapeEntry(top.id, top.data() as RawEntry) : null,
-        };
-      } catch (err) {
-        console.warn('fetchRecentDailyWinners error for', date, err);
-        return { date, winner: null };
-      }
-    }),
-  );
+  const earliest = dates[dates.length - 1];
+
+  const { data, error } = await supabase
+    .from('daily_leaderboard')
+    .select(`utc_date, ${LB_COLS}`)
+    .gte('utc_date', earliest)
+    .order('utc_date', { ascending: false })
+    .order('best', { ascending: false })
+    .order('first_completed_at', { ascending: true });
+
+  if (error) {
+    console.warn('fetchRecentDailyWinners error:', error.message);
+    return dates.map((date) => ({ date, winner: null }));
+  }
+
+  // First (top) row per day wins.
+  const topByDate = new Map<string, LeaderboardEntry>();
+  for (const row of data as (LbRow & { utc_date: string })[]) {
+    if (!topByDate.has(row.utc_date)) {
+      topByDate.set(row.utc_date, shapeEntry(row));
+    }
+  }
+  return dates.map((date) => ({ date, winner: topByDate.get(date) ?? null }));
 }
 
-// Watch the current user's per-day attempt doc to know how many attempts
-// they've used + their best so far. Drives the menu card 3-state UI.
 export interface MyDailyAttempt {
   puzzleId: number;
   attempts: number;
@@ -131,28 +114,34 @@ export interface MyDailyAttempt {
 }
 
 export function watchMyDailyAttempt(
-  uid: string,
+  _uid: string, // ignored — RLS scopes the query to the session user
   utcDate: string,
   onChange: (attempt: MyDailyAttempt | null) => void,
 ): () => void {
-  const ref = doc(db, 'users', uid, 'dailyPuzzles', utcDate);
-  return onSnapshot(
-    ref,
-    (snap) => {
-      if (!snap.exists()) {
+  let alive = true;
+  void supabase
+    .from('daily_puzzles')
+    .select('puzzle_id, attempts, best')
+    .eq('utc_date', utcDate)
+    .maybeSingle()
+    .then(({ data, error }) => {
+      if (!alive) return;
+      if (error) {
+        console.warn('watchMyDailyAttempt error:', error.message);
         onChange(null);
         return;
       }
-      const d = snap.data();
+      if (!data) {
+        onChange(null);
+        return;
+      }
       onChange({
-        puzzleId: typeof d.puzzleId === 'number' ? d.puzzleId : -1,
-        attempts: typeof d.attempts === 'number' ? d.attempts : 0,
-        best: typeof d.best === 'number' ? d.best : 0,
+        puzzleId: typeof data.puzzle_id === 'number' ? data.puzzle_id : -1,
+        attempts: typeof data.attempts === 'number' ? data.attempts : 0,
+        best: typeof data.best === 'number' ? data.best : 0,
       });
-    },
-    (err) => {
-      console.warn('watchMyDailyAttempt error:', err);
-      onChange(null);
-    },
-  );
+    });
+  return () => {
+    alive = false;
+  };
 }

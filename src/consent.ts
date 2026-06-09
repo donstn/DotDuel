@@ -1,4 +1,4 @@
-import { enableAnalyticsIfSupported } from './firebase';
+import { enableAnalyticsIfSupported } from './telemetry';
 
 /**
  * GDPR / ePrivacy analytics-consent gate.

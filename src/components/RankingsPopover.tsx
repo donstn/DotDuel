@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { User } from 'firebase/auth';
+import type { AppUser } from '../auth/AppUser';
 import {
   aiOpponentDisplayName,
   aiOpponentKey,
@@ -26,7 +26,7 @@ type View = 'global' | 'local';
 
 interface Props {
   onClose: () => void;
-  user: User | null;
+  user: AppUser | null;
   onOpenSignIn?: () => void;
 }
 

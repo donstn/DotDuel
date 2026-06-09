@@ -1001,12 +1001,12 @@ export default function App() {
   const mpLockedByOther =
     !!activeGameSession && activeGameSession.sessionId !== mySessionId;
 
-  // Defensive teardown: when another device takes over our session, we must
-  // unsubscribe from the game we were watching and route off any multiplayer
-  // screen. Otherwise the abandoned tab keeps receiving onSnapshot updates
-  // for a game it no longer owns — when the OTHER device finishes the game,
-  // Firestore flips status to 'finished' and we'd render a GameOver screen
-  // for a match we weren't really playing.
+  // Defensive teardown for the simultaneous-claim race: if two tabs of the same
+  // account claim at nearly the same instant, the loser sees the winner's
+  // sessionId via watchSession and must drop off any multiplayer screen + stop
+  // watching a game it no longer owns. (In the normal case a second tab can't
+  // take over a live session — see the hard lock in openMultiplayer — so the
+  // holder's active game is never torn down by this.)
   useEffect(() => {
     if (!mpLockedByOther) return;
     setPairing(null);
@@ -1034,10 +1034,12 @@ export default function App() {
       session_locked: mpLockedByOther ? 'true' : 'false',
     });
     if (!user) return;
-    // claimSession is setDoc-with-merge-overwrite semantics: if another
-    // device holds the lock, tapping Multiplayer here intentionally takes
-    // it over. The other device's watchSession will see the new sessionId
-    // and route back to the menu on its next snapshot.
+    // HARD LOCK: never steal a live session from another tab/device — the active
+    // game stays where it started; this tab stays locked out until the holder
+    // leaves multiplayer (releaseSession) or its claim goes stale (~45s if the
+    // holding tab was closed/crashed). The menu's Multiplayer card is already
+    // disabled when locked; this guards any other entry path.
+    if (mpLockedByOther) return;
     void claimSession(user.uid, mySessionId).catch((e) =>
       console.warn('claimSession failed:', e),
     );

@@ -168,12 +168,12 @@ export function Menu({
                 </button>
               ) : mpLockedByOther ? (
                 <button
-                  className="menu-card"
-                  onClick={onOpenMultiplayer}
-                  title="Tap to take over the session on this device"
+                  className="menu-card disabled"
+                  disabled
+                  title="You have a multiplayer session open on another tab or device"
                 >
                   <strong>Multiplayer</strong>
-                  <span>Active on another device — tap to take over here.</span>
+                  <span>Active on another tab/device — finish or close it there.</span>
                 </button>
               ) : (
                 <button

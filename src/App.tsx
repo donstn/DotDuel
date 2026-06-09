@@ -44,9 +44,11 @@ import {
   watchError,
   watchGame,
   type ConnectionStatus,
+  type GameClock,
   type OnlineError,
   type OnlineGame,
 } from './cloud/onlineGame';
+import { measureServerSkewMs } from './cloud/serverTime';
 import {
   claimSession,
   getSessionId,
@@ -236,6 +238,15 @@ export default function App() {
     baseTurn: number;
     state: GameState;
   } | null>(null);
+  // Optimistic clock, synthesized when the local player moves (mirrors the
+  // optimistic board): freezes the mover's time and starts the opponent with a
+  // FRESH turnStartedAt, so the clock stays consistent with the optimistic board
+  // and doesn't snap back ~1 RTT when the server confirms. Dropped on the same
+  // turn-caught-up / rejection signals as optimisticMpState.
+  const [optimisticClock, setOptimisticClock] = useState<GameClock | null>(null);
+  // Client↔server wall-clock offset (serverNow ≈ Date.now() + skew), measured
+  // once per match so clock extrapolation is accurate on skewed devices.
+  const [serverSkewMs, setServerSkewMs] = useState(0);
   const [mpMatchRecord, setMpMatchRecord] = useState<MatchRecord | null>(null);
   const mySessionIdRef = useRef<string>(getSessionId());
   const [activeGameSession, setActiveGameSession] =
@@ -1333,6 +1344,7 @@ export default function App() {
     if (!optimisticMpState || !onlineGame) return;
     if (onlineGame.state.turn >= optimisticMpState.state.turn) {
       setOptimisticMpState(null);
+      setOptimisticClock(null);
     }
   }, [onlineGame?.state.turn, optimisticMpState]);
 
@@ -1340,8 +1352,25 @@ export default function App() {
   useEffect(() => {
     if (!onlineError) return;
     setOptimisticMpState(null);
+    setOptimisticClock(null);
     setMoveInFlight(false);
   }, [onlineError?.ts]);
+
+  // Measure the client↔server clock offset once per match so the clock badges
+  // extrapolate against the server's turnStartedAt accurately.
+  useEffect(() => {
+    if (!onlineGameId) {
+      setServerSkewMs(0);
+      return;
+    }
+    let cancelled = false;
+    void measureServerSkewMs().then((skew) => {
+      if (!cancelled) setServerSkewMs(skew);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [onlineGameId]);
 
   // Defensive recovery: if the mpgame screen is showing the loading guard
   // for more than 2 seconds (onlineGame is null even though we have a
@@ -1502,6 +1531,24 @@ export default function App() {
     });
   }, [screen, onlineGame, user]);
 
+  // Synthesize the clock for the instant AFTER the local player's move: freeze
+  // my remaining at the move moment and hand the turn to the opponent with a new
+  // turnStartedAt = serverNow. Returns null if the clock hasn't started yet
+  // (board not loaded) — let the server drive in that case.
+  const buildOptimisticClock = (myNum: 1 | 2): GameClock | null => {
+    const clock = onlineGame?.clock;
+    if (!clock || clock.turnStartedAt <= 0) return null;
+    const nowServer = Date.now() + serverSkewMs;
+    const elapsed = clock.current === myNum ? Math.max(0, nowServer - clock.turnStartedAt) : 0;
+    return {
+      ...clock,
+      p1RemainingMs: myNum === 1 ? Math.max(0, clock.p1RemainingMs - elapsed) : clock.p1RemainingMs,
+      p2RemainingMs: myNum === 2 ? Math.max(0, clock.p2RemainingMs - elapsed) : clock.p2RemainingMs,
+      turnStartedAt: nowServer,
+      current: myNum === 1 ? 2 : 1,
+    };
+  };
+
   const handleMpDotClick = async (dotId: number) => {
     if (!user || !onlineGameId || !onlineGame) return;
     const myNum = playerNumFor(onlineGame, user.uid);
@@ -1518,6 +1565,7 @@ export default function App() {
     try {
       const result = applyMove(baseState, dotId);
       setOptimisticMpState({ baseTurn: baseState.turn, state: result.state });
+      setOptimisticClock(buildOptimisticClock(myNum));
       if (result.pointsGained > 0 || result.newlyPending.length > 0) {
         setScoreEvent({
           dotId,
@@ -1537,6 +1585,7 @@ export default function App() {
       console.warn('sendMove failed:', e);
       setMoveInFlight(false);
       setOptimisticMpState(null);
+      setOptimisticClock(null);
     }
   };
 
@@ -1553,6 +1602,7 @@ export default function App() {
     try {
       const result = applyClaim(baseState, lineId);
       setOptimisticMpState({ baseTurn: baseState.turn, state: result.state });
+      setOptimisticClock(buildOptimisticClock(myNum));
       const line = getBoard(onlineGame.shape).lines.find((l) => l.id === lineId);
       if (line && result.pointsGained > 0) {
         const midDot = line.dotIds[Math.floor(line.dotIds.length / 2)];
@@ -1574,6 +1624,7 @@ export default function App() {
       console.warn('sendMove failed:', e);
       setMoveInFlight(false);
       setOptimisticMpState(null);
+      setOptimisticClock(null);
     }
   };
 
@@ -1733,29 +1784,31 @@ export default function App() {
     const mpShowOver = mpState.finished;
     const mpDisabled =
       mpState.finished || moveInFlight || (myNum !== null && mpState.current !== myNum);
-    const clock = onlineGame.clock;
+    // Prefer the optimistic clock when the local player has a move in flight: it
+    // freezes the mover's time and hands the turn to the opponent with a FRESH
+    // turnStartedAt, so display stays consistent with the optimistic board and
+    // doesn't snap ~1 RTT when the server confirms. (The old approach used the
+    // server clock + server state.current to dodge the "opponent clock
+    // extrapolates from the previous turn's start = wildly wrong low value" bug;
+    // the optimistic clock avoids that by carrying its own correct turnStartedAt.)
+    // The timeout-claim path below still keys off the authoritative server clock.
+    const clock = optimisticClock ?? onlineGame.clock;
     const clockRunning = !mpState.finished && (clock?.turnStartedAt ?? 0) > 0;
-    // Clock display uses SERVER-CONFIRMED state.current, not the optimistic
-    // mpState. Reason: when the local player moves, the optimistic state
-    // flips current to the opponent immediately, but clock.turnStartedAt
-    // only updates when the server confirms. If we used mpState.current
-    // here, the opponent's clock would extrapolate from the previous turn's
-    // start time, showing a wildly wrong (much lower) value for ~500ms–2s
-    // until server confirmation — the "clocks jumping for first few moves"
-    // bug. Using server state keeps the clocks visually stable.
-    const serverCurrent = onlineGame.state.current;
+    const activeCurrent = clock?.current ?? onlineGame.state.current;
     const p1Clock = clock ? (
       <ClockBadge
         remainingAtRefMs={clock.p1RemainingMs}
         refTime={clock.turnStartedAt}
-        isRunning={clockRunning && serverCurrent === 1}
+        isRunning={clockRunning && activeCurrent === 1}
+        skewMs={serverSkewMs}
       />
     ) : null;
     const p2Clock = clock ? (
       <ClockBadge
         remainingAtRefMs={clock.p2RemainingMs}
         refTime={clock.turnStartedAt}
-        isRunning={clockRunning && serverCurrent === 2}
+        isRunning={clockRunning && activeCurrent === 2}
+        skewMs={serverSkewMs}
       />
     ) : null;
 

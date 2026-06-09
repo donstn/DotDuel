@@ -30,6 +30,29 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.0.0',
+    date: '2026-06-09',
+    highlight: 'Server upgrade + smoother multiplayer',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Moved multiplayer to a new, faster backend for more reliable matches.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Multiplayer clocks are now smooth and fair — your clock no longer jumps or keeps running after you move.',
+      },
+      {
+        kind: 'changed',
+        text: 'Game invites stay on screen until your friend answers, and you can accept them right from the results screen.',
+      },
+      {
+        kind: 'fixed',
+        text: 'You’re now automatically findable by your username, so friends can add you without extra steps.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.3.7.0',
     date: '2026-06-06',
     highlight: 'Auto-updating app + menu scroll fix',

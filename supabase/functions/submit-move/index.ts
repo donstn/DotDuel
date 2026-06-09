@@ -187,6 +187,11 @@ Deno.serve(async (req) => {
     const now = Date.now();
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
+    const { gameId, action, clientSentAt } = await req.json().catch(() => ({}));
+    // Keep-warm ping (from the keep-warm cron): warm the isolate, skip auth/DB.
+    if (action?.kind === 'ping') return json({ ok: true, warm: true });
+    if (!gameId || !action?.kind) return json({ error: 'BAD_REQUEST' }, 400);
+
     const jwt = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
     const {
       data: { user },
@@ -194,9 +199,6 @@ Deno.serve(async (req) => {
     } = await admin.auth.getUser(jwt);
     if (uErr || !user) return json({ error: 'UNAUTHENTICATED' }, 401);
     const uid = user.id;
-
-    const { gameId, action, clientSentAt } = await req.json();
-    if (!gameId || !action?.kind) return json({ error: 'BAD_REQUEST' }, 400);
 
     const { data: game, error: gErr } = await admin
       .from('games')
@@ -250,7 +252,7 @@ Deno.serve(async (req) => {
     // its measured skew); transit = now − clientSentAt. It's client-influenced,
     // so clamp to [0, CAP] — worst-case abuse is CAP per move. Applied only to
     // the normal move deduction; the timeout/abort checks above stay strict.
-    const LAG_COMP_CAP_MS = 1000;
+    const LAG_COMP_CAP_MS = 500;
     const transitCredit =
       typeof clientSentAt === 'number'
         ? Math.min(Math.max(0, now - clientSentAt), LAG_COMP_CAP_MS)
@@ -272,7 +274,11 @@ Deno.serve(async (req) => {
     const newClock = {
       ...clock,
       [curKey]: newRemaining,
-      turnStartedAt: now,
+      // Stamp the new (opponent's) turn at the move's SEND time, not the server
+      // processing time, so the opponent's authoritative clock start matches the
+      // client's optimistic start (turnStartedAt = clientSentAt) — no snap/pause
+      // on reconciliation. Capped via transitCredit so it can't be gamed.
+      turnStartedAt: now - transitCredit,
       current: newState.current,
     };
     const updates: Record<string, unknown> = {

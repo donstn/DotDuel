@@ -1531,21 +1531,24 @@ export default function App() {
     });
   }, [screen, onlineGame, user]);
 
-  // Freeze the mover's clock at the move instant. We intentionally do NOT start
-  // the opponent's clock here (no guessed turnStartedAt): while the move is in
-  // flight, BOTH clocks render frozen (see clockRunning in the game view), so the
-  // opponent's clock can't tick down optimistically and then snap back up when
-  // the server's authoritative timestamp lands. That snap — sized to the round-
-  // trip, worst on a cold start — was the "clock flicker on the first few moves"
-  // regression. Authoritative ticking resumes when the server confirms.
-  const buildOptimisticClock = (myNum: 1 | 2): GameClock | null => {
+  // Optimistic clock for the instant AFTER the local player's move: freeze the
+  // mover at its move-time value AND start the opponent ticking from `sentAt`
+  // (the move's send time in server time — the SAME value handed to sendMove, so
+  // the server can stamp turnStartedAt = now - credit ≈ sentAt). Because the
+  // optimistic and authoritative turn-starts reference the same instant, the
+  // opponent's clock starts immediately and reconciles with no snap and no pause.
+  // `sentAt` is also the reference for the mover's frozen value, so its freeze
+  // matches the last displayed value. Returns null if it isn't our ticking turn.
+  const buildOptimisticClock = (myNum: 1 | 2, sentAt: number): GameClock | null => {
     const clock = onlineGame?.clock;
     if (!clock || clock.turnStartedAt <= 0 || clock.current !== myNum) return null;
-    const elapsed = Math.max(0, Date.now() + serverSkewMs - clock.turnStartedAt);
+    const elapsed = Math.max(0, sentAt - clock.turnStartedAt);
     return {
       ...clock,
       p1RemainingMs: myNum === 1 ? Math.max(0, clock.p1RemainingMs - elapsed) : clock.p1RemainingMs,
       p2RemainingMs: myNum === 2 ? Math.max(0, clock.p2RemainingMs - elapsed) : clock.p2RemainingMs,
+      turnStartedAt: sentAt,
+      current: myNum === 1 ? 2 : 1,
     };
   };
 
@@ -1559,13 +1562,16 @@ export default function App() {
     if (baseState.colored[dotId]) return;
     setActiveHint(null);
     setMoveInFlight(true);
+    // One send-time (in server time) shared by the optimistic clock and sendMove
+    // so the optimistic and authoritative turn-starts reference the same instant.
+    const sentAt = Date.now() + serverSkewMs;
     // Note: we do NOT setLastDot here. The "last move" highlight is
     // reserved for the OPPONENT's most recent placement, picked up by
     // the state-diff effect below.
     try {
       const result = applyMove(baseState, dotId);
       setOptimisticMpState({ baseTurn: baseState.turn, state: result.state });
-      setOptimisticClock(buildOptimisticClock(myNum));
+      setOptimisticClock(buildOptimisticClock(myNum, sentAt));
       if (result.pointsGained > 0 || result.newlyPending.length > 0) {
         setScoreEvent({
           dotId,
@@ -1580,7 +1586,7 @@ export default function App() {
       return;
     }
     try {
-      await sendMove(onlineGameId, user.uid, { kind: 'dot', dotId }, Date.now() + serverSkewMs);
+      await sendMove(onlineGameId, user.uid, { kind: 'dot', dotId }, sentAt);
     } catch (e) {
       console.warn('sendMove failed:', e);
       setMoveInFlight(false);
@@ -1599,10 +1605,11 @@ export default function App() {
     if (!baseState.pending.includes(lineId)) return;
     setActiveHint(null);
     setMoveInFlight(true);
+    const sentAt = Date.now() + serverSkewMs;
     try {
       const result = applyClaim(baseState, lineId);
       setOptimisticMpState({ baseTurn: baseState.turn, state: result.state });
-      setOptimisticClock(buildOptimisticClock(myNum));
+      setOptimisticClock(buildOptimisticClock(myNum, sentAt));
       const line = getBoard(onlineGame.shape).lines.find((l) => l.id === lineId);
       if (line && result.pointsGained > 0) {
         const midDot = line.dotIds[Math.floor(line.dotIds.length / 2)];
@@ -1619,7 +1626,7 @@ export default function App() {
       return;
     }
     try {
-      await sendMove(onlineGameId, user.uid, { kind: 'claim', lineId }, Date.now() + serverSkewMs);
+      await sendMove(onlineGameId, user.uid, { kind: 'claim', lineId }, sentAt);
     } catch (e) {
       console.warn('sendMove failed:', e);
       setMoveInFlight(false);
@@ -1792,15 +1799,13 @@ export default function App() {
     // extrapolates from the previous turn's start = wildly wrong low value" bug;
     // the optimistic clock avoids that by carrying its own correct turnStartedAt.)
     // The timeout-claim path below still keys off the authoritative server clock.
-    // While the local move is in flight (optimisticClock present), freeze BOTH
-    // clocks — the mover at its frozen value, the opponent at its last value — so
-    // nothing ticks-then-snaps during the round-trip (the flicker). Authoritative
-    // ticking resumes when the server confirms and optimisticClock clears.
-    const inFlightClock = optimisticClock != null;
+    // Prefer the optimistic clock while a local move is in flight: it freezes the
+    // mover and starts the opponent from `sentAt`. Because submit-move stamps the
+    // authoritative turnStartedAt at the same instant (now - credit ≈ sentAt), the
+    // opponent ticks immediately and reconciles with no snap/pause/flicker.
     const clock = optimisticClock ?? onlineGame.clock;
-    const clockRunning =
-      !mpState.finished && !inFlightClock && (clock?.turnStartedAt ?? 0) > 0;
-    const activeCurrent = onlineGame.state.current;
+    const clockRunning = !mpState.finished && (clock?.turnStartedAt ?? 0) > 0;
+    const activeCurrent = clock?.current ?? onlineGame.state.current;
     const p1Clock = clock ? (
       <ClockBadge
         remainingAtRefMs={clock.p1RemainingMs}

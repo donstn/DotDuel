@@ -81,7 +81,7 @@ import {
   watchMyDailyAttempt,
   type MyDailyAttempt,
 } from './cloud/dailyLeaderboard';
-import { dateToUtcKey, puzzleForDate } from './dailyPuzzles';
+import { dateToUtcKey, fetchDailyPuzzleDef } from './dailyPuzzles';
 import { finalizeDailyPuzzle } from './cloud/dailyPuzzleResult';
 import { syncProfileName } from './cloud/supabaseProfile';
 import type { Friend, PendingRequest } from './cloud/friends';
@@ -108,7 +108,7 @@ import {
   type Consent,
 } from './consent';
 import { pickAIAction } from './ai';
-import { applyClaim, applyMove, createGame, pointsIfPlayed } from './game';
+import { applyAction, applyClaim, applyMove, createGame, pointsIfPlayed } from './game';
 import { getBoard } from './geometry';
 import {
   aiOpponentKey,
@@ -126,7 +126,7 @@ import {
   type Settings,
 } from './storage';
 import { DIFFICULTY_LABELS } from './types';
-import type { Difficulty, GameMode, GameState, Progress, ShapeId } from './types';
+import type { Difficulty, GameAction, GameMode, GameState, Progress, ShapeId } from './types';
 import { APP_VERSION } from './version';
 import { bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './telemetry';
 
@@ -302,11 +302,28 @@ export default function App() {
   // the GameOver variant to display.
   const dailyPuzzleIdRef = useRef<number | null>(null);
   const [dailyPuzzleResult, setDailyPuzzleResult] = useState<
-    { margin: number; best: number; attempts: number; attemptsRemaining: number; current: number; longest: number } | null
+    { score: number; best: number; attempts: number; attemptsRemaining: number; current: number; longest: number } | null
   >(null);
   // 2b-v2: subscribed view of today's per-user attempt doc + popover state.
   const [myDailyAttempt, setMyDailyAttempt] = useState<MyDailyAttempt | null>(null);
   const [puzzleLbOpen, setPuzzleLbOpen] = useState(false);
+  // Daily revamp — loading/error state while the shared puzzle def is fetched/generated.
+  const [dailyLoading, setDailyLoading] = useState(false);
+  const [dailyError, setDailyError] = useState<string | null>(null);
+  // Daily revamp — 3-minute player clock (Blitz). Ticks ONLY on the player's turn
+  // (current === 1); the AI's thinking time is free. remainingAtRefMs is the
+  // authoritative remaining ms at refTime; ClockBadge extrapolates the display.
+  // refTime === 0 / running false = frozen (banked). On reaching 0 the attempt
+  // ends with the current P1 score (handleDailyTimeout).
+  const DAILY_CLOCK_MS = 180_000;
+  const [dailyClock, setDailyClock] = useState<{
+    remainingAtRefMs: number;
+    refTime: number;
+    running: boolean;
+  }>({ remainingAtRefMs: DAILY_CLOCK_MS, refTime: 0, running: false });
+  const dailyTimeoutTimerRef = useRef<number | null>(null);
+  const dailyTimedOutRef = useRef(false);
+  const [dailyTimedOut, setDailyTimedOut] = useState(false);
 
   const updateSettings = (next: Settings) => {
     setSettings(next);
@@ -333,12 +350,20 @@ export default function App() {
     mode: GameMode,
     shape: ShapeId,
     difficulty?: Difficulty,
-    openingMoves?: number[],
+    opening?: GameAction[],
   ) => {
     if (aiTimer.current !== null) {
       clearTimeout(aiTimer.current);
       aiTimer.current = null;
     }
+    // Reset the daily clock for the new run (no-op visually for other modes).
+    if (dailyTimeoutTimerRef.current !== null) {
+      clearTimeout(dailyTimeoutTimerRef.current);
+      dailyTimeoutTimerRef.current = null;
+    }
+    dailyTimedOutRef.current = false;
+    setDailyTimedOut(false);
+    setDailyClock({ remainingAtRefMs: DAILY_CLOCK_MS, refTime: 0, running: false });
     // Clear transient visual state from the previous game so the new
     // board mounts clean. Without this, the stale scoreEvent from the
     // last scoring move re-fires Board's float-mount useEffect and a
@@ -369,15 +394,16 @@ export default function App() {
     }
     setConfig({ mode, shape, difficulty });
     let initial = createGame(shape, mode, difficulty);
-    // Daily-puzzle opening moves get applied here so the player starts
-    // mid-game on a pre-positioned board. applyMove enforces turn-passing
-    // so the player who's "up" after the opening alternates naturally.
-    if (mode === 'daily' && openingMoves && openingMoves.length > 0) {
-      for (const dotId of openingMoves) {
+    // Daily-puzzle seeded opening gets replayed here so the player starts
+    // mid-game on the shared pre-positioned board. The opening is an AI-vs-AI
+    // GameAction sequence (dot placements AND claims); applyAction enforces
+    // turn-passing so after the (even-length) opening it's the player's (P1) turn.
+    if (mode === 'daily' && opening && opening.length > 0) {
+      for (const action of opening) {
         try {
-          initial = applyMove(initial, dotId).state;
+          initial = applyAction(initial, action);
         } catch (e) {
-          console.warn('daily-puzzle opening move failed:', e);
+          console.warn('daily-puzzle opening action failed:', e);
         }
       }
     }
@@ -388,17 +414,32 @@ export default function App() {
     setScreen('game');
   };
 
-  // Phase 2b — load today's puzzle (lazy import keeps the library out of
-  // the initial bundle) and hand off to startGame with the puzzle's
-  // configured opening moves. Signed-in only — anonymous callers will see
-  // the disabled "Sign in to play" card on the menu instead.
+  // Daily revamp — fetch today's SHARED puzzle def from the server (random board
+  // + opponent level + AI-seeded opening, identical for everyone) and hand off to
+  // startGame. Signed-in only — anonymous callers see the disabled "Sign in to
+  // play" card. The first request of the day triggers server-side generation
+  // (can take ~1s), so we show a loading overlay while it resolves.
   const startDailyPuzzle = () => {
-    if (!user) return;
-    const puzzle = puzzleForDate();
-    dailyPuzzleIdRef.current = puzzle.id;
-    setDailyPuzzleResult(null);
-    trackEvent('daily_puzzle_started', { puzzle_id: puzzle.id, shape: puzzle.shape });
-    startGame('daily', puzzle.shape, puzzle.aiDifficulty, puzzle.openingMoves);
+    if (!user || dailyLoading) return;
+    setDailyLoading(true);
+    void (async () => {
+      try {
+        const def = await fetchDailyPuzzleDef();
+        dailyPuzzleIdRef.current = def.puzzleId;
+        setDailyPuzzleResult(null);
+        trackEvent('daily_puzzle_started', {
+          puzzle_id: def.puzzleId,
+          shape: def.shape,
+          difficulty: def.aiLevel,
+        });
+        startGame('daily', def.shape, def.aiLevel, def.opening);
+      } catch (e) {
+        console.warn('startDailyPuzzle failed:', e);
+        setDailyError("Couldn't load today's puzzle. Check your connection and try again.");
+      } finally {
+        setDailyLoading(false);
+      }
+    })();
   };
 
   const backToMenu = () => {
@@ -410,6 +451,13 @@ export default function App() {
     gameEndCounted.current = false;
     setDailyPuzzleResult(null);
     dailyPuzzleIdRef.current = null;
+    if (dailyTimeoutTimerRef.current !== null) {
+      clearTimeout(dailyTimeoutTimerRef.current);
+      dailyTimeoutTimerRef.current = null;
+    }
+    dailyTimedOutRef.current = false;
+    setDailyTimedOut(false);
+    setDailyClock({ remainingAtRefMs: DAILY_CLOCK_MS, refTime: 0, running: false });
     setScoreEvent(null);
     setActiveHint(null);
     setPendingFlash(false);
@@ -424,6 +472,76 @@ export default function App() {
     if (!config) return;
     startGame(config.mode, config.shape, config.difficulty);
   };
+
+  // Daily revamp — end the attempt when the player's 3-minute clock runs out.
+  // Force-finish on the current scores; the finalize effect (keyed on
+  // state.finished) then records the P1 score exactly like a natural end.
+  const handleDailyTimeout = () => {
+    if (dailyTimedOutRef.current) return;
+    dailyTimedOutRef.current = true;
+    setDailyTimedOut(true);
+    setDailyClock({ remainingAtRefMs: 0, refTime: 0, running: false });
+    setThinking(false);
+    if (aiTimer.current !== null) {
+      clearTimeout(aiTimer.current);
+      aiTimer.current = null;
+    }
+    setState((prev) => {
+      if (!prev || prev.finished) return prev;
+      const winner =
+        prev.scores[1] > prev.scores[2]
+          ? 1
+          : prev.scores[2] > prev.scores[1]
+            ? 2
+            : 'draw';
+      return { ...prev, finished: true, winner };
+    });
+  };
+
+  // Daily revamp — start/freeze the player clock as the turn flips. The clock
+  // runs only while it's the player's move (current === 1) on the game screen;
+  // the AI's turn freezes it (banking the elapsed time into remainingAtRefMs).
+  useEffect(() => {
+    if (!state || !config || config.mode !== 'daily') return;
+    const shouldRun = !state.finished && state.current === 1 && screen === 'game';
+    setDailyClock((prev) => {
+      if (shouldRun && !prev.running) {
+        return { remainingAtRefMs: prev.remainingAtRefMs, refTime: Date.now(), running: true };
+      }
+      if (!shouldRun && prev.running) {
+        const elapsed = prev.refTime > 0 ? Date.now() - prev.refTime : 0;
+        return {
+          remainingAtRefMs: Math.max(0, prev.remainingAtRefMs - elapsed),
+          refTime: 0,
+          running: false,
+        };
+      }
+      return prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.current, state?.finished, config?.mode, screen]);
+
+  // Daily revamp — fire the timeout exactly when the running clock hits zero.
+  useEffect(() => {
+    if (dailyTimeoutTimerRef.current !== null) {
+      clearTimeout(dailyTimeoutTimerRef.current);
+      dailyTimeoutTimerRef.current = null;
+    }
+    if (!dailyClock.running || dailyClock.refTime === 0) return;
+    const left = dailyClock.remainingAtRefMs - (Date.now() - dailyClock.refTime);
+    if (left <= 0) {
+      handleDailyTimeout();
+      return;
+    }
+    dailyTimeoutTimerRef.current = window.setTimeout(handleDailyTimeout, left);
+    return () => {
+      if (dailyTimeoutTimerRef.current !== null) {
+        clearTimeout(dailyTimeoutTimerRef.current);
+        dailyTimeoutTimerRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dailyClock]);
 
   useEffect(() => {
     if (!state || !config) return;
@@ -621,12 +739,12 @@ export default function App() {
       });
     }
 
-    // Phase 2b — daily-puzzle finalization. Writes the attempt doc + bumps
-    // the streak. Fires only for vs-AI puzzle wins/losses (signed-in by
-    // construction of the entry point). Result drives the GameOver variant.
+    // Daily-puzzle finalization. Writes the attempt doc + bumps the streak.
+    // Ranking metric is the player's raw P1 score (s1), not the margin — best of
+    // 3 attempts wins the day. Result drives the GameOver variant.
     if (config.mode === 'daily' && user) {
       const puzzleId = dailyPuzzleIdRef.current ?? -1;
-      const margin = s1 - s2;
+      const p1Score = s1;
       const dispName =
         cloudProfile?.displayName ??
         settings.playerName ??
@@ -641,10 +759,10 @@ export default function App() {
             displayName: dispName,
             utcDate,
             puzzleId,
-            margin,
+            p1Score,
           });
           setDailyPuzzleResult({
-            margin,
+            score: p1Score,
             best: result.best,
             attempts: result.attempts,
             attemptsRemaining: result.attemptsRemaining,
@@ -658,7 +776,7 @@ export default function App() {
           });
           trackEvent('daily_puzzle_solved', {
             puzzle_id: puzzleId,
-            margin,
+            score: p1Score,
             best: result.best,
             attempts: result.attempts,
             streak_current: result.streak.current,
@@ -666,8 +784,8 @@ export default function App() {
         } catch (e) {
           console.warn('finalizeDailyPuzzle failed:', e);
           setDailyPuzzleResult({
-            margin,
-            best: margin,
+            score: p1Score,
+            best: p1Score,
             attempts: 0,
             attemptsRemaining: 0,
             current: 0,
@@ -2291,6 +2409,24 @@ export default function App() {
             onClose={() => setPuzzleLbOpen(false)}
           />
         )}
+        {dailyLoading && (
+          <div className="daily-loading-overlay" role="status" aria-live="polite">
+            <div className="daily-loading-card">
+              <span className="daily-loading-spinner" aria-hidden="true" />
+              <span>Loading today&rsquo;s puzzle…</span>
+            </div>
+          </div>
+        )}
+        {dailyError && (
+          <div className="rules-overlay" role="dialog" aria-modal="true" onClick={() => setDailyError(null)}>
+            <div className="rules-card daily-error-card" onClick={(e) => e.stopPropagation()}>
+              <p>{dailyError}</p>
+              <button className="rules-got-it" onClick={() => setDailyError(null)}>
+                OK
+              </button>
+            </div>
+          </div>
+        )}
         {signInOpen && <SignInPopover onClose={() => setSignInOpen(false)} />}
         {!authLoading && !user && !gateDismissed && (
           <SignInPopover
@@ -2459,6 +2595,15 @@ export default function App() {
               {state.pending.length === 1 ? 'line to claim' : 'lines to claim'}
             </span>
           </div>
+          {config.mode === 'daily' && (
+            <div className="daily-clock-wrap" title="Your time for this attempt">
+              <ClockBadge
+                remainingAtRefMs={dailyClock.remainingAtRefMs}
+                refTime={dailyClock.refTime}
+                isRunning={dailyClock.running}
+              />
+            </div>
+          )}
           {showRingsToggle && (
             <button
               type="button"
@@ -2543,6 +2688,7 @@ export default function App() {
           onMenu={backToMenu}
           onStartShape={(s, d) => startGame('ai', s, d)}
           dailyResult={dailyPuzzleResult}
+          dailyTimedOut={dailyTimedOut}
           onTryDailyAgain={startDailyPuzzle}
           onOpenPuzzleLeaderboard={() => setPuzzleLbOpen(true)}
         />

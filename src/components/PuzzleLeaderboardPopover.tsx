@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { dateToUtcKey } from '../dailyPuzzles';
 import {
-  watchTodaysLeaderboard,
   fetchRecentDailyWinners,
-  type LeaderboardEntry,
   type DailyWinner,
 } from '../cloud/dailyLeaderboard';
 
@@ -26,14 +24,12 @@ function fmtDate(date: string, todayKey: string): string {
   return `${MONTHS[m - 1] ?? '?'} ${d}`;
 }
 
-// Phase 2b-v3 — daily-puzzle leaderboard popover. Two tabs: today's full board
-// and the winner of each of the last 30 days.
+// Daily-puzzle leaderboard — a single list of the WINNER of each of the last 30
+// played days (newest first), shown with the date. Today is the top row once
+// someone has finished today's puzzle. Ranked by P1 score.
 export function PuzzleLeaderboardPopover({ myUid, onClose }: Props) {
   const today = dateToUtcKey();
-  const [tab, setTab] = useState<'today' | 'recent'>('today');
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [recent, setRecent] = useState<DailyWinner[] | null>(null);
+  const [winners, setWinners] = useState<DailyWinner[] | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -44,23 +40,14 @@ export function PuzzleLeaderboardPopover({ myUid, onClose }: Props) {
   }, [onClose]);
 
   useEffect(() => {
-    return watchTodaysLeaderboard(today, (next) => {
-      setEntries(next);
-      setLoaded(true);
-    });
-  }, [today]);
-
-  // Lazily load the 30-day winner history the first time the tab is opened.
-  useEffect(() => {
-    if (tab !== 'recent' || recent !== null) return;
     let alive = true;
     fetchRecentDailyWinners(30).then((w) => {
-      if (alive) setRecent(w);
+      if (alive) setWinners(w);
     });
     return () => {
       alive = false;
     };
-  }, [tab, recent]);
+  }, []);
 
   const onBackdrop = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose();
@@ -80,88 +67,35 @@ export function PuzzleLeaderboardPopover({ myUid, onClose }: Props) {
         </button>
 
         <header className="rules-header">
-          <h2>Puzzle leaderboard</h2>
+          <h2>Daily winners</h2>
           <p className="rules-tagline">
-            Highest margin wins. Ties broken by who finished first. Resets at
-            midnight UTC.
+            Highest score takes the day. Ties broken by who finished first.
+            Resets at midnight UTC.
           </p>
         </header>
 
-        <div className="rankings-view-toggle puzzle-lb-tabs">
-          <button
-            type="button"
-            className={`rankings-pill ${tab === 'today' ? 'active' : ''}`}
-            onClick={() => setTab('today')}
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            className={`rankings-pill ${tab === 'recent' ? 'active' : ''}`}
-            onClick={() => setTab('recent')}
-          >
-            Recent winners
-          </button>
-        </div>
-
         <div className="puzzle-lb-body">
-          {tab === 'today' ? (
-            !loaded ? (
-              <p className="settings-hint">Loading…</p>
-            ) : entries.length === 0 ? (
-              <p className="settings-hint">
-                No entries yet today. Be the first to play today&rsquo;s puzzle.
-              </p>
-            ) : (
-              <ol className="puzzle-lb-list">
-                {entries.map((e, i) => {
-                  const isMe = myUid !== null && e.uid === myUid;
-                  return (
-                    <li
-                      key={e.uid}
-                      className={`puzzle-lb-row${isMe ? ' puzzle-lb-row-me' : ''}`}
-                    >
-                      <span className="puzzle-lb-rank">{i + 1}</span>
-                      <span className="puzzle-lb-name" title={e.displayName}>
-                        {e.displayName}
-                        {isMe && <span className="puzzle-lb-you"> (you)</span>}
-                      </span>
-                      <span className="puzzle-lb-margin">
-                        {e.best > 0 ? '+' : ''}
-                        {e.best}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ol>
-            )
-          ) : recent === null ? (
+          {winners === null ? (
             <p className="settings-hint">Loading…</p>
+          ) : winners.length === 0 ? (
+            <p className="settings-hint">
+              No one has finished a daily puzzle yet. Be the first.
+            </p>
           ) : (
             <ol className="puzzle-lb-list puzzle-lb-winners">
-              {recent.map((d) => {
-                const isMe =
-                  d.winner !== null && myUid !== null && d.winner.uid === myUid;
+              {winners.map((d) => {
+                const isMe = myUid !== null && d.winner.uid === myUid;
                 return (
                   <li
                     key={d.date}
                     className={`puzzle-lb-row${isMe ? ' puzzle-lb-row-me' : ''}`}
                   >
                     <span className="puzzle-lb-date">{fmtDate(d.date, today)}</span>
-                    <span
-                      className="puzzle-lb-name"
-                      title={d.winner?.displayName ?? undefined}
-                    >
-                      {d.winner ? (
-                        d.winner.displayName
-                      ) : (
-                        <span className="puzzle-lb-empty">No entries</span>
-                      )}
+                    <span className="puzzle-lb-name" title={d.winner.displayName}>
+                      {d.winner.displayName}
                       {isMe && <span className="puzzle-lb-you"> (you)</span>}
                     </span>
-                    <span className="puzzle-lb-margin">
-                      {d.winner ? `${d.winner.best > 0 ? '+' : ''}${d.winner.best}` : ''}
-                    </span>
+                    <span className="puzzle-lb-margin">{d.winner.best}</span>
                   </li>
                 );
               })}

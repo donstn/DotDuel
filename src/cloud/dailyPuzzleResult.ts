@@ -8,13 +8,14 @@ import { supabase } from '../supabase';
 export const MAX_ATTEMPTS_PER_DAY = 3;
 
 export interface FinalizeArgs {
-  // uid + displayName are accepted for call-site compatibility but ignored —
-  // the RPC derives both from the authenticated Supabase session.
+  // uid is accepted for call-site compatibility but ignored — the RPC derives it
+  // from the authenticated Supabase session. displayName IS used (synced to the
+  // profile + shown on the leaderboard).
   uid: string;
   displayName: string;
   utcDate: string; // 'YYYY-MM-DD'
   puzzleId: number;
-  margin: number; // human score - AI score
+  p1Score: number; // the player's raw P1 score (ranking metric)
 }
 
 export interface FinalizeResult {
@@ -39,7 +40,7 @@ export async function finalizeDailyPuzzle(
   const { data, error } = await supabase.rpc('finalize_daily', {
     p_utc_date: args.utcDate,
     p_puzzle_id: args.puzzleId,
-    p_margin: args.margin,
+    p_p1_score: args.p1Score,
     p_display_name: args.displayName,
   });
   if (error) throw new Error(error.message);

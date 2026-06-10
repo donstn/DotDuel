@@ -208,8 +208,7 @@ export function Menu({
                     >
                       <strong>Today&rsquo;s puzzle</strong>
                       <span>
-                        ✓ Done · best {(best ?? 0) > 0 ? '+' : ''}
-                        {best ?? 0} · resets midnight UTC
+                        ✓ Done · best {best ?? 0} · resets midnight UTC
                       </span>
                     </button>
                   );
@@ -220,7 +219,6 @@ export function Menu({
                       <strong>Today&rsquo;s puzzle</strong>
                       <span>
                         Attempt {attempts + 1}/{MAX_ATTEMPTS_PER_DAY} · best{' '}
-                        {(best ?? 0) > 0 ? '+' : ''}
                         {best ?? 0}
                       </span>
                     </button>
@@ -230,7 +228,7 @@ export function Menu({
                   <button className="menu-card" onClick={onStartDailyPuzzle}>
                     <strong>Today&rsquo;s puzzle</strong>
                     <span>
-                      {MAX_ATTEMPTS_PER_DAY} attempts. Beat the AI by the biggest margin.
+                      {MAX_ATTEMPTS_PER_DAY} attempts · 3 min · highest score wins.
                     </span>
                   </button>
                 );

@@ -48,19 +48,22 @@ interface Props {
   /** Sends a friend request to the opponent. Undefined to suppress the
    *  button entirely (e.g., in vs-AI mode or when caller isn't signed in). */
   onAddOpponentAsFriend?: () => Promise<void>;
-  /** Phase 2b-v2 — daily-puzzle finalize result. When present + mode='daily',
-   *  renders the daily variant: margin, best, streak, attempts-remaining,
-   *  Try-again / View-leaderboard CTAs. */
+  /** Daily-puzzle finalize result. When present + mode='daily', renders the
+   *  daily variant: P1 score, best, streak, attempts-remaining, Try-again /
+   *  View-leaderboard CTAs. */
   dailyResult?: {
-    margin: number;
+    score: number;
     best: number;
     attempts: number;
     attemptsRemaining: number;
     current: number;
     longest: number;
   } | null;
-  /** Phase 2b-v2 — start another daily-puzzle attempt (only when attempts
-   *  remain). Tied to startDailyPuzzle in App.tsx. */
+  /** Daily revamp — true when the attempt ended because the 3-minute clock ran
+   *  out (vs. the board finishing naturally). */
+  dailyTimedOut?: boolean;
+  /** Start another daily-puzzle attempt (only when attempts remain). Tied to
+   *  startDailyPuzzle in App.tsx. */
   onTryDailyAgain?: () => void;
   /** Phase 2b-v2 — open the public puzzle leaderboard from GameOver. */
   onOpenPuzzleLeaderboard?: () => void;
@@ -181,6 +184,7 @@ export function GameOver({
   opponentIsFriend,
   onAddOpponentAsFriend,
   dailyResult,
+  dailyTimedOut,
   onTryDailyAgain,
   onOpenPuzzleLeaderboard,
 }: Props) {
@@ -302,19 +306,14 @@ export function GameOver({
           <div className="go-daily-result">
             {dailyResult ? (
               <>
+                {dailyTimedOut && (
+                  <div className="go-daily-timeout">⏱ Time&rsquo;s up</div>
+                )}
                 <div className="go-daily-margin">
-                  This run:{' '}
-                  <strong>
-                    {dailyResult.margin > 0 ? '+' : ''}
-                    {dailyResult.margin}
-                  </strong>
+                  Your score: <strong>{dailyResult.score}</strong>
                 </div>
                 <div className="go-daily-best">
-                  Best today:{' '}
-                  <strong>
-                    {dailyResult.best > 0 ? '+' : ''}
-                    {dailyResult.best}
-                  </strong>
+                  Best today: <strong>{dailyResult.best}</strong>
                   <span className="go-daily-attempts">
                     {' '}
                     · attempt {dailyResult.attempts}/3

@@ -155,3 +155,10 @@ vite.config.ts.timestamp-*
 final_review_age_based_before_pushing.txt
 monetization_plan.md
 supabase/functions/_shared/engine/
+
+# Session scratchpad — current prompt + live findings, survives restarts.
+# Cleaned out once the prompt is fulfilled into code.
+promts.md
+
+# Local Android WebView test screenshots / helper scripts (not shipped).
+.android-test-shots/

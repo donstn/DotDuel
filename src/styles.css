@@ -117,9 +117,16 @@
   --bevel-shade: rgba(0, 0, 0, 0.28);
   --press-translate: 2px;
   --press-scale: 0.985;
-  --accent-hi: color-mix(in srgb, var(--accent), white 20%);
-  --accent-lo: color-mix(in srgb, var(--accent), black 26%);
-  --accent-edge: color-mix(in srgb, var(--accent), white 42%);
+  /* accent-hi/-lo/-edge and the rim lip were color-mix() (Chromium 111+), which
+     rendered nothing on older WebViews — buttons/bezel lost their gradient. They
+     derive from a FIXED per-theme --accent/--board-felt, so they're precomputed
+     to static values here (and overridden literally in every [data-theme] block,
+     since those re-resolved the :root color-mix against their own accent/felt).
+     --accent-rgb is the accent's R,G,B for rgba() shadow/focus tints below. */
+  --accent-rgb: 123, 219, 149;
+  --accent-hi: #95e2aa;
+  --accent-lo: #5ba26e;
+  --accent-edge: #b2eac2;
   --accent-shadow: var(--accent);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
   --t-press: 90ms;
@@ -127,9 +134,9 @@
 
   /* Board bezel: rim derives from the felt so it harmonizes with every theme.
      Lit lip (rim-hi/mid/lo gradient stroke) + dark interior contact band. */
-  --rim-hi: color-mix(in srgb, var(--board-felt-1), white 14%);
+  --rim-hi: #37473e;
   --rim-mid: var(--board-felt-1);
-  --rim-lo: color-mix(in srgb, var(--board-felt-2), black 34%);
+  --rim-lo: #07100c;
   --rim-contact: rgba(0, 0, 0, 0.5);
   --rim-drop: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
 }
@@ -159,6 +166,12 @@
   --bg-center: #1a0e2e;
   --bg-edge: #02010a;
   --accent: #f5d76a;
+  --accent-rgb: 245, 215, 106;
+  --accent-hi: #f7df88;
+  --accent-lo: #b59f4e;
+  --accent-edge: #f9e8a9;
+  --rim-hi: #3e344d;
+  --rim-lo: #0d0715;
 
   /* Board belongs to the theme: deep aubergine felt + violet-tinted sockets
      (was inheriting the default green felt). Rim lip auto-derives from felt. */
@@ -205,6 +218,12 @@
   --bg-center: #1a1f2a;
   --bg-edge: #02060a;
   --accent: #5fb3d4;
+  --accent-rgb: 95, 179, 212;
+  --accent-hi: #7fc2dd;
+  --accent-lo: #46849d;
+  --accent-edge: #a2d3e6;
+  --rim-hi: #3c424b;
+  --rim-lo: #0c0f14;
 
   /* Cool slate felt + steel-tinted sockets — suits both the wine-red P1 and
      sky-blue P2 (was inheriting the default green felt). */
@@ -251,6 +270,12 @@
   --bg-center: #3a2418;
   --bg-edge: #0d0604;
   --accent: #e0a050;
+  --accent-rgb: 224, 160, 80;
+  --accent-hi: #e6b373;
+  --accent-lo: #a6763b;
+  --accent-edge: #edc89a;
+  --rim-hi: #52443a;
+  --rim-lo: #180f0b;
 
   /* Warm umber wood felt + earthy sockets — a Catan-style table (was inheriting
      the default green felt). Terracotta P1 + parchment P2 both read on it. */
@@ -297,6 +322,12 @@
   --bg-center: #0a2030;
   --bg-edge: #01060a;
   --accent: #ff8c5a;
+  --accent-rgb: 255, 140, 90;
+  --accent-hi: #ffa37b;
+  --accent-lo: #bd6843;
+  --accent-edge: #ffbc9f;
+  --rim-hi: #2e444d;
+  --rim-lo: #040f15;
 
   /* Deep ocean-floor felt + teal-tinted sockets (was inheriting the default
      green felt). Coral P2 pops; teal P1 stays lighter than the felt + rim. */
@@ -343,6 +374,12 @@
   --bg-center: #0c0a1a;
   --bg-edge: #02010a;
   --accent: #67e8f9;
+  --accent-rgb: 103, 232, 249;
+  --accent-hi: #85edfa;
+  --accent-lo: #4cacb8;
+  --accent-edge: #a7f2fc;
+  --rim-hi: #353346;
+  --rim-lo: #070510;
 
   /* Deep-space indigo felt + cosmic sockets (was inheriting the default green
      felt). Cyan P2 pops; indigo P1 stays lighter than the felt + rim. */
@@ -390,8 +427,8 @@
   /* Board bezel — felt-toned lit lip (never brighter than the near-white felt);
      depth carried by the crisp dark contact band. */
   --rim-hi: var(--board-felt-1);
-  --rim-mid: color-mix(in srgb, var(--board-felt-1), #b9b9bd 35%);
-  --rim-lo: color-mix(in srgb, var(--board-felt-2), #2a2a2c 22%);
+  --rim-mid: #ddddde;
+  --rim-lo: #bababa;
   --rim-contact: rgba(20, 20, 22, 0.42);
   --scrim: rgba(228, 222, 210, 0.78);
   --p1-glow: #2c2c2e;
@@ -435,6 +472,10 @@
   --title-grad-bottom: #5a5a5c;
 
   --accent: #1a1a1c;
+  --accent-rgb: 26, 26, 28;
+  --accent-hi: #484849;
+  --accent-lo: #131315;
+  --accent-edge: #7a7a7b;
 }
 
 /* ---------- THEME 8: Vintage Press (LIGHT — burgundy ink + navy ink on parchment) ----------
@@ -463,8 +504,8 @@
   --bevel-shade: rgba(55, 40, 18, 0.16);
   /* Board bezel — warm felt-toned lit lip; depth via the dark contact band. */
   --rim-hi: var(--board-felt-1);
-  --rim-mid: color-mix(in srgb, var(--board-felt-1), #c8b88f 35%);
-  --rim-lo: color-mix(in srgb, var(--board-felt-2), #5a4326 22%);
+  --rim-mid: #dfd3b4;
+  --rim-lo: #c0b192;
   --rim-contact: rgba(70, 48, 22, 0.42);
   --scrim: rgba(238, 229, 208, 0.78);
   --p1-glow: #a82a3e;
@@ -510,6 +551,10 @@
   --title-grad-bottom: #1a3a4a;
 
   --accent: #8b1a2b;
+  --accent-rgb: 139, 26, 43;
+  --accent-hi: #a24855;
+  --accent-lo: #671320;
+  --accent-edge: #bc7a84;
 }
 
 /* Vintage Press: the global provisional-badge styling uses a pale
@@ -953,7 +998,7 @@ button {
   font-weight: 700;
   font-size: 1rem;
   border: 1px solid var(--accent-edge);
-  box-shadow: 0 6px 22px color-mix(in srgb, var(--accent-shadow) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 22px rgba(var(--accent-rgb), 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   cursor: pointer;
   transition: background 160ms, transform 140ms;
 }
@@ -2313,7 +2358,7 @@ h1, h2, h3,
   font-weight: 600;
   font-size: 0.9rem;
   border: 1px solid var(--accent-edge);
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent-shadow) 40%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   transition: background 160ms, transform 140ms;
 }
 
@@ -2397,8 +2442,8 @@ h1, h2, h3,
 /* Focus tint was hard-coded green (default-theme P1) — off-brand on the other
    7 themes. Derive from --accent so it follows every scheme. */
 .settings-input:focus {
-  border-color: color-mix(in srgb, var(--accent), transparent 28%);
-  background: color-mix(in srgb, var(--accent), transparent 90%);
+  border-color: rgba(var(--accent-rgb), 0.72);
+  background: rgba(var(--accent-rgb), 0.1);
 }
 
 .settings-toggle {
@@ -2792,7 +2837,7 @@ h1, h2, h3,
   background: linear-gradient(180deg, var(--accent-hi), var(--accent-lo));
   color: var(--on-accent);
   border-color: var(--accent-edge);
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent-shadow) 40%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .game-over-buttons .primary:hover {
@@ -2852,20 +2897,10 @@ h1, h2, h3,
 
 /* ---------------- GDPR consent banner ---------------- */
 
-/* When the banner is present anywhere in the document, reserve room
-   for it at the bottom of the game screen so it doesn't overlay the
-   board's last rows. CSS :has() is supported on all modern browsers
-   as of mid-2023. */
-body:has(.consent-banner) .game-screen {
-  padding-bottom: 110px;
-}
-
-@media (max-width: 720px) {
-  body:has(.consent-banner) .game-screen {
-    /* Banner is taller on narrow phones (text wraps to 3 lines). */
-    padding-bottom: 160px;
-  }
-}
+/* Consent-banner space-reservation rules were removed: the banner is retired
+   (ConsentBanner renders null) and CSS :has() isn't supported on old WebViews
+   (< Chromium 105). If a banner returns, reserve space via a JS-toggled
+   body.has-consent-banner class instead of a :has() selector. */
 
 .consent-banner {
   position: fixed;
@@ -3726,20 +3761,6 @@ body:has(.consent-banner) .game-screen {
   }
 }
 
-/* ---------------- Popover + consent-banner overlap (all sizes) ----------------
- * If the consent banner is showing at the bottom of the viewport, the
- * popover overlay must reserve room above it so the popup isn't
- * covered. ~110px on desktop where the banner is one row, more on
- * mobile (handled inside the mobile @media block).
- */
-body:has(.consent-banner) .rules-overlay {
-  padding-bottom: 110px;
-}
-body:has(.consent-banner) .rules-card {
-  max-height: calc(85vh - 100px);
-  max-height: min(calc(85vh - 100px), calc(85dvh - 100px), calc(85svh - 100px));
-}
-
 /* ---------------- Popovers on mobile ----------------
  * Make Rules / Settings / Theme / Privacy / Changelog popovers fit
  * within the visible viewport on phones, with the close ✕ button
@@ -3784,21 +3805,6 @@ body:has(.consent-banner) .rules-card {
 
   .rules-footer-bar {
     padding: 8px 14px 10px;
-  }
-
-  /* The cookie consent banner is fixed at the bottom of the viewport.
-     When it's visible, both the overlay and the card need to leave
-     room for it so the Done / close-area isn't covered. */
-  body:has(.consent-banner) .rules-overlay {
-    /* Reserve room at the bottom for the consent banner so the
-       popover doesn't get covered. ~150px is enough for the
-       wrapped 3-line banner on a phone. */
-    padding-bottom: 150px;
-  }
-  body:has(.consent-banner) .rules-card {
-    /* Same 95% rule, just trimmed by the reserved 150px. */
-    max-height: calc(95vh - 150px);
-    max-height: min(calc(95vh - 150px), calc(95dvh - 150px), calc(95svh - 150px));
   }
 
   /* Footer pill must wrap to 2+ lines if needed — never let it
@@ -4430,6 +4436,63 @@ body:has(.consent-banner) .rules-card {
 @keyframes clockLowPulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(220, 80, 80, 0.35); }
   50%      { box-shadow: 0 0 0 6px rgba(220, 80, 80, 0); }
+}
+
+/* Daily-puzzle 3-minute clock in the game topbar. */
+.daily-clock-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* Daily-puzzle "Time's up" note in GameOver. */
+.go-daily-timeout {
+  color: #ffb4b4;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+
+/* Daily-puzzle loading overlay (while the shared def is fetched/generated). */
+.daily-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 9, 11, 0.55);
+  backdrop-filter: blur(4px) saturate(120%);
+}
+
+.daily-loading-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 22px;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-bright);
+  font-weight: 600;
+}
+
+.daily-loading-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(123, 219, 149, 0.3);
+  border-top-color: var(--accent);
+  animation: dailySpin 0.8s linear infinite;
+}
+
+@keyframes dailySpin {
+  to { transform: rotate(360deg); }
+}
+
+.daily-error-card {
+  max-width: 320px;
+  text-align: center;
 }
 
 .match-found-ready {
@@ -5635,7 +5698,7 @@ body:has(.consent-banner) .rules-card {
     inset 0 1px 0 var(--bevel-light),
     inset 0 -2px 4px var(--bevel-shade),
     0 2px 4px rgba(0, 0, 0, 0.28),
-    0 8px 20px -4px color-mix(in srgb, var(--accent-shadow) 45%, transparent);
+    0 8px 20px -4px rgba(var(--accent-rgb), 0.45);
   transition:
     transform var(--t-press) var(--ease-spring),
     box-shadow var(--t-press) ease,
@@ -5667,7 +5730,7 @@ body:has(.consent-banner) .rules-card {
     inset 0 1px 0 var(--bevel-light),
     inset 0 -2px 4px var(--bevel-shade),
     0 4px 8px rgba(0, 0, 0, 0.3),
-    0 14px 30px -6px color-mix(in srgb, var(--accent-shadow) 55%, transparent);
+    0 14px 30px -6px rgba(var(--accent-rgb), 0.55);
 }
 .hotseat-start:active:not(:disabled),
 .rules-got-it:active:not(:disabled),

@@ -8,6 +8,14 @@ import { VitePWA } from 'vite-plugin-pwa';
 // once GitHub Pages recognises the CNAME.
 export default defineConfig(() => ({
   base: '/',
+  // Explicit JS floor. Vite's implicit default ('modules' ≈ Chrome 87) is left
+  // as-is here but made reviewable: this is the oldest WebView the bundle is
+  // guaranteed to parse. Capacitor minSdk is 24 (Android 7), but devices with an
+  // updated System WebView run current Chromium regardless of OS version, so
+  // chrome87 covers the active fleet. To reach stock/un-updated old WebViews
+  // (< Chrome 87) you'd add @vitejs/plugin-legacy (deferred — needs polyfills,
+  // not just a lower syntax target).
+  build: { target: 'chrome87' },
   plugins: [
     react(),
     // Auto-updating service worker so home-screen / installed instances pick up

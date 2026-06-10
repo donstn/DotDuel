@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.2.0',
+    date: '2026-06-10',
+    highlight: 'Daily puzzle reborn — one shared board, race the clock',
+    changes: [
+      {
+        kind: 'added',
+        text: "The daily puzzle is now the same board for everyone, every day: a random shape with a pre-played opening, then 3 minutes on the clock to rack up the highest score. Best of 3 attempts.",
+      },
+      {
+        kind: 'changed',
+        text: "Daily ranking is now by your score (not the margin vs the AI), and the leaderboard shows each day's winner for the last 30 days.",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.1.0',
     date: '2026-06-10',
     highlight: 'Color themes restyle the whole board',

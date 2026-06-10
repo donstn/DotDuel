@@ -79,8 +79,14 @@ Deno.serve(async (req) => {
     }
     if (!best) return json({ matched: false });
 
-    // earlier-joined player is P1 (chess colour convention)
-    const meFirst = new Date(me.joined_at).getTime() <= new Date(best.joined_at).getTime();
+    // P1 (first mover) is a coin flip, so over many matches each player is P1
+    // ~50% of the time. This matters because a shape can favour the first or
+    // second mover (e.g. triangle favours P2). Rematches then alternate from
+    // here (see set_rematch / spawn_rematch), so a pair trades sides game to
+    // game. Was previously join-order based, which skewed toward whoever waited
+    // longer in the queue. Both clients read p1_uid/p2_uid off the created game
+    // row, so they agree regardless of which side won the coin flip.
+    const meFirst = Math.random() < 0.5;
     const p1 = meFirst ? me : best;
     const p2 = meFirst ? best : me;
 

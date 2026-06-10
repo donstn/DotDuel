@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.3.0',
+    date: '2026-06-10',
+    highlight: 'Cleaner board, bigger text',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Removed the in-game tip bubbles that popped up mid-match — they flashed by too fast to read and got in the way. The Rules screen and the "See unclaimed lines" view still teach the scoring.',
+      },
+      {
+        kind: 'changed',
+        text: 'Bumped every bit of small text up to a minimum readable size across the whole app for better legibility and accessibility.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.2.0',
     date: '2026-06-10',
     highlight: 'Daily puzzle reborn — one shared board, race the clock',

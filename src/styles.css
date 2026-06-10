@@ -783,7 +783,7 @@ button {
   backdrop-filter: blur(10px) saturate(1.4);
   -webkit-backdrop-filter: blur(10px) saturate(1.4);
   color: var(--accent);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   letter-spacing: 0.04em;
   font-weight: 600;
 }
@@ -1037,7 +1037,7 @@ button {
   max-width: 100%;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.32),
               0 1px 0 rgba(255, 255, 255, 0.06) inset;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--text-mute);
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -1066,7 +1066,7 @@ button {
   .app-footer-inner {
     gap: 8px;
     padding: 6px 12px;
-    font-size: 0.68rem;
+    font-size: 0.75rem;
   }
   .app-footer {
     padding: 6px 8px max(8px, env(safe-area-inset-bottom));
@@ -1121,7 +1121,7 @@ button {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-bright);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
@@ -1141,7 +1141,7 @@ button {
 }
 
 .go-rating-label {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-mute);
@@ -1312,7 +1312,7 @@ button {
   border-radius: 999px;
   background: rgba(255, 214, 128, 0.12);
   border: 1px solid rgba(255, 214, 128, 0.4);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: #ffd680;
   letter-spacing: 0.02em;
   animation: pendingPulse 1.8s ease-in-out infinite;
@@ -1520,7 +1520,7 @@ button {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   color: var(--text);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -1571,7 +1571,7 @@ button {
 
 @media (max-width: 720px) {
   .btn-claim-toggle {
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     padding: 2px 6px 2px 9px;
     gap: 6px;
   }
@@ -1654,7 +1654,7 @@ button {
 }
 
 .remaining-label {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--text-dim);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1770,7 +1770,7 @@ button {
 }
 
 .player-name {
-  font-size: clamp(0.72rem, 2.3vw, 0.92rem);
+  font-size: clamp(0.75rem, 2.3vw, 0.92rem);
   font-weight: 600;
   color: var(--text);
   text-align: center;
@@ -1782,7 +1782,7 @@ button {
 }
 
 .player-rating {
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   color: var(--text-mute);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1800,7 +1800,7 @@ button {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   line-height: 1.1;
   color: var(--text-dim);
   white-space: nowrap;
@@ -1811,7 +1811,7 @@ button {
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text-mute);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   min-width: 28px;
   text-transform: uppercase;
 }
@@ -1840,12 +1840,12 @@ button {
 .stats-pct {
   font-weight: 700;
   color: var(--text);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   letter-spacing: 0.01em;
 }
 
 .stats-empty {
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-style: italic;
   color: var(--text-mute);
   opacity: 0.7;
@@ -1853,10 +1853,10 @@ button {
 
 @media (max-width: 380px) {
   .stats-line {
-    font-size: 0.62rem;
+    font-size: 0.75rem;
   }
   .stats-pct {
-    font-size: 0.66rem;
+    font-size: 0.75rem;
   }
 }
 
@@ -1902,7 +1902,7 @@ button {
   display: flex;
   align-items: baseline;
   gap: 4px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   line-height: 1.15;
   color: var(--text-dim);
   white-space: nowrap;
@@ -1933,20 +1933,20 @@ button {
 
 .pt-avg {
   margin-left: auto;
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   color: var(--text-mute);
   letter-spacing: 0.01em;
 }
 
 @media (max-width: 380px) {
   .pt-row {
-    font-size: 0.66rem;
+    font-size: 0.75rem;
   }
   .pt-value {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
   }
   .pt-avg {
-    font-size: 0.58rem;
+    font-size: 0.75rem;
   }
 }
 
@@ -2663,7 +2663,7 @@ h1, h2, h3,
 }
 
 .final-score span {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -3079,10 +3079,10 @@ h1, h2, h3,
   }
   .btn-resign-inline {
     padding: 4px 8px;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
   }
   .remaining-value { font-size: 1rem; }
-  .remaining-label { font-size: 0.66rem; }
+  .remaining-label { font-size: 0.75rem; }
   .side-panel {
     padding: 6px;
     gap: 4px;
@@ -3095,7 +3095,7 @@ h1, h2, h3,
   }
   .app-footer-inner {
     padding: 5px 12px;
-    font-size: 0.66rem;
+    font-size: 0.75rem;
     gap: 8px;
   }
 }
@@ -3137,7 +3137,7 @@ h1, h2, h3,
   position: absolute;
   top: 2px;
   left: 6px;
-  font-size: 0.55rem;
+  font-size: 0.75rem;
   color: var(--text-dim);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -3194,7 +3194,7 @@ h1, h2, h3,
   color: var(--text);
 }
 .ad-slot-preview-text {
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-mute);
@@ -3228,7 +3228,7 @@ h1, h2, h3,
 
 .rankings-subject-tag {
   display: inline-block;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -3348,7 +3348,7 @@ h1, h2, h3,
 }
 
 .rankings-global-me-tag {
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -3420,7 +3420,7 @@ h1, h2, h3,
   z-index: 1;
   text-align: left;
   font-weight: 600;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -3462,7 +3462,7 @@ h1, h2, h3,
 .rankings-table th .sort-glyph {
   display: inline-block;
   margin-left: 4px;
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   opacity: 0.6;
 }
 
@@ -3721,7 +3721,7 @@ h1, h2, h3,
 
   .btn-resign-inline {
     padding: 3px 9px;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
   }
 
   .player-score {
@@ -3744,7 +3744,7 @@ h1, h2, h3,
      (ratingSlot or rating prop), so in vs-AI / hot-seat where the
      rating prop is undefined the slot is absent entirely. */
   .player-rating {
-    font-size: 0.74rem;
+    font-size: 0.75rem;
     padding: 0;
     margin-top: 1px;
     color: var(--text-dim);
@@ -3874,7 +3874,7 @@ h1, h2, h3,
     width: clamp(28px, 8.5vh, 40px);
   }
   .player-name {
-    font-size: 0.74rem;
+    font-size: 0.75rem;
   }
   .player-score {
     font-size: 1.4rem;
@@ -3902,13 +3902,13 @@ h1, h2, h3,
     font-size: 0.92rem;
   }
   .menu-card-rank span {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
   }
   .menu-card strong {
     font-size: 0.92rem;
   }
   .menu-card span {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
   }
   .title {
     font-size: clamp(1.5rem, 4.5vh, 2.1rem);
@@ -3919,7 +3919,7 @@ h1, h2, h3,
     max-width: 480px;
   }
   .version-badge {
-    font-size: 0.6rem;
+    font-size: 0.75rem;
     padding: 3px 10px;
   }
 }
@@ -4012,7 +4012,7 @@ h1, h2, h3,
     font-size: 0.8rem;
   }
   .theme-swatch-label span {
-    font-size: 0.66rem;
+    font-size: 0.75rem;
   }
 }
 
@@ -4100,7 +4100,7 @@ h1, h2, h3,
 }
 
 .theme-swatch-label span {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--text-dim);
   line-height: 1.3;
 }
@@ -4109,7 +4109,7 @@ h1, h2, h3,
   position: absolute;
   top: 6px;
   right: 6px;
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -4164,7 +4164,7 @@ h1, h2, h3,
 
 .app-footer-version {
   color: var(--text-mute);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   letter-spacing: 0.02em;
 }
 
@@ -4220,7 +4220,7 @@ h1, h2, h3,
 }
 
 .changelog-date {
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   color: var(--text-mute);
   letter-spacing: 0.04em;
 }
@@ -4244,7 +4244,7 @@ h1, h2, h3,
 
 .changelog-group h4 {
   margin: 0 0 4px;
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -4278,7 +4278,7 @@ h1, h2, h3,
 
 .menu-card-sub {
   color: var(--text-mute);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   margin-top: 2px;
 }
 
@@ -4373,7 +4373,7 @@ h1, h2, h3,
 
 .match-found-tag {
   color: var(--text-mute);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -4496,7 +4496,7 @@ h1, h2, h3,
 }
 
 .match-found-ready {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   letter-spacing: 0.04em;
   color: var(--text-mute);
   margin-top: 4px;
@@ -4585,7 +4585,7 @@ h1, h2, h3,
   align-items: center;
   gap: 10px;
   color: var(--text-mute);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -4885,7 +4885,7 @@ h1, h2, h3,
 }
 
 .provisional-badge {
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   padding: 2px 7px;
@@ -4899,7 +4899,7 @@ h1, h2, h3,
 .bot-tag {
   display: inline-block;
   margin-left: 6px;
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 2px 6px;
@@ -4919,7 +4919,7 @@ h1, h2, h3,
 }
 
 .match-history-label {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-mute);
@@ -4953,7 +4953,7 @@ h1, h2, h3,
   width: 22px;
   height: 22px;
   border-radius: 6px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -5009,7 +5009,7 @@ h1, h2, h3,
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--glass-border);
   color: var(--text-dim);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   letter-spacing: 0.04em;
   cursor: pointer;
   transition: background 140ms, color 140ms;
@@ -5109,7 +5109,7 @@ h1, h2, h3,
   background: rgba(0, 0, 0, 0.92);
   color: #c8f0d4;
   font-family: ui-monospace, Menlo, Consolas, monospace;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.45;
   z-index: 9999;
   display: flex;
@@ -5140,7 +5140,7 @@ h1, h2, h3,
   border: 1px solid rgba(123, 219, 149, 0.4);
   border-radius: 4px;
   padding: 4px 10px;
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
   font-family: inherit;
 }
@@ -5178,7 +5178,7 @@ h1, h2, h3,
   border-radius: 999px;
   padding: 6px 12px;
   font-family: ui-monospace, Menlo, Consolas, monospace;
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
 }
 
@@ -5203,7 +5203,7 @@ h1, h2, h3,
   border-radius: 999px;
   background: var(--accent);
   color: var(--on-accent);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 700;
   line-height: 16px;
   text-align: center;
@@ -5252,7 +5252,7 @@ h1, h2, h3,
   border-radius: 999px;
   background: var(--accent);
   color: var(--on-accent);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 700;
   line-height: 16px;
   text-align: center;
@@ -5304,7 +5304,7 @@ h1, h2, h3,
   white-space: nowrap;
 }
 .friends-row-status {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--text-dim);
 }
 .friends-row-status.status-menu { color: var(--accent); }
@@ -5514,7 +5514,7 @@ h1, h2, h3,
   background: rgba(98, 207, 144, 0.12);
 }
 .invite-radio input { accent-color: var(--accent); }
-.invite-radio small { color: var(--text-dim); font-size: 0.7rem; }
+.invite-radio small { color: var(--text-dim); font-size: 0.75rem; }
 .invite-ranked-toggle {
   display: flex;
   align-items: center;
@@ -5524,7 +5524,7 @@ h1, h2, h3,
 .invite-ranked-toggle input { accent-color: var(--accent); }
 .invite-ranked-hint {
   margin: 6px 0 0;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   color: var(--text-dim);
 }
 .invite-error {

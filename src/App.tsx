@@ -108,7 +108,7 @@ import {
   type Consent,
 } from './consent';
 import { pickAIAction } from './ai';
-import { applyAction, applyClaim, applyMove, createGame, pointsIfPlayed } from './game';
+import { applyAction, applyClaim, applyMove, createGame } from './game';
 import { getBoard } from './geometry';
 import {
   aiOpponentKey,
@@ -122,7 +122,6 @@ import {
   resetProgress,
   saveProgress,
   saveSettings,
-  type HintKey,
   type Settings,
 } from './storage';
 import { DIFFICULTY_LABELS } from './types';
@@ -295,7 +294,6 @@ export default function App() {
   } | null>(null);
   const [pendingFlash, setPendingFlash] = useState(false);
   const prevPendingLenRef = useRef<number>(0);
-  const [activeHint, setActiveHint] = useState<{ text: string; anchorDotId: number } | null>(null);
   // Phase 2b — daily puzzle. dailyPuzzleIdRef carries today's puzzle id
   // through the gameplay so the finalize useEffect can pass it back to
   // Firestore. dailyPuzzleResult holds the post-finalize streak info for
@@ -330,22 +328,6 @@ export default function App() {
     saveSettings(next);
   };
 
-  // Phase 1b helper: fires a contextual hint if its per-concept "shown"
-  // flag is unset. Marks the flag immediately so reloads / re-triggers in
-  // the same game don't re-show. trackEvent fires for funnel analysis.
-  // anchorDotId is the dot the speech bubble will point at — the
-  // pedagogical referent (the just-scored dot, the missed empty, the
-  // claimable line's midpoint, etc.).
-  const tryFireHint = (key: HintKey, text: string, anchorDotId: number) => {
-    if (settings[key]) return;
-    const next: Settings = { ...settings, [key]: true };
-    setSettings(next);
-    saveSettings(next);
-    setActiveHint({ text, anchorDotId });
-    trackEvent('hint_shown', { hint_id: key }, 'low');
-  };
-
-
   const startGame = (
     mode: GameMode,
     shape: ShapeId,
@@ -369,7 +351,6 @@ export default function App() {
     // last scoring move re-fires Board's float-mount useEffect and a
     // ghost +N drifts up over the fresh empty board.
     setScoreEvent(null);
-    setActiveHint(null);
     setPendingFlash(false);
     prevPendingLenRef.current = 0;
     winRecorded.current = false;
@@ -459,7 +440,6 @@ export default function App() {
     setDailyTimedOut(false);
     setDailyClock({ remainingAtRefMs: DAILY_CLOCK_MS, refTime: 0, running: false });
     setScoreEvent(null);
-    setActiveHint(null);
     setPendingFlash(false);
     prevPendingLenRef.current = 0;
     setScreen('menu');
@@ -618,53 +598,6 @@ export default function App() {
       scoring_player: state.scores[1] > 0 ? 1 : 2,
     });
   }, [state, config, user]);
-
-  // Phase 1b hint: "first pending-claim opportunity at start of turn".
-  // Anchors the speech bubble to the midpoint dot of the first pending
-  // line — the bubble visually points AT a claimable dot.
-  useEffect(() => {
-    if (!state || !config || state.finished) return;
-    if (config.mode !== 'ai' && config.mode !== 'hotseat') return;
-    if (config.mode === 'ai' && state.current !== 1) return;
-    if (state.pending.length === 0) return;
-    const firstPendingId = state.pending[0];
-    const line = getBoard(config.shape).lines.find((l) => l.id === firstPendingId);
-    if (!line) return;
-    const anchor = line.dotIds[Math.floor(line.dotIds.length / 2)];
-    tryFireHint(
-      'hintPendingClaim',
-      "It's your turn — there's a free line waiting. Tap any of its coloured dots to claim it instead of placing.",
-      anchor,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state?.current, state?.pending.length, state?.finished, config?.mode]);
-
-  // Phase 1b hint: "near-end" — fires once when ≥90% of dots are coloured
-  // and the game isn't over yet. Anchor: midpoint of first remaining
-  // pending line if any, else any empty dot, else first colored dot.
-  useEffect(() => {
-    if (!state || !config || state.finished) return;
-    if (config.mode !== 'ai' && config.mode !== 'hotseat') return;
-    const board = getBoard(config.shape);
-    const totalDots = board.dots.length;
-    const filled = Object.keys(state.colored).length;
-    if (totalDots === 0) return;
-    if (filled / totalDots < 0.9) return;
-    let anchor = 0;
-    if (state.pending.length > 0) {
-      const line = board.lines.find((l) => l.id === state.pending[0]);
-      if (line) anchor = line.dotIds[Math.floor(line.dotIds.length / 2)];
-    } else {
-      const empty = board.dots.find((d) => !state.colored[d.id]);
-      anchor = empty ? empty.id : 0;
-    }
-    tryFireHint(
-      'hintNearEnd',
-      'Game ends when every line is claimed. Keep claiming.',
-      anchor,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state?.colored, state?.finished, config?.mode, config?.shape]);
 
   // pending-flash: one-shot ~600ms class toggle whenever the pending pool
   // grows. Sources: biggest-only triggers from my move (scoreEvent path),
@@ -1277,7 +1210,6 @@ export default function App() {
   // so keying on onlineGameId catches them all. See bugs.md "Ghost +N popup".
   useEffect(() => {
     setScoreEvent(null);
-    setActiveHint(null);
     setPendingFlash(false);
     prevPendingLenRef.current = 0;
   }, [onlineGameId]);
@@ -1725,7 +1657,6 @@ export default function App() {
     if (baseState.current !== myNum) return;
     if (moveInFlight) return;
     if (baseState.colored[dotId]) return;
-    setActiveHint(null);
     setMoveInFlight(true);
     // One send-time (in server time) shared by the optimistic clock and sendMove
     // so the optimistic and authoritative turn-starts reference the same instant.
@@ -1768,7 +1699,6 @@ export default function App() {
     if (baseState.current !== myNum) return;
     if (moveInFlight) return;
     if (!baseState.pending.includes(lineId)) return;
-    setActiveHint(null);
     setMoveInFlight(true);
     const sentAt = Date.now() + serverSkewMs;
     try {
@@ -1805,7 +1735,6 @@ export default function App() {
     if (thinking) return;
     if ((config.mode === 'ai' || config.mode === 'daily') && state.current === 2) return;
     if (state.colored[dotId]) return;
-    setActiveHint(null);
     const movingPlayer = state.current;
     const result = applyMove(state, dotId);
     if (result.pointsGained > 0 || result.newlyPending.length > 0) {
@@ -1815,35 +1744,6 @@ export default function App() {
         player: movingPlayer,
         seq: Date.now(),
       });
-    }
-    // Phase 1b hint triggers from a human dot placement.
-    if (result.pointsGained > 0 && result.newlyPending.length === 0) {
-      tryFireHint(
-        'hintFirstScore',
-        `+${result.pointsGained} — you completed a line.`,
-        dotId,
-      );
-    } else if (result.pointsGained > 0 && result.newlyPending.length > 0) {
-      tryFireHint(
-        'hintBiggestOnly',
-        `Two lines closed — only the longest (+${result.pointsGained}) scored. The other becomes pending: anyone can claim it on their turn for free points. Wait too long and your opponent will.`,
-        dotId,
-      );
-    } else if (result.pointsGained === 0 && !settings.hintOverlapMiss) {
-      // Overlap-miss detection: any other empty dot that WOULD have scored?
-      const board = getBoard(config.shape);
-      for (const d of board.dots) {
-        if (d.id === dotId) continue;
-        if (state.colored[d.id]) continue;
-        if (pointsIfPlayed(state, board, d.id).gained > 0) {
-          tryFireHint(
-            'hintOverlapMiss',
-            'That empty dot would have scored — scan for almost-full lines before placing.',
-            d.id,
-          );
-          break;
-        }
-      }
     }
     // Hot-seat both players share the screen, so still flag the last
     // dot. In vs-AI we ONLY highlight the AI's moves (set by the AI
@@ -1859,7 +1759,6 @@ export default function App() {
     if (thinking) return;
     if ((config.mode === 'ai' || config.mode === 'daily') && state.current === 2) return;
     if (!state.pending.includes(lineId)) return;
-    setActiveHint(null);
     const movingPlayer = state.current;
     const result = applyClaim(state, lineId);
     claimsInGame.current += 1;
@@ -2071,8 +1970,6 @@ export default function App() {
             lastDot={lastDot}
             showHints={false}
             scoreEvent={scoreEvent}
-            hint={activeHint}
-            onDismissHint={() => setActiveHint(null)}
           />
           <SidePanel
             side="right"
@@ -2659,8 +2556,6 @@ export default function App() {
           colorSwap={colorSwap}
           showHints={ringsVisible && !disabled}
           scoreEvent={scoreEvent}
-          hint={activeHint}
-          onDismissHint={() => setActiveHint(null)}
         />
         <SidePanel
           side="right"

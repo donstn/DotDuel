@@ -109,9 +109,6 @@ export function resetProgress(): Progress {
 
 const SETTINGS_KEY = 'dotduel:settings:v2';
 
-// Hints reset after this much inactivity so returning players see them again.
-const HINT_INACTIVITY_RESET_MS = 60 * 24 * 60 * 60 * 1000;
-
 export interface Settings {
   playerName: string;
   opponentName: string;
@@ -122,27 +119,7 @@ export interface Settings {
   showClaimableLines: boolean;
   showClaimableLinesL4: boolean;
   lastPlayedAt: number;
-  hintFirstScore: boolean;
-  hintOverlapMiss: boolean;
-  hintBiggestOnly: boolean;
-  hintPendingClaim: boolean;
-  hintNearEnd: boolean;
 }
-
-export type HintKey =
-  | 'hintFirstScore'
-  | 'hintOverlapMiss'
-  | 'hintBiggestOnly'
-  | 'hintPendingClaim'
-  | 'hintNearEnd';
-
-const HINT_KEYS: HintKey[] = [
-  'hintFirstScore',
-  'hintOverlapMiss',
-  'hintBiggestOnly',
-  'hintPendingClaim',
-  'hintNearEnd',
-];
 
 function defaultSettings(): Settings {
   return {
@@ -155,11 +132,6 @@ function defaultSettings(): Settings {
     showClaimableLines: true,
     showClaimableLinesL4: false,
     lastPlayedAt: 0,
-    hintFirstScore: false,
-    hintOverlapMiss: false,
-    hintBiggestOnly: false,
-    hintPendingClaim: false,
-    hintNearEnd: false,
   };
 }
 
@@ -169,15 +141,6 @@ export function loadSettings(): Settings {
     if (!raw) return defaultSettings();
     const parsed = JSON.parse(raw) as Partial<Settings>;
     const merged: Settings = { ...defaultSettings(), ...parsed };
-    // 60-day-inactivity reset: clear all hint-shown flags so returning
-    // players see the captions again (the cohort retention work is meant
-    // to recover them — punishing them with silent UX defeats the point).
-    if (
-      merged.lastPlayedAt > 0 &&
-      Date.now() - merged.lastPlayedAt > HINT_INACTIVITY_RESET_MS
-    ) {
-      for (const k of HINT_KEYS) merged[k] = false;
-    }
     return merged;
   } catch {
     return defaultSettings();

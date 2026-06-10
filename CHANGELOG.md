@@ -5,6 +5,21 @@ All notable changes to DotDuel will be documented in this file. Format follows
 
 ## [Unreleased]
 
+### Changed
+
+- **Removed the in-game contextual hint popups** (0.4.3.0). The five
+  reactive speech bubbles (`hintFirstScore` / `hintBiggestOnly` /
+  `hintOverlapMiss` / `hintPendingClaim` / `hintNearEnd`) were stomped
+  by the AI's ~450ms reply in vs-AI before they could be read, while
+  still burning their once-per-lifetime flag. Dropped `tryFireHint`,
+  the `activeHint` state, the `HintBubble` render + `wrapText`, and the
+  `HintKey` settings flags + 60-day reset. The learning rings, "See
+  unclaimed lines" toggle, and Rules popover remain as the teaching
+  layer.
+- **Accessibility — 12px minimum text size** (0.4.3.0). Raised every
+  sub-12px `font-size` (down to `0.55rem` ≈ 8.8px at the 16px root) and
+  one `clamp()` floor to the `0.75rem` / 12px EN 301 549 / WCAG minimum.
+
 ### Added
 
 - **Share previews and browser-tab icon.** New `public/og-card.png`

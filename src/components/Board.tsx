@@ -18,11 +18,6 @@ interface FloatingScore {
 
 const SCORE_FLOAT_DURATION_MS = 1050;
 
-interface HintInput {
-  text: string;
-  anchorDotId: number;
-}
-
 interface Props {
   state: GameState;
   onDotClick?: (dotId: number) => void;
@@ -32,28 +27,6 @@ interface Props {
   colorSwap?: boolean;
   showHints?: boolean;
   scoreEvent?: ScoreEvent | null;
-  hint?: HintInput | null;
-  onDismissHint?: () => void;
-}
-
-// Word-wrap a caption into <=maxLines lines, trying to keep each line
-// under maxCharsPerLine. Greedy line-fill — overflow words go to the next
-// line. Last line may exceed maxCharsPerLine if a single word is longer.
-function wrapText(text: string, maxCharsPerLine: number, maxLines: number): string[] {
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let current = '';
-  for (const w of words) {
-    const candidate = current ? `${current} ${w}` : w;
-    if (candidate.length <= maxCharsPerLine || !current) {
-      current = candidate;
-    } else {
-      lines.push(current);
-      current = w;
-    }
-  }
-  if (current) lines.push(current);
-  return lines.slice(0, maxLines);
 }
 
 function colorIndex(player: Player, swap: boolean): 1 | 2 {
@@ -217,8 +190,6 @@ export function Board({
   colorSwap = false,
   showHints = false,
   scoreEvent = null,
-  hint = null,
-  onDismissHint,
 }: Props) {
   const board = getBoard(state.shape);
   const vb = board.viewBox;
@@ -655,82 +626,6 @@ export function Board({
             </g>
           );
         })}
-
-        {hint && (() => {
-          const anchor = board.dots[hint.anchorDotId];
-          if (!anchor) return null;
-          const lines = wrapText(hint.text, 30, 7);
-          const fontSize = dotRadius * 0.8;
-          const lineHeight = fontSize * 1.25;
-          const padX = dotRadius * 0.7;
-          const padY = dotRadius * 0.5;
-          const longest = lines.reduce((m, l) => Math.max(m, l.length), 0);
-          const charW = fontSize * 0.55;
-          const bubbleW = Math.min(vb.w - padX, longest * charW + padX * 2);
-          const bubbleH = lines.length * lineHeight + padY * 2;
-          const tailLen = dotRadius * 0.7;
-          const aboveRoom = anchor.y - vb.y;
-          const belowRoom = vb.y + vb.h - anchor.y;
-          const placeAbove = aboveRoom >= bubbleH + tailLen + dotRadius * 1.4
-            || aboveRoom > belowRoom;
-          // Clamp the bubble horizontally so it doesn't escape viewBox.
-          const halfW = bubbleW / 2;
-          const minCx = vb.x + halfW + padX * 0.2;
-          const maxCx = vb.x + vb.w - halfW - padX * 0.2;
-          const bubbleCx = Math.max(minCx, Math.min(maxCx, anchor.x));
-          const bubbleX = bubbleCx - halfW;
-          const bubbleY = placeAbove
-            ? anchor.y - dotRadius - tailLen - bubbleH
-            : anchor.y + dotRadius + tailLen;
-          const tailBaseY = placeAbove ? bubbleY + bubbleH : bubbleY;
-          const tailTipY = placeAbove ? anchor.y - dotRadius : anchor.y + dotRadius;
-          // Tail base sits along the bubble's edge, clamped so its base
-          // stays inside the bubble rect even when the bubble was clamped
-          // away from the anchor.
-          const tailHalfW = dotRadius * 0.45;
-          const tailBaseMinX = bubbleX + dotRadius * 0.4;
-          const tailBaseMaxX = bubbleX + bubbleW - dotRadius * 0.4;
-          const tailBaseCenter = Math.max(
-            tailBaseMinX + tailHalfW,
-            Math.min(tailBaseMaxX - tailHalfW, anchor.x),
-          );
-          const tailPoints = [
-            `${tailBaseCenter - tailHalfW},${tailBaseY}`,
-            `${tailBaseCenter + tailHalfW},${tailBaseY}`,
-            `${anchor.x},${tailTipY}`,
-          ].join(' ');
-          const textStartY = bubbleY + padY + fontSize * 0.95;
-          return (
-            <g
-              className="hint-bubble"
-              onClick={onDismissHint}
-              style={{ cursor: onDismissHint ? 'pointer' : 'default' }}
-            >
-              <polygon points={tailPoints} className="hint-bubble-tail" />
-              <rect
-                x={bubbleX}
-                y={bubbleY}
-                width={bubbleW}
-                height={bubbleH}
-                rx={dotRadius * 0.4}
-                className="hint-bubble-bg"
-              />
-              {lines.map((ln, i) => (
-                <text
-                  key={i}
-                  x={bubbleX + bubbleW / 2}
-                  y={textStartY + i * lineHeight}
-                  textAnchor="middle"
-                  dominantBaseline="alphabetic"
-                  fontSize={fontSize}
-                  className="hint-bubble-text"
-                >
-                  {ln}
-                </text>
-              ))}
-            </g>
-          );
-        })()}
       </svg>
       <div className="sr-only" role="status" aria-live="polite">
         {liveMessage}

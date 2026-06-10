@@ -3,14 +3,37 @@ import { useEffect, useRef } from 'react';
 /**
  * One-shot win celebration: a zero-dependency canvas particle burst (fireworks
  * + confetti) rendered as a transparent, click-through full-screen overlay on
- * the GameOver screen. 'standard' = green (any win); 'impossible' = the full
- * gold show for beating the Impossible AI. Plays once, drains, then stops the
- * RAF loop. Skipped entirely under prefers-reduced-motion. Never runs on the
- * board, so it doesn't touch the "no infinite board animation" rule.
+ * the GameOver screen. Colours are read from the ACTIVE THEME's CSS variables
+ * (P1/P2 families + accent), so the confetti matches whatever scheme is set
+ * instead of always green/pearl. The 'impossible' (L5) show uses an
+ * accent-forward, brighter palette — still theme-derived (gold themes give
+ * gold, coral gives coral, …). Plays once, drains, then stops the RAF loop.
+ * Skipped entirely under prefers-reduced-motion. Never runs on the board, so
+ * it doesn't touch the "no infinite board animation" rule.
  */
 
-const GREEN = ['#62cf90', '#7bdb95', '#b8f5d3', '#ffffff', '#1c7a3d', '#d3ecaa'];
-const GOLD = ['#f5d76a', '#ffd700', '#fff3b0', '#ffffff', '#e0a050', '#ff8c5a'];
+function themePalette(): { standard: string[]; accent: string[] } {
+  const cs = getComputedStyle(document.documentElement);
+  const v = (name: string, fallback: string) =>
+    cs.getPropertyValue(name).trim() || fallback;
+  const standard = [
+    v('--p1-bright', '#62cf90'),
+    v('--p1-glow', '#1c7a3d'),
+    v('--p2-bright', '#ffffff'),
+    v('--p2-glow', '#f0fbcf'),
+    v('--accent', '#7bdb95'),
+    '#ffffff',
+  ];
+  const accent = [
+    v('--accent', '#f5d76a'),
+    v('--p2-bright', '#fff3b0'),
+    v('--p2-glow', '#ffd700'),
+    '#ffffff',
+    v('--p1-bright', '#62cf90'),
+    v('--accent', '#f5d76a'),
+  ];
+  return { standard, accent };
+}
 
 interface Spark {
   x: number; y: number; px: number; py: number;
@@ -155,9 +178,11 @@ export function WinCelebration({ level }: { level: number }) {
     };
 
     // Celebration scales with the difficulty you beat: L1 small -> L5 biggest.
-    // L5 (Impossible) also switches to GOLD + an extra central burst.
+    // L5 (Impossible) switches to the accent-forward palette + an extra burst.
+    // Both palettes are read from the active theme (see themePalette).
+    const { standard, accent } = themePalette();
     const isGold = lvl === 5;
-    const set = isGold ? GOLD : GREEN;
+    const set = isGold ? accent : standard;
     const confettiN = [45, 80, 120, 165, 210][lvl - 1];
     const shellN = [2, 3, 5, 7, 12][lvl - 1];
     rain(set, confettiN);
@@ -165,8 +190,8 @@ export function WinCelebration({ level }: { level: number }) {
       timers.push(window.setTimeout(() => launchShell(set), i * 300));
     }
     if (isGold) {
-      timers.push(window.setTimeout(() => burst(W * 0.5, H * 0.3, GOLD, 150, 13), 400));
-      timers.push(window.setTimeout(() => rain(GREEN, 120), 1400));
+      timers.push(window.setTimeout(() => burst(W * 0.5, H * 0.3, accent, 150, 13), 400));
+      timers.push(window.setTimeout(() => rain(standard, 120), 1400));
     }
     raf = requestAnimationFrame(frame);
 

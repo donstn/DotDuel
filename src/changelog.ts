@@ -30,6 +30,37 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.1.0',
+    date: '2026-06-10',
+    highlight: 'Color themes restyle the whole board',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Color themes now restyle the entire board — the playing surface, pieces, win celebration, and buttons all match the scheme you pick, instead of a green board showing under every theme.',
+      },
+      {
+        kind: 'changed',
+        text: 'In online matches, who moves first is now a fair coin flip, and rematches alternate who starts — so over a series you each get the first move about half the time.',
+      },
+      {
+        kind: 'changed',
+        text: 'The computer opponent moves quicker, so games against the AI feel more responsive.',
+      },
+      {
+        kind: 'changed',
+        text: 'Menus, popovers, and the end-of-game screen open more smoothly with less lag.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Locked shapes and difficulties now show a clear padlock instead of looking greyed-out or broken.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The email and password sign-in fields are now clearly visible, and pieces read more clearly against the board in every theme.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.0.0',
     date: '2026-06-09',
     highlight: 'Server upgrade + smoother multiplayer',

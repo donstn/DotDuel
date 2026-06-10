@@ -138,7 +138,7 @@ interface SessionConfig {
   difficulty?: Difficulty;
 }
 
-const AI_DELAY_MS = 450;
+const AI_DELAY_MS = 250;
 
 // Effective "show pending-claim rings" rule (Phase 1b — replaces the old
 // universal gamesPlayed/claimsMade learning window). Tiered by mode AND

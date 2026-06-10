@@ -92,8 +92,8 @@
      dot never dissolves into the board (especially on light themes). Light
      themes override these below; placed dots read as raised tokens by contrast. */
   --dot-empty-core: #0a1210;
-  --dot-empty-mid: #21302a;
-  --dot-empty-rim: rgba(170, 195, 182, 0.32);
+  --dot-empty-mid: #27392f;
+  --dot-empty-rim: rgba(176, 201, 188, 0.44);
 
   /* Board "felt" — the framed playing surface behind the dots. */
   --board-felt-1: #16291e;
@@ -160,6 +160,15 @@
   --bg-edge: #02010a;
   --accent: #f5d76a;
 
+  /* Board belongs to the theme: deep aubergine felt + violet-tinted sockets
+     (was inheriting the default green felt). Rim lip auto-derives from felt. */
+  --dot-empty-core: #0e0820;
+  --dot-empty-mid: #322545;
+  --dot-empty-rim: rgba(206, 188, 224, 0.42);
+  --board-felt-1: #1f1330;
+  --board-felt-2: #130b20;
+  --board-felt-border: rgba(230, 215, 255, 0.10);
+
   /* Warm champagne text tones — harmonises with the gold accent
      and lifts away from the violet bg. Previously inherited the
      default cream-green which looked "borrowed" from Forest & Pearl. */
@@ -196,6 +205,15 @@
   --bg-center: #1a1f2a;
   --bg-edge: #02060a;
   --accent: #5fb3d4;
+
+  /* Cool slate felt + steel-tinted sockets — suits both the wine-red P1 and
+     sky-blue P2 (was inheriting the default green felt). */
+  --dot-empty-core: #0a0e14;
+  --dot-empty-mid: #2c3540;
+  --dot-empty-rim: rgba(196, 210, 224, 0.42);
+  --board-felt-1: #1c232e;
+  --board-felt-2: #12171f;
+  --board-felt-border: rgba(210, 226, 240, 0.10);
 
   /* Cool steel-blue text tones — harmonises with the sky-blue
      accent and the charcoal-blue bg. Previously inherited the
@@ -234,6 +252,15 @@
   --bg-edge: #0d0604;
   --accent: #e0a050;
 
+  /* Warm umber wood felt + earthy sockets — a Catan-style table (was inheriting
+     the default green felt). Terracotta P1 + parchment P2 both read on it. */
+  --dot-empty-core: #160d06;
+  --dot-empty-mid: #4a3420;
+  --dot-empty-rim: rgba(232, 212, 182, 0.42);
+  --board-felt-1: #36251a;
+  --board-felt-2: #241710;
+  --board-felt-border: rgba(255, 232, 200, 0.10);
+
   /* Warm cream / parchment text tones — mirrors the P2 family
      and harmonises with the dusk-brown bg. Previously inherited
      the default cream-green which read cold against warm earth. */
@@ -271,6 +298,15 @@
   --bg-edge: #01060a;
   --accent: #ff8c5a;
 
+  /* Deep ocean-floor felt + teal-tinted sockets (was inheriting the default
+     green felt). Coral P2 pops; teal P1 stays lighter than the felt + rim. */
+  --dot-empty-core: #04101a;
+  --dot-empty-mid: #1c3a44;
+  --dot-empty-rim: rgba(186, 218, 226, 0.42);
+  --board-felt-1: #0c2630;
+  --board-felt-2: #061620;
+  --board-felt-border: rgba(200, 232, 240, 0.10);
+
   /* Sea-foam / icy aqua text tones — sits cleanly on the deep
      ocean bg and harmonises with the teal P1 family. The pale
      coral title-bottom keeps the accent identity in the wordmark. */
@@ -307,6 +343,15 @@
   --bg-center: #0c0a1a;
   --bg-edge: #02010a;
   --accent: #67e8f9;
+
+  /* Deep-space indigo felt + cosmic sockets (was inheriting the default green
+     felt). Cyan P2 pops; indigo P1 stays lighter than the felt + rim. */
+  --dot-empty-core: #070518;
+  --dot-empty-mid: #262247;
+  --dot-empty-rim: rgba(206, 206, 238, 0.42);
+  --board-felt-1: #141228;
+  --board-felt-2: #0a0818;
+  --board-felt-border: rgba(216, 216, 245, 0.10);
 
   /* Icy lavender-white text tones — the indigo bg is too cool
      for the default cream-green to feel native. Cyan title-bottom
@@ -797,8 +842,27 @@ button {
 
 .menu-card.disabled,
 .menu-card:disabled {
-  opacity: 0.4;
+  opacity: 0.55;
   cursor: not-allowed;
+  filter: saturate(0.72);
+}
+
+/* Locked affordance — a small corner padlock so a disabled card reads as
+   "earn/unlock this", not as a broken/half-loaded placeholder (which 0.4 opacity
+   alone looked like). Mask + currentColor-style fill so it follows every theme. */
+.menu-card.disabled::after,
+.menu-card:disabled::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 11px;
+  width: 13px;
+  height: 15px;
+  background-color: var(--text-dim);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9z'/%3E%3C/svg%3E") center / contain no-repeat;
+  opacity: 0.8;
+  pointer-events: none;
 }
 
 .link-btn {
@@ -884,18 +948,18 @@ button {
   margin-top: 6px;
   padding: 12px 22px;
   border-radius: 14px;
-  background: linear-gradient(180deg, #2a8e4a, #0f5a28);
-  color: #f5fbdb;
+  background: linear-gradient(180deg, var(--accent-hi), var(--accent-lo));
+  color: var(--on-accent);
   font-weight: 700;
   font-size: 1rem;
-  border: 1px solid rgba(174, 240, 194, 0.5);
-  box-shadow: 0 6px 22px rgba(28, 122, 61, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--accent-edge);
+  box-shadow: 0 6px 22px color-mix(in srgb, var(--accent-shadow) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   cursor: pointer;
   transition: background 160ms, transform 140ms;
 }
 
 .hotseat-start:hover {
-  background: linear-gradient(180deg, #38ad5e, #166932);
+  background: linear-gradient(180deg, var(--accent-edge), var(--accent));
 }
 
 .hotseat-start:active {
@@ -1587,9 +1651,20 @@ button {
   margin-right: 8px;
 }
 
-.side-panel.active {
+/* Active-panel "breathing" pulse. Driven by an opacity animation on a
+   non-blurred ::after halo — NOT a filter animation on the panel itself, which
+   forced the backdrop-filter blur to re-sample EVERY frame for the whole game
+   (a continuous compositor cost). Opacity on a separate layer is composited. */
+.side-panel.active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
   animation: panelBreathe 2.2s ease-in-out infinite;
 }
+.side-panel-p1.active::after { box-shadow: 0 0 20px 1px rgba(var(--p1-rgb-glow), 0.45); }
+.side-panel-p2.active::after { box-shadow: 0 0 20px 1px rgba(var(--p2-rgb-glow), 0.4); }
 
 .side-panel-p1.active {
   border-color: rgba(var(--p1-rgb-bright), 0.55);
@@ -1606,12 +1681,8 @@ button {
 }
 
 @keyframes panelBreathe {
-  0%, 100% {
-    filter: brightness(1) saturate(1);
-  }
-  50% {
-    filter: brightness(1.12) saturate(1.15);
-  }
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.85; }
 }
 
 .avatar-frame {
@@ -1912,12 +1983,12 @@ h1, h2, h3,
    clearly against a dark board. Cheap stroke, NOT a GPU filter, so it doesn't
    add to the endgame compositor budget (see bugs.md — Rendering/GPU). */
 .dot-p1 {
-  stroke: rgba(var(--p1-rgb-bright), 0.42);
-  stroke-width: 0.04;
+  stroke: rgba(var(--p1-rgb-bright), 0.55);
+  stroke-width: 0.05;
 }
 .dot-p2 {
-  stroke: rgba(var(--p2-rgb-bright), 0.5);
-  stroke-width: 0.04;
+  stroke: rgba(var(--p2-rgb-bright), 0.6);
+  stroke-width: 0.05;
 }
 
 .dot-last {
@@ -2015,8 +2086,10 @@ h1, h2, h3,
   position: fixed;
   inset: 0;
   background: var(--scrim);
-  backdrop-filter: blur(10px) saturate(1.2);
-  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  /* No backdrop-filter here on purpose: the opaque --scrim already mutes the
+     background, and blurring a full-viewport overlay that sits over a menu full
+     of glass cards meant blurring twice (overlay + card) on every popover open
+     — the main "screen-to-screen feels slow" spike. The card below is frosted. */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2029,8 +2102,8 @@ h1, h2, h3,
 .rules-card {
   position: relative;
   background: var(--glass-bg-strong);
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
   border: 1px solid var(--glass-border-strong);
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow-strong);
@@ -2235,17 +2308,17 @@ h1, h2, h3,
 .rules-got-it {
   padding: 9px 20px;
   border-radius: 12px;
-  background: linear-gradient(180deg, #2a8e4a, #0f5a28);
-  color: #f5fbdb;
+  background: linear-gradient(180deg, var(--accent-hi), var(--accent-lo));
+  color: var(--on-accent);
   font-weight: 600;
   font-size: 0.9rem;
-  border: 1px solid rgba(174, 240, 194, 0.5);
-  box-shadow: 0 4px 16px rgba(28, 122, 61, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--accent-edge);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent-shadow) 40%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   transition: background 160ms, transform 140ms;
 }
 
 .rules-got-it:hover {
-  background: linear-gradient(180deg, #38ad5e, #166932);
+  background: linear-gradient(180deg, var(--accent-edge), var(--accent));
 }
 
 .rules-got-it:active {
@@ -2306,16 +2379,26 @@ h1, h2, h3,
   font-size: 0.96rem;
   padding: 9px 12px;
   border-radius: 10px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border-strong);
   color: var(--text);
   outline: none;
   transition: border-color 140ms, background 140ms;
 }
 
+/* Placeholder was browser-default (very low alpha) — near-invisible on the
+   near-black glass fields, which made the email/password path read as disabled
+   next to the solid white Google button. Explicit muted tone, full opacity. */
+.settings-input::placeholder {
+  color: var(--text-mute);
+  opacity: 1;
+}
+
+/* Focus tint was hard-coded green (default-theme P1) — off-brand on the other
+   7 themes. Derive from --accent so it follows every scheme. */
 .settings-input:focus {
-  border-color: rgba(98, 207, 144, 0.55);
-  background: rgba(98, 207, 144, 0.06);
+  border-color: color-mix(in srgb, var(--accent), transparent 28%);
+  background: color-mix(in srgb, var(--accent), transparent 90%);
 }
 
 .settings-toggle {
@@ -2465,8 +2548,8 @@ h1, h2, h3,
   position: absolute;
   inset: 0;
   background: var(--scrim);
-  backdrop-filter: blur(14px) saturate(1.2);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  /* No overlay blur (see .rules-overlay) — scrim mutes the board, the card is
+     frosted, and this avoids double-blurring under the celebration canvas. */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2483,8 +2566,8 @@ h1, h2, h3,
 .game-over-card {
   position: relative;
   background: var(--glass-bg-strong);
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
   border: 1px solid var(--glass-border-strong);
   border-radius: var(--radius-lg);
   padding: 26px 28px;
@@ -2607,7 +2690,7 @@ h1, h2, h3,
 
 .go-cta:hover:not(:disabled) {
   background: var(--glass-bg-strong);
-  border-color: rgba(174, 240, 194, 0.5);
+  border-color: var(--accent-edge);
 }
 
 .go-cta:active:not(:disabled) {
@@ -2619,16 +2702,10 @@ h1, h2, h3,
   cursor: not-allowed;
 }
 
-.go-cta-primary {
-  background: linear-gradient(180deg, #2a8e4a, #0f5a28);
-  color: #f5fbdb;
-  border-color: rgba(174, 240, 194, 0.5);
-  box-shadow: 0 4px 16px rgba(28, 122, 61, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-}
-
-.go-cta-primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #38ad5e, #166932);
-}
+/* .go-cta-primary base + hover are themed by the accent-driven button block
+   further down (search ".go-cta-primary,"). A legacy hard-coded GREEN gradient
+   used to live here and leaked green on hover regardless of theme — removed so
+   the "Try Easier/Harder" CTA follows --accent like every other primary button. */
 
 .go-cta-secondary {
   background: var(--glass-bg);
@@ -2712,14 +2789,14 @@ h1, h2, h3,
 }
 
 .game-over-buttons .primary {
-  background: linear-gradient(180deg, #2a8e4a, #0f5a28);
-  color: #f5fbdb;
-  border-color: rgba(174, 240, 194, 0.5);
-  box-shadow: 0 4px 16px rgba(28, 122, 61, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: linear-gradient(180deg, var(--accent-hi), var(--accent-lo));
+  color: var(--on-accent);
+  border-color: var(--accent-edge);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent-shadow) 40%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .game-over-buttons .primary:hover {
-  background: linear-gradient(180deg, #38ad5e, #166932);
+  background: linear-gradient(180deg, var(--accent-edge), var(--accent));
 }
 
 /* Rematch button states */
@@ -2859,13 +2936,13 @@ body:has(.consent-banner) .game-screen {
 }
 
 .consent-accept {
-  background: linear-gradient(180deg, #2a8e4a, #0f5a28);
-  color: #f5fbdb;
-  border: 1px solid rgba(174, 240, 194, 0.5);
+  background: linear-gradient(180deg, var(--accent-hi), var(--accent-lo));
+  color: var(--on-accent);
+  border: 1px solid var(--accent-edge);
 }
 
 .consent-accept:hover:not(:disabled) {
-  background: linear-gradient(180deg, #38ad5e, #166932);
+  background: linear-gradient(180deg, var(--accent-edge), var(--accent));
 }
 
 .consent-decline {

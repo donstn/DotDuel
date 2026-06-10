@@ -162,3 +162,8 @@ promts.md
 
 # Local Android WebView test screenshots / helper scripts (not shipped).
 .android-test-shots/
+
+# Local debug screenshots (scratch — not shipped).
+visual_bug.png
+visual bug.jpeg
+visual_bug.*

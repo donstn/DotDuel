@@ -5657,6 +5657,132 @@ h1, h2, h3,
   padding: 6px 14px;
 }
 
+/* Share-a-result button on GameOver (strategic plan Phase 3) */
+.go-share-row {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+.go-share-btn {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border-strong);
+  color: var(--text);
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+.go-share-btn:hover {
+  background: var(--glass-bg-strong);
+  color: var(--text-bright);
+}
+.go-share-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.go-share-feedback {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+/* Desktop share dialog — preview + copy/platform actions (mobile gets the
+   OS share sheet instead and never sees this). */
+.share-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.share-dialog-card {
+  background: rgba(20, 32, 26, 0.94);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 16px 18px;
+  max-width: 420px;
+  width: 100%;
+  max-height: 100vh;
+  max-height: 100dvh;
+  max-height: 100svh;
+  overflow-y: auto;
+  text-align: center;
+  color: var(--text);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.share-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.share-dialog-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.share-dialog-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.share-dialog-close:hover {
+  color: var(--text-bright);
+}
+.share-dialog-preview {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  display: block;
+}
+.share-dialog-actions,
+.share-dialog-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.share-action {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border-strong);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+.share-action:hover {
+  background: var(--glass-bg-strong);
+  color: var(--text-bright);
+}
+.share-action.primary {
+  border-color: var(--accent);
+  color: var(--text-bright);
+}
+.share-dialog-hint {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+}
+.share-dialog-download {
+  align-self: center;
+}
+
 /* Mobile tightening */
 @media (max-width: 480px) {
   .friends-card { max-width: 100%; }

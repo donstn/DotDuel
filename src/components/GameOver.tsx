@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { DIFFICULTY_LABELS, SHAPE_LABEL } from '../types';
 import type { Difficulty, GameMode, GameState, Player, ShapeId } from '../types';
+import type { ShareResultData } from '../share/resultShareText';
+import { GameResultShareButton } from './GameResultShareButton';
 import { WinCelebration } from './WinCelebration';
 
 interface UnlockResult {
@@ -67,6 +69,9 @@ interface Props {
   onTryDailyAgain?: () => void;
   /** Phase 2b-v2 — open the public puzzle leaderboard from GameOver. */
   onOpenPuzzleLeaderboard?: () => void;
+  /** Signed-in uid — the share-result link carries ?ref=<uid>. Null/undefined
+   *  produces a clean URL (anonymous share). */
+  myUid?: string | null;
 }
 
 const SHAPE_NEXT: Record<ShapeId, ShapeId | null> = {
@@ -187,6 +192,7 @@ export function GameOver({
   dailyTimedOut,
   onTryDailyAgain,
   onOpenPuzzleLeaderboard,
+  myUid,
 }: Props) {
   const [addFriendState, setAddFriendState] = useState<
     'idle' | 'sending' | 'sent' | 'failed'
@@ -251,6 +257,25 @@ export function GameOver({
     title = 'Impossible — defeated';
     titleClass = 'go-title-impossible';
   }
+
+  // Share-a-result (strategic plan Phase 3): available on every mode and
+  // outcome except aborted matches and daily attempts still being saved.
+  const shareData: ShareResultData | null =
+    finishedReason !== 'aborted' && (mode !== 'daily' || !!dailyResult)
+      ? {
+          mode,
+          shape,
+          difficulty,
+          scores: state.scores,
+          winner: state.winner,
+          myPlayer,
+          p1Name,
+          p2Name,
+          ratingDelta: ratingChange?.delta,
+          dailyScore: dailyResult?.score,
+          myUid,
+        }
+      : null;
 
   const suggestion = buildSuggestion({
     state,
@@ -409,6 +434,7 @@ export function GameOver({
             <button onClick={onMenu}>Menu</button>
           </div>
         )}
+        {shareData && <GameResultShareButton data={shareData} state={state} />}
       </div>
     </div>
   );

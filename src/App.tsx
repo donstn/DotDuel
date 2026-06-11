@@ -2015,6 +2015,7 @@ export default function App() {
             onLobby={onMpBackToLobby}
             onStartShape={() => onLeaveMpGame()}
             myPlayer={myNum ?? undefined}
+            myUid={sbUser?.uid ?? null}
             finishedReason={onlineGame.finishedReason}
             opponentIsBot={pairing.opponentIsBot}
             opponentUid={pairing.opponentUid}
@@ -2586,6 +2587,7 @@ export default function App() {
           dailyTimedOut={dailyTimedOut}
           onTryDailyAgain={startDailyPuzzle}
           onOpenPuzzleLeaderboard={() => setPuzzleLbOpen(true)}
+          myUid={sbUser?.uid ?? null}
         />
       )}
       {puzzleLbOpen && (

@@ -5,6 +5,22 @@ All notable changes to DotDuel will be documented in this file. Format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **Share card fidelity + resolution** (0.4.5.1 / 0.4.5.2). Strikes on the
+  card were ~3× thicker than `Board.tsx` proportions — a finished Square
+  (40 struck lines) rendered as a bright mesh burying the dots; now exact
+  in-game ratios (strokeWidth `r*0.42`, outer ×0.575, inner ×0.22,
+  overshoot 5R/3, opaque). "pts" overlapped the daily score because
+  `measureText` ran after `ctx.restore()` reverted the 132px font. Card
+  now renders at **2×** (2400×1260, `SCALE` const + `ctx.scale`) so it
+  survives full-screen viewing in Messenger/WhatsApp: the six
+  `shadowBlur`/offset sites scale explicitly (canvas shadows are
+  device-space), grain draws transform-reset to stay 1-px film grain.
+  Share-sheet file ships as full-res JPEG q0.9 (~0.5MB vs ~6MB grainy
+  PNG); clipboard/download/preview keep PNG; dormant unfurl upload pinned
+  to 1200×630 (110KB, under the 400KB bucket cap).
+
 ### Added
 
 - **Play Store readiness** (0.4.5.0). Release signing wired into

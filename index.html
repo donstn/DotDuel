@@ -15,6 +15,12 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
 
+    <!-- Start font downloads before CSS is parsed — kills the late-font swap
+         on slow connections. Paths mirror the @font-face rules in styles.css. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/outfit-var.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/chakra-petch-600.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/chakra-petch-700.woff2" crossorigin />
+
     <!--
       Content Security Policy. Defense-in-depth against a future XSS
       regression. Only allows scripts / connections / images from

@@ -61,7 +61,7 @@ export function PrivacyPopover({ onClose, consent, onChangeConsent }: Props) {
               <li>
                 <strong>Account:</strong> email, display name, sign-in
                 provider (Google or password), account creation date.
-                Source: you, via Firebase Auth at sign-up.
+                Source: you, via Supabase Auth at sign-up.
               </li>
               <li>
                 <strong>Multiplayer rating:</strong> your current Elo,
@@ -131,9 +131,10 @@ export function PrivacyPopover({ onClose, consent, onChangeConsent }: Props) {
           <section>
             <h3>Who it's shared with</h3>
             <p>
-              We use Google's Firebase platform (Authentication, Firestore,
-              Realtime Database, Cloud Functions, Hosting, and Analytics)
-              as our infrastructure provider
+              We use Supabase (database, authentication, realtime
+              infrastructure and serverless functions, hosted in the EU)
+              as our backend provider, plus Google for sign-in and
+              consent-gated Analytics
               {ADS_ENABLED ? (
                 <>
                   , plus Google AdSense to serve small banner ads on a
@@ -143,9 +144,9 @@ export function PrivacyPopover({ onClose, consent, onChangeConsent }: Props) {
               ) : (
                 <>. Analytics only loads after you accept the consent banner</>
               )}
-              . Google processes data under its standard Cloud Terms /
-              Data Processing Addendum. We do not sell or share your data
-              with any other third party.
+              . Supabase and Google process data under their standard
+              terms / Data Processing Addenda. We do not sell or share
+              your data with any other third party.
               {ADS_ENABLED ? null : (
                 <> We do not currently use third-party ad networks.</>
               )}
@@ -224,9 +225,9 @@ export function PrivacyPopover({ onClose, consent, onChangeConsent }: Props) {
           <section>
             <h3>Cookies and analytics</h3>
             <p>
-              We do not set tracking cookies. Firebase Auth uses
-              first-party session storage to keep you signed in. Google
-              Analytics uses cookies, but only if you accept below.
+              We do not set tracking cookies. Our sign-in (Supabase Auth)
+              uses first-party session storage to keep you signed in.
+              Google Analytics uses cookies, but only if you accept below.
             </p>
             <div className="privacy-consent-block">
               <p>
@@ -276,7 +277,16 @@ export function PrivacyPopover({ onClose, consent, onChangeConsent }: Props) {
             <h3>Effective date</h3>
             <p>
               This policy is effective from {EFFECTIVE_DATE}. We'll update
-              it here if anything material changes.
+              it here if anything material changes. The canonical version
+              is published at{' '}
+              <a
+                href="https://www.dotduel.com/privacy.html"
+                target="_blank"
+                rel="noreferrer"
+              >
+                dotduel.com/privacy.html
+              </a>
+              .
             </p>
           </section>
         </div>

@@ -212,12 +212,16 @@ export function Board({
   // Minkowski round-offset frame: constant gap + constant-radius arc corners, so
   // every shape (triangle apex included) frames with an even margin and identical
   // corner rounding. Two gaps -> a uniform-width annulus = the bevel facet.
-  const hull = simplifyHull(
-    convexHull(board.dots.map((d) => ({ x: d.x, y: d.y }))),
-    0.02,
-  );
-  const feltPathOuter = minkowskiHullPath(hull, feltGap);
-  const feltPathInner = minkowskiHullPath(hull, innerGap);
+  const { feltPathOuter, feltPathInner } = useMemo(() => {
+    const hull = simplifyHull(
+      convexHull(board.dots.map((d) => ({ x: d.x, y: d.y }))),
+      0.02,
+    );
+    return {
+      feltPathOuter: minkowskiHullPath(hull, feltGap),
+      feltPathInner: minkowskiHullPath(hull, innerGap),
+    };
+  }, [board, feltGap, innerGap]);
   const [floats, setFloats] = useState<FloatingScore[]>([]);
   const [focusedDotId, setFocusedDotId] = useState<number | null>(null);
   const dotRefs = useRef(new Map<number, SVGCircleElement | null>());
@@ -237,6 +241,12 @@ export function Board({
     }, SCORE_FLOAT_DURATION_MS);
     return () => window.clearTimeout(timer);
   }, [scoreEvent]);
+
+  const linesById = useMemo(() => {
+    const map = new Map<string, Line>();
+    for (const line of board.lines) map.set(line.id, line);
+    return map;
+  }, [board.lines]);
 
   const pendingThroughDot = useMemo(() => {
     const pendingSet = new Set(state.pending);
@@ -491,7 +501,7 @@ export function Board({
                 r={owner ? dotRadius : dotRadius * 0.82}
                 fill={`url(#${fillId})`}
                 className={cls}
-                filter={owner ? 'url(#dot-shadow)' : undefined}
+                filter={isLast && owner ? 'url(#dot-shadow)' : undefined}
                 role={interactive ? 'button' : 'img'}
                 aria-label={ariaLabel}
                 tabIndex={d.id === rovingId ? 0 : -1}
@@ -593,7 +603,7 @@ export function Board({
         })}
 
         {state.completed.map((c) => {
-          const line = board.lines.find((l) => l.id === c.lineId);
+          const line = linesById.get(c.lineId);
           if (!line) return null;
           const { x1, y1, x2, y2 } = lineEndpoints(board, line, overshoot);
           const outer = strokeWidth * 0.575;

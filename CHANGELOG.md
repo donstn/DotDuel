@@ -7,6 +7,42 @@ All notable changes to DotDuel will be documented in this file. Format follows
 
 ### Added
 
+- **Play Store readiness** (0.4.5.0). Release signing wired into
+  `android/app/build.gradle` via git-ignored `android/keystore.properties`
+  (template: `keystore.properties.example`); `npm run build:android-release`
+  (vite mode `androidrelease`) is now the ONLY build that serves real AdMob
+  ads — every other build (dev, plain `npm run build`, emulator) uses
+  Google's test unit, so the real unit can never collect fake impressions.
+  `gradlew bundleRelease` verified producing a 7 MB `.aab`. Android hardware
+  back button (`@capacitor/app`, official plugin, MIT, $0): closes any open
+  dialog (synthesizes Escape), exits only from the menu, ignored mid-game.
+  Plain-language submission walkthrough in `PLAY_STORE_GUIDE.md` (keystore,
+  Data Safety answers, IARC, listing assets).
+- **Leaderboard loading skeleton + error retry** (0.4.5.0). Global
+  leaderboard shows 8 pulsing placeholder rows in the final table layout
+  while loading; `watchLeaderboard` gained an `onError` callback so network
+  failures render a "Couldn't load — Try again" state instead of the
+  misleading "no games yet" empty state.
+
+### Changed
+
+- **Game-screen GPU diet** (0.4.5.0, from the 2026-06-12 perf review). The
+  `dot-shadow` SVG blur filter now applies ONLY to the last-placed dot
+  (was: every colored dot = 36–63 offscreen render targets per frame — the
+  exact escalation bugs.md predicted); `backdrop-filter` removed from the
+  three surfaces alive during play (`.game-topbar`, `.side-panel`,
+  `.app-footer-inner` — replaced with `--glass-bg-strong` tint; menu
+  popovers keep their blur); completed-line lookups and the convex-hull
+  felt paths memoized in `Board.tsx`. Fonts moved to `public/fonts/` with
+  `<link rel="preload">` in index.html (kills the late-font swap on 3G).
+  Verified non-issues during the same review: multiplayer optimistic UI
+  already shipped (the CLAUDE.md "move latency" open thread was stale) and
+  the matchmaking screen already shows an elapsed-seconds counter.
+- **Privacy policy corrected** (0.4.5.0). `public/privacy.html` + the
+  in-app popover still claimed Firebase processed our data — corrected to
+  Supabase, added Android app + AdMob disclosures (required for the Play
+  Data Safety form), popover now links the canonical web URL.
+
 - **Share-a-result victory cards** (0.4.4.0, strategic plan Phase 3 —
   post-game viral). New "📤 Share result" button on GameOver for ALL
   modes (vs-AI / hot-seat / multiplayer / daily), hidden only for

@@ -37,6 +37,7 @@ function shapeSupabase(d: Record<string, unknown>): LeaderboardEntry {
 export function watchLeaderboard(
   onChange: (rows: LeaderboardEntry[]) => void,
   max: number = 50,
+  onError?: () => void,
 ): () => void {
   let cancelled = false;
   const fetchTop = async () => {
@@ -48,7 +49,9 @@ export function watchLeaderboard(
     if (cancelled) return;
     if (error) {
       console.warn('watchLeaderboard (supabase) error:', error);
-      onChange([]);
+      // Surface as an error, NOT an empty list — an empty list renders the
+      // "no games yet" empty state, which lies about a network failure.
+      onError?.();
       return;
     }
     onChange((data ?? []).map(shapeSupabase));

@@ -223,6 +223,8 @@ export function RankingsPopover({ onClose, user, onOpenSignIn }: Props) {
   const [dataVersion, setDataVersion] = useState(0);
   const [globalRows, setGlobalRows] = useState<LeaderboardEntry[]>([]);
   const [globalLoading, setGlobalLoading] = useState(true);
+  const [globalError, setGlobalError] = useState(false);
+  const [globalRetryNonce, setGlobalRetryNonce] = useState(0);
 
   // Subscribe to global leaderboard whenever the popover is open with a
   // signed-in user. Only active in the global view (saves Firestore reads
@@ -233,12 +235,21 @@ export function RankingsPopover({ onClose, user, onOpenSignIn }: Props) {
       return;
     }
     setGlobalLoading(true);
-    const unsub = watchLeaderboard((rows) => {
-      setGlobalRows(rows);
-      setGlobalLoading(false);
-    }, 50);
+    setGlobalError(false);
+    const unsub = watchLeaderboard(
+      (rows) => {
+        setGlobalRows(rows);
+        setGlobalLoading(false);
+        setGlobalError(false);
+      },
+      50,
+      () => {
+        setGlobalLoading(false);
+        setGlobalError(true);
+      },
+    );
     return unsub;
-  }, [view, user?.uid]);
+  }, [view, user?.uid, globalRetryNonce]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -418,6 +429,8 @@ export function RankingsPopover({ onClose, user, onOpenSignIn }: Props) {
             <GlobalLeaderboard
               rows={globalRows}
               loading={globalLoading}
+              error={globalError}
+              onRetry={() => setGlobalRetryNonce((n) => n + 1)}
               signedIn={!!user}
               myUid={user?.uid ?? null}
               onSignIn={onOpenSignIn}
@@ -657,12 +670,16 @@ export function RankingsPopover({ onClose, user, onOpenSignIn }: Props) {
 function GlobalLeaderboard({
   rows,
   loading,
+  error,
+  onRetry,
   signedIn,
   myUid,
   onSignIn,
 }: {
   rows: LeaderboardEntry[];
   loading: boolean;
+  error: boolean;
+  onRetry: () => void;
   signedIn: boolean;
   myUid: string | null;
   onSignIn?: () => void;
@@ -685,8 +702,45 @@ function GlobalLeaderboard({
       </div>
     );
   }
+  if (error) {
+    return (
+      <div className="rankings-global-signin">
+        <p className="rankings-empty">
+          Couldn’t load the leaderboard — check your connection.
+        </p>
+        <button type="button" className="rules-got-it" onClick={onRetry}>
+          Try again
+        </button>
+      </div>
+    );
+  }
   if (loading) {
-    return <p className="rankings-empty">Loading leaderboard…</p>;
+    // Skeleton rows instead of a bare text line: the table appears at its
+    // final size immediately, so content doesn't jump in on slow networks.
+    return (
+      <div className="rankings-table-wrap" aria-busy="true">
+        <table className="rankings-table">
+          <thead>
+            <tr>
+              <th className="col-rank">#</th>
+              <th className="col-num">Elo</th>
+              <th className="col-name">Player</th>
+              <th className="col-num">Games</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: 8 }, (_, i) => (
+              <tr key={i} className="rankings-skeleton-row">
+                <td className="col-rank">{i + 1}</td>
+                <td className="col-num"><span className="skeleton-bar skeleton-w2" /></td>
+                <td className="col-name"><span className="skeleton-bar skeleton-w4" /></td>
+                <td className="col-num"><span className="skeleton-bar skeleton-w1" /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
   }
   if (rows.length === 0) {
     return (

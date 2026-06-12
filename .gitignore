@@ -78,6 +78,8 @@ web_modules/
 .env
 .env.*
 !.env.example
+# Not a secret — just the VITE_ADMOB_REAL=1 flag the Play release build needs.
+!.env.androidrelease
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

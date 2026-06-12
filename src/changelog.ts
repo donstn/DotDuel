@@ -30,6 +30,29 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.5.0',
+    date: '2026-06-12',
+    highlight: 'Faster on phones',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Lighter graphics effects during play — the game runs noticeably smoother on budget phones, with no change to the look.',
+      },
+      {
+        kind: 'added',
+        text: 'Leaderboard now shows placeholder rows while loading and a retry button if your connection drops.',
+      },
+      {
+        kind: 'changed',
+        text: 'Privacy policy updated: backend provider corrected to Supabase, Android app and AdMob disclosures added.',
+      },
+      {
+        kind: 'added',
+        text: 'Android app: the back button now closes open popups instead of quitting the game.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.4.0',
     date: '2026-06-11',
     highlight: 'Share your result',

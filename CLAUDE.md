@@ -270,7 +270,7 @@ For exact change list, read `CHANGELOG.md` or `src/changelog.ts`. The latter is 
 
 ### Open threads
 
-- **Move latency.** Clicks take ~300–500ms because of the `validateMove` round-trip. Fix is optimistic UI (apply locally, reconcile via `watchGame`). ~30 lines, deferred.
+- ~~Move latency~~ **RESOLVED** — optimistic UI shipped during the Supabase era: `optimisticMpState` + `optimisticClock` in `App.tsx` echo the local move + clock instantly; `moveInFlight` only overlaps the opponent's turn so it adds no perceived delay. (Verified 2026-06-12 during the perf review.)
 - **Bundle size.** ~1040 KB raw / **~262 KB gzipped** as of 0.2.7.2; Firebase SDKs dominate. Code-split `cloud/` + `auth/` behind sign-in for ~150 KB savings before public launch.
 - **`clockTimeout` scheduled function (E.3).** Fallback sweep for the edge case where both clients crash mid-turn — the client-driven timeout claim doesn't cover that. Cloud Scheduler, 15s sweep.
 - **Provisional badge** until 10 placement games played (UI only).

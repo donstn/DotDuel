@@ -811,6 +811,29 @@ export default function App() {
     void initNativeAds();
   }, []);
 
+  // Android hardware back button. Default Capacitor behavior exits the app
+  // from anywhere — including mid-game. Instead: an open dialog closes (every
+  // popover renders role="dialog" and already listens for Escape), the menu
+  // exits, and any other screen ignores it (in-app back arrows handle
+  // navigation; accidental exit mid-ranked-game is the failure mode we block).
+  const screenRef = useRef(screen);
+  screenRef.current = screen;
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    let remove: (() => void) | null = null;
+    void import('@capacitor/app').then(({ App: CapApp }) => {
+      const sub = CapApp.addListener('backButton', () => {
+        if (document.querySelector('[role="dialog"]')) {
+          window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+          return;
+        }
+        if (screenRef.current === 'menu') void CapApp.exitApp();
+      });
+      remove = () => void sub.then((s) => s.remove());
+    });
+    return () => remove?.();
+  }, []);
+
   // Native banner show/hide by screen — mirrors the AdSense placement policy:
   // visible on menu + free single-player; HIDDEN during ranked (matchFound/
   // mpgame). No-op on web.

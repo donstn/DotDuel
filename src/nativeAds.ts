@@ -27,11 +27,14 @@ const REAL_BANNER_ID = 'ca-app-pub-1268043579532481/8790879910';
 const TEST_BANNER_ID = 'ca-app-pub-3940256099942544/6300978111'; // Google sample banner
 
 /**
- * TRUE while developing: use the test unit + flag the device as a test device,
- * so the real unit never gets fake impressions (which can flag the AdMob
- * account). FLIP TO false for the production Play release so real ads serve.
+ * Real ads are an explicit OPT-IN: only `npm run build:android-release`
+ * (vite --mode androidrelease, which loads .env.androidrelease) serves the
+ * real unit. Every other build — dev server, plain `npm run build`, emulator
+ * testing via cap sync — uses the test unit + test-device flag, so the real
+ * unit can never collect fake impressions (which can flag the AdMob account).
+ * Fail-safe direction: forgetting the special build = no revenue, not a ban.
  */
-const ADMOB_TESTING = true;
+const ADMOB_TESTING = import.meta.env.VITE_ADMOB_REAL !== '1';
 const BANNER_AD_ID = ADMOB_TESTING ? TEST_BANNER_ID : REAL_BANNER_ID;
 
 export function isNativeApp(): boolean {

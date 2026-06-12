@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
+import { isNativeApp } from '../nativeAds';
 import { supabase } from '../supabase';
-import { signInWithGoogleSupabase } from './supabaseAuth';
+import {
+  signInWithGoogleNative,
+  signInWithGoogleSupabase,
+} from './supabaseAuth';
 
 interface Props {
   onClose: () => void;
@@ -59,10 +63,14 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
     }
   }
 
-  // Google OAuth is a full-page redirect; it navigates away and returns with a
-  // session (detectSessionInUrl). No onClose — the redirect handles it.
+  // Native app: OS account picker (Credential Manager) — the session arrives
+  // in-place, so the popover closes on success. Web: full-page OAuth redirect;
+  // it navigates away and returns with a session (detectSessionInUrl), so no
+  // onClose — the redirect handles it.
   const onGoogle = () =>
-    run(() => signInWithGoogleSupabase(), { closeOnSuccess: false });
+    isNativeApp()
+      ? run(() => signInWithGoogleNative())
+      : run(() => signInWithGoogleSupabase(), { closeOnSuccess: false });
 
   const onEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();

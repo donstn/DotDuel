@@ -177,9 +177,9 @@ function ringToggleAvailable(
   );
 }
 
-// Shown on any mp-flow screen when Firebase RTDB has been unreachable for
-// >15s — typically a DNS-level ad/tracker blocker (Whalebone, AdGuard,
-// NextDNS, etc.) or a restrictive Wi-Fi blocking *.firebasedatabase.app.
+// Shown on any mp-flow screen when the Supabase realtime server has been
+// unreachable for >15s — typically a DNS-level ad/tracker blocker (Whalebone,
+// AdGuard, NextDNS, etc.) or a restrictive Wi-Fi blocking *.supabase.co.
 // Replaces matchmaking/matchFound/mpgame-loading with a clear explanation
 // + Back to menu escape, instead of letting the user stare at a frozen
 // "Searching for opponent" screen.
@@ -197,7 +197,7 @@ function renderMpUnreachable({ onLeave }: { onLeave: () => void }) {
         <br />· another Wi-Fi network or mobile data
         <br />· another browser
         <br />· disabling DNS filters / VPN for a moment
-        <br />· whitelisting <code>*.firebasedatabase.app</code> in your blocker
+        <br />· whitelisting <code>*.supabase.co</code> in your blocker
       </p>
       <p className="hint">
         Single-player vs the bot works offline — open Menu and pick Vs AI.
@@ -881,7 +881,7 @@ export default function App() {
     if (consent) saveConsent(consent);
   }, [consent]);
 
-  // Diagnostic: log Firebase RTDB connection state changes for the lifetime
+  // Diagnostic: log realtime connection state changes for the lifetime
   // of the page. Lets us see (via Chrome USB inspect) whether the
   // WebSocket-level connection is even establishing on mobile browsers.
   useEffect(() => {
@@ -889,7 +889,7 @@ export default function App() {
   }, []);
 
   // React-facing connection state. Disconnected = persistent (>15s) failure
-  // to reach Firebase RTDB. Drives the offline UI: greys-out the Multiplayer
+  // to reach the realtime server. Drives the offline UI: greys-out the Multiplayer
   // button on the menu and surfaces a clear explanation on the mp screens
   // so users with strict DNS / ad-blocker setups know what's wrong instead
   // of staring at a frozen "Connecting…" screen.

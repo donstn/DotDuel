@@ -1,390 +1,151 @@
 # DotDuel
 
-A two-player dot-coloring strategy game. Players take turns coloring dots on a geometric board; lines (runs of dots in valid directions) score points when fully filled — but the scoring rule is **biggest-only with pending claims** (see Game Rules). Game ends when every dot is colored AND every completed line is claimed; higher score wins.
+Two-player dot-coloring strategy game. Players alternate coloring dots on a geometric board; completed lines score under a **biggest-only + pending claims** rule (see Game rules). Game ends when all dots are colored AND all completed lines claimed; higher score wins.
 
-Live staging: **https://donstn.github.io/DotDuel/** (auto-deployed from `main` via `.github/workflows/deploy.yml`). Production domain **www.dotduel.com** pending.
-
-Notable changes tracked in `CHANGELOG.md`. Current version: see `src/version.ts` (`APP_VERSION`).
-
-Known bugs (fixed + accepted, with root cause and forward-looking notes) tracked in `bugs.md`. **Check there first** if a familiar-looking symptom recurs — we've already burned the diagnosis time once.
-
----
-
-## ⚠️ ACTIVE MIGRATION: Firebase → Supabase (branch `supabase-migration`)
-
-The backend is mid-migration **Firebase → Supabase** (Postgres + Auth + Realtime + Edge Functions). **Vite stays; Next.js was rejected.** Production `main` is **still 100% Firebase and untouched** — all migration work is on branch **`supabase-migration`**. Supabase project ref `ggyjxayazxbjvjbeecxa`.
-
-**Before touching backend code, read `SUPABASE_MIGRATION.md` (repo root)** — full status, deployed Edge Functions, applied migrations, conventions.
-
-- **Done on Supabase (through 2026-06-08):** Phase 0 (schema/RLS/triggers), Phase 1 (daily puzzle, profile name-sync, cloud-progress), **dual-auth Google bridge**, Phase 3 server side, **client `SUPABASE` transport (flag `CLIENT_SUPABASE_TRANSPORT` in `src/types.ts` is flipped ON on the branch) — 2-browser gauntlet PASSED** (pair/ready/moves/clock/resign/timeout/abort/reconnect+Elo), **rematch**, **bots** (5 seeded, `request-bot-match` + `doBotMove` in submit-move), and **coupled reads #1+#2** (profile/rating, leaderboard, match history, GameOver Elo delta all read Supabase).
-- **Next session — see `SUPABASE_MIGRATION.md` "COUPLED-MODULE AUDIT":** #3 usernames (claim/availability), #4 friends+invites(+`accept-invite` Edge Fn)+presence, #5 session-lock+account-delete, #6 server backstops (botFallbackSweep pg_cron, shape-unlock in matchmake = currently triangle-only, clockTimeout sweep), then **Phase 4 cutover** (migrate 2 real players' Elo, retire Firebase). **Campaign (Phase 2) deferred.** Key gotcha that bit us repeatedly: app uses the **Firebase uid** but Supabase tables key on the **Supabase auth uuid** — resolve via cached `currentSupabaseUid()` for any uid-keyed Supabase read/write.
-- **Conventions:** apply SQL via the dashboard **SQL Editor** (NOT `db push` — CLI migration history is intentionally out of sync); any `SECURITY DEFINER` RPC writing fn-only cols (rating/streak) must `perform set_config('app.allow_protected_write','on',true)` first or the guard trigger reverts it; `clock.turnStartedAt` is epoch-ms; run `node scripts/copy-engine-supabase.cjs` before deploying engine-dependent Edge Functions; rotate the non-expiring Supabase access token before launch.
-
----
+- **Production: https://www.dotduel.com** (GH Pages, auto-deployed from `main` via `.github/workflows/deploy.yml`, Vite `base: '/'`). Also ships as a **Capacitor Android app** (Play Store submission in progress — see `PLAY_STORE_GUIDE.md`).
+- Version: `src/version.ts` (`APP_VERSION`), in lock-step with `src/changelog.ts` (in-app modal) and `CHANGELOG.md`.
+- **Check `bugs.md` first** when a familiar symptom recurs — diagnoses are recorded there.
 
 ## Tech stack
 
-- **React 18** + **Vite 5** + **TypeScript** (strict mode)
-- SVG board (auto-scales via `viewBox`)
-- **Firebase** (Auth, Firestore, RTDB, Cloud Functions `europe-west1`) for multiplayer + accounts — *being migrated to Supabase; see the Active Migration section above*
-- **localStorage** for offline progression
-- `tsx` for headless simulation scripts (dev-only)
-- No runtime UI framework
+- **React 18 + Vite 5 + TypeScript (strict)**; SVG board (auto-scales via `viewBox`); no UI framework.
+- **Supabase** (project ref `ggyjxayazxbjvjbeecxa`): Postgres + RLS, Auth (Google + email), Realtime, Edge Functions, pg_cron sweeps. The Firebase → Supabase migration **completed and cut over 2026-06-09 (0.4.0.0)** — client is 100% Firebase-free. `SUPABASE_MIGRATION.md` keeps the full schema/function inventory and conventions.
+- **Capacitor 8** for Android (AdMob via `@capacitor-community/admob`, native Google sign-in via `@capgo/capacitor-social-login`, MPL-2.0).
+- **localStorage** for offline progression; **GA4 gtag.js** telemetry behind Google CMP/Consent Mode; `tsx` for headless simulation scripts.
+
+### Supabase conventions (gotchas that bit us)
+
+- App identifies players by the **legacy Firebase uid**, but Supabase tables key on the **Supabase auth uuid** — resolve via cached `currentSupabaseUid()` for any uid-keyed read/write.
+- Apply SQL via the dashboard **SQL Editor** or `db query --linked` — NOT `db push` (CLI migration history intentionally out of sync).
+- Any `SECURITY DEFINER` RPC writing protected cols (rating/streak/presence) must `perform set_config('app.allow_protected_write','on',true)` first or the guard trigger reverts it.
+- `clock.turnStartedAt` is **epoch-ms**. Run `node scripts/copy-engine-supabase.cjs` before deploying engine-dependent Edge Functions.
+- Pending: retire the Firebase cloud project, rotate the Supabase access token + service-role key (both non-expiring, were pasted in chat).
 
 ## Running it
 
 ```powershell
-npm install
-npm run dev              # http://localhost:5173
-npm run build            # production bundle in ./dist (runs tsc -b first)
-npm run preview          # serve the production build
-npm run simulate         # 4×4 AI matrix on triangle
-npm run simulate:l4      # L5 vs L5 across shapes (N=1000)
-npm run simulate:square  # 50-game L5 vs L5 square integrity check
-npm run simulate:tri8    # Triangle-8 prototype
+npm run dev                    # http://localhost:5173
+npm run build                  # tsc -b + Vite bundle → dist/
+npm run build:android-release  # ONLY build serving real AdMob ads (.env.androidrelease)
+npm run simulate / simulate:l4 / simulate:square / simulate:tri8
 ```
 
-**Deploy.** `git push origin main` triggers `.github/workflows/deploy.yml`: `npm ci` → `npm run build` → publish `dist/` to Pages. Vite `base` is `/DotDuel/` for builds (not dev). Cloud Functions deploy separately via `firebase deploy --only functions`.
-
----
+Deploy: `git push origin main` → GH Pages. Android: `npx cap sync android`, then Android Studio / `gradlew bundleRelease` (signing via git-ignored `android/keystore.properties`; never commit keystores).
 
 ## File layout
 
 ```
 src/
-  main.tsx, App.tsx              Entry; screen state machine, AI scheduler, popover state
-  version.ts, changelog.ts       Public version label + in-app changelog modal data
-  types.ts                       GameState, GameAction, ShapeId, Difficulty
-  geometry.ts                    Board generation (dots + line buckets). Single source of truth for "what is a line"
-  game.ts                        Pure logic: applyMove, applyClaim, applyAction, pointsIfPlayed
-  ai.ts                          5-tier AI: pickAIAction
-  storage.ts                     localStorage: progression, settings, per-name W/D/L
-  styles.css                     Glass theme, layout, animations
-  components/                    Menu, Board, SidePanel, GameOver, AppFooter,
-                                 Rules/Settings/Rankings/Tutorial Popover, MatchFoundScreen, ClockBadge
-  cloud/                         Firebase wrappers: matchmake, watchGame, sendMove, usernames, friends?, profile
-  auth/                          Google sign-in (signInWithPopup for web, native plugin on Capacitor)
-functions/src/                   Cloud Functions; engine/ is auto-copied from src/ on build
-scripts/                         simulate*.ts + build-assets.mjs (OG card / favicon pipeline via sharp)
-simulation-results.md            Accumulated balance data
-CHANGELOG.md                     Authoritative shipped-changes log (Keep a Changelog)
-.github/workflows/deploy.yml     GH Pages deploy on push to main
+  App.tsx                  Screen state machine, AI scheduler, optimistic MP state, popovers
+  types.ts / geometry.ts   GameState + board generation. geometry.ts is the ONLY definition of lines
+  game.ts                  Pure logic: applyMove, applyClaim, applyAction, pointsIfPlayed (immutable)
+  ai.ts                    5-tier AI (pickAIAction)
+  storage.ts               localStorage (progression, settings, per-name W/D/L)
+  telemetry.ts             GA4 trackEvent (PII strip, session cap)
+  nativeAds.ts / ads.ts    AdMob (app) / AdSense (web), consent-gated
+  share/                   Victory-card canvas renderer + share text
+  components/ cloud/ auth/ Menu, Board, SidePanel, GameOver, popovers · Supabase wrappers · sign-in
+supabase/functions/        Edge Functions (engine/ copied from src/ by script)
+android/                   Capacitor project
+scripts/                   simulate*.ts, build-assets.mjs, copy-engine-supabase.cjs
+public/privacy.html        Public privacy policy (Play + AdSense requirement)
+cloudflare/                Backlogged share-link unfurl setup docs
 ```
-
-`geometry.ts` is the only place that defines lines — everywhere else iterates `board.lines`.
-
----
 
 ## Game rules (definitive)
 
-### Turn structure
+- **Turn:** place a dot on any empty cell OR claim a pending line. Turn always passes; P1 starts.
+- **Scoring — biggest-only + pending:** when a placement completes lines, score `length` of the **single longest**; other completed lines become **pending** (colored, unscored). Claiming a pending line scores its full length. Pending is a **shared pool** — either player may claim any pending line. (Naïve sum-all gave the last mover ~99% wins; pending claims rebalance to ~1–3 pts at L5 vs L5 — see `simulation-results.md`.)
+- **Minimum line length 1** — corner apexes are 1-point lines drawn as a short stroke.
+- **Game end:** all dots colored AND `pending.length === 0`; if dots fill first, remaining turns are forced claims. Equal scores = draw.
 
-Each turn: **place a dot** on any empty cell, OR **claim a pending line**. Turn always passes. P1 → P2 → P1, starting P1.
-
-### Scoring — "biggest-only + pending"
-
-When placing a dot completes one or more lines:
-- Score `line.length` for the **single longest** completed line.
-- Other completed lines become **pending** (colored on the board, unscored).
-
-Claiming a pending line scores its full length. A single move only scores one line directly; excess value is parked as pending.
-
-**Why this rule:** the naïve "sum all completed lines" gave the last-mover a ~99% win at optimal play. Pending claims rebalance parity — L5 vs L5 stays within ~1–3 average points across all shapes. See `simulation-results.md`.
-
-### Other rules
-
-- **Minimum line length: 1.** Corner apexes count as 1-point lines, drawn as a short stroke through the single dot.
-- **Pending is a shared pool.** Either player may claim any pending line on their turn — no ownership reservation.
-- **Game end:** all dots colored AND `pending.length === 0`. If dots fill before pending drains, remaining turns are forced claims. Equal scores = draw.
-
-### Per-shape geometry
-
-| Shape | Dots | Directions | Lines | Total points |
-|-------|------|------------|-------|--------------|
-| Triangle (inverted, rows 8→1) | 36 | horiz + 2 triangular diagonals | 24 | 108 |
+| Shape | Dots | Directions | Lines | Total pts |
+|---|---|---|---|---|
+| Triangle (rows 8→1) | 36 | horiz + 2 triangular diagonals | 24 | 108 |
 | Square 7×7 | 49 | horiz + vert + 2 diagonals | 40 | 196 |
 | Rectangle 7×9 | 63 | horiz + vert + 2 diagonals | 46 | 252 |
-| Rhombus (rows 1..6..1) | 36 | horiz + 2 triangular diagonals | 23 | 108 |
-
-Triangle + rhombus use a triangular lattice — only 3 directions exist, no vertical.
-
----
+| Rhombus (1..6..1) | 36 | horiz + 2 triangular diagonals | 23 | 108 |
 
 ## UI rules
 
-### Hard rule — nothing escapes the viewport
+**Hard rule — nothing escapes the viewport.** `body { overflow: hidden }`; everything must fit at iPhone-SE (~320×568) — emulate 320px before merging layout changes. Recurring traps: inline-flex pill rows need `flex-wrap: wrap; max-width: 100%`; use the `100vh`/`100dvh`/`100svh` cascade (mobile URL-bar); flex columns need `min-height: 0` for scrollable children; `position: fixed` overlays need reserved space via `body:has(...)`.
 
-`body { overflow: hidden }` — the game never scrolls. Every popover/footer/banner must fit at iPhone-SE class (~320×568). Recurring traps:
+**Theme:** Glass Orb — glassmorphism over dark green vignette + film grain. Multiple selectable color themes via CSS vars. Popovers keep `backdrop-filter`; **persistent game-screen surfaces don't** (GPU cost on cheap phones — 0.4.5.0 diet). CVD-safe palette, distinguishable by luminance alone: `--p1` `#0d4a23` (dark green) / `--p2` `#d3ecaa` (cream) + `-glow`/`-bright` variants, `--accent` `#7bdb95`.
 
-- **Inline-flex pill rows without `flex-wrap`** silently overflow right. Always add `flex-wrap: wrap; justify-content: center; max-width: 100%`.
-- **`100vh` in popover `max-height`** — on mobile Safari/Brave it's the URL-bar-collapsed value, content gets clipped when the bar is visible. Use cascade `max-height: 100vh; max-height: 100dvh; max-height: 100svh;` (svh is safest).
-- **Flex columns missing `min-height: 0`** — child with `overflow-y: auto` refuses to scroll because intrinsic body height wins.
-- **`position: fixed` overlays (consent banner)** silently cover content below. Reserve space with `body:has(.banner-class) .other-thing { padding-bottom: ... }`.
+**Game screen:** topbar (back · "X pts left" + pending badge, always rendered `visibility:hidden` when empty so height never shifts · `?` rules). Desktop: panel · board · panel; phone (`max-width: 720px`): player cards stack as rows above the board. Active panel gets a breathing glow.
 
-Always emulate 320px-wide viewport before merging layout changes.
+**Rendering:** dots are glassy 3D spheres (radial gradient + specular); the SVG `dot-shadow` blur filter applies ONLY to the last-placed dot (perf). Strikes are two stacked strokes (outer base ×0.575 of `strokeWidth = r*0.42`, inner highlight ×0.22) with 5R/3 overshoot, after dots, `pointer-events: none`.
 
-### Theme — Glass Orb
+**Pending lines are invisible by design** past the learning window (`gamesPlayed < 10 || claimsMade < 3`); during it, a static soft yellow ring on Triangle only — **no animation on board content, ever**. **Claiming:** click any colored dot in a pending line → longest pending line through it is claimed. Animations: dot pop 380ms, strike fade ~360ms; no infinite board animations; topbar `min-height` and absolute thinking-dots prevent layout shift.
 
-Glassmorphism over dark green vignette (`#15291e` center → `#02090b` edges) + film-grain overlay. All surfaces are `backdrop-filter: blur(...) saturate(...)` with thin gradient borders.
+Rules popover opens from menu footer AND in-game `?`; `AppFooter.tsx` is the only path to Settings mid-game.
 
-### Color palette (CVD-friendly, luminance-distinguishable)
+## AI (`ai.ts`)
 
-| Token | Value | Role |
-|-------|-------|------|
-| `--p1` / `--p1-glow` / `--p1-bright` | `#0d4a23` / `#1c7a3d` / `#62cf90` | P1 dark green |
-| `--p2` / `--p2-glow` / `--p2-bright` | `#d3ecaa` / `#f0fbcf` / `#ffffff` | P2 cream-green |
-| `--accent` | `#7bdb95` | "points left" highlight |
-| `--glass-bg` / `--glass-border` | rgba whites | All glass surfaces |
-
-P1/P2 distinguishable by luminance alone (deuteranopia/protanopia safe).
-
-### Game-screen layout
-
-- **Top bar:** back-arrow · "X pts left" + "N lines to claim" badge below (always rendered with `visibility:hidden` when empty, so topbar height never shifts) · `?` rules button.
-- **Desktop:** three columns — left panel · board · right panel. Panel width `clamp(86px, 22vw, 150px)`, vertical content order: avatar → name → stats → rating → score → totals.
-- **Phone (`max-width: 720px` or short landscape):** CSS-grid stacks both player cards as compact horizontal rows above the board. Stats/totals/rating hidden in this layout (still in Rankings). Landscape shrinks ~30% further.
-- **Active panel:** colored glow border + 2.2s `panelBreathe` filter pulse.
-- **AI thinking dots (`···`):** shown during 450ms `AI_DELAY_MS`. On mobile the indicator is absolutely-positioned so name/score don't reflow.
-
-### Dot & strike rendering
-
-- **Dots:** glassy 3D spheres — radial gradient per role (`dot-p1/p2/empty/empty-hover`) with off-center highlight (35%/28%) + small specular ellipse + soft drop-shadow.
-- **Strikes:** two-stacked-strokes for a ribbon look. Outer base (`#2b8a4c` P1 / `#c8c878` P2) at `strokeWidth * 0.575`; inner highlight (`#b8f5d3` P1 / `#ffffff` P2) at `strokeWidth * 0.22`, blend `screen`. Rendered after dots with `pointer-events: none`.
-- **Overshoot:** strikes extend `5R/3` past first/last dot centers. Length-1 corner strikes are oriented by sampling another same-direction line on the board.
-
-### Pending lines — invisible by design
-
-No persistent visual once the user is past the **learning window** (`settings.gamesPlayed < 10 || settings.claimsMade < 3`). During the window, colored dots on a pending line get a static soft yellow ring (`.dot-hint-ring`, `stroke-width: 0.08`, `opacity: 0.55`). **No animation** — busy boards must not strobe.
-
-### Claiming
-
-Click any colored dot in a pending line → the **longest** pending line through that dot is claimed. No menu. Cursor stays default (no claimability hover hint).
-
-### Animations
-
-- Dot pop: scale 0.5→1.08→1.0 over 380ms (overshoot), origin = dot center (`transform-box: fill-box`).
-- Strike appear: ~360ms scale-fade-in.
-- Active-panel breathe: 2.2s `panelBreathe`. AI thinking dots: 1.4s `dotsPulse`.
-- **No infinite animations on board content.** Layout-shift sources reserved: `topbar-center { min-height: 44px }`, mobile `thinking-dots { position: absolute }`.
-
-### Popovers & footer
-
-Rules popover opens from menu footer OR in-game `?`. Closes on backdrop / ✕ / ESC. Body scrolls if overflowed. `AppFooter.tsx` is the only path to Settings mid-game (shown on menu AND in-game). Currently: `DotDuel © 2026 · Rules · Settings`. Privacy/Contact reserved for GDPR copy.
-
----
-
-## AI design (`ai.ts`)
-
-AI plays P2 in vs-AI mode. All levels use `availableActions` + `pointsIfPlayed` + `applyAction` from `game.ts`. All shuffle candidate lists before picking, so play isn't deterministic. `AI_DELAY_MS = 450` in `App.tsx`.
+AI plays P2; all levels shuffle candidates (non-deterministic); `AI_DELAY_MS = 450`.
 
 | Level | Strategy |
-|-------|----------|
-| **L1 Beginner** (`pickPureRandomAction`) | Uniform random over all actions. Will ignore a free 7-point completion. |
-| **L2 Easy** (`pickEasyAction`) | "Obvious" moves (1-dot corners OR ≥5pt scores) else random. Ignores mid 2–4pt gains. |
-| **L3 Medium** (`pickGreedyOrRandomAction`) | Picks highest immediate gain if any > 0; else random. No lookahead. |
-| **L4 Hard** (`pickGreedyMinSetupAction`) | 1-ply minimax: `my_gain − opp_best_response`. Refuses small wins that gift larger opportunities. |
-| **L5 Impossible** (`pickMinimaxAction`) | 2-ply minimax over top-K shortlist (K=16 if ≤16 actions, else 10). Leaf eval = `scores[me] − scores[opp]` + **pending prediction** (sort pending desc, alternate awarding length to me/opp starting with current turn, scaled by `PENDING_DISCOUNT = 0.5`). |
+|---|---|
+| L1 | Uniform random |
+| L2 | "Obvious" moves (1-dot corners or ≥5 pts), else random |
+| L3 | Greedy best immediate gain, else random |
+| L4 | 1-ply minimax: `my_gain − opp_best_response` |
+| L5 | 2-ply minimax over top-K (16/10), leaf = score diff + pending prediction (alternating award, `PENDING_DISCOUNT = 0.5`) |
 
-### AI avatars (SidePanel.tsx)
-
-| Level | Visual |
-|-------|--------|
-| L1 | Chubby head, brightest mint, asymmetric eyes, open smile + tongue, big cheeks, antenna w/ star |
-| L2 | Round head, light mint, symmetric sparkle eyes, wide smile, antenna w/ heart |
-| L3 | Rounded square, mid-green, round eyes, gentle smile, chest indicator, antenna w/ circle |
-| L4 | Squarer head, dark green, narrow rectangular eyes, neutral mouth, two green-tipped antennae, forehead sensor |
-| L5 | Angular chamfered head, near-black, **glowing red eyes**, frown, **three sharp horns**, battle scar, metallic seam |
-
----
+Avatars in `SidePanel.tsx` escalate from cute round mint robot (L1) to angular near-black horned bot with glowing red eyes (L5).
 
 ## Storage (`storage.ts`)
 
-Three independent localStorage keys, each `:vN` versioned. **Bump the suffix when shape semantics change** so old data is silently re-defaulted instead of crash-parsing.
+Three versioned localStorage keys — **bump `:vN` when shape semantics change** (old data re-defaults instead of crash-parsing). All writes via `storage.ts` helpers, never raw `localStorage.setItem`.
 
-- **`dotduel:progress:v3`** — `{ unlocked: {triangle/square/rectangle/rhombus: 0..5}, wins: {"shape:diff": true} }`. Unlock rules: Triangle L1 unlocked at start; within shape, beating N unlocks N+1; across shapes, beating **L2+** unlocks the next shape at L1 (Triangle → Square → Rectangle → Rhombus). Hot-seat never touches progression.
-- **`dotduel:settings:v1`** — `{ playerName, opponentName, hotseatColorSwap, tutorialSeen, gamesPlayed, claimsMade }`. Last two drive the learning-hint window.
-- **`dotduel:stats:v4`** — per-name W/D/L keyed by `normKey(name)` (lowercased+trimmed). Split by difficulty × shape for AI, by shape for hot-seat. `byOpponent` map powers head-to-head. Totals/percentages **derived on read**, never stored.
+- `dotduel:progress:v3` — unlocks: Triangle L1 at start; beating N unlocks N+1; beating **L2+** unlocks next shape (Triangle → Square → Rectangle → Rhombus). Hot-seat never touches it.
+- `dotduel:settings:v1` — names, color swap, tutorialSeen, gamesPlayed/claimsMade (learning window).
+- `dotduel:stats:v4` — per-name W/D/L by `normKey(name)`, split by difficulty × shape; totals derived on read.
 
-All localStorage writes go via `saveProgress()` etc. — never `localStorage.setItem` directly.
-
----
-
-## Modes & menu
-
-- **Vs AI** — drives unlock progression.
-- **Hot-seat** — two humans one device; all shapes immediately; no progression.
-- **Multiplayer** — Google sign-in required; matchmaker pairs strangers; chess-clock time controls; ranked Elo.
-- **Rankings** — opens `RankingsPopover.tsx`: leaderboard + head-to-head, AI difficulties counted as opponents. Profile delete behind a confirm dialog.
-
----
+**Modes:** Vs AI (drives unlocks) · Hot-seat (all shapes, no progression) · Multiplayer (Google sign-in, matchmaker + bots fallback, chess clocks, ranked Elo, friends/invites/presence, rematch) · Daily puzzle (server-generated shared board, 3-min clock, score leaderboard) · Rankings popover.
 
 ## MANDATORY: zero-cost, no-royalty stack
 
-The user does not want to pay any licensing/patent/royalty/per-user fee when shipping. When introducing any dependency, asset, service, or algorithm:
+No licensing/patent/royalty/per-user fees ever. For any new dependency, asset, service, or algorithm: permissive OSS only (MIT/Apache-2.0/BSD/ISC; avoid GPL/AGPL); no patented algorithms; no paid SaaS in the runtime path (free tiers OK only if free at production scale); no proprietary fonts/icons/audio; no event-volume-billed analytics without approval. **Always state a new dep's license/cost in the same response that adds it.** Current exception consciously accepted: `@capgo/capacitor-social-login` is MPL-2.0 (file-level copyleft, dependency-use OK, $0).
 
-1. **Permissive OSS only** (MIT / Apache-2.0 / BSD / ISC). Avoid GPL/AGPL. Avoid "non-commercial" / "evaluation" labels.
-2. **No patented algorithms** (watch for codecs like H.264/H.265, "patent-pending" libs).
-3. **No paid SaaS in the runtime path.** Free tiers OK *only if* they remain free at expected production scale.
-4. **No proprietary fonts/icons/audio/images.** System fonts or self-hosted OSS (e.g., Inter via SIL OFL). Original or royalty-free assets only.
-5. **No event-volume-billed analytics** without explicit user approval.
-6. **When in doubt, surface it.** Always list new dep's license/cost terms in the same response that adds it.
+## Security — accepted risks (don't re-flag)
 
-Current runtime deps: React, React-DOM, Vite, TypeScript, @vitejs/plugin-react, Firebase JS SDK (Apache-2.0). Dev: tsx, sharp (Apache-2.0, build-time only). All free, all permissive OSS.
+- Match docs readable by any signed-in user (displayName/Elo already public on leaderboard; tighten if chat/IP/email ever added).
+- Supabase anon key + GA measurement id are public by design (same model as the old Firebase web key); RLS is the gate.
+- Cookie/consent gate is client-side only; moves server-side if we add server-side analytics ingest.
+- Social RPCs have no rate-limiting yet — add a token-bucket before public launch.
 
----
+## Current status (2026-06-12) — Alpha 0.4.5.3
 
-## Security — known accepted risks
+Live and ranked on www.dotduel.com. Arc since 0.3.0.0: **ads** (AdSense web + AdMob app, Google CMP — AdSense approval still pending review, requested 2026-06-06) → **0.4.0.0 Supabase cutover + prod domain** → server daily puzzle (0.4.2.0) → onboarding simplification (0.4.3.0) → **victory-card sharing** (0.4.4.0, redesigned 0.4.5.1–3: in-game felt board, 2× render, JPEG share path) → **0.4.5.0 perf GPU-diet + Play Store readiness + native Google sign-in** (Credential Manager → `signInWithIdToken`).
 
-Audit on 2026-05-26. Three low-severity findings **knowingly accepted**. Don't re-flag them:
+**Open / user-action items:**
+- Play Store: keystore creation, Play Console account + Data Safety + listing — walkthrough in `PLAY_STORE_GUIDE.md` (incl. Android OAuth client SHA-1 steps).
+- Native Google sign-in needs full e2e on a device with a Google account; iPhone-browser Google 403 still open (the native pattern applies).
+- Google consent-screen brand verification (free) before launch.
 
-- **L-1: `matches/{matchId}` readable by any signed-in user.** Match docs hold displayName, rating before/after, scores, shape, time control, finishedReason. Accepted: displayName + Elo are already on the public leaderboard; this only exposes "who played whom, how it ended" — chess-tournament-spectator data. Tighten to participant-only if anything sensitive (chat/IP/email) is added later.
-- **L-2: Firebase Web API key is public.** Documented Firebase model — the key identifies the project, doesn't authenticate. Misuse prevented by security rules + App Check (enable if abuse appears).
-- **L-4: Cookie banner is a client-only consent gate.** A user spoofing their own localStorage to load Analytics affects only their browser, not our GDPR posture against Google. Moves server-side if/when we add a server-side analytics ingest.
+## Backlog / deferred — don't start without explicit ask
 
----
+- **Share-link unfurl** — fully built, gated OFF (`ENABLE_SHARE_CARD_LINKS = false` in `src/cloud/shareCards.ts`); Supabase side (table/bucket/`r` fn) is live and harmless. Revive = flip flag + Cloudflare DNS per `cloudflare/SETUP-STEPS.md` (must preserve Namecheap email forwarding). Decision: TBD.
+- **Firebase retirement** — delete the cloud project, remove `VITE_FIREBASE_*` from env files, rotate Supabase keys. (`functions/` dir already removed from repo.)
+- Tutorial animations (SVG scenes reusing Board + `applyAction` — full spec in git history of this file), sounds (Settings toggle waits on it), game replay, monetization (cosmetics/ad-break/Pro — zero-cost constraint), trademark filing (EUIPO ~€850 / LT ~€180 / USPTO later; patent ruled out), legal footer (Privacy/Terms/Contact GDPR copy), SEO discoverable pages (rankings/changelog as real URLs; vite-ssg vs Next.js discussion pending), multiplayer shape-picker (server ready), clock-timeout sweep, GH Actions Node 24 bump (deploy.yml, warned for June 16).
 
-## Current status (2026-06-02)
+## Conventions
 
-Multiplayer is **live and ranked**. Current version: **Alpha 0.2.7.2** (see `CHANGELOG.md` and `src/changelog.ts`).
-
-Shipped through the multiplayer + friends foundation (pre-strategic-plan):
-- Phase D (server-authoritative multiplayer), E.1 (chess clocks + ready/countdown + timeout), E.2 (Elo finalize + match history)
-- Session lock (`gameSessions/{uid}`) prevents one user on two devices
-- Loading-screen auto-recovery on stale `watchGame`
-- Security audit fixes H-1, H-2, M-1, M-2, M-3, L-3, L-5
-- CSP, Apple/Android PWA icons, OG share card, favicon
-- Alpha 0.2.0.0: Friends list + invites + presence + tell-a-friend (`?ref=<uid>`) referral
-
-Shipped from the **adoption + retention strategic plan** (May–June 2026):
-- **Phase 0 (0.2.1.0)** — telemetry foundation: `trackEvent` wrapper with PII strip + session cap + dev console logging, ~15 funnel events, SHA-256 referrer hashing, session-boot snapshot
-- **Phase 1a (0.2.2.0)** — visible scoring: floating `+N` SVG popup, score-row pulse, pending-pill flash
-- **Phase 1b (0.2.3.0)** — contextual hints: 5 once-per-lifetime SVG speech bubbles anchored to triggering dot, auto-dismiss on next human move; "See unclaimed lines" toggle pill
-- **Phase 2c (0.2.4.0)** — menu share/invite: signed-in "Invite a friend" pill + anonymous "Share DotDuel" ghost link
-- **Phase 2a (0.2.5.0)** — daily-streak plumbing (signed-in only, server-side authoritative in `users/{uid}.streak`)
-- **Phase 2b (0.2.6.0 / 0.2.7.0)** — daily puzzle: 28-puzzle library rotating by UTC date, best-of-3 attempts, public leaderboard at `dailyLeaderboard/{utcDate}/entries/{uid}`, new "Today's puzzle" + "Puzzle leaderboard" menu cards, GameOver daily variant with try-again CTA
-- **0.2.7.2** — endgame flicker / black-screen fix: removed `mix-blend-mode: screen` from `.crossline-inner` (was creating per-line GPU compositor layers, overflowing budgets at the claim-only endgame). Full diagnosis in `bugs.md`.
-- **LICENSE** at repo root (proprietary, all rights reserved) — explicit IP claim ahead of any commercialisation
-- **SEO** — comparable-game keywords (tic-tac-toe, Dots and Boxes, chess, Connect Four, Gomoku, Othello), FAQPage JSON-LD with 6 Q&As, expanded `<noscript>` body with "How DotDuel compares" + 5 FAQ paragraphs
-
-For exact change list, read `CHANGELOG.md` or `src/changelog.ts`. The latter is the in-app footer changelog modal — keep `version` strings in lock-step with `src/version.ts`.
-
-### Open threads
-
-- ~~Move latency~~ **RESOLVED** — optimistic UI shipped during the Supabase era: `optimisticMpState` + `optimisticClock` in `App.tsx` echo the local move + clock instantly; `moveInFlight` only overlaps the opponent's turn so it adds no perceived delay. (Verified 2026-06-12 during the perf review.)
-- **Bundle size.** ~1040 KB raw / **~262 KB gzipped** as of 0.2.7.2; Firebase SDKs dominate. Code-split `cloud/` + `auth/` behind sign-in for ~150 KB savings before public launch.
-- **`clockTimeout` scheduled function (E.3).** Fallback sweep for the edge case where both clients crash mid-turn — the client-driven timeout claim doesn't cover that. Cloud Scheduler, 15s sweep.
-- **Provisional badge** until 10 placement games played (UI only).
-- **Hint stomping in vs-AI** — KNOWN, not fixed. Diagnosed in `bugs.md`; recommended fix (Option 1: min-display-time gate inside `tryFireHint`, ~15 LOC) ready when prioritised.
-- **Pending-claim rings flicker on Square / Rectangle** — root cause was `mix-blend-mode: screen` (fixed in 0.2.7.2). The triangle-only gate from 0.2.7.1 is retained as a UX choice (rings only on Triangle for learning), no longer a bug fix.
-
----
-
-## Active strategic plan — adoption + early-churners retention
-
-**Read before starting any user-facing work** on onboarding, retention, virality, or telemetry:
-`C:\Users\onemu\.claude\plans\ok-so-situation-is-eager-key.md`
-
-It contains the multi-phase plan agreed in the 2026-05-31 session covering:
-- ✅ **Phase 0** (0.2.1.0): telemetry (`trackEvent` at ~15 funnel breakpoints) — **shipped**
-- ✅ **Phase 1a** (0.2.2.0): visible scoring — **shipped**
-- ✅ **Phase 1b** (0.2.3.0): in-game contextual hints + claimable-lines toggle — **shipped**
-- ✅ **Phase 2a** (0.2.5.0): daily-streak plumbing — **shipped**
-- ✅ **Phase 2b** (0.2.6.0 / 0.2.7.0): daily puzzle + leaderboard — **shipped**
-- ✅ **Phase 2c** (0.2.4.0): menu share / invite — **shipped**
-- ⏳ **Phase 3**: after-game share-a-win + challenge-this-opponent CTA (post-game viral) — **next unstarted**
-- ⏳ **Phase 4** (deferred until Phase 0 telemetry): SSR pre-render + browser push + strategy blog
-
-The 5-approach onboarding rescue plan is folded into Phase 1 (we picked Approach 2: in-game contextual hints). Approaches 1, 3, 4, 5 remain in the backlog inside the plan file.
-
-If the user asks "what's next" on adoption / retention / onboarding without specifying a phase: **Phase 3** is the next unstarted phase. Phase 4 is deferred until Phase 0 telemetry tells us whether the retention work paid off.
-
-## Deferred — do not start without explicit ask
-
-### Tutorial animations
-
-Replace text-only `TutorialPopover` + enrich Rules popover. Est. ~2 days.
-
-- **Format: SVG (NOT GIFs).** ~5KB each, themable, no asset pipeline, crisp at any size.
-- **Five looped scenes:** place a dot · score a line (+3 pop) · biggest-only catch (4-line strikes, 2-line goes pending with ring) · claim a pending line · game end.
-- **Implementation:** `src/components/tutorial/AnimatedScene.tsx` takes `frames: {action, pauseMs}[]`, reuses `Board.tsx` (disabled) + `applyAction` — no parallel engine, no drift.
-- **Placement:** first-launch 5-card carousel (gated by existing `settings.tutorialSeen`); inline ~120×120 thumbnails in Rules popover sections.
-
-### SEO refinements (post-launch)
-
-Baseline (meta tags, OG, Twitter Card, VideoGame JSON-LD, FAQPage JSON-LD, robots.txt, sitemap.xml, expanded `<noscript>` body with comparable-game positioning) is in place as of 2026-06-01. Future when traffic justifies:
-
-- Pre-render menu HTML via `vite-ssg` so Google sees populated DOM (biggest single win).
-- `/blog` route for strategy / design / tournament long-tail.
-- `Schema.org AggregateRating` once reviews > 50.
-- Localized pages (`/es`, `/pt`) when non-English MAU justifies.
-- Lighthouse pass + code-split to drop initial bundle < 500 KB gzipped.
-
-### Trademark filing (decided, not yet acted on)
-
-LICENSE file at repo root declares proprietary, all rights reserved (see [[project_dotduel_copyright]] in user memory). Next step is trademark registration for the "DotDuel" name. Three options in order of value:
-- **EUIPO** (~€850, class 9 + class 41, 4-6 months) — best coverage for the user's location.
-- **LT national VPB** (~€180, LT-only, 4-6 months) — cheapest entry point.
-- **USPTO** ($250-350/class, 8-12 months) — defer until US revenue.
-
-Patent on the biggest-only-with-pending mechanic was explicitly ruled out (€5k-50k+, 2-4 years, not worth it for an alpha). Cheap alternative: file a US provisional patent ($150-300, no lawyer required) for 12 months of "patent pending" status as defensive cover.
-
-### Sounds
-
-Need to create appropriate sounds based on the game. Surfaced again in the 2026-06-05 visualization revamp — the new Settings design exposes a **Sound effects** toggle, so the audio engine (dot pop, line claim, win sting) needs building before that toggle ships. Still gated behind retention/gameplay work.
-
-### Replay
-
-Game **replay / watch-back**, surfaced in the 2026-06-05 visualization revamp. Scope TBD — likely re-watching a finished game move-by-move from stored move history, possibly shareable. Define the feature before building. Future, not now.
-
-### Share-link unfurl — BACKLOGGED, TBD whether we ship it (2026-06-12)
-
-Personalized share links that unfurl into the victory card on WhatsApp/X/Telegram/Discord (`dotduel.com/r/<id>` → OG card image → redirect to `?ref=<uid>`). **Fully built; decision deferred** — parked because the pretty-URL step needs a Cloudflare DNS migration the user judged too involved for now. If revived, it's a "full development" item (finish + verify + decide), not a quick flip.
-
-- **State:** backend is **live on prod Supabase** (table `share_cards`, public `share-cards` bucket, public Edge Fn `r` — all deployed, RLS-verified, harmless while unused). Client is built but **gated OFF** behind `ENABLE_SHARE_CARD_LINKS = false` in `src/cloud/shareCards.ts` — sharing falls back to the plain image + `?ref=` link. The card **redesign** is independent and stays (not part of this backlog).
-- **To revive:** flip `ENABLE_SHARE_CARD_LINKS` true, do the Cloudflare setup in `cloudflare/SETUP-STEPS.md` (plain-English) / `cloudflare/README.md` (technical), then flip `SHARE_LINK_BASE` to `https://dotduel.com/r`.
-- **Open cost note:** Supabase custom domain ($10/mo) is ruled out by the zero-cost rule; the free path is Cloudflare DNS + a Worker. A nameserver migration risks `@dotduel.com` email forwarding (Namecheap `eforward1-5` MX + SPF TXT) — must be preserved.
-- **Cleanup if abandoned:** drop the `share_cards` table + `share-cards` bucket + `r` function on Supabase; delete `src/cloud/shareCards.ts`, `supabase/functions/r/`, the `20260612010000_share_cards.sql` migration, and `cloudflare/`.
-
-### Monetization (TBD)
-
-Likely options: cosmetic skins, optional consent-gated ad break, one-time "Pro" unlock. Constraint: must not pay a third party to ship (no Unity ads, no per-event-billed SDKs, no premium licenses).
-
-### Legal footer
-
-Replace stub anchors in `Menu.tsx` (Privacy/Terms/Contact) when GDPR copy is written.
-
-### Production domain (www.dotduel.com)
-
-On hold pending polish sign-off. Either keep GH Pages + custom-domain CNAME, or migrate to Cloudflare Pages / Netlify / Vercel free tier.
-
----
-
-## Development conventions
-
-- **Strict TS** — `noUnusedLocals`, `noUnusedParameters`. Use `void` or destructure-omit unused params.
-- **No comments** unless the *why* is non-obvious (constraint, workaround). Identifier names beat narration.
-- **Game state is immutable.** `applyMove`/`applyClaim`/`applyAction` return new `GameState`; don't mutate `colored`/`completed`/`pending`/`scores`.
-- **Geometry computed once** via memoized `getBoards()`. Don't recompute per render.
-- **localStorage writes via the `storage.ts` helpers**; bump `:vN` when shape semantics change.
-- UI strings live in components (no i18n). Game UI is **English**; team communication is **Lithuanian**.
-- **Bump `src/version.ts` `APP_VERSION` + add a `src/changelog.ts` entry** on user-visible changes. Keep them in lock-step.
-- **HMR can stall** — if edits don't reach the browser, restart `npm run dev` and clear `node_modules/.vite`.
-- **Firebase Google sign-in:** use `signInWithPopup` for web. `signInWithRedirect` breaks on localhost+Chrome. Capacitor uses the native plugin on mobile.
-
----
+- Strict TS (`noUnusedLocals`/`noUnusedParameters`). No comments unless the *why* is non-obvious. Game state immutable; geometry computed once (`getBoards()`).
+- **Bump `src/version.ts` + `src/changelog.ts` on user-visible changes** (changelog wording is user-owned — flag drafts for review).
+- UI strings English, in components; team communication Lithuanian.
+- Supabase Auth: web uses the browser OAuth flow, Capacitor uses the native plugin. HMR stalls → restart dev + clear `node_modules/.vite`.
+- Production pushes to `main` and prod-data writes need explicit user authorization.
 
 ## Sanity checklist before shipping
 
-1. `npm run build` succeeds (TS strict + Vite bundle).
-2. Triangle L1 win unlocks L2; Triangle L2 win unlocks Square.
-3. Hot-seat does not modify `dotduel:progress:v3` (per-name stats in `dotduel:stats:v4` DO update — intended).
-4. Corner dot scores 1 point immediately and renders the corner strike.
-5. Multi-line completion: longest strikes; rest go pending (no visual outside learning window). Clicking a pending dot later claims it.
-6. Endgame: all dots colored, players continue claiming until pending pool is empty before GameOver.
-7. iPhone-SE portrait stacks player cards above the board; landscape fits the three mode cards on one menu row.
-8. Topbar/board don't shift vertically when pending badge appears or AI starts thinking.
-9. Rules popover opens from menu footer AND in-game `?`; closes on backdrop / ✕ / ESC.
-10. After AI changes: `npm run simulate:l4` — L5 vs L5 averages stay within ~3 points per shape.
-11. After square / pending-flow changes: `npm run simulate:square` — must report 50/50 with integrity OK.
-12. After push to `main`: `gh run list --limit 1` green and staging URL loads.
-13. After multiplayer-touching changes: two-browser sanity — pair, ready, full game, GameOver, Elo delta on both sides, session lock releases on back-to-menu.
+1. `npm run build` green.
+2. Triangle L1 win unlocks L2; Triangle L2 win unlocks Square. Hot-seat doesn't touch progress (stats DO update).
+3. Corner dot scores 1 + corner strike; multi-line completion: longest strikes, rest pending; clicking a pending dot claims it; endgame drains pending before GameOver.
+4. iPhone-SE portrait: cards stack above board; nothing scrolls or shifts when badges/thinking appear.
+5. Rules popover from menu footer AND in-game `?`.
+6. After AI changes: `npm run simulate:l4` (~3 pts max gap); after square/pending changes: `npm run simulate:square` (50/50 + integrity OK).
+7. After push to `main`: `gh run list --limit 1` green, prod loads.
+8. After multiplayer changes: two-browser sanity (pair, ready, game, GameOver, Elo both sides, session lock releases).
+9. After Android-touching changes: `npx cap sync android` + emulator boot (AVD `dotduel_api35`, WHPX accel).

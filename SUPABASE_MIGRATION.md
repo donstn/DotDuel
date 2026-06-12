@@ -1,6 +1,12 @@
 # Supabase migration — status & handoff
 
-Branch: **`supabase-migration`** (production `main` is untouched, still 100% Firebase).
+> **HISTORICAL (2026-06-12): the migration is COMPLETE.** Merged to `main` and cut over
+> 2026-06-09 as Alpha 0.4.0.0 — production www.dotduel.com runs on Supabase, the client is
+> 100% Firebase-free, and the `functions/` dir has been removed from the repo. Branch
+> references below are stale. This doc remains the inventory of deployed Edge Functions,
+> tables/RLS, and conventions (the conventions are also summarized in CLAUDE.md).
+> Still pending: retire the Firebase cloud project + rotate Supabase keys.
+
 Supabase project ref: **`ggyjxayazxbjvjbeecxa`** · URL `https://ggyjxayazxbjvjbeecxa.supabase.co`
 
 ## ⚡ SESSION 2 (2026-06-08 pm) — THE CLIENT IS NOW 100% FIREBASE-FREE

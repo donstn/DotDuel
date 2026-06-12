@@ -30,6 +30,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.5.1',
+    date: '2026-06-12',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Share card: the board now looks like the real game (line thickness matched; dots no longer buried on busy boards) and the score no longer overlaps the "pts" label.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.5.0',
     date: '2026-06-12',
     highlight: 'Faster on phones',

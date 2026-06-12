@@ -249,11 +249,11 @@ function drawBoard(
     }
   }
 
-  // Strikes over the dots — slimmer than in-game so a busy endgame board
-  // reads as a finished match, not a scribble.
+  // Strikes over the dots — EXACT in-game proportions (Board.tsx: strokeWidth
+  // = dotRadius*0.42, outer ×0.575, inner ×0.22, overshoot 5R/3, opaque).
+  // Anything fatter turns a finished Square board (40 struck lines) into a
+  // bright mesh that buries the dots and reads as fake.
   const lineById = new Map(board.lines.map((l) => [l.id, l]));
-  ctx.save();
-  ctx.globalAlpha = 0.92;
   for (const c of state.completed) {
     const line = lineById.get(c.lineId);
     if (!line) continue;
@@ -269,7 +269,7 @@ function drawBoard(
       dx = 1;
       dy = 0;
     }
-    const over = (r * 1.15) / scale;
+    const over = (r * (5 / 3)) / scale;
     const x1 = px(first.x - dx * over);
     const y1 = py(first.y - dy * over);
     const x2 = px(last.x + dx * over);
@@ -280,16 +280,15 @@ function drawBoard(
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.strokeStyle = s.outer;
-    ctx.lineWidth = r * 0.78;
+    ctx.lineWidth = r * 0.42 * 0.575;
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.strokeStyle = s.inner;
-    ctx.lineWidth = r * 0.28;
+    ctx.lineWidth = r * 0.42 * 0.22;
     ctx.stroke();
   }
-  ctx.restore();
 }
 
 function wrapText(
@@ -557,8 +556,10 @@ export async function renderVictoryCard({
     ctx.font = scoreFont;
     ctx.fillStyle = theme.accent;
     ctx.fillText(String(share.a.score), colX, scoreBase);
-    ctx.restore();
+    // Measure INSIDE the save block while scoreFont is active — restore()
+    // reverts the font, and a small-font measurement parks "pts" on the digits.
     const nW = ctx.measureText(String(share.a.score)).width;
+    ctx.restore();
     ctx.font = `700 44px ${FONT_DISPLAY}`;
     ctx.fillStyle = theme.textDim;
     ctx.fillText('pts', colX + nW + 28, scoreBase);

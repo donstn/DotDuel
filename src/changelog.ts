@@ -30,6 +30,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.5.2',
+    date: '2026-06-12',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Share card is now rendered at double resolution — no more visible pixels when the picture is opened full-screen in Messenger or WhatsApp.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.5.1',
     date: '2026-06-12',
     changes: [

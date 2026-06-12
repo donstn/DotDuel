@@ -15,6 +15,12 @@ import type { ResultShare } from './resultShareText';
 
 const W = 1200;
 const H = 630;
+// Output at 2× (2400×1260): messengers open shared images FULL-SCREEN on
+// 1080-1440px phones, where a 1200px image shows visible pixels. All layout
+// stays in 1200×630 logical units via ctx.scale — but canvas shadows are
+// DEVICE-space per spec (the CTM doesn't touch them), so every shadowBlur/
+// shadowOffset below multiplies by SCALE explicitly.
+const SCALE = 2;
 
 const FONT_DISPLAY = "'Chakra Petch', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif";
 const FONT_BODY = "'Outfit', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif";
@@ -130,7 +136,7 @@ function drawGlowDot(
   const c = theme.dot[player];
   ctx.save();
   ctx.shadowColor = c.bright;
-  ctx.shadowBlur = r * 0.7;
+  ctx.shadowBlur = r * 0.7 * SCALE;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fillStyle = dotGradient(ctx, x, y, r, [c.bright, c.glow, c.deep]);
@@ -186,9 +192,14 @@ function drawGrain(ctx: CanvasRenderingContext2D, theme: Theme): void {
   const pat = ctx.createPattern(tile, 'repeat');
   if (!pat) return;
   ctx.save();
-  ctx.globalAlpha = 0.5;
+  // Device space: under ctx.scale the pattern's noise pixels would smear into
+  // soft 2×2 blobs. Resetting the transform keeps true 1-device-px film grain.
+  // Slightly lower alpha than the 1× original — noise is incompressible, and
+  // 4× the grain pixels would otherwise balloon the PNG.
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 0.4;
   ctx.fillStyle = pat;
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(0, 0, W * SCALE, H * SCALE);
   ctx.restore();
 }
 
@@ -228,8 +239,8 @@ function drawBoard(
       const c = theme.dot[cd.player];
       ctx.save();
       ctx.shadowColor = 'rgba(0,0,0,0.45)';
-      ctx.shadowBlur = r * 0.5;
-      ctx.shadowOffsetY = r * 0.22;
+      ctx.shadowBlur = r * 0.5 * SCALE;
+      ctx.shadowOffsetY = r * 0.22 * SCALE;
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.fillStyle = dotGradient(ctx, x, y, r, [c.bright, c.glow, c.deep]);
@@ -356,10 +367,11 @@ export async function renderVictoryCard({
 
   const theme = readTheme();
   const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
+  canvas.width = W * SCALE;
+  canvas.height = H * SCALE;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('canvas 2d unavailable');
+  ctx.scale(SCALE, SCALE);
 
   // ---- Atmosphere -----------------------------------------------------------
   ctx.fillStyle = theme.bgEdge;
@@ -400,8 +412,8 @@ export async function renderVictoryCard({
   const pr = 30;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.5)';
-  ctx.shadowBlur = 40;
-  ctx.shadowOffsetY = 14;
+  ctx.shadowBlur = 40 * SCALE;
+  ctx.shadowOffsetY = 14 * SCALE;
   rr(ctx, panel.x, panel.y, panel.w, panel.h, pr);
   const glassFill = ctx.createLinearGradient(panel.x, panel.y, panel.x, panel.y + panel.h);
   glassFill.addColorStop(0, theme.glass(theme.isLight ? 0.06 : 0.075));
@@ -510,7 +522,7 @@ export async function renderVictoryCard({
       ctx.save();
       if (won) {
         ctx.shadowColor = theme.dot[player].bright;
-        ctx.shadowBlur = 34;
+        ctx.shadowBlur = 34 * SCALE;
       }
       ctx.fillStyle = won ? theme.dot[player].bright : theme.textDim;
       ctx.font = scoreFont;
@@ -552,7 +564,7 @@ export async function renderVictoryCard({
     // Solo (daily): giant accent score + "pts".
     ctx.save();
     ctx.shadowColor = theme.accent;
-    ctx.shadowBlur = 36;
+    ctx.shadowBlur = 36 * SCALE;
     ctx.font = scoreFont;
     ctx.fillStyle = theme.accent;
     ctx.fillText(String(share.a.score), colX, scoreBase);
@@ -579,7 +591,7 @@ export async function renderVictoryCard({
   const btn = { x: colX, y: ctaY, w: ctaW + 64, h: 60 };
   ctx.save();
   ctx.shadowColor = theme.accent;
-  ctx.shadowBlur = 30;
+  ctx.shadowBlur = 30 * SCALE;
   rr(ctx, btn.x, btn.y, btn.w, btn.h, 30);
   const btnFill = ctx.createLinearGradient(0, btn.y, 0, btn.y + btn.h);
   btnFill.addColorStop(0, theme.accent);

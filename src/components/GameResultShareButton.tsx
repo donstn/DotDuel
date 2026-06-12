@@ -9,6 +9,32 @@ import type { GameState } from '../types';
 
 const SHARE_TITLE = 'DotDuel — fast 2-player dot strategy';
 const FILE_NAME = 'dotduel-result.png';
+const SHARE_FILE_NAME = 'dotduel-result.jpg';
+
+// The 2× card PNG is ~6MB (film grain defeats PNG compression). For the OS
+// share sheet we send a full-res JPEG q0.9 (~0.5MB) instead — messengers
+// transcode to JPEG on send anyway, and the grain dithers away any banding.
+// Clipboard (PNG-only API), download, and the dialog preview keep the PNG.
+async function toShareJpeg(png: Blob): Promise<Blob> {
+  try {
+    const bmp = await createImageBitmap(png);
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = bmp.width;
+      canvas.height = bmp.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return png;
+      ctx.drawImage(bmp, 0, 0);
+      return await new Promise<Blob>((resolve) => {
+        canvas.toBlob((b) => resolve(b ?? png), 'image/jpeg', 0.9);
+      });
+    } finally {
+      bmp.close();
+    }
+  } catch {
+    return png;
+  }
+}
 
 interface Props {
   data: ShareResultData;
@@ -42,8 +68,8 @@ async function tryNativeShare(
       import('@capacitor/share'),
     ]);
     const written = await Filesystem.writeFile({
-      path: FILE_NAME,
-      data: await blobToBase64(blob),
+      path: SHARE_FILE_NAME,
+      data: await blobToBase64(await toShareJpeg(blob)),
       directory: Directory.Cache,
     });
     try {
@@ -54,7 +80,9 @@ async function tryNativeShare(
       throw e;
     }
   }
-  const file = new File([blob], FILE_NAME, { type: 'image/png' });
+  const file = new File([await toShareJpeg(blob)], SHARE_FILE_NAME, {
+    type: 'image/jpeg',
+  });
   if (navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ title: SHARE_TITLE, text: shareText, files: [file] });

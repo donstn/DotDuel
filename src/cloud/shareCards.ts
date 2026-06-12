@@ -26,15 +26,24 @@ function randomId(): string {
     .replace(/=+$/, '');
 }
 
+// Upload size is pinned to OG dimensions regardless of the render scale:
+// unfurl previews never display larger than ~1200 wide, and the card is now
+// rendered at 2× (2400×1260) — uploading that would silently exceed the
+// bucket's 400KB cap (grain defeats JPEG compression) and kill the feature
+// with no error anywhere.
+const OG_W = 1200;
+const OG_H = 630;
+
 async function pngToJpeg(png: Blob): Promise<Blob> {
   const bmp = await createImageBitmap(png);
   try {
     const canvas = document.createElement('canvas');
-    canvas.width = bmp.width;
-    canvas.height = bmp.height;
+    canvas.width = OG_W;
+    canvas.height = OG_H;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('canvas 2d unavailable');
-    ctx.drawImage(bmp, 0, 0);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(bmp, 0, 0, OG_W, OG_H);
     return await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (b) => (b ? resolve(b) : reject(new Error('toBlob failed'))),

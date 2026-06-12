@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.4.0',
+    date: '2026-06-11',
+    highlight: 'Share your result',
+    changes: [
+      {
+        kind: 'added',
+        text: 'New "Share result" button on the end-of-game screen — it builds a picture of your finished board with the score and shares it anywhere, along with a link your friends can use to play you.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.3.0',
     date: '2026-06-10',
     highlight: 'Cleaner board, bigger text',

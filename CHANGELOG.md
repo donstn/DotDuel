@@ -5,6 +5,26 @@ All notable changes to DotDuel will be documented in this file. Format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Share-a-result victory cards** (0.4.4.0, strategic plan Phase 3 —
+  post-game viral). New "📤 Share result" button on GameOver for ALL
+  modes (vs-AI / hot-seat / multiplayer / daily), hidden only for
+  aborted matches. On tap, `src/share/victoryCard.ts` renders a
+  1200×630 PNG on an offscreen canvas — theme-aware (reads the active
+  theme's CSS vars), og-card aesthetic, with the REAL final board
+  (every dot + completed-line strikes) and outcome-tuned copy from
+  `src/share/resultShareText.ts` (ranked → Elo delta, daily → puzzle
+  score, vs-AI → level beaten, hot-seat → final score). The shared
+  link carries `?ref=<uid>` for signed-in users (existing referral
+  pickup), clean URL for anonymous. Share cascade: native app →
+  `@capacitor/filesystem` cache write + `@capacitor/share` sheet;
+  web → `navigator.share` with the File; fallback → PNG download +
+  clipboard. Blob generated on demand, nothing persisted. New
+  telemetry: `result_share_clicked` / `result_share_completed`
+  (mode, outcome, share_method). New deps `@capacitor/share` +
+  `@capacitor/filesystem` (official Capacitor plugins, MIT, $0).
+
 ### Changed
 
 - **Removed the in-game contextual hint popups** (0.4.3.0). The five

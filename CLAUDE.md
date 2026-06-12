@@ -336,6 +336,15 @@ Need to create appropriate sounds based on the game. Surfaced again in the 2026-
 
 Game **replay / watch-back**, surfaced in the 2026-06-05 visualization revamp. Scope TBD — likely re-watching a finished game move-by-move from stored move history, possibly shareable. Define the feature before building. Future, not now.
 
+### Share-link unfurl — BACKLOGGED, TBD whether we ship it (2026-06-12)
+
+Personalized share links that unfurl into the victory card on WhatsApp/X/Telegram/Discord (`dotduel.com/r/<id>` → OG card image → redirect to `?ref=<uid>`). **Fully built; decision deferred** — parked because the pretty-URL step needs a Cloudflare DNS migration the user judged too involved for now. If revived, it's a "full development" item (finish + verify + decide), not a quick flip.
+
+- **State:** backend is **live on prod Supabase** (table `share_cards`, public `share-cards` bucket, public Edge Fn `r` — all deployed, RLS-verified, harmless while unused). Client is built but **gated OFF** behind `ENABLE_SHARE_CARD_LINKS = false` in `src/cloud/shareCards.ts` — sharing falls back to the plain image + `?ref=` link. The card **redesign** is independent and stays (not part of this backlog).
+- **To revive:** flip `ENABLE_SHARE_CARD_LINKS` true, do the Cloudflare setup in `cloudflare/SETUP-STEPS.md` (plain-English) / `cloudflare/README.md` (technical), then flip `SHARE_LINK_BASE` to `https://dotduel.com/r`.
+- **Open cost note:** Supabase custom domain ($10/mo) is ruled out by the zero-cost rule; the free path is Cloudflare DNS + a Worker. A nameserver migration risks `@dotduel.com` email forwarding (Namecheap `eforward1-5` MX + SPF TXT) — must be preserved.
+- **Cleanup if abandoned:** drop the `share_cards` table + `share-cards` bucket + `r` function on Supabase; delete `src/cloud/shareCards.ts`, `supabase/functions/r/`, the `20260612010000_share_cards.sql` migration, and `cloudflare/`.
+
 ### Monetization (TBD)
 
 Likely options: cosmetic skins, optional consent-gated ad break, one-time "Pro" unlock. Constraint: must not pay a third party to ship (no Unity ads, no per-event-billed SDKs, no premium licenses).

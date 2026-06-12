@@ -46,7 +46,14 @@ Everything that imported Firebase has been ported to Supabase or removed. `src/f
 - **Phase 3 server side** — Deno engine copy; `finalize_game` (Elo) RPC; **`submit-move` Edge Function (deployed)**; `set_ready`/`set_board_loaded`/`set_rematch` RPCs; **`matchmake` Edge Function (deployed)** + `pairings` table; Realtime enabled on `games` + `pairings`.
 
 ## Deployed Edge Functions
-`submit-move`, `matchmake`. Deploy with `npx supabase functions deploy <name>` (CLI is logged-in + linked; **no Docker needed** — the warning is harmless). **Run `node scripts/copy-engine-supabase.cjs` before deploying engine-dependent functions** (submit-move, future bot-move).
+`submit-move`, `matchmake`, `request-bot-match`, `accept-invite`, `account-delete`, `daily-puzzle`, `r`. Deploy with `npx supabase functions deploy <name>` (CLI is logged-in + linked; **no Docker needed** — the warning is harmless). **Run `node scripts/copy-engine-supabase.cjs` before deploying engine-dependent functions** (submit-move, future bot-move).
+
+### Share-card unfurl (2026-06-12, branch `capacitor-android`)
+- **`share_cards` table + public `share-cards` storage bucket** (owner-only insert RLS, 50/day cap, JPEG ≤400 KB) — applied via `db query --linked`, SQL kept at `supabase/migrations/20260612010000_share_cards.sql`.
+- **`r` Edge Function** (deployed `--no-verify-jwt`, public): `GET /functions/v1/r/<id>` serves OG/Twitter tags pointing at the stored card JPEG so pasted links unfurl into the picture, then redirects humans to `www.dotduel.com/?ref=<uid>`. Unknown ids → 302 home.
+- Client: `src/cloud/shareCards.ts` (`createShareCardLink` uploads JPEG + row, returns link; null on any failure → share falls back to plain URL). Wired in `GameResultShareButton` (native app awaits link; desktop dialog upgrades in background; web `navigator.share` stays instant to keep user activation).
+- **Verified:** RLS negative tests pass (anon upload/insert denied, select empty); invalid-id redirects OK. **Positive path pending a real signed-in share** (user will test). One unconfirmed throwaway `sharetest+…@dotduel.com` auth user left behind — delete via dashboard at convenience.
+- **Deferred:** 30-day storage cleanup cron (needs storage-API delete via Edge Fn + pg_net; revisit after key rotation). **Link domain undecided** — links currently use the `…supabase.co/functions/v1/r/<id>` host; user wants a domain discussion before shipping to players.
 
 ## Migrations applied (via SQL Editor — NOT `db push`)
 init schema · rpcs (finalize_daily/complete_level) · finalize_daily_v2 · profile_progress · games_realtime · finalize_game · game_lifecycle_rpcs · pairings.

@@ -30,6 +30,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.5.3',
+    date: '2026-06-12',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Share card redesigned: the board now sits on its real 3D felt table like in the game, the text is centered, and the DotDuel.com address is much easier to read.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.5.2',
     date: '2026-06-12',
     changes: [

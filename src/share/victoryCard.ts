@@ -45,6 +45,11 @@ interface Theme {
   isLight: boolean;
   /** Ink for glass borders / lattice / grain — white on dark themes, black on light. */
   glass: (a: number) => string;
+  /** In-game board surface: felt gradient + bezel rim (same CSS vars as Board.tsx). */
+  felt1: string;
+  felt2: string;
+  rimHi: string;
+  rimLo: string;
   dot: Record<Player, { bright: string; glow: string; deep: string }>;
   strike: Record<Player, { outer: string; inner: string }>;
 }
@@ -69,6 +74,10 @@ function readTheme(): Theme {
     titleBottom: cssVar('--title-grad-bottom', '#b9d6c4'),
     isLight,
     glass: isLight ? (a) => `rgba(20,16,8,${a})` : (a) => `rgba(255,255,255,${a})`,
+    felt1: cssVar('--board-felt-1', '#16291e'),
+    felt2: cssVar('--board-felt-2', '#0a1812'),
+    rimHi: cssVar('--rim-hi', '#37473e'),
+    rimLo: cssVar('--rim-lo', '#07100c'),
     dot: {
       1: {
         bright: cssVar('--p1-bright', '#62cf90'),
@@ -203,6 +212,34 @@ function drawGrain(ctx: CanvasRenderingContext2D, theme: Theme): void {
   ctx.restore();
 }
 
+interface Pt {
+  x: number;
+  y: number;
+}
+
+// Andrew monotone chain — the dots' convex hull is the felt outline.
+function convexHull(pts: Pt[]): Pt[] {
+  const p = [...pts].sort((a, b) => a.x - b.x || a.y - b.y);
+  const cross = (o: Pt, a: Pt, b: Pt) =>
+    (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const lower: Pt[] = [];
+  for (const q of p) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], q) <= 0)
+      lower.pop();
+    lower.push(q);
+  }
+  const upper: Pt[] = [];
+  for (let i = p.length - 1; i >= 0; i--) {
+    const q = p[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], q) <= 0)
+      upper.pop();
+    upper.push(q);
+  }
+  lower.pop();
+  upper.pop();
+  return lower.concat(upper);
+}
+
 function drawBoard(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -212,7 +249,14 @@ function drawBoard(
 ): void {
   const board = getBoards()[shape];
   const vb = board.viewBox;
-  const scale = Math.min(rect.w / vb.w, rect.h / vb.h);
+  // Two-pass fit: the felt + rim extend past the dots by a dot-radius-derived
+  // margin, so size the dot layout once, derive the margin, then refit.
+  let scale = Math.min(rect.w / vb.w, rect.h / vb.h);
+  let margin = Math.min(rect.w, rect.h) * 0.0; // first pass: none
+  for (let pass = 0; pass < 2; pass++) {
+    scale = Math.min((rect.w - margin * 2) / vb.w, (rect.h - margin * 2) / vb.h);
+    margin = scale * 0.31 * (1.64 + 0.55) + 6; // feltGap + rim + breathing room
+  }
   const ox = rect.x + (rect.w - vb.w * scale) / 2 - vb.x * scale;
   const oy = rect.y + (rect.h - vb.h * scale) / 2 - vb.y * scale;
   const px = (x: number) => ox + x * scale;
@@ -230,6 +274,60 @@ function drawBoard(
   }
   if (!Number.isFinite(minD)) minD = 1;
   const r = minD * 0.31 * scale;
+
+  // ---- In-game felt board: Minkowski-rounded hull (round-join fat stroke +
+  // fill = the disc-offset silhouette Board.tsx builds), bezel rim, recessed
+  // felt — the 3D "table" the game plays on.
+  const hull = convexHull(board.dots.map((d) => ({ x: px(d.x), y: py(d.y) })));
+  const traceHull = () => {
+    ctx.beginPath();
+    hull.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.closePath();
+  };
+  const silhouette = (offset: number, paint: string | CanvasGradient) => {
+    traceHull();
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.lineWidth = offset * 2;
+    ctx.strokeStyle = paint;
+    ctx.fillStyle = paint;
+    ctx.stroke();
+    ctx.fill();
+  };
+  const feltGap = r * 1.64; // in-game feltGap = dotRadius * 1.64
+  const rimW = r * 0.5;
+  const top = Math.min(...hull.map((p) => p.y)) - feltGap - rimW;
+  const bot = Math.max(...hull.map((p) => p.y)) + feltGap + rimW;
+
+  // Bezel rim, top-lit, floated on a drop shadow.
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 26 * SCALE;
+  ctx.shadowOffsetY = 10 * SCALE;
+  const rim = ctx.createLinearGradient(0, top, 0, bot);
+  rim.addColorStop(0, theme.rimHi);
+  rim.addColorStop(0.5, theme.felt1);
+  rim.addColorStop(1, theme.rimLo);
+  silhouette(feltGap + rimW, rim);
+  ctx.restore();
+
+  // Dark contact band just inside the rim, then the felt surface — radial
+  // top-left light like the in-game board-felt gradient, slightly darker at
+  // the edges so the felt reads as recessed into the bezel.
+  silhouette(feltGap + rimW * 0.36, theme.rimLo);
+  const cxF = (Math.min(...hull.map((p) => p.x)) + Math.max(...hull.map((p) => p.x))) / 2;
+  const spanF = bot - top;
+  const felt = ctx.createRadialGradient(
+    cxF - spanF * 0.18,
+    top + spanF * 0.22,
+    spanF * 0.08,
+    cxF,
+    (top + bot) / 2,
+    spanF * 0.92,
+  );
+  felt.addColorStop(0, theme.felt1);
+  felt.addColorStop(1, theme.felt2);
+  silhouette(feltGap, felt);
 
   for (const d of board.dots) {
     const cd = state.colored[d.id];
@@ -392,10 +490,10 @@ export async function renderVictoryCard({
   ctx.fillStyle = vig;
   ctx.fillRect(0, 0, W, H);
 
-  // ---- Glass board panel (right) -------------------------------------------
-  const panel = { x: 648, y: 74, w: 474, h: 482 };
+  // ---- Board (right) — the real in-game felt table, no glass card ----------
+  const panel = { x: 640, y: 64, w: 490, h: 502 };
 
-  // Accent bloom behind the panel.
+  // Accent bloom behind the board — the card's light source.
   const bloom = ctx.createRadialGradient(
     panel.x + panel.w / 2,
     panel.y + panel.h / 2,
@@ -409,69 +507,31 @@ export async function renderVictoryCard({
   ctx.fillStyle = bloom;
   ctx.fillRect(panel.x - 130, panel.y - 130, panel.w + 260, panel.h + 260);
 
-  const pr = 30;
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.5)';
-  ctx.shadowBlur = 40 * SCALE;
-  ctx.shadowOffsetY = 14 * SCALE;
-  rr(ctx, panel.x, panel.y, panel.w, panel.h, pr);
-  const glassFill = ctx.createLinearGradient(panel.x, panel.y, panel.x, panel.y + panel.h);
-  glassFill.addColorStop(0, theme.glass(theme.isLight ? 0.06 : 0.075));
-  glassFill.addColorStop(1, theme.glass(theme.isLight ? 0.03 : 0.025));
-  ctx.fillStyle = glassFill;
-  ctx.fill();
-  ctx.restore();
+  drawBoard(ctx, state, shape, panel, theme);
 
-  rr(ctx, panel.x, panel.y, panel.w, panel.h, pr);
-  const glassEdge = ctx.createLinearGradient(panel.x, panel.y, panel.x, panel.y + panel.h);
-  glassEdge.addColorStop(0, theme.glass(theme.isLight ? 0.35 : 0.32));
-  glassEdge.addColorStop(0.5, theme.glass(0.08));
-  glassEdge.addColorStop(1, theme.glass(theme.isLight ? 0.2 : 0.14));
-  ctx.strokeStyle = glassEdge;
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  // ---- Left column — CENTERED stack -----------------------------------------
+  const colX = 64;
+  const colW = 540;
+  const colCX = colX + colW / 2;
 
-  // Specular top-edge highlight, like the in-game glass surfaces.
-  ctx.save();
-  rr(ctx, panel.x, panel.y, panel.w, panel.h, pr);
-  ctx.clip();
-  const spec = ctx.createLinearGradient(0, panel.y, 0, panel.y + 90);
-  spec.addColorStop(0, theme.glass(theme.isLight ? 0.1 : 0.12));
-  spec.addColorStop(1, theme.glass(0));
-  ctx.fillStyle = spec;
-  ctx.fillRect(panel.x, panel.y, panel.w, 90);
-  ctx.restore();
-
-  drawBoard(
-    ctx,
-    state,
-    shape,
-    { x: panel.x + 34, y: panel.y + 34, w: panel.w - 68, h: panel.h - 68 },
-    theme,
-  );
-
-  // ---- Left column ----------------------------------------------------------
-  const colX = 84;
-  const colW = 510;
-
-  // Wordmark row.
-  ctx.textAlign = 'left';
+  // Wordmark, flanked by the two player dots.
+  ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.font = `700 42px ${FONT_DISPLAY}`;
   const title = ctx.createLinearGradient(0, 70, 0, 110);
   title.addColorStop(0, theme.titleTop);
   title.addColorStop(1, theme.titleBottom);
-  drawGlowDot(ctx, colX + 15, 96, 15, theme, 1);
-  ctx.fillStyle = title;
-  ctx.fillText('DotDuel', colX + 48, 110);
   const wmW = ctx.measureText('DotDuel').width;
-  drawGlowDot(ctx, colX + 48 + wmW + 33, 96, 15, theme, 2);
+  drawGlowDot(ctx, colCX - wmW / 2 - 33, 96, 15, theme, 1);
+  ctx.fillStyle = title;
+  ctx.fillText('DotDuel', colCX, 110);
+  drawGlowDot(ctx, colCX + wmW / 2 + 33, 96, 15, theme, 2);
 
-  // Mode chip.
+  // Mode chip — kept as a quiet label pill (it's information, not a control).
   setLetterSpacing(ctx, '3px');
   ctx.font = `700 19px ${FONT_BODY}`;
   const tagW = ctx.measureText(share.tag).width;
-  const chip = { x: colX, y: 152, w: tagW + 48, h: 42 };
+  const chip = { x: colCX - (tagW + 48) / 2, y: 152, w: tagW + 48, h: 42 };
   rr(ctx, chip.x, chip.y, chip.w, chip.h, 21);
   ctx.fillStyle = `${theme.accent}1f`;
   ctx.fill();
@@ -480,7 +540,7 @@ export async function renderVictoryCard({
   ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.fillStyle = theme.accent;
-  ctx.fillText(share.tag, chip.x + 24, chip.y + 28);
+  ctx.fillText(share.tag, colCX, chip.y + 28);
   setLetterSpacing(ctx, '0px');
 
   // Headline — up to 2 lines; the whole stack below adapts to the line count
@@ -496,122 +556,144 @@ export async function renderVictoryCard({
   let y = twoLine ? 252 : 258;
   ctx.fillStyle = theme.text;
   for (const l of headLines) {
-    ctx.fillText(l, colX, y);
+    ctx.fillText(l, colCX, y);
     y += 56;
   }
   const lastHeadBase = y - 56;
 
-  // Hero score block.
-  const scoreSize = share.b ? (twoLine ? 96 : 116) : twoLine ? 110 : 132;
+  // Hero score block (sized −30% from the v1 design: numbers support the
+  // headline now instead of shouting over it).
+  const scoreSize = share.b ? (twoLine ? 67 : 81) : twoLine ? 77 : 92;
   const scoreFont = `700 ${scoreSize}px ${FONT_DISPLAY}`;
-  const scoreBase = lastHeadBase + (twoLine ? 118 : 148);
-  const nameY = scoreBase + (twoLine ? 42 : 46);
+  const scoreBase = lastHeadBase + (twoLine ? 96 : 118);
+  const nameY = scoreBase + (twoLine ? 40 : 44);
   if (share.b) {
     const winnerIsA = share.outcome === 'win';
     ctx.font = scoreFont;
     const sepW = ctx.measureText('–').width + 36;
     const aW = ctx.measureText(String(share.a.score)).width;
-    let x = colX;
+    const bW = ctx.measureText(String(share.b.score)).width;
+    const total = aW + 18 + sepW + bW;
+    const aCX = colCX - total / 2 + aW / 2;
+    const bCX = colCX + total / 2 - bW / 2;
 
     const drawScore = (
       score: number,
       player: Player,
       won: boolean,
-      atX: number,
+      atCX: number,
     ): void => {
       ctx.save();
       if (won) {
         ctx.shadowColor = theme.dot[player].bright;
-        ctx.shadowBlur = 34 * SCALE;
+        ctx.shadowBlur = 24 * SCALE;
       }
       ctx.fillStyle = won ? theme.dot[player].bright : theme.textDim;
       ctx.font = scoreFont;
-      ctx.fillText(String(score), atX, scoreBase);
+      ctx.fillText(String(score), atCX, scoreBase);
       ctx.restore();
     };
 
-    drawScore(share.a.score, share.a.player, winnerIsA || share.outcome === 'draw', x);
-    x += aW + 18;
+    drawScore(share.a.score, share.a.player, winnerIsA || share.outcome === 'draw', aCX);
     ctx.fillStyle = theme.glass(0.35);
     ctx.font = scoreFont;
-    ctx.fillText('–', x, scoreBase);
-    x += sepW;
+    ctx.fillText('–', colCX, scoreBase);
     drawScore(
       share.b.score,
       share.b.player,
       share.outcome === 'loss' || share.outcome === 'draw',
-      x,
+      bCX,
     );
 
-    // Names under their numerals, bullet dots in player colors.
+    // Names centered under their numerals, bullet dots in player colors.
     ctx.font = `600 25px ${FONT_BODY}`;
-    const nameA = truncate(ctx, share.a.name, 220);
-    const nameB = truncate(ctx, share.b.name, 220);
-    ctx.beginPath();
-    ctx.arc(colX + 8, nameY - 8, 7, 0, Math.PI * 2);
-    ctx.fillStyle = theme.dot[share.a.player].bright;
-    ctx.fill();
-    ctx.fillStyle = theme.text;
-    ctx.fillText(nameA, colX + 26, nameY);
-    const bX = colX + aW + 18 + sepW;
-    ctx.beginPath();
-    ctx.arc(bX + 8, nameY - 8, 7, 0, Math.PI * 2);
-    ctx.fillStyle = theme.dot[share.b.player].bright;
-    ctx.fill();
-    ctx.fillStyle = theme.text;
-    ctx.fillText(nameB, bX + 26, nameY);
+    const nameA = truncate(ctx, share.a.name, 230);
+    const nameB = truncate(ctx, share.b.name, 230);
+    const drawName = (name: string, player: Player, atCX: number): void => {
+      const nw = ctx.measureText(name).width;
+      ctx.beginPath();
+      ctx.arc(atCX - nw / 2 - 18, nameY - 8, 7, 0, Math.PI * 2);
+      ctx.fillStyle = theme.dot[player].bright;
+      ctx.fill();
+      ctx.fillStyle = theme.text;
+      ctx.fillText(name, atCX + 9, nameY);
+    };
+    drawName(nameA, share.a.player, aCX);
+    drawName(nameB, share.b.player, bCX);
   } else {
-    // Solo (daily): giant accent score + "pts".
+    // Solo (daily): accent score + "pts".
+    ctx.font = scoreFont;
+    const nW = ctx.measureText(String(share.a.score)).width;
+    ctx.font = `700 38px ${FONT_DISPLAY}`;
+    const ptsW = ctx.measureText('pts').width;
+    const numCX = colCX - (ptsW + 20) / 2;
     ctx.save();
     ctx.shadowColor = theme.accent;
-    ctx.shadowBlur = 36 * SCALE;
+    ctx.shadowBlur = 26 * SCALE;
     ctx.font = scoreFont;
     ctx.fillStyle = theme.accent;
-    ctx.fillText(String(share.a.score), colX, scoreBase);
-    // Measure INSIDE the save block while scoreFont is active — restore()
-    // reverts the font, and a small-font measurement parks "pts" on the digits.
-    const nW = ctx.measureText(String(share.a.score)).width;
+    ctx.fillText(String(share.a.score), numCX, scoreBase);
     ctx.restore();
-    ctx.font = `700 44px ${FONT_DISPLAY}`;
+    ctx.font = `700 38px ${FONT_DISPLAY}`;
     ctx.fillStyle = theme.textDim;
-    ctx.fillText('pts', colX + nW + 28, scoreBase);
+    ctx.textAlign = 'left';
+    ctx.fillText('pts', numCX + nW / 2 + 20, scoreBase);
+    ctx.textAlign = 'center';
     ctx.font = `600 25px ${FONT_BODY}`;
+    const soloName = truncate(ctx, share.a.name, 300);
+    const snW = ctx.measureText(soloName).width;
     ctx.beginPath();
-    ctx.arc(colX + 8, nameY - 8, 7, 0, Math.PI * 2);
+    ctx.arc(colCX - snW / 2 - 18, nameY - 8, 7, 0, Math.PI * 2);
     ctx.fillStyle = theme.dot[1].bright;
     ctx.fill();
     ctx.fillStyle = theme.text;
-    ctx.fillText(truncate(ctx, share.a.name, 300), colX + 26, nameY);
+    ctx.fillText(soloName, colCX + 9, nameY);
   }
 
-  // CTA button.
-  const ctaY = nameY + 26;
-  ctx.font = `800 27px ${FONT_BODY}`;
+  // CTA — not a button (nothing on a picture is clickable; a fake button
+  // erodes trust). A challenge line instead: accent rules flanking glowing
+  // text, with the domain right below as the "where".
+  const ctaBase = nameY + 64;
+  setLetterSpacing(ctx, '1px');
+  ctx.font = `700 31px ${FONT_DISPLAY}`;
   const ctaW = ctx.measureText(share.cta).width;
-  const btn = { x: colX, y: ctaY, w: ctaW + 64, h: 60 };
   ctx.save();
   ctx.shadowColor = theme.accent;
-  ctx.shadowBlur = 30 * SCALE;
-  rr(ctx, btn.x, btn.y, btn.w, btn.h, 30);
-  const btnFill = ctx.createLinearGradient(0, btn.y, 0, btn.y + btn.h);
-  btnFill.addColorStop(0, theme.accent);
-  btnFill.addColorStop(1, theme.accent);
-  ctx.fillStyle = btnFill;
-  ctx.fill();
+  ctx.shadowBlur = 18 * SCALE;
+  ctx.fillStyle = theme.accent;
+  ctx.fillText(share.cta, colCX, ctaBase);
   ctx.restore();
-  rr(ctx, btn.x, btn.y, btn.w, btn.h, 30);
-  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.fillStyle = luminance(theme.accent) > 0.45 ? '#0b1810' : '#ffffff';
-  ctx.fillText(share.cta, btn.x + 32, btn.y + 39);
-
-  // Domain.
-  setLetterSpacing(ctx, '2px');
-  ctx.font = `600 21px ${FONT_BODY}`;
-  ctx.fillStyle = theme.textDim;
-  ctx.fillText('www.dotduel.com', colX, Math.min(ctaY + 100, 598));
   setLetterSpacing(ctx, '0px');
+  const ruleY = ctaBase - 10;
+  const ruleGap = ctaW / 2 + 26;
+  const ruleLen = 64;
+  const rule = (dir: 1 | -1) => {
+    const g = ctx.createLinearGradient(
+      colCX + dir * ruleGap,
+      0,
+      colCX + dir * (ruleGap + ruleLen),
+      0,
+    );
+    g.addColorStop(0, `${theme.accent}cc`);
+    g.addColorStop(1, `${theme.accent}00`);
+    ctx.strokeStyle = g;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(colCX + dir * ruleGap, ruleY);
+    ctx.lineTo(colCX + dir * (ruleGap + ruleLen), ruleY);
+    ctx.stroke();
+  };
+  rule(1);
+  rule(-1);
+
+  // Domain — the call to action's destination, big enough to actually read
+  // in a feed (+60% over the v1 size).
+  setLetterSpacing(ctx, '2px');
+  ctx.font = `700 34px ${FONT_BODY}`;
+  ctx.fillStyle = theme.text;
+  ctx.fillText('www.DotDuel.com', colCX, Math.min(ctaBase + 56, 600));
+  setLetterSpacing(ctx, '0px');
+  ctx.textAlign = 'left';
 
   drawGrain(ctx, theme);
 

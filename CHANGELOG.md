@@ -18,6 +18,19 @@ All notable changes to DotDuel will be documented in this file. Format follows
   dialog (synthesizes Escape), exits only from the menu, ignored mid-game.
   Plain-language submission walkthrough in `PLAY_STORE_GUIDE.md` (keystore,
   Data Safety answers, IARC, listing assets).
+- **Native Google sign-in on Android** (0.4.5.0). The Capacitor app now
+  uses the OS account picker (Credential Manager via
+  `@capgo/capacitor-social-login` 8.3.22, MPL-2.0 — file-level copyleft,
+  dependency-use doesn't affect app code, $0) → id-token →
+  `signInWithIdToken` (the existing dual-auth bridge fn). Replaces the
+  web `signInWithOAuth` redirect on native, which stranded the session in
+  an external browser tab (redirect target `https://localhost` + no deep
+  link back) and showed the raw `<ref>.supabase.co` domain on Google's
+  consent page. Web sign-in unchanged. Requires `GOOGLE_WEB_CLIENT_ID`
+  (same client ID as Supabase's Google provider) in
+  `src/auth/supabaseAuth.ts` + an Android OAuth client (package +
+  signing SHA-1) in Google Cloud — see PLAY_STORE_GUIDE.md Part 2.5;
+  until then the native button shows a friendly "not configured" error.
 - **Leaderboard loading skeleton + error retry** (0.4.5.0). Global
   leaderboard shows 8 pulsing placeholder rows in the final table layout
   while loading; `watchLeaderboard` gained an `onError` callback so network

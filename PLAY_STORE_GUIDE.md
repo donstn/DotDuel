@@ -47,6 +47,28 @@ it comes out signed.)
 Before each future upload, the version must go up: tell Claude "bump the
 Android version" (`versionCode` +1 in `android/app/build.gradle`).
 
+## Part 2.5 — Google sign-in for the app (one time, ~10 minutes)
+
+The app uses the native Google account picker (no browser page, no
+supabase.co link shown). It needs two things in **Google Cloud Console →
+APIs & Services → Credentials** (same project where the existing OAuth
+client lives):
+
+1. **Find the existing "Web" OAuth client** and copy its **Client ID**
+   (`…apps.googleusercontent.com`) — paste it to Claude, who puts it in
+   `GOOGLE_WEB_CLIENT_ID` in `src/auth/supabaseAuth.ts`. It must be the same
+   client ID that is set on Supabase → Authentication → Providers → Google.
+2. **Create an Android OAuth client**: Create credentials → OAuth client ID →
+   Android →
+   - Package name: `com.dotduel.app`
+   - SHA-1: `D8:61:55:7C:76:D2:6D:8F:D6:10:F6:CE:2C:50:09:E8:DD:72:AD:79`
+     (this machine's debug key — makes sign-in work on the emulator/dev builds)
+
+   Later, after Play Console onboarding, **add one more Android client** the
+   same way with the SHA-1 shown under Play Console → Test and release →
+   Setup → App signing (Google re-signs your app, so its certificate differs).
+   Without that, Google sign-in works in testing but fails for Play users.
+
 ## Part 3 — Play Console setup (you, ~1 hour of forms)
 
 1. **Account:** https://play.google.com/console → sign in with your Google

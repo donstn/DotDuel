@@ -41,6 +41,40 @@ export async function signInWithGoogleIdToken(idToken: string): Promise<void> {
   if (error) throw error;
 }
 
+// The WEB OAuth client ID (Google Cloud Console) — the SAME one configured on
+// Supabase's Google provider, so the native id-token's audience passes
+// signInWithIdToken. Public by design (ships in every client). The native
+// Credential Manager flow ALSO requires an Android OAuth client (package
+// com.dotduel.app + signing SHA-1) to exist in the same Google Cloud project —
+// that client's id is never referenced in code, it just has to exist.
+const GOOGLE_WEB_CLIENT_ID = '';
+
+// Native (Capacitor) Google sign-in: the OS account picker via Credential
+// Manager — no browser page, no supabase.co domain shown, immune to Google's
+// disallowed_useragent webview block. Token goes through the same
+// signInWithIdToken bridge the dual-auth era used.
+let socialLoginReady = false;
+export async function signInWithGoogleNative(): Promise<void> {
+  if (!GOOGLE_WEB_CLIENT_ID) {
+    throw new Error('Google sign-in is not configured yet for the app.');
+  }
+  const { SocialLogin } = await import('@capgo/capacitor-social-login');
+  if (!socialLoginReady) {
+    await SocialLogin.initialize({
+      google: { webClientId: GOOGLE_WEB_CLIENT_ID },
+    });
+    socialLoginReady = true;
+  }
+  const { result } = await SocialLogin.login({
+    provider: 'google',
+    options: {},
+  });
+  if (result.responseType !== 'online' || !result.idToken) {
+    throw new Error('Google sign-in did not return an identity token.');
+  }
+  await signInWithGoogleIdToken(result.idToken);
+}
+
 export async function signOutSupabase(): Promise<void> {
   await supabase.auth.signOut();
 }

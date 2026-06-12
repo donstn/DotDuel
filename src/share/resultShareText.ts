@@ -26,6 +26,8 @@ export type ShareOutcome = 'win' | 'loss' | 'draw';
 
 /** Everything the card renderer + share sheet need, sharer-perspective. */
 export interface ResultShare {
+  /** Short uppercase context chip for the card, e.g. "VS AI · TRIANGLE". */
+  tag: string;
   headline: string;
   /** Sharer-side score first. `b` is null for solo results (daily). */
   a: { name: string; score: number; player: Player };
@@ -56,6 +58,7 @@ export function buildResultShare(d: ShareResultData): ResultShare {
   if (d.mode === 'daily') {
     const score = d.dailyScore ?? d.scores[1];
     return {
+      tag: 'DAILY PUZZLE',
       headline: 'Today’s puzzle',
       a: { name: d.p1Name, score, player: 1 },
       b: null,
@@ -84,6 +87,7 @@ export function buildResultShare(d: ShareResultData): ResultShare {
           ? `The ${level} AI got me ${s2}–${s1} in DotDuel. Think you can do better?\n${url}`
           : `I drew the ${level} AI ${s1}–${s2} in DotDuel. Can you finish the job?\n${url}`;
     return {
+      tag: `VS AI · ${shapeLabel.toUpperCase()}`,
       headline,
       a: { name: d.p1Name, score: s1, player: 1 },
       b: { name: d.p2Name, score: s2, player: 2 },
@@ -119,6 +123,7 @@ export function buildResultShare(d: ShareResultData): ResultShare {
           ? `Just played a ranked DotDuel match (${myScore}–${oppScore}). Up for a game?\n${url}`
           : `Dead-even ranked DotDuel match (${myScore}–${oppScore}). Settle it for us?\n${url}`;
     return {
+      tag: `RANKED · ${shapeLabel.toUpperCase()}`,
       headline,
       a: { name: myName, score: myScore, player: me },
       b: { name: oppName, score: oppScore, player: opp },
@@ -138,6 +143,7 @@ export function buildResultShare(d: ShareResultData): ResultShare {
     const winnerName = w === 1 ? d.p1Name : d.p2Name;
     const loserName = w === 1 ? d.p2Name : d.p1Name;
     return {
+      tag: `HOT-SEAT · ${shapeLabel.toUpperCase()}`,
       headline: `${winnerName} wins`,
       a: { name: winnerName, score: d.scores[w], player: w },
       b: { name: loserName, score: d.scores[l], player: l },
@@ -148,6 +154,7 @@ export function buildResultShare(d: ShareResultData): ResultShare {
     };
   }
   return {
+    tag: `HOT-SEAT · ${shapeLabel.toUpperCase()}`,
     headline: 'Dead even',
     a: { name: d.p1Name, score: s1, player: 1 },
     b: { name: d.p2Name, score: s2, player: 2 },

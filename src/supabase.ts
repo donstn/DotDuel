@@ -11,7 +11,9 @@ import { createClient } from '@supabase/supabase-js';
 // as the old Firebase web config, which was likewise hardcoded). Hardcoded as
 // the default so production CI builds work without env secrets; `.env.local`
 // overrides for local dev or pointing at a different project.
-const url = import.meta.env.VITE_SUPABASE_URL ?? 'https://ggyjxayazxbjvjbeecxa.supabase.co';
+export const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL ?? 'https://ggyjxayazxbjvjbeecxa.supabase.co';
+const url = SUPABASE_URL;
 const anonKey =
   import.meta.env.VITE_SUPABASE_ANON_KEY ??
   'sb_publishable_wV3b7zFPGVvPt6No3OnJRQ_S7tJA6iY';

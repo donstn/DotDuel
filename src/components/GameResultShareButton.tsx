@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createShareCardLink, withCardLink } from '../cloud/shareCards';
 import { isNativeApp } from '../nativeAds';
 import { buildResultShare } from '../share/resultShareText';
 import type { ResultShare, ShareResultData } from '../share/resultShareText';
@@ -100,6 +101,8 @@ interface DialogState {
   share: ResultShare;
   blob: Blob;
   previewUrl: string;
+  /** True once share.url is the unfurling card link (image travels with it). */
+  cardLink: boolean;
 }
 
 export function GameResultShareButton({ data, state }: Props) {
@@ -146,11 +149,33 @@ export function GameResultShareButton({ data, state }: Props) {
     setFeedback(null);
     try {
       const blob = await renderVictoryCard({ share, state, shape: data.shape });
-      const method = await tryNativeShare(blob, share.shareText);
+      let outShare = share;
+      if (isNativeApp()) {
+        // The native plugin has no user-activation deadline — safe to upload
+        // first so the shared text carries the unfurling card link.
+        const link = await createShareCardLink(share, blob);
+        if (link) outShare = withCardLink(share, link);
+      }
+      const method = await tryNativeShare(blob, outShare.shareText);
       if (method === 'unsupported') {
-        setDialog({ share, blob, previewUrl: URL.createObjectURL(blob) });
+        setDialog({
+          share: outShare,
+          blob,
+          previewUrl: URL.createObjectURL(blob),
+          cardLink: outShare !== share,
+        });
+        if (outShare === share) {
+          // Upgrade the dialog's link in the background; window.open/copy get a
+          // fresh activation per click, so the late swap is safe.
+          void createShareCardLink(share, blob).then((link) => {
+            if (!link) return;
+            setDialog((d) =>
+              d ? { ...d, share: withCardLink(d.share, link), cardLink: true } : d,
+            );
+          });
+        }
       } else if (method) {
-        completed(share, method);
+        completed(outShare, method);
       }
     } catch {
       flash('Could not share — try again');
@@ -255,8 +280,9 @@ export function GameResultShareButton({ data, state }: Props) {
               </button>
             </div>
             <p className="share-dialog-hint">
-              Platform buttons share your text and link. To include the picture,
-              use Copy image and paste it into your post.
+              {dialog.cardLink
+                ? 'Your link shows the card picture automatically when pasted. For an inline image, Copy image and paste it into your post.'
+                : 'Platform buttons share your text and link. To include the picture, use Copy image and paste it into your post.'}
             </p>
             <button type="button" className="share-action share-dialog-download" onClick={onDownload}>
               ⬇ Download image

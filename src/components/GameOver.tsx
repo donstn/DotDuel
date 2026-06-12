@@ -69,9 +69,10 @@ interface Props {
   onTryDailyAgain?: () => void;
   /** Phase 2b-v2 — open the public puzzle leaderboard from GameOver. */
   onOpenPuzzleLeaderboard?: () => void;
-  /** Signed-in uid — the share-result link carries ?ref=<uid>. Null/undefined
+  /** Signed-in player's referral code — the share-result link carries
+   *  ?ref=<CODE> (random 6-char, never the account id). Null/undefined
    *  produces a clean URL (anonymous share). */
-  myUid?: string | null;
+  refCode?: string | null;
 }
 
 const SHAPE_NEXT: Record<ShapeId, ShapeId | null> = {
@@ -192,7 +193,7 @@ export function GameOver({
   dailyTimedOut,
   onTryDailyAgain,
   onOpenPuzzleLeaderboard,
-  myUid,
+  refCode,
 }: Props) {
   const [addFriendState, setAddFriendState] = useState<
     'idle' | 'sending' | 'sent' | 'failed'
@@ -273,7 +274,7 @@ export function GameOver({
           p2Name,
           ratingDelta: ratingChange?.delta,
           dailyScore: dailyResult?.score,
-          myUid,
+          refCode,
         }
       : null;
 

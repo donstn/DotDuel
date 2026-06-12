@@ -17,9 +17,10 @@ export interface ShareResultData {
   ratingDelta?: number;
   /** Daily-puzzle attempt score. */
   dailyScore?: number;
-  /** Signed-in uid → the shared link carries ?ref=<uid> (same flow as
-   *  TellAFriendButton invites). Anonymous shares get a clean URL. */
-  myUid?: string | null;
+  /** Signed-in player's referral code → the shared link carries ?ref=<CODE>
+   *  (same flow as TellAFriendButton invites). The code is a random 6-char
+   *  string, never the account id. Anonymous shares get a clean URL. */
+  refCode?: string | null;
 }
 
 export type ShareOutcome = 'win' | 'loss' | 'draw';
@@ -50,8 +51,8 @@ const CTA: Record<ShareOutcome, string> = {
 };
 
 export function buildResultShare(d: ShareResultData): ResultShare {
-  const url = d.myUid
-    ? `${APP_URL}?ref=${encodeURIComponent(d.myUid)}`
+  const url = d.refCode
+    ? `${APP_URL}?ref=${encodeURIComponent(d.refCode)}`
     : APP_URL;
   const shapeLabel = SHAPE_LABEL[d.shape];
 

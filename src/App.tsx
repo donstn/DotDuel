@@ -89,6 +89,7 @@ import {
   subscribeFriendData,
   sendFriendRequestByUid,
 } from './cloud/friends';
+import { claimReferral, resolveReferralCode, REF_CODE_RE } from './cloud/referrals';
 import type { Invite } from './cloud/invites';
 import { subscribeIncomingInvites } from './cloud/invites';
 import type { FriendStatus, PresenceStatus } from './cloud/presence';
@@ -1016,12 +1017,14 @@ export default function App() {
     void setPresenceStatus(user.uid, status);
   }, [user?.uid, screen, config?.mode, onlineGame?.state.finished]);
 
-  // Tell-a-friend: pick up ?ref=<uid> on first load, hold it in sessionStorage,
-  // consume it once the user has signed up + claimed a username (post-signup
-  // auto-friend-request). The pickup runs unconditionally; the consume waits
-  // for cloudProfile.displayName to be present so it fires after username claim.
-  // Also mirrors to localStorage with 30-day TTL purely for telemetry
-  // attribution of ref_friend_request_sent — does NOT gate the auto-add.
+  // Tell-a-friend: pick up ?ref=<CODE> on first load (new links carry a random
+  // 6-char referral code; legacy links carried the uid — both accepted), hold
+  // it in sessionStorage, consume it once the user has signed up + claimed a
+  // username (post-signup auto-friend-request). The pickup runs
+  // unconditionally; the consume waits for cloudProfile.displayName to be
+  // present so it fires after username claim. Also mirrors to localStorage
+  // with 30-day TTL — used by the referral-attribution claim below and for
+  // telemetry attribution of ref_friend_request_sent.
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -1053,30 +1056,78 @@ export default function App() {
     }
     if (!ref || ref === user.uid) return;
     sessionStorage.removeItem('dotduel:pendingFriendRef');
-    const refUid = ref;
-    sendFriendRequestByUid(refUid)
-      .then(() => {
-        let daysSinceLanding = 0;
-        try {
-          const raw = localStorage.getItem('dotduel:referrer:v1');
-          if (raw) {
-            const parsed = JSON.parse(raw) as { uid?: string; landedAt?: number };
-            if (typeof parsed.landedAt === 'number' && parsed.landedAt > 0) {
-              daysSinceLanding = Math.floor((Date.now() - parsed.landedAt) / (24 * 60 * 60 * 1000));
-            }
+    const refParam = ref;
+    void (async () => {
+      // New links carry a random referral code → resolve it to the sharer's
+      // uid; legacy links carried the uid directly.
+      const refUid = REF_CODE_RE.test(refParam)
+        ? await resolveReferralCode(refParam)
+        : refParam;
+      if (!refUid || refUid === user.uid) return;
+      await sendFriendRequestByUid(refUid);
+      let daysSinceLanding = 0;
+      try {
+        const raw = localStorage.getItem('dotduel:referrer:v1');
+        if (raw) {
+          const parsed = JSON.parse(raw) as { uid?: string; landedAt?: number };
+          if (typeof parsed.landedAt === 'number' && parsed.landedAt > 0) {
+            daysSinceLanding = Math.floor((Date.now() - parsed.landedAt) / (24 * 60 * 60 * 1000));
           }
-        } catch {
-          // ignore
         }
-        void sha256First8(refUid).then((hash) => {
-          trackEvent('ref_friend_request_sent', {
-            referrer_uid_hash: hash,
-            days_since_landing: daysSinceLanding,
-          });
+      } catch {
+        // ignore
+      }
+      void sha256First8(refUid).then((hash) => {
+        trackEvent('ref_friend_request_sent', {
+          referrer_uid_hash: hash,
+          days_since_landing: daysSinceLanding,
+        });
+      });
+    })().catch((e) => console.warn('referral friend-request failed:', e));
+  }, [user?.uid, cloudProfile?.displayName]);
+
+  // Durable referral attribution: when a NEW account arrives via someone's
+  // ?ref=<CODE> link, record who brought them in (write-once; the server
+  // refuses self-claims, dead codes, double claims, and accounts older than
+  // 48h) so future referral rewards can be granted retroactively. Independent
+  // of the friend-request flow above — attribution doesn't need a username.
+  useEffect(() => {
+    if (!user) return;
+    let stored: { uid?: string; landedAt?: number } | null = null;
+    try {
+      const raw = localStorage.getItem('dotduel:referrer:v1');
+      if (raw) stored = JSON.parse(raw) as { uid?: string; landedAt?: number };
+    } catch {
+      return;
+    }
+    const code = stored?.uid;
+    if (!code || !REF_CODE_RE.test(code)) return; // legacy uid links: no claim
+    if (
+      typeof stored?.landedAt !== 'number' ||
+      Date.now() - stored.landedAt > 30 * 24 * 60 * 60 * 1000
+    ) {
+      return;
+    }
+    // One attempt per account — server refusals are final, retrying is noise.
+    const guardKey = `dotduel:refClaimAttempted:${user.uid}`;
+    try {
+      if (localStorage.getItem(guardKey)) return;
+      localStorage.setItem(guardKey, '1');
+    } catch {
+      return;
+    }
+    claimReferral(code)
+      .then(() => {
+        void sha256First8(code).then((hash) => {
+          trackEvent('referral_claimed', { referrer_code_hash: hash });
         });
       })
-      .catch((e) => console.warn('referral friend-request failed:', e));
-  }, [user?.uid, cloudProfile?.displayName]);
+      .catch((e) => {
+        trackEvent('referral_claim_failed', {
+          error_code: (e as Error)?.message ?? 'unknown',
+        });
+      });
+  }, [user?.uid]);
 
   // When a pairing arrives while waiting (or even while on the menu — handles
   // reconnect mid-search), jump to matchFound.
@@ -2038,7 +2089,7 @@ export default function App() {
             onLobby={onMpBackToLobby}
             onStartShape={() => onLeaveMpGame()}
             myPlayer={myNum ?? undefined}
-            myUid={sbUser?.uid ?? null}
+            refCode={cloudProfile?.referralCode ?? null}
             finishedReason={onlineGame.finishedReason}
             opponentIsBot={pairing.opponentIsBot}
             opponentUid={pairing.opponentUid}
@@ -2229,6 +2280,7 @@ export default function App() {
           onOpenThemes={() => setThemeOpen(true)}
           mpLockedByOther={mpLockedByOther}
           mpUnreachable={mpUnreachable}
+          refCode={cloudProfile?.referralCode ?? null}
           friendsOnlineCount={friendsOnlineCount}
           friendsTotal={friends.length}
           friendsBadgeCount={friendsBadgeCount}
@@ -2438,6 +2490,7 @@ export default function App() {
         {friendsOpen && user && (
           <FriendsPopover
             myUid={user.uid}
+            refCode={cloudProfile?.referralCode ?? null}
             friends={friends}
             statusMap={friendStatusMap}
             incoming={incomingRequests}
@@ -2610,7 +2663,7 @@ export default function App() {
           dailyTimedOut={dailyTimedOut}
           onTryDailyAgain={startDailyPuzzle}
           onOpenPuzzleLeaderboard={() => setPuzzleLbOpen(true)}
-          myUid={sbUser?.uid ?? null}
+          refCode={cloudProfile?.referralCode ?? null}
         />
       )}
       {puzzleLbOpen && (

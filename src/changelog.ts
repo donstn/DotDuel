@@ -30,6 +30,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.6.0',
+    date: '2026-06-12',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Shared result cards now carry a scannable QR code — friends can point their camera (or long-press the picture) to jump straight into the game. Invite links use a private invite code instead of your account id.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.5.3',
     date: '2026-06-12',
     changes: [

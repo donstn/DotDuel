@@ -12,6 +12,9 @@ export interface CloudProfile {
   challengePolicy?: 'everyone' | 'friends-only' | 'nobody';
   showPresence?: boolean;
   friendListHidden?: boolean;
+  /** Random 6-char invite code (server-generated). Share links carry this
+   *  instead of the account uuid so nothing identifiable leaks into URLs. */
+  referralCode?: string | null;
   streak?: {
     current: number;
     longest: number;
@@ -73,6 +76,7 @@ function shapeSupabaseProfile(row: Record<string, unknown>): CloudProfile {
     challengePolicy: (row.challenge_policy ?? undefined) as CloudProfile['challengePolicy'],
     showPresence: (row.show_presence ?? undefined) as boolean | undefined,
     friendListHidden: (row.friend_list_hidden ?? undefined) as boolean | undefined,
+    referralCode: (row.referral_code ?? null) as string | null,
     streak: hasStreak
       ? {
           current: row.streak_current as number,

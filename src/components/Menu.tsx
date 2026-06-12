@@ -24,6 +24,8 @@ interface Props {
   onOpenThemes: () => void;
   mpLockedByOther: boolean;
   mpUnreachable: boolean;
+  /** Signed-in player's referral code — invite links carry ?ref=<CODE>. */
+  refCode?: string | null;
   // Friends button (Alpha 0.2.0.0) — only meaningful when signed in.
   friendsOnlineCount?: number;
   friendsTotal?: number;
@@ -53,6 +55,7 @@ export function Menu({
   onOpenThemes,
   mpLockedByOther,
   mpUnreachable,
+  refCode = null,
   friendsOnlineCount = 0,
   friendsTotal = 0,
   friendsBadgeCount = 0,
@@ -120,7 +123,7 @@ export function Menu({
               )}
               <TellAFriendButton
                 variant="invite"
-                myUid={user.uid}
+                refCode={refCode}
                 className="menu-auth-btn"
               />
               <button

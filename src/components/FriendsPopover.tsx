@@ -13,6 +13,8 @@ import { TellAFriendButton } from './TellAFriendButton';
 
 interface Props {
   myUid: string;
+  /** Referral code for the invite link (random 6-char, never the uid). */
+  refCode?: string | null;
   friends: Friend[];
   statusMap: Record<string, FriendStatus>;
   incoming: PendingRequest[];
@@ -25,6 +27,7 @@ type Tab = 'online' | 'all' | 'requests';
 
 export function FriendsPopover({
   myUid,
+  refCode = null,
   friends,
   statusMap,
   incoming,
@@ -214,7 +217,7 @@ export function FriendsPopover({
         </div>
 
         <div className="friends-tell-a-friend">
-          <TellAFriendButton variant="invite" myUid={myUid} />
+          <TellAFriendButton variant="invite" refCode={refCode} />
         </div>
       </div>
     </div>

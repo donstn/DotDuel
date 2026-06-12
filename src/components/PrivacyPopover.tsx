@@ -82,6 +82,13 @@ export function PrivacyPopover({ onClose, consent, onChangeConsent }: Props) {
                 the game ends.
               </li>
               <li>
+                <strong>Friends &amp; invites:</strong> your friend list,
+                pending requests, online status, and game invites. If you
+                joined through another player&apos;s invite link or QR code,
+                we record which player invited you (their random invite
+                code — so future referral rewards can be honoured).
+              </li>
+              <li>
                 <strong>Device-only data:</strong> your single-player
                 progress, vs-AI/hot-seat stats, theme preference, and
                 tutorial-seen flag. Stored in your browser's localStorage

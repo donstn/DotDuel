@@ -1,3 +1,4 @@
+import qrcode from 'qrcode-generator';
 import { getBoards } from '../geometry';
 import type { GameState, Player, ShapeId } from '../types';
 import type { ResultShare } from './resultShareText';
@@ -441,6 +442,63 @@ function setLetterSpacing(ctx: CanvasRenderingContext2D, v: string): void {
   }
 }
 
+// The domain text on the card isn't clickable (it's pixels), and forwarded
+// images usually lose their accompanying link — the QR survives inside the
+// picture. Recipients long-press the image (Google Lens / Live Text) or scan
+// from another screen; the URL carries the sharer's ?ref=<CODE>.
+function drawQrTile(ctx: CanvasRenderingContext2D, url: string): void {
+  let qr: ReturnType<typeof qrcode>;
+  try {
+    qr = qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+  } catch {
+    return; // overlong URL etc. — the card just ships without a QR
+  }
+  const count = qr.getModuleCount();
+  const TILE_W = 108;
+  const PAD = 12;
+  const CAP_H = 26;
+  const TILE_H = TILE_W + CAP_H;
+  const x = W - 28 - TILE_W;
+  const y = H - 28 - TILE_H;
+
+  // White tile regardless of theme — scanners want dark-on-light, and the
+  // pad doubles as the QR spec's quiet zone (12px ≈ 4 modules).
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.45)';
+  ctx.shadowBlur = 16 * SCALE;
+  ctx.shadowOffsetY = 5 * SCALE;
+  rr(ctx, x, y, TILE_W, TILE_H, 14);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.restore();
+
+  ctx.font = `600 14px ${FONT_BODY}`;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#0c120e';
+  ctx.fillText('Scan to play', x + TILE_W / 2, y + TILE_H - 11);
+  ctx.textAlign = 'left';
+
+  // Modules in DEVICE pixels at integer coordinates/size — under ctx.scale
+  // they'd land on half-pixels and anti-alias into gray, which JPEG then
+  // smears; crisp black squares are the scannability budget.
+  const innerDev = (TILE_W - PAD * 2) * SCALE;
+  const m = Math.max(1, Math.floor(innerDev / count));
+  const qrDev = m * count;
+  const x0 = Math.round((x + TILE_W / 2) * SCALE - qrDev / 2);
+  const y0 = Math.round((y + PAD) * SCALE + (innerDev - qrDev) / 2);
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#0c120e';
+  for (let row = 0; row < count; row++) {
+    for (let col = 0; col < count; col++) {
+      if (qr.isDark(row, col)) ctx.fillRect(x0 + col * m, y0 + row * m, m, m);
+    }
+  }
+  ctx.restore();
+}
+
 export interface VictoryCardInput {
   share: ResultShare;
   state: GameState;
@@ -696,6 +754,8 @@ export async function renderVictoryCard({
   ctx.textAlign = 'left';
 
   drawGrain(ctx, theme);
+  // After the grain so noise never speckles the QR modules.
+  drawQrTile(ctx, share.url);
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(

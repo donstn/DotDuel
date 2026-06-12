@@ -5,6 +5,21 @@ All notable changes to DotDuel will be documented in this file. Format follows
 
 ## [Unreleased]
 
+### Added
+
+- **QR code on the share card + private referral codes** (0.4.6.0). The
+  victory card carries a white "Scan to play" QR tile (bottom-right, drawn
+  after the film grain, modules at integer device pixels so JPEG can't smear
+  them; `qrcode-generator` 2.0.4, MIT, zero deps). The QR and all invite /
+  share links now carry `?ref=<CODE>` — a random 6-char per-player code
+  stored in `profiles.referral_code` — instead of the account uuid, so
+  nothing identifiable leaks into URLs. New write-once attribution:
+  `claim_referral(code)` records `profiles.referred_by/referred_at` for
+  accounts younger than 48h (guard-trigger protected, self/double/bot claims
+  refused), so referrals made now can earn reward months when monetization
+  ships. Legacy `?ref=<uid>` links still auto-friend but don't attribute.
+  Migration: `supabase/migrations/20260612020000_referrals.sql`.
+
 ### Fixed
 
 - **Share card fidelity + resolution** (0.4.5.1 / 0.4.5.2). Strikes on the

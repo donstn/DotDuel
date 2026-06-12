@@ -14,26 +14,27 @@ const LABELS = {
 
 interface Props {
   variant: 'invite' | 'share';
-  // Required for variant='invite' so the shared link carries ?ref=<uid> for
-  // the auto-friend-request flow. Ignored for variant='share' — anonymous
-  // shares produce a clean URL with no referral relationship.
-  myUid?: string;
+  // Required for variant='invite' so the shared link carries ?ref=<CODE> for
+  // the auto-friend-request + referral-attribution flow. A random 6-char code
+  // from the sharer's profile — never the account id. Ignored for
+  // variant='share' — anonymous shares produce a clean URL.
+  refCode?: string | null;
   className?: string;
 }
 
 // Shared share-sheet logic (native share → mailto → clipboard) used for two
 // distinct user-facing flows:
 //   variant='invite' — signed-in user invites someone to TRY the app; URL
-//     carries ?ref=<uid> so the recipient auto-friend-requests on signup.
+//     carries ?ref=<CODE> so the recipient auto-friend-requests on signup.
 //   variant='share' — anonymous visitor shares the page. Clean URL, no
 //     referral relationship (they have no account to invite into).
 // DotDuel never sees the recipient address — privacy-clean and zero cost.
-export function TellAFriendButton({ variant, myUid, className }: Props) {
+export function TellAFriendButton({ variant, refCode, className }: Props) {
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const url =
-    variant === 'invite' && myUid
-      ? `${APP_URL}?ref=${encodeURIComponent(myUid)}`
+    variant === 'invite' && refCode
+      ? `${APP_URL}?ref=${encodeURIComponent(refCode)}`
       : APP_URL;
   const text = TEXTS[variant];
   const body = `${text}\n\n${url}`;

@@ -47,7 +47,8 @@ export async function signInWithGoogleIdToken(idToken: string): Promise<void> {
 // Credential Manager flow ALSO requires an Android OAuth client (package
 // com.dotduel.app + signing SHA-1) to exist in the same Google Cloud project —
 // that client's id is never referenced in code, it just has to exist.
-const GOOGLE_WEB_CLIENT_ID = '';
+const GOOGLE_WEB_CLIENT_ID =
+  '20053192504-c3o1brq2kdsg8q0k2bj9k4l8ur5iqc66.apps.googleusercontent.com';
 
 // Native (Capacitor) Google sign-in: the OS account picker via Credential
 // Manager — no browser page, no supabase.co domain shown, immune to Google's

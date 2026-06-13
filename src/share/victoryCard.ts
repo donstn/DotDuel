@@ -446,48 +446,43 @@ function setLetterSpacing(ctx: CanvasRenderingContext2D, v: string): void {
 // images usually lose their accompanying link — the QR survives inside the
 // picture. Recipients long-press the image (Google Lens / Live Text) or scan
 // from another screen; the URL carries the sharer's ?ref=<CODE>.
-function drawQrTile(ctx: CanvasRenderingContext2D, url: string): void {
-  let qr: ReturnType<typeof qrcode>;
+type Qr = ReturnType<typeof qrcode>;
+
+function buildQr(url: string): Qr | null {
   try {
-    qr = qrcode(0, 'M');
+    const qr = qrcode(0, 'M');
     qr.addData(url);
     qr.make();
+    return qr;
   } catch {
-    return; // overlong URL etc. — the card just ships without a QR
+    return null; // overlong URL etc. — the card just ships without a QR
   }
-  const count = qr.getModuleCount();
-  const TILE_W = 108;
-  const PAD = 12;
-  const CAP_H = 26;
-  const TILE_H = TILE_W + CAP_H;
-  const x = W - 28 - TILE_W;
-  const y = H - 28 - TILE_H;
+}
 
-  // White tile regardless of theme — scanners want dark-on-light, and the
-  // pad doubles as the QR spec's quiet zone (12px ≈ 4 modules).
+// Square white tile at (x,y) in logical units. Painted late (after the grain)
+// so film noise never speckles the modules and costs scannability.
+function drawQrTile(ctx: CanvasRenderingContext2D, qr: Qr, x: number, y: number, size: number): void {
+  const count = qr.getModuleCount();
+  const PAD = 13; // quiet zone ≈ 4 modules
+
+  // White tile regardless of theme — scanners want dark-on-light.
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.45)';
   ctx.shadowBlur = 16 * SCALE;
   ctx.shadowOffsetY = 5 * SCALE;
-  rr(ctx, x, y, TILE_W, TILE_H, 14);
+  rr(ctx, x, y, size, size, 16);
   ctx.fillStyle = '#ffffff';
   ctx.fill();
   ctx.restore();
 
-  ctx.font = `600 14px ${FONT_BODY}`;
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#0c120e';
-  ctx.fillText('Scan to play', x + TILE_W / 2, y + TILE_H - 11);
-  ctx.textAlign = 'left';
-
   // Modules in DEVICE pixels at integer coordinates/size — under ctx.scale
   // they'd land on half-pixels and anti-alias into gray, which JPEG then
   // smears; crisp black squares are the scannability budget.
-  const innerDev = (TILE_W - PAD * 2) * SCALE;
+  const innerDev = (size - PAD * 2) * SCALE;
   const m = Math.max(1, Math.floor(innerDev / count));
   const qrDev = m * count;
-  const x0 = Math.round((x + TILE_W / 2) * SCALE - qrDev / 2);
-  const y0 = Math.round((y + PAD) * SCALE + (innerDev - qrDev) / 2);
+  const x0 = Math.round((x + size / 2) * SCALE - qrDev / 2);
+  const y0 = Math.round((y + size / 2) * SCALE - qrDev / 2);
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#0c120e';
@@ -708,54 +703,76 @@ export async function renderVictoryCard({
     ctx.fillText(soloName, colCX + 9, nameY);
   }
 
-  // CTA — not a button (nothing on a picture is clickable; a fake button
-  // erodes trust). A challenge line instead: accent rules flanking glowing
-  // text, with the domain right below as the "where".
-  const ctaBase = nameY + 64;
-  setLetterSpacing(ctx, '1px');
-  ctx.font = `700 31px ${FONT_DISPLAY}`;
-  const ctaW = ctx.measureText(share.cta).width;
-  ctx.save();
-  ctx.shadowColor = theme.accent;
-  ctx.shadowBlur = 18 * SCALE;
-  ctx.fillStyle = theme.accent;
-  ctx.fillText(share.cta, colCX, ctaBase);
-  ctx.restore();
-  setLetterSpacing(ctx, '0px');
-  const ruleY = ctaBase - 10;
-  const ruleGap = ctaW / 2 + 26;
-  const ruleLen = 64;
-  const rule = (dir: 1 | -1) => {
-    const g = ctx.createLinearGradient(
-      colCX + dir * ruleGap,
-      0,
-      colCX + dir * (ruleGap + ruleLen),
-      0,
-    );
-    g.addColorStop(0, `${theme.accent}cc`);
-    g.addColorStop(1, `${theme.accent}00`);
-    ctx.strokeStyle = g;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(colCX + dir * ruleGap, ruleY);
-    ctx.lineTo(colCX + dir * (ruleGap + ruleLen), ruleY);
-    ctx.stroke();
-  };
-  rule(1);
-  rule(-1);
+  // ---- Bottom group: QR tile paired with the challenge line + domain --------
+  // The QR is the only scannable affordance on a forwarded image (the domain is
+  // just pixels), so it sits right beside its destination — "scan this to get
+  // here". The group is centered in the left column. Only the QR's POSITION is
+  // reserved here; the white tile is painted after the grain (below). If the
+  // URL is too long to encode, the text falls back to a centered stack.
+  let qrDraw: { qr: Qr; x: number; y: number; size: number } | null = null;
+  const qr = buildQr(share.url);
+  const QR_SIZE = 138;
+  const groupCY = Math.min(nameY + 90, 530);
+  ctx.textBaseline = 'alphabetic';
 
-  // Domain — the call to action's destination, big enough to actually read
-  // in a feed (+60% over the v1 size).
-  setLetterSpacing(ctx, '2px');
-  ctx.font = `700 34px ${FONT_BODY}`;
-  ctx.fillStyle = theme.text;
-  ctx.fillText('www.DotDuel.com', colCX, Math.min(ctaBase + 56, 600));
-  setLetterSpacing(ctx, '0px');
-  ctx.textAlign = 'left';
+  if (qr) {
+    const gap = 26;
+    let ctaSize = 30;
+    ctx.font = `700 ${ctaSize}px ${FONT_DISPLAY}`;
+    let ctaW = ctx.measureText(share.cta).width;
+    setLetterSpacing(ctx, '1.5px');
+    ctx.font = `700 30px ${FONT_BODY}`;
+    const domainW = ctx.measureText('www.DotDuel.com').width;
+    setLetterSpacing(ctx, '0px');
+    // Shrink the challenge line if the row would overflow the column.
+    while (ctaSize > 22 && QR_SIZE + gap + Math.max(ctaW, domainW) > colW) {
+      ctaSize -= 1;
+      ctx.font = `700 ${ctaSize}px ${FONT_DISPLAY}`;
+      ctaW = ctx.measureText(share.cta).width;
+    }
+    const textW = Math.max(ctaW, domainW);
+    const qrX = colCX - (QR_SIZE + gap + textW) / 2;
+    const textX = qrX + QR_SIZE + gap;
+    qrDraw = { qr, x: qrX, y: groupCY - QR_SIZE / 2, size: QR_SIZE };
+
+    // Challenge line (glowing accent) over the domain, left-aligned, the pair
+    // vertically centered against the QR tile.
+    ctx.textAlign = 'left';
+    setLetterSpacing(ctx, '1px');
+    ctx.font = `700 ${ctaSize}px ${FONT_DISPLAY}`;
+    ctx.save();
+    ctx.shadowColor = theme.accent;
+    ctx.shadowBlur = 16 * SCALE;
+    ctx.fillStyle = theme.accent;
+    ctx.fillText(share.cta, textX, groupCY - 8);
+    ctx.restore();
+    setLetterSpacing(ctx, '1.5px');
+    ctx.font = `700 30px ${FONT_BODY}`;
+    ctx.fillStyle = theme.text;
+    ctx.fillText('www.DotDuel.com', textX, groupCY + 32);
+    setLetterSpacing(ctx, '0px');
+    ctx.textAlign = 'left';
+  } else {
+    setLetterSpacing(ctx, '1px');
+    ctx.textAlign = 'center';
+    ctx.font = `700 31px ${FONT_DISPLAY}`;
+    ctx.save();
+    ctx.shadowColor = theme.accent;
+    ctx.shadowBlur = 18 * SCALE;
+    ctx.fillStyle = theme.accent;
+    ctx.fillText(share.cta, colCX, groupCY);
+    ctx.restore();
+    setLetterSpacing(ctx, '2px');
+    ctx.font = `700 34px ${FONT_BODY}`;
+    ctx.fillStyle = theme.text;
+    ctx.fillText('www.DotDuel.com', colCX, groupCY + 50);
+    setLetterSpacing(ctx, '0px');
+    ctx.textAlign = 'left';
+  }
 
   drawGrain(ctx, theme);
-  // After the grain so noise never speckles the QR modules.
-  drawQrTile(ctx, share.url);
+  // After the grain so noise never speckles the white tile / QR modules.
+  if (qrDraw) drawQrTile(ctx, qrDraw.qr, qrDraw.x, qrDraw.y, qrDraw.size);
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(

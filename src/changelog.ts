@@ -30,6 +30,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.6.1',
+    date: '2026-06-13',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Tidied the shared result card: the QR code now sits beside the link instead of overlapping the board, and it’s larger and easier to scan.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.6.0',
     date: '2026-06-12',
     changes: [

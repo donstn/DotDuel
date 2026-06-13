@@ -247,7 +247,7 @@ function drawBoard(
   shape: ShapeId,
   rect: { x: number; y: number; w: number; h: number },
   theme: Theme,
-): void {
+): Pt[] {
   const board = getBoards()[shape];
   const vb = board.viewBox;
   // Two-pass fit: the felt + rim extend past the dots by a dot-radius-derived
@@ -399,6 +399,64 @@ function drawBoard(
     ctx.lineWidth = r * 0.42 * 0.22;
     ctx.stroke();
   }
+
+  // The dots' convex hull (canvas space) — the medallion is inscribed inside it
+  // so the QR can never poke past the board's silhouette (matters for the
+  // pointed shapes: triangle, rhombus).
+  return hull;
+}
+
+// Vertical span [yMin,yMax] where the line x=X crosses a convex polygon, or null
+// if X is outside it.
+function yIntervalAt(poly: Pt[], x: number): [number, number] | null {
+  const ys: number[] = [];
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i];
+    const b = poly[(i + 1) % poly.length];
+    if (x < Math.min(a.x, b.x) || x > Math.max(a.x, b.x)) continue;
+    if (a.x === b.x) ys.push(a.y, b.y);
+    else ys.push(a.y + ((x - a.x) / (b.x - a.x)) * (b.y - a.y));
+  }
+  if (ys.length < 2) return null;
+  return [Math.min(...ys), Math.max(...ys)];
+}
+
+// Largest rectangle of the given aspect (h/w), centered on x=cx, that fits
+// inside a convex polygon. For a convex hull the binding columns are the two
+// vertical edges of the rect, so intersect their y-spans and grow w by binary
+// search. Returns the rect's top-left + width, or null if nothing fits.
+function inscribeRect(
+  poly: Pt[],
+  cx: number,
+  aspect: number,
+  maxW: number,
+): { x: number; y: number; w: number } | null {
+  const topYFor = (w: number): number | null => {
+    const half = w / 2;
+    const i1 = yIntervalAt(poly, cx - half);
+    const i2 = yIntervalAt(poly, cx + half);
+    if (!i1 || !i2) return null;
+    const ylo = Math.max(i1[0], i2[0]);
+    const yhi = Math.min(i1[1], i2[1]);
+    const band = yhi - ylo;
+    const h = w * aspect;
+    if (band < h) return null;
+    return ylo + (band - h) / 2; // centered vertically in the available band
+  };
+  let lo = 0;
+  let hi = maxW;
+  let best: { x: number; y: number; w: number } | null = null;
+  for (let i = 0; i < 34; i++) {
+    const w = (lo + hi) / 2;
+    const y = topYFor(w);
+    if (y != null) {
+      best = { x: cx - w / 2, y, w };
+      lo = w;
+    } else {
+      hi = w;
+    }
+  }
+  return best;
 }
 
 function wrapText(
@@ -448,9 +506,16 @@ function setLetterSpacing(ctx: CanvasRenderingContext2D, v: string): void {
 // from another screen; the URL carries the sharer's ?ref=<CODE>.
 type Qr = ReturnType<typeof qrcode>;
 
-function buildQr(url: string): Qr | null {
+interface QrSkin {
+  tile: string; // light field — high luminance
+  module: string; // dark modules — low luminance
+  border?: string;
+}
+const QR_DEFAULT: QrSkin = { tile: '#ffffff', module: '#0c120e' };
+
+function buildQr(url: string, ec: 'M' | 'Q' | 'H' = 'M'): Qr | null {
   try {
-    const qr = qrcode(0, 'M');
+    const qr = qrcode(0, ec);
     qr.addData(url);
     qr.make();
     return qr;
@@ -459,33 +524,78 @@ function buildQr(url: string): Qr | null {
   }
 }
 
-// Square white tile at (x,y) in logical units. Painted late (after the grain)
-// so film noise never speckles the modules and costs scannability.
-function drawQrTile(ctx: CanvasRenderingContext2D, qr: Qr, x: number, y: number, size: number): void {
-  const count = qr.getModuleCount();
-  const PAD = 13; // quiet zone ≈ 4 modules
+// Scale every RGB channel by f (0..1) — keeps the hue, drops the luminance, so
+// a brand colour can be pushed dark enough to read as QR modules.
+function darken(hex: string, f: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  const r = Math.round(((n >> 16) & 255) * f);
+  const g = Math.round(((n >> 8) & 255) * f);
+  const b = Math.round((n & 255) * f);
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+}
 
-  // White tile regardless of theme — scanners want dark-on-light.
+// Rounded tile at (x,y), QR in the top w×w square, an optional caption strip of
+// height capH below it. Painted late (after the grain) so film noise never
+// speckles the modules and costs scannability. Default skin is dark-on-white; a
+// themed skin (dark p1 green on light p2 cream) stays scannable because the
+// palette is luminance-separated by design.
+function drawQrTile(
+  ctx: CanvasRenderingContext2D,
+  qr: Qr,
+  x: number,
+  y: number,
+  w: number,
+  capH: number,
+  skin: QrSkin = QR_DEFAULT,
+  caption?: string,
+): void {
+  const count = qr.getModuleCount();
+  const PAD = Math.max(10, w * 0.085); // quiet zone (≈4 modules)
+  const totalH = w + capH;
+
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.45)';
-  ctx.shadowBlur = 16 * SCALE;
-  ctx.shadowOffsetY = 5 * SCALE;
-  rr(ctx, x, y, size, size, 16);
-  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 18 * SCALE;
+  ctx.shadowOffsetY = 6 * SCALE;
+  rr(ctx, x, y, w, totalH, 16);
+  ctx.fillStyle = skin.tile;
   ctx.fill();
   ctx.restore();
+  if (skin.border) {
+    rr(ctx, x, y, w, totalH, 16);
+    ctx.strokeStyle = skin.border;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  if (caption && capH > 10) {
+    let fs = Math.round(capH * 0.46);
+    ctx.font = `700 ${fs}px ${FONT_BODY}`;
+    while (fs > 9 && ctx.measureText(caption).width > w * 0.9) {
+      fs -= 1;
+      ctx.font = `700 ${fs}px ${FONT_BODY}`;
+    }
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = skin.module;
+    ctx.fillText(caption, x + w / 2, y + w + capH * 0.54);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  }
 
   // Modules in DEVICE pixels at integer coordinates/size — under ctx.scale
   // they'd land on half-pixels and anti-alias into gray, which JPEG then
-  // smears; crisp black squares are the scannability budget.
-  const innerDev = (size - PAD * 2) * SCALE;
+  // smears; crisp squares are the scannability budget.
+  const innerDev = (w - PAD * 2) * SCALE;
   const m = Math.max(1, Math.floor(innerDev / count));
   const qrDev = m * count;
-  const x0 = Math.round((x + size / 2) * SCALE - qrDev / 2);
-  const y0 = Math.round((y + size / 2) * SCALE - qrDev / 2);
+  const x0 = Math.round((x + w / 2) * SCALE - qrDev / 2);
+  const y0 = Math.round((y + w / 2) * SCALE - qrDev / 2);
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillStyle = '#0c120e';
+  ctx.fillStyle = skin.module;
   for (let row = 0; row < count; row++) {
     for (let col = 0; col < count; col++) {
       if (qr.isDark(row, col)) ctx.fillRect(x0 + col * m, y0 + row * m, m, m);
@@ -544,7 +654,9 @@ export async function renderVictoryCard({
   ctx.fillRect(0, 0, W, H);
 
   // ---- Board (right) — the real in-game felt table, no glass card ----------
-  const panel = { x: 640, y: 64, w: 490, h: 502 };
+  // Spans (roughly) from the wordmark at the top to the domain at the bottom,
+  // and as wide as the card allows — the board is the hero on the right.
+  const panel = { x: 610, y: 82, w: 578, h: 516 };
 
   // Accent bloom behind the board — the card's light source.
   const bloom = ctx.createRadialGradient(
@@ -560,7 +672,40 @@ export async function renderVictoryCard({
   ctx.fillStyle = bloom;
   ctx.fillRect(panel.x - 130, panel.y - 130, panel.w + 260, panel.h + 260);
 
-  drawBoard(ctx, state, shape, panel, theme);
+  const hull = drawBoard(ctx, state, shape, panel, theme);
+
+  // ---- Themed QR medallion, inscribed INSIDE the board silhouette ------------
+  // Game colours: deep p1-green modules on a light p2-cream tile + a "Scan to
+  // play now!" caption. The palette is luminance-separated by design (CVD-safe),
+  // so the colour still scans; EC level H adds redundancy for the colour + the
+  // busy felt. inscribeRect keeps the whole tile within the hull so it never
+  // pokes past a pointed shape's edges. Only the POSITION is reserved here — the
+  // tile is painted after the grain (below) so noise never costs contrast.
+  let qrDraw:
+    | { qr: Qr; x: number; y: number; w: number; capH: number; skin: QrSkin; caption: string }
+    | null = null;
+  const medQr = buildQr(share.url, 'H');
+  if (medQr && hull.length >= 3) {
+    const xsH = hull.map((p) => p.x);
+    const cx = (Math.min(...xsH) + Math.max(...xsH)) / 2;
+    const spanX = Math.max(...xsH) - Math.min(...xsH);
+    const ASPECT = 1.18; // square QR + ~18% caption strip
+    const rect = inscribeRect(hull, cx, ASPECT, Math.min(spanX, 300));
+    if (rect) {
+      qrDraw = {
+        qr: medQr,
+        x: rect.x,
+        y: rect.y,
+        w: rect.w,
+        capH: rect.w * (ASPECT - 1),
+        caption: 'Scan to play now!',
+        skin: {
+          tile: cssVar('--p2-glow', '#f0fbcf'),
+          module: darken(cssVar('--p1', '#0d4a23'), 0.62),
+        },
+      };
+    }
+  }
 
   // ---- Left column — CENTERED stack -----------------------------------------
   const colX = 64;
@@ -580,46 +725,37 @@ export async function renderVictoryCard({
   ctx.fillText('DotDuel', colCX, 110);
   drawGlowDot(ctx, colCX + wmW / 2 + 33, 96, 15, theme, 2);
 
-  // Mode chip — kept as a quiet label pill (it's information, not a control).
-  setLetterSpacing(ctx, '3px');
-  ctx.font = `700 19px ${FONT_BODY}`;
-  const tagW = ctx.measureText(share.tag).width;
-  const chip = { x: colCX - (tagW + 48) / 2, y: 152, w: tagW + 48, h: 42 };
-  rr(ctx, chip.x, chip.y, chip.w, chip.h, 21);
-  ctx.fillStyle = `${theme.accent}1f`;
-  ctx.fill();
-  rr(ctx, chip.x, chip.y, chip.w, chip.h, 21);
-  ctx.strokeStyle = `${theme.accent}66`;
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.fillStyle = theme.accent;
-  ctx.fillText(share.tag, colCX, chip.y + 28);
-  setLetterSpacing(ctx, '0px');
-
-  // Headline — up to 2 lines; the whole stack below adapts to the line count
-  // so nothing ever collides at the bottom edge.
-  ctx.font = `700 58px ${FONT_DISPLAY}`;
-  let headLines = wrapText(ctx, share.headline, colW);
-  if (headLines.length > 1) {
-    ctx.font = `700 50px ${FONT_DISPLAY}`;
-    headLines = wrapText(ctx, share.headline, colW);
-    if (headLines.length > 2) headLines = headLines.slice(0, 2);
+  // Verdict — just Win / Loss / Draw, from the sharer's perspective. Coloured by
+  // outcome: a win glows accent, a loss is muted, a draw is neutral. Solo/daily
+  // (no opponent) keeps its own headline since Win/Loss is meaningless there.
+  const verdict = share.b
+    ? share.outcome === 'win'
+      ? 'Win'
+      : share.outcome === 'loss'
+        ? 'Loss'
+        : 'Draw'
+    : share.headline;
+  ctx.font = `700 76px ${FONT_DISPLAY}`;
+  const vLine = wrapText(ctx, verdict, colW)[0] ?? verdict;
+  ctx.save();
+  if (share.b && share.outcome === 'win') {
+    ctx.shadowColor = theme.accent;
+    ctx.shadowBlur = 22 * SCALE;
+    ctx.fillStyle = theme.accent;
+  } else if (share.b && share.outcome === 'loss') {
+    ctx.fillStyle = theme.textDim;
+  } else {
+    ctx.fillStyle = theme.text;
   }
-  const twoLine = headLines.length > 1;
-  let y = twoLine ? 252 : 258;
-  ctx.fillStyle = theme.text;
-  for (const l of headLines) {
-    ctx.fillText(l, colCX, y);
-    y += 56;
-  }
-  const lastHeadBase = y - 56;
+  ctx.fillText(vLine, colCX, 252);
+  ctx.restore();
 
-  // Hero score block (sized −30% from the v1 design: numbers support the
-  // headline now instead of shouting over it).
-  const scoreSize = share.b ? (twoLine ? 67 : 81) : twoLine ? 77 : 92;
+  // Hero score block — fixed single-line layout now the chip + multi-line
+  // headline are gone; the whole left stack is vertically balanced.
+  const scoreSize = share.b ? 84 : 92;
   const scoreFont = `700 ${scoreSize}px ${FONT_DISPLAY}`;
-  const scoreBase = lastHeadBase + (twoLine ? 96 : 118);
-  const nameY = scoreBase + (twoLine ? 40 : 44);
+  const scoreBase = 378;
+  const nameY = scoreBase + 44;
   if (share.b) {
     const winnerIsA = share.outcome === 'win';
     ctx.font = scoreFont;
@@ -703,76 +839,55 @@ export async function renderVictoryCard({
     ctx.fillText(soloName, colCX + 9, nameY);
   }
 
-  // ---- Bottom group: QR tile paired with the challenge line + domain --------
-  // The QR is the only scannable affordance on a forwarded image (the domain is
-  // just pixels), so it sits right beside its destination — "scan this to get
-  // here". The group is centered in the left column. Only the QR's POSITION is
-  // reserved here; the white tile is painted after the grain (below). If the
-  // URL is too long to encode, the text falls back to a centered stack.
-  let qrDraw: { qr: Qr; x: number; y: number; size: number } | null = null;
-  const qr = buildQr(share.url);
-  const QR_SIZE = 138;
-  const groupCY = Math.min(nameY + 90, 530);
+  // CTA — a challenge line (not a button; nothing on a picture is clickable),
+  // accent rules flanking glowing text, with the domain right below as the
+  // "where". The QR now lives on the board, so this returns to a centered stack.
   ctx.textBaseline = 'alphabetic';
+  const ctaBase = 524;
+  setLetterSpacing(ctx, '1px');
+  ctx.textAlign = 'center';
+  ctx.font = `700 31px ${FONT_DISPLAY}`;
+  const ctaW = ctx.measureText(share.cta).width;
+  ctx.save();
+  ctx.shadowColor = theme.accent;
+  ctx.shadowBlur = 18 * SCALE;
+  ctx.fillStyle = theme.accent;
+  ctx.fillText(share.cta, colCX, ctaBase);
+  ctx.restore();
+  setLetterSpacing(ctx, '0px');
+  const ruleY = ctaBase - 10;
+  const ruleGap = ctaW / 2 + 26;
+  const ruleLen = 64;
+  const rule = (dir: 1 | -1) => {
+    const g = ctx.createLinearGradient(
+      colCX + dir * ruleGap,
+      0,
+      colCX + dir * (ruleGap + ruleLen),
+      0,
+    );
+    g.addColorStop(0, `${theme.accent}cc`);
+    g.addColorStop(1, `${theme.accent}00`);
+    ctx.strokeStyle = g;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(colCX + dir * ruleGap, ruleY);
+    ctx.lineTo(colCX + dir * (ruleGap + ruleLen), ruleY);
+    ctx.stroke();
+  };
+  rule(1);
+  rule(-1);
 
-  if (qr) {
-    const gap = 26;
-    let ctaSize = 30;
-    ctx.font = `700 ${ctaSize}px ${FONT_DISPLAY}`;
-    let ctaW = ctx.measureText(share.cta).width;
-    setLetterSpacing(ctx, '1.5px');
-    ctx.font = `700 30px ${FONT_BODY}`;
-    const domainW = ctx.measureText('www.DotDuel.com').width;
-    setLetterSpacing(ctx, '0px');
-    // Shrink the challenge line if the row would overflow the column.
-    while (ctaSize > 22 && QR_SIZE + gap + Math.max(ctaW, domainW) > colW) {
-      ctaSize -= 1;
-      ctx.font = `700 ${ctaSize}px ${FONT_DISPLAY}`;
-      ctaW = ctx.measureText(share.cta).width;
-    }
-    const textW = Math.max(ctaW, domainW);
-    const qrX = colCX - (QR_SIZE + gap + textW) / 2;
-    const textX = qrX + QR_SIZE + gap;
-    qrDraw = { qr, x: qrX, y: groupCY - QR_SIZE / 2, size: QR_SIZE };
-
-    // Challenge line (glowing accent) over the domain, left-aligned, the pair
-    // vertically centered against the QR tile.
-    ctx.textAlign = 'left';
-    setLetterSpacing(ctx, '1px');
-    ctx.font = `700 ${ctaSize}px ${FONT_DISPLAY}`;
-    ctx.save();
-    ctx.shadowColor = theme.accent;
-    ctx.shadowBlur = 16 * SCALE;
-    ctx.fillStyle = theme.accent;
-    ctx.fillText(share.cta, textX, groupCY - 8);
-    ctx.restore();
-    setLetterSpacing(ctx, '1.5px');
-    ctx.font = `700 30px ${FONT_BODY}`;
-    ctx.fillStyle = theme.text;
-    ctx.fillText('www.DotDuel.com', textX, groupCY + 32);
-    setLetterSpacing(ctx, '0px');
-    ctx.textAlign = 'left';
-  } else {
-    setLetterSpacing(ctx, '1px');
-    ctx.textAlign = 'center';
-    ctx.font = `700 31px ${FONT_DISPLAY}`;
-    ctx.save();
-    ctx.shadowColor = theme.accent;
-    ctx.shadowBlur = 18 * SCALE;
-    ctx.fillStyle = theme.accent;
-    ctx.fillText(share.cta, colCX, groupCY);
-    ctx.restore();
-    setLetterSpacing(ctx, '2px');
-    ctx.font = `700 34px ${FONT_BODY}`;
-    ctx.fillStyle = theme.text;
-    ctx.fillText('www.DotDuel.com', colCX, groupCY + 50);
-    setLetterSpacing(ctx, '0px');
-    ctx.textAlign = 'left';
-  }
+  setLetterSpacing(ctx, '2px');
+  ctx.font = `700 34px ${FONT_BODY}`;
+  ctx.fillStyle = theme.text;
+  ctx.fillText('www.DotDuel.com', colCX, Math.min(ctaBase + 56, 600));
+  setLetterSpacing(ctx, '0px');
+  ctx.textAlign = 'left';
 
   drawGrain(ctx, theme);
-  // After the grain so noise never speckles the white tile / QR modules.
-  if (qrDraw) drawQrTile(ctx, qrDraw.qr, qrDraw.x, qrDraw.y, qrDraw.size);
+  // After the grain so noise never speckles the tile / QR modules.
+  if (qrDraw)
+    drawQrTile(ctx, qrDraw.qr, qrDraw.x, qrDraw.y, qrDraw.w, qrDraw.capH, qrDraw.skin, qrDraw.caption);
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(

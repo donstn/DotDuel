@@ -30,12 +30,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: 'Alpha 0.4.6.1',
+    version: 'Alpha 0.4.6.2',
     date: '2026-06-13',
     changes: [
       {
         kind: 'changed',
-        text: 'Tidied the shared result card: the QR code now sits beside the link instead of overlapping the board, and it’s larger and easier to scan.',
+        text: 'Reworked the shared result card: a bigger board, the result shown simply as Win / Loss / Draw, and the QR code now a game-coloured code in the middle of the board with a “Scan to play now!” label.',
       },
     ],
   },

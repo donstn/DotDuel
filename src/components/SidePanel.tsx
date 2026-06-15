@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { DIFFICULTY_LABELS } from '../types';
 import type { Difficulty, Player } from '../types';
+import { AchievementBadge } from '../achievements/AchievementBadge';
 import {
   avgPerGame,
   hotseatTotal,
@@ -31,6 +32,10 @@ interface SidePanelProps {
   actionSlot?: ReactNode;
   /** Optional content rendered directly under the avatar (e.g. Elo). */
   belowAvatar?: ReactNode;
+  /** Featured achievement badge shown beside the name (yours or opponent's). */
+  featured?: { icon: string; tier?: number; title: string } | null;
+  /** Click handler for the featured badge (opens the achievements view). */
+  onFeaturedClick?: () => void;
 }
 
 function effectiveColor(player: Player, swap: boolean): 1 | 2 {
@@ -52,6 +57,8 @@ export function SidePanel({
   stats,
   actionSlot,
   belowAvatar,
+  featured,
+  onFeaturedClick,
 }: SidePanelProps) {
   const color = effectiveColor(player, colorSwap);
   const cls = [
@@ -87,8 +94,20 @@ export function SidePanel({
         )}
       </div>
       {belowAvatar && <div className="player-below-avatar">{belowAvatar}</div>}
-      <div className="player-name" title={name}>
-        {name}
+      <div className="player-name-row">
+        <div className="player-name" title={name}>
+          {name}
+        </div>
+        {featured && (
+          <AchievementBadge
+            icon={featured.icon}
+            tier={featured.tier}
+            earned
+            size={22}
+            title={`${featured.title} — tap for achievements`}
+            onClick={onFeaturedClick}
+          />
+        )}
       </div>
       {actionSlot && <div className="player-action-slot">{actionSlot}</div>}
       {stats && <StatsPanel stats={stats} />}

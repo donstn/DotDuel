@@ -6,7 +6,8 @@ import {
   type AchievementCategory,
 } from './catalog';
 import { AchievementBadge } from './AchievementBadge';
-import { onAchievementsChange, unlockedIds } from './store';
+import { getFeatured, onAchievementsChange, setFeatured, unlockedIds } from './store';
+import { pushFeatured } from './cloudSync';
 
 const CATS = Object.keys(CATEGORY_LABEL) as AchievementCategory[];
 
@@ -23,6 +24,7 @@ export function AchievementsPopover({ onClose }: { onClose: () => void }) {
   const [sel, setSel] = useState<string | null>(null);
   const selDef = sel ? ACHIEVEMENTS.find((a) => a.id === sel) ?? null : null;
   const selEarned = !!sel && earned.has(sel);
+  const featured = getFeatured();
   const pct = Math.round((earned.size / ACHIEVEMENT_COUNT) * 100);
 
   return (
@@ -60,6 +62,20 @@ export function AchievementsPopover({ onClose }: { onClose: () => void }) {
                 </span>
                 <span className="ach-detail-status">{selEarned ? '✓ Unlocked' : 'Locked'}</span>
               </div>
+              {selEarned && (
+                <button
+                  type="button"
+                  className={`ach-pin ${featured === sel ? 'is-on' : ''}`}
+                  onClick={() => {
+                    const next = featured === sel ? null : sel;
+                    setFeatured(next);
+                    void pushFeatured(next);
+                  }}
+                  title="Show this badge next to your name in games"
+                >
+                  {featured === sel ? '★ Featured' : 'Pin'}
+                </button>
+              )}
             </>
           ) : (
             <span className="ach-detail-hint">Tap a badge to see what it’s for.</span>

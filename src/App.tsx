@@ -16,6 +16,18 @@ import { PrivacyPopover } from './components/PrivacyPopover';
 import { ProfilePopover } from './components/ProfilePopover';
 import { RankingsPopover } from './components/RankingsPopover';
 import { AchievementsPopover } from './achievements/AchievementsPopover';
+import { AchievementToast } from './achievements/AchievementToast';
+import {
+  evaluate as evaluateAchievements,
+  recordDaily,
+  recordLocalGame,
+  recordRankedGame,
+  recordTheme,
+  type EvalEnv,
+} from './achievements/engine';
+import { pushUnlocks, syncAchievementsOnSignIn } from './achievements/cloudSync';
+import { getFeatured, onAchievementsChange } from './achievements/store';
+import { ACHIEVEMENT_BY_ID } from './achievements/catalog';
 import { RulesPopover } from './components/RulesPopover';
 import { SettingsPopover } from './components/SettingsPopover';
 import { SidePanel } from './components/SidePanel';
@@ -228,6 +240,8 @@ export default function App() {
   const [rankingsOpen, setRankingsOpen] = useState(false);
   const [rankingsView, setRankingsView] = useState<'global' | 'local'>('global');
   const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [achToasts, setAchToasts] = useState<string[]>([]);
+  const achBackfilled = useRef(false);
   const [signInOpen, setSignInOpen] = useState(false);
   // Login gate shown on first load while signed out, until the user signs in
   // or explicitly chooses to play anonymously (session-scoped).
@@ -659,6 +673,22 @@ export default function App() {
         recordGameResult(p2, 'hotseat', outcomeFor(2), config.shape, s2, s1, undefined, k1);
       }
     }
+    if (config.mode === 'ai' || config.mode === 'hotseat') {
+      fireAch(
+        recordLocalGame(
+          {
+            mode: config.mode,
+            shape: config.shape,
+            difficulty: config.difficulty,
+            won: winnerSide === 1,
+            draw: winnerSide === 'draw' || winnerSide === null,
+            myScore: s1,
+            oppScore: s2,
+          },
+          achEnv(),
+        ),
+      );
+    }
     if (!gameFinishedFiredRef.current) {
       gameFinishedFiredRef.current = true;
       const winnerLabel =
@@ -711,6 +741,7 @@ export default function App() {
             attempts: result.attempts,
             best: result.best,
           });
+          fireAch(recordDaily(result.streak.current, result.attempts >= 3, achEnv()));
           trackEvent('daily_puzzle_solved', {
             puzzle_id: puzzleId,
             score: p1Score,
@@ -869,13 +900,65 @@ export default function App() {
     }
   }, [sbUser?.uid, cloudProfile?.displayName]);
 
-  // Apply colour theme to <html data-theme> and persist on every change.
+  const achEnv = (): EvalEnv => ({
+    playerName:
+      user && cloudProfile?.displayName
+        ? cloudProfile.displayName
+        : settings.playerName || 'Player 1',
+    rating: cloudProfile?.rating ?? 0,
+    dayStreakConsec: cloudProfile?.streak?.current ?? 0,
+  });
+
+  // Queue freshly-unlocked achievement toasts + mirror them to the cloud.
+  const fireAch = (fresh: string[]) => {
+    if (!fresh.length) return;
+    setAchToasts((q) => [...q, ...fresh]);
+    void pushUnlocks(fresh);
+  };
+
+  // Apply colour theme to <html data-theme>, persist, and count "themes tried".
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     saveTheme(theme);
+    fireAch(recordTheme(theme, achEnv()));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme]);
 
   const setTheme = (id: ThemeId) => setThemeState(id);
+
+  // Stat-derived achievements (Elo, day-streak, totals, beat-Bot, all-shapes):
+  // re-evaluate when the relevant data changes. The FIRST pass after load
+  // backfills silently (no toast flood for already-earned badges); later
+  // changes toast.
+  useEffect(() => {
+    // Wait for the cloud profile (rating/streak) to settle for signed-in users,
+    // so the profile arriving doesn't toast already-earned Elo/streak badges.
+    if (user && !cloudProfileLoaded) return;
+    const fresh = evaluateAchievements(achEnv());
+    if (achBackfilled.current) fireAch(fresh);
+    else achBackfilled.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, cloudProfileLoaded, cloudProfile?.rating, cloudProfile?.streak?.current, progress]);
+
+  // On sign-in: union cloud achievements into local (silent — earned elsewhere).
+  useEffect(() => {
+    if (!sbUser) return;
+    void syncAchievementsOnSignIn();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sbUser?.uid]);
+
+  // The badge the player pinned to show beside their name in-game (reactive to
+  // unlocks + pin changes via the store subscription).
+  const [featuredId, setFeaturedId] = useState<string | null>(() => getFeatured());
+  useEffect(() => onAchievementsChange(() => setFeaturedId(getFeatured())), []);
+  const myFeatured =
+    featuredId && ACHIEVEMENT_BY_ID[featuredId]
+      ? {
+          icon: ACHIEVEMENT_BY_ID[featuredId].icon,
+          tier: ACHIEVEMENT_BY_ID[featuredId].tier,
+          title: ACHIEVEMENT_BY_ID[featuredId].title,
+        }
+      : null;
 
   // GDPR / ePrivacy: on boot, apply whatever consent decision exists
   // (no decision = no analytics, banner shows up). On every change,
@@ -1703,6 +1786,24 @@ export default function App() {
       finished_reason: onlineGame.finishedReason ?? 'normal',
       duration_ms: gameStartedAtRef.current > 0 ? Date.now() - gameStartedAtRef.current : 0,
     });
+    {
+      const won = winnerSide === myNum;
+      const draw = winnerSide === 'draw' || winnerSide == null;
+      const onTime = onlineGame.finishedReason === 'timeout' && won;
+      fireAch(
+        recordRankedGame(
+          {
+            won,
+            draw,
+            onTime,
+            wasRematch: false,
+            myRating: cloudProfile?.rating ?? 0,
+            oppRating: 0,
+          },
+          achEnv(),
+        ),
+      );
+    }
   }, [screen, onlineGame, user]);
 
   // Optimistic clock for the instant AFTER the local player's move: freeze the
@@ -1980,6 +2081,10 @@ export default function App() {
 
     return (
       <div className="game-screen">
+        <AchievementToast
+          queue={achToasts}
+          onDismiss={() => setAchToasts((q) => q.slice(1))}
+        />
         <div className="game-topbar">
           <button className="btn-back" onClick={onMpBackPressed} aria-label="Leave match">
             ‹
@@ -2018,6 +2123,8 @@ export default function App() {
             score={mpState.scores[1]}
             avatar={mpP1Avatar}
             stats={null}
+            featured={myNum === 1 ? myFeatured : null}
+            onFeaturedClick={() => setAchievementsOpen(true)}
             ratingSlot={p1Clock}
             belowAvatar={
               <span className="player-elo">
@@ -2056,6 +2163,8 @@ export default function App() {
             score={mpState.scores[2]}
             avatar={mpP2Avatar}
             stats={null}
+            featured={myNum === 2 ? myFeatured : null}
+            onFeaturedClick={() => setAchievementsOpen(true)}
             ratingSlot={p2Clock}
             belowAvatar={
               <span className="player-elo">
@@ -2376,6 +2485,10 @@ export default function App() {
         {achievementsOpen && (
           <AchievementsPopover onClose={() => setAchievementsOpen(false)} />
         )}
+        <AchievementToast
+          queue={achToasts}
+          onDismiss={() => setAchToasts((q) => q.slice(1))}
+        />
         {rankingsOpen && (
           <RankingsPopover
             onClose={() => setRankingsOpen(false)}
@@ -2560,6 +2673,10 @@ export default function App() {
 
   return (
     <div className="game-screen">
+      <AchievementToast
+        queue={achToasts}
+        onDismiss={() => setAchToasts((q) => q.slice(1))}
+      />
       <div className="game-topbar">
         <button className="btn-back" onClick={backHandler} aria-label="Back to menu">
           ‹
@@ -2623,6 +2740,8 @@ export default function App() {
           avatar={p1Avatar}
           colorSwap={colorSwap}
           stats={p1Stats}
+          featured={myFeatured}
+          onFeaturedClick={() => setAchievementsOpen(true)}
           actionSlot={
             aiResignAvailable ? (
               <button

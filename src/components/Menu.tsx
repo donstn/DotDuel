@@ -8,6 +8,29 @@ import { FriendsButton } from './FriendsButton';
 import { TellAFriendButton } from './TellAFriendButton';
 import type { MyDailyAttempt } from '../cloud/dailyLeaderboard';
 import { MAX_ATTEMPTS_PER_DAY } from '../cloud/dailyPuzzleResult';
+import {
+  BotSquadIcon,
+  DailyIcon,
+  DeviceIcon,
+  DuelIcon,
+  GlobeIcon,
+  HouseIcon,
+  PodiumIcon,
+  PuzzleIcon,
+  RectangleShapeIcon,
+  RhombusShapeIcon,
+  SquareShapeIcon,
+  TriangleShapeIcon,
+  TrophyIcon,
+} from './MenuIcons';
+import { AIAvatar } from './SidePanel';
+
+const SHAPE_ICON: Record<ShapeId, (p: { className?: string }) => JSX.Element> = {
+  triangle: TriangleShapeIcon,
+  square: SquareShapeIcon,
+  rectangle: RectangleShapeIcon,
+  rhombus: RhombusShapeIcon,
+};
 
 interface Props {
   progress: Progress;
@@ -16,7 +39,7 @@ interface Props {
   user: AppUser | null;
   onStart: (mode: GameMode, shape: ShapeId, difficulty?: Difficulty) => void;
   onSettingsUpdate: (next: Settings) => void;
-  onOpenRankings: () => void;
+  onOpenRankings: (view?: 'global' | 'local') => void;
   onOpenSignIn: () => void;
   onOpenProfile: () => void;
   onSignOut: () => void;
@@ -38,6 +61,36 @@ interface Props {
   myDailyAttempt?: MyDailyAttempt | null;
   // 2b-v2: open the public puzzle leaderboard popover.
   onOpenPuzzleLeaderboard?: () => void;
+}
+
+/** Top-level grouping of the home menu (0.4.7 redesign). */
+type Category = 'single' | 'multi' | 'rankings';
+
+/** Shared shelf-card chrome: icon · (title + subtitle) · chevron. */
+function CardInner({
+  icon,
+  title,
+  sub,
+  iconClass = '',
+}: {
+  icon: React.ReactNode;
+  title: string;
+  sub: string;
+  /** Extra class on the icon slot (e.g. "is-avatar" for the bot faces). */
+  iconClass?: string;
+}) {
+  return (
+    <>
+      <span className={`menu-shelf-ic ${iconClass}`}>{icon}</span>
+      <span className="menu-shelf-body">
+        <strong>{title}</strong>
+        <span className="menu-shelf-sub">{sub}</span>
+      </span>
+      <span className="menu-shelf-chev" aria-hidden="true">
+        ›
+      </span>
+    </>
+  );
 }
 
 export function Menu({
@@ -65,10 +118,108 @@ export function Menu({
   onOpenPuzzleLeaderboard,
 }: Props) {
   const [mode, setMode] = useState<GameMode | null>(null);
+  const [category, setCategory] = useState<Category | null>(null);
   const [shape, setShape] = useState<ShapeId | null>(null);
   const [aiDifficulty, setAiDifficulty] = useState<Difficulty | null>(null);
 
-  if (!mode) {
+  // ---- Daily-puzzle shelf card (3-state, sign-in gated) ----
+  const dailyCard = () => {
+    if (user && onStartDailyPuzzle) {
+      const attempts = myDailyAttempt?.attempts ?? 0;
+      const best = myDailyAttempt?.best;
+      const exhausted = attempts >= MAX_ATTEMPTS_PER_DAY;
+      if (exhausted) {
+        return (
+          <button
+            className="menu-shelf disabled"
+            disabled
+            title="All 3 attempts used. Come back tomorrow."
+          >
+            <CardInner
+              icon={<DailyIcon />}
+              title="Daily puzzle"
+              sub={`✓ Done · best ${best ?? 0} · resets midnight UTC`}
+            />
+          </button>
+        );
+      }
+      const sub =
+        attempts > 0
+          ? `Attempt ${attempts + 1}/${MAX_ATTEMPTS_PER_DAY} · best ${best ?? 0}`
+          : `${MAX_ATTEMPTS_PER_DAY} attempts · 3 min · top score wins.`;
+      return (
+        <button className="menu-shelf" onClick={onStartDailyPuzzle}>
+          <CardInner icon={<DailyIcon />} title="Daily puzzle" sub={sub} />
+        </button>
+      );
+    }
+    return (
+      <button
+        className="menu-shelf disabled"
+        disabled
+        title="Sign in to play today's puzzle"
+      >
+        <CardInner icon={<DailyIcon />} title="Daily puzzle" sub="Sign in to play." />
+      </button>
+    );
+  };
+
+  // ---- Online-ranked shelf card (sign-in / network gated) ----
+  const onlineCard = () => {
+    if (!user) {
+      return (
+        <button className="menu-shelf disabled" disabled title="Sign in to play online">
+          <CardInner
+            icon={<GlobeIcon />}
+            title="Online ranked game"
+            sub="Sign in to play."
+          />
+        </button>
+      );
+    }
+    if (mpUnreachable) {
+      return (
+        <button
+          className="menu-shelf disabled"
+          disabled
+          title="Your network is blocking the game server (likely an ad/tracker blocker or DNS filter)"
+        >
+          <CardInner
+            icon={<GlobeIcon />}
+            title="Online ranked game"
+            sub="Server unreachable — your network may be blocking it."
+          />
+        </button>
+      );
+    }
+    if (mpLockedByOther) {
+      return (
+        <button
+          className="menu-shelf disabled"
+          disabled
+          title="You have a multiplayer session open on another tab or device"
+        >
+          <CardInner
+            icon={<GlobeIcon />}
+            title="Online ranked game"
+            sub="Active on another tab/device — finish or close it there."
+          />
+        </button>
+      );
+    }
+    return (
+      <button className="menu-shelf" onClick={onOpenMultiplayer}>
+        <CardInner
+          icon={<GlobeIcon />}
+          title="Online ranked game"
+          sub="Find a rated match."
+        />
+      </button>
+    );
+  };
+
+  // ---- Level 0: home (three category shelves) ----
+  if (!mode && !category) {
     const welcomeName = gameName ?? user?.email?.split('@')[0] ?? null;
     return (
       <div className="menu">
@@ -106,11 +257,7 @@ export function Menu({
         <div className="menu-auth-row">
           {user ? (
             <>
-              <button
-                type="button"
-                className="menu-auth-btn"
-                onClick={onOpenProfile}
-              >
+              <button type="button" className="menu-auth-btn" onClick={onOpenProfile}>
                 Profile
               </button>
               {onOpenFriends && (
@@ -126,11 +273,7 @@ export function Menu({
                 refCode={refCode}
                 className="menu-auth-btn"
               />
-              <button
-                type="button"
-                className="menu-auth-btn"
-                onClick={onSignOut}
-              >
+              <button type="button" className="menu-auth-btn" onClick={onSignOut}>
                 Sign out
               </button>
             </>
@@ -149,126 +292,114 @@ export function Menu({
             <TellAFriendButton variant="share" className="menu-share-link" />
           </div>
         )}
-        <div className="menu-section">
-          <div className="menu-grid">
-            <button className="menu-card" onClick={() => setMode('ai')}>
-              <strong>Vs AI</strong>
-              <span>Play against the bot.</span>
-            </button>
-            <button className="menu-card" onClick={() => setMode('hotseat')}>
-              <strong>Hot-seat</strong>
-              <span>Two players, one device.</span>
-            </button>
-            {user ? (
-              mpUnreachable ? (
-                <button
-                  className="menu-card disabled"
-                  disabled
-                  title="Your network is blocking the game server (likely an ad/tracker blocker or DNS filter)"
-                >
-                  <strong>Multiplayer</strong>
-                  <span>Server unreachable — your network may be blocking it.</span>
-                </button>
-              ) : mpLockedByOther ? (
-                <button
-                  className="menu-card disabled"
-                  disabled
-                  title="You have a multiplayer session open on another tab or device"
-                >
-                  <strong>Multiplayer</strong>
-                  <span>Active on another tab/device — finish or close it there.</span>
-                </button>
-              ) : (
-                <button
-                  className="menu-card"
-                  onClick={onOpenMultiplayer}
-                >
-                  <strong>Multiplayer</strong>
-                  <span>Find a ranked match.</span>
-                </button>
-              )
-            ) : (
-              <button
-                className="menu-card disabled"
-                disabled
-                title="Sign in to play multiplayer"
-              >
-                <strong>Multiplayer</strong>
-                <span>Sign in to play.</span>
-              </button>
-            )}
-            {user && onStartDailyPuzzle ? (
-              (() => {
-                const attempts = myDailyAttempt?.attempts ?? 0;
-                const best = myDailyAttempt?.best;
-                const exhausted = attempts >= MAX_ATTEMPTS_PER_DAY;
-                if (exhausted) {
-                  return (
-                    <button
-                      className="menu-card disabled"
-                      disabled
-                      title="All 3 attempts used. Come back tomorrow."
-                    >
-                      <strong>Today&rsquo;s puzzle</strong>
-                      <span>
-                        ✓ Done · best {best ?? 0} · resets midnight UTC
-                      </span>
-                    </button>
-                  );
-                }
-                if (attempts > 0) {
-                  return (
-                    <button className="menu-card" onClick={onStartDailyPuzzle}>
-                      <strong>Today&rsquo;s puzzle</strong>
-                      <span>
-                        Attempt {attempts + 1}/{MAX_ATTEMPTS_PER_DAY} · best{' '}
-                        {best ?? 0}
-                      </span>
-                    </button>
-                  );
-                }
-                return (
-                  <button className="menu-card" onClick={onStartDailyPuzzle}>
-                    <strong>Today&rsquo;s puzzle</strong>
-                    <span>
-                      {MAX_ATTEMPTS_PER_DAY} attempts · 3 min · highest score wins.
-                    </span>
-                  </button>
-                );
-              })()
-            ) : (
-              <button
-                className="menu-card disabled"
-                disabled
-                title="Sign in to play today's puzzle"
-              >
-                <strong>Today&rsquo;s puzzle</strong>
-                <span>Sign in to play.</span>
-              </button>
-            )}
-            {onOpenPuzzleLeaderboard && (
-              user ? (
-                <button className="menu-card" onClick={onOpenPuzzleLeaderboard}>
-                  <strong>Puzzle leaderboard</strong>
-                  <span>Today&rsquo;s best margins.</span>
-                </button>
-              ) : (
-                <button
-                  className="menu-card disabled"
-                  disabled
-                  title="Sign in to view"
-                >
-                  <strong>Puzzle leaderboard</strong>
-                  <span>Sign in to view.</span>
-                </button>
-              )
-            )}
-          </div>
-          <button className="menu-card menu-card-rank" onClick={onOpenRankings}>
-            <strong>Rankings</strong>
-            <span>Your records and head-to-head.</span>
+        <div className="menu-shelves">
+          <button className="menu-shelf" onClick={() => setCategory('single')}>
+            <CardInner
+              icon={<BotSquadIcon />}
+              title="Single player"
+              sub="Bots & daily puzzle."
+            />
           </button>
-        </div>      </div>
+          <button className="menu-shelf" onClick={() => setCategory('multi')}>
+            <CardInner
+              icon={<DuelIcon />}
+              title="Multiplayer"
+              sub="Hot-seat & online ranked."
+            />
+          </button>
+          <button className="menu-shelf" onClick={() => setCategory('rankings')}>
+            <CardInner
+              icon={<PodiumIcon />}
+              title="Rankings"
+              sub="Puzzle, local & rated boards."
+            />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Level 1: Single player ----
+  if (!mode && category === 'single') {
+    return (
+      <div className="menu">
+        <button className="link-btn back-link" onClick={() => setCategory(null)}>
+          ‹ Back
+        </button>
+        <h2>Single player</h2>
+        <div className="menu-shelves">
+          <button className="menu-shelf" onClick={() => setMode('ai')}>
+            <CardInner
+              icon={<BotSquadIcon />}
+              title="Bots"
+              sub="Five levels, gentle to merciless."
+            />
+          </button>
+          {dailyCard()}
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Level 1: Multiplayer ----
+  if (!mode && category === 'multi') {
+    return (
+      <div className="menu">
+        <button className="link-btn back-link" onClick={() => setCategory(null)}>
+          ‹ Back
+        </button>
+        <h2>Multiplayer</h2>
+        <div className="menu-shelves">
+          <button className="menu-shelf" onClick={() => setMode('hotseat')}>
+            <CardInner
+              icon={<DeviceIcon />}
+              title="Hot-seat"
+              sub="1 device · 2 players."
+            />
+          </button>
+          {onlineCard()}
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Level 1: Rankings ----
+  if (!mode && category === 'rankings') {
+    return (
+      <div className="menu">
+        <button className="link-btn back-link" onClick={() => setCategory(null)}>
+          ‹ Back
+        </button>
+        <h2>Rankings</h2>
+        <div className="menu-shelves">
+          <button
+            className={`menu-shelf ${user ? '' : 'disabled'}`}
+            disabled={!user || !onOpenPuzzleLeaderboard}
+            onClick={() => onOpenPuzzleLeaderboard?.()}
+            title={user ? '' : 'Sign in to view'}
+          >
+            <CardInner
+              icon={<PuzzleIcon />}
+              title="Puzzle rankings"
+              sub={user ? "Today's best puzzle scores." : 'Sign in to view.'}
+            />
+          </button>
+          <button className="menu-shelf" onClick={() => onOpenRankings('local')}>
+            <CardInner
+              icon={<HouseIcon />}
+              title="Local rankings"
+              sub="Your records on this device."
+            />
+          </button>
+          <button className="menu-shelf" onClick={() => onOpenRankings('global')}>
+            <CardInner
+              icon={<TrophyIcon />}
+              title="Rated rankings"
+              sub="Global online Elo leaderboard."
+            />
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -277,18 +408,17 @@ export function Menu({
       <div className="menu">
         <button className="link-btn back-link" onClick={() => setMode(null)}>‹ Back</button>
         <h2>Choose shape</h2>
-        <div className="menu-grid">
-          {PLAYABLE_SHAPE_META.map((s) => (
-            <button
-              key={s.id}
-              className="menu-card"
-              onClick={() => setShape(s.id)}
-            >
-              <strong>{s.label}</strong>
-              <span>{s.dots} dots</span>
-            </button>
-          ))}
-        </div>      </div>
+        <div className="menu-shelves">
+          {PLAYABLE_SHAPE_META.map((s) => {
+            const ShapeIcon = SHAPE_ICON[s.id];
+            return (
+              <button key={s.id} className="menu-shelf" onClick={() => setShape(s.id)}>
+                <CardInner icon={<ShapeIcon />} title={s.label} sub={`${s.dots} dots`} />
+              </button>
+            );
+          })}
+        </div>
+      </div>
     );
   }
 
@@ -318,23 +448,28 @@ export function Menu({
       <div className="menu">
         <button className="link-btn back-link" onClick={() => setMode(null)}>‹ Back</button>
         <h2>Choose shape</h2>
-        <div className="menu-grid">
+        <div className="menu-shelves">
           {PLAYABLE_SHAPE_META.map((s) => {
             const unlockedAny = progress.unlocked[s.id] > 0;
+            const ShapeIcon = SHAPE_ICON[s.id];
             return (
               <button
                 key={s.id}
-                className={`menu-card ${unlockedAny ? '' : 'disabled'}`}
+                className={`menu-shelf ${unlockedAny ? '' : 'disabled'}`}
                 disabled={!unlockedAny}
                 onClick={() => setShape(s.id)}
                 title={unlockedAny ? '' : 'Beat the previous shape on Hard to unlock'}
               >
-                <strong>{s.label}</strong>
-                <span>{unlockedAny ? `${s.dots} dots` : 'Locked'}</span>
+                <CardInner
+                  icon={<ShapeIcon />}
+                  title={s.label}
+                  sub={unlockedAny ? `${s.dots} dots` : 'Locked'}
+                />
               </button>
             );
           })}
-        </div>      </div>
+        </div>
+      </div>
     );
   }
 
@@ -346,13 +481,13 @@ export function Menu({
         <button className="link-btn back-link" onClick={() => setShape(null)}>‹ Back</button>
         <h2>Choose difficulty</h2>
         <p className="hint">{SHAPE_META.find((s) => s.id === shape)!.label}</p>
-        <div className="menu-grid">
+        <div className="menu-shelves">
           {all.map((d) => {
             const unlocked = isUnlocked(progress, shape, d) || available.includes(d);
             return (
               <button
                 key={d}
-                className={`menu-card ${unlocked ? '' : 'disabled'}`}
+                className={`menu-shelf ${unlocked ? '' : 'disabled'}`}
                 disabled={!unlocked}
                 onClick={() => {
                   if (gameName) {
@@ -362,12 +497,17 @@ export function Menu({
                   }
                 }}
               >
-                <strong>{DIFFICULTY_LABELS[d]}</strong>
-                <span>{unlocked ? `Level ${d}` : 'Locked'}</span>
+                <CardInner
+                  iconClass="is-avatar"
+                  icon={<AIAvatar level={d} />}
+                  title={DIFFICULTY_LABELS[d]}
+                  sub={unlocked ? `Level ${d}` : 'Locked'}
+                />
               </button>
             );
           })}
-        </div>      </div>
+        </div>
+      </div>
     );
   }
 
@@ -427,7 +567,7 @@ function VsAISetup({
       <button className="link-btn back-link" onClick={onBack}>‹ Back</button>
       <h2>Who's playing?</h2>
       <p className="hint">
-        {meta.label} · vs <strong>AI · {DIFFICULTY_LABELS[difficulty]}</strong>
+        {meta.label} · vs <strong>Bot · {DIFFICULTY_LABELS[difficulty]}</strong>
       </p>
       <div className="hotseat-setup">
         <label className="hotseat-name">

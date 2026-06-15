@@ -171,7 +171,7 @@ export function ProfilePopover({
                   <strong>{totalAll}</strong>
                 </div>
                 <div className="profile-row">
-                  <span>Vs-AI · W/D/L</span>
+                  <span>Vs-Bots · W/D/L</span>
                   <strong>
                     {aiTotal.wins} / {aiTotal.draws} / {aiTotal.losses}{' '}
                     <em>({safePercent(aiTotal.wins, aiGames)})</em>

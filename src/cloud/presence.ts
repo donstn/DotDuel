@@ -166,7 +166,7 @@ export function statusLabel(s: FriendStatus): string {
     case 'menu':
       return 'On menu';
     case 'in-ai':
-      return 'Vs AI';
+      return 'Vs Bots';
     case 'in-hotseat':
       return 'Hot-seat';
     case 'in-ranked':

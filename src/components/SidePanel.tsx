@@ -158,8 +158,8 @@ function StatsPanel({ stats }: { stats: PlayerRow }) {
       {aiDiffEntries.map((e) => (
         <StatsLine
           key={`ai-${e.difficulty}`}
-          label={`AI · ${DIFFICULTY_LABELS[e.difficulty]}`}
-          short={`AI L${e.difficulty}`}
+          label={`Bot · ${DIFFICULTY_LABELS[e.difficulty]}`}
+          short={`Bot L${e.difficulty}`}
           mode={e.stats}
           total={e.total}
         />
@@ -270,7 +270,7 @@ function GuestAvatar({ label, player }: { label: string; player: Player }) {
   );
 }
 
-function AIAvatar({ level }: { level: Difficulty }) {
+export function AIAvatar({ level }: { level: Difficulty }) {
   const label = `AI opponent, ${DIFFICULTY_LABELS[level]} difficulty`;
   switch (level) {
     case 1:

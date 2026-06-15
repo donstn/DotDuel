@@ -800,6 +800,126 @@ button {
   min-height: 280px;
 }
 
+/* ---- Home shelves (0.4.7 menu redesign): full-width stacked category cards
+   [icon · title+subtitle · chevron]. No backdrop-filter (kept lean per the GPU
+   diet); subtitle uses theme-aware --text-dim so it reads on light themes. */
+.menu-shelves {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 440px;
+}
+
+.menu-shelf {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  padding: 15px 16px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease,
+    border-color 160ms ease, box-shadow 200ms ease;
+}
+
+.menu-shelf::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 55%);
+}
+
+.menu-shelf:hover:not(.disabled):not(:disabled) {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42), 0 1px 0 rgba(255, 255, 255, 0.1) inset;
+}
+
+.menu-shelf:active:not(.disabled):not(:disabled) {
+  transform: translateY(-1px) scale(0.995);
+}
+
+.menu-shelf.disabled,
+.menu-shelf:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.menu-shelf-ic {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--accent);
+  background: radial-gradient(circle at 35% 30%, rgba(123, 219, 149, 0.16), rgba(123, 219, 149, 0.04));
+  border: 1px solid var(--glass-border);
+}
+
+.menu-shelf-ic svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+
+/* Bot-level shelves show the actual escalating robot avatar — drop the tinted
+   box and let the full face (incl. antenna) show, rounded-square not circle. */
+.menu-shelf-ic.is-avatar {
+  background: none;
+  border: none;
+}
+
+.menu-shelf-ic.is-avatar svg {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+}
+
+.menu-shelf-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.menu-shelf-body strong {
+  font-size: 1.08rem;
+  font-weight: 650;
+  color: var(--text);
+  letter-spacing: 0.005em;
+}
+
+.menu-shelf-sub {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.25;
+}
+
+.menu-shelf-chev {
+  flex: 0 0 auto;
+  font-size: 1.55rem;
+  line-height: 1;
+  color: var(--accent);
+  opacity: 0.65;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.menu-shelf:hover:not(.disabled):not(:disabled) .menu-shelf-chev {
+  transform: translateX(3px);
+  opacity: 1;
+}
+
 .menu h2 {
   margin: 0;
   font-weight: 600;

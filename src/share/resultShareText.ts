@@ -71,24 +71,24 @@ export function buildResultShare(d: ShareResultData): ResultShare {
   }
 
   if (d.mode === 'ai') {
-    const level = d.difficulty ? DIFFICULTY_LABELS[d.difficulty] : 'AI';
+    const level = d.difficulty ? DIFFICULTY_LABELS[d.difficulty] : 'Bot';
     const outcome = outcomeFor(1, d.winner);
     const s1 = d.scores[1];
     const s2 = d.scores[2];
     const headline =
       outcome === 'win'
-        ? `${level} AI — defeated`
+        ? `${level} Bot — defeated`
         : outcome === 'loss'
-          ? `${level} AI wins this one`
-          : `Draw vs ${level} AI`;
+          ? `${level} Bot wins this one`
+          : `Draw vs ${level} Bot`;
     const shareText =
       outcome === 'win'
-        ? `I beat the ${level} AI ${s1}–${s2} on the ${shapeLabel} board in DotDuel — can you?\n${url}`
+        ? `I beat the ${level} Bot ${s1}–${s2} on the ${shapeLabel} board in DotDuel — can you?\n${url}`
         : outcome === 'loss'
-          ? `The ${level} AI got me ${s2}–${s1} in DotDuel. Think you can do better?\n${url}`
-          : `I drew the ${level} AI ${s1}–${s2} in DotDuel. Can you finish the job?\n${url}`;
+          ? `The ${level} Bot got me ${s2}–${s1} in DotDuel. Think you can do better?\n${url}`
+          : `I drew the ${level} Bot ${s1}–${s2} in DotDuel. Can you finish the job?\n${url}`;
     return {
-      tag: `VS AI · ${shapeLabel.toUpperCase()}`,
+      tag: `VS BOT · ${shapeLabel.toUpperCase()}`,
       headline,
       a: { name: d.p1Name, score: s1, player: 1 },
       b: { name: d.p2Name, score: s2, player: 2 },

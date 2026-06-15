@@ -30,6 +30,29 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.7.0',
+    date: '2026-06-15',
+    highlight: 'New menu + Bots',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'The main menu is reorganised into three clear sections — Single player, Multiplayer, and Rankings — each opening a tidy list with its own icons.',
+      },
+      {
+        kind: 'changed',
+        text: 'The computer opponents are now called “Bots” instead of “AI” throughout.',
+      },
+      {
+        kind: 'changed',
+        text: 'Choosing a board shape or a bot level now shows a matching icon — the board shape, and each bot’s own face for its difficulty.',
+      },
+      {
+        kind: 'fixed',
+        text: 'On Android the app now stays in portrait when you tilt your phone.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.6.2',
     date: '2026-06-13',
     changes: [

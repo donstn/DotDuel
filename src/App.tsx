@@ -201,7 +201,7 @@ function renderMpUnreachable({ onLeave }: { onLeave: () => void }) {
         <br />· whitelisting <code>*.supabase.co</code> in your blocker
       </p>
       <p className="hint">
-        Single-player vs the bot works offline — open Menu and pick Vs AI.
+        Single-player vs the bots works offline — open Menu and pick Bots.
       </p>
       <button type="button" className="menu-auth-btn" onClick={onLeave}>
         Back to menu
@@ -225,6 +225,7 @@ export default function App() {
   const [rulesOpen, setRulesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rankingsOpen, setRankingsOpen] = useState(false);
+  const [rankingsView, setRankingsView] = useState<'global' | 'local'>('global');
   const [signInOpen, setSignInOpen] = useState(false);
   // Login gate shown on first load while signed out, until the user signs in
   // or explicitly chooses to play anonymously (session-scoped).
@@ -2272,7 +2273,10 @@ export default function App() {
           user={user}
           onStart={startGame}
           onSettingsUpdate={updateSettings}
-          onOpenRankings={() => setRankingsOpen(true)}
+          onOpenRankings={(view) => {
+            if (view) setRankingsView(view);
+            setRankingsOpen(true);
+          }}
           onOpenSignIn={() => setSignInOpen(true)}
           onOpenProfile={() => setProfileOpen(true)}
           onSignOut={() => void onSignOutSafe()}
@@ -2369,6 +2373,7 @@ export default function App() {
         {rankingsOpen && (
           <RankingsPopover
             onClose={() => setRankingsOpen(false)}
+            initialView={rankingsView}
             user={user}
             onOpenSignIn={() => {
               setRankingsOpen(false);
@@ -2523,7 +2528,7 @@ export default function App() {
       : settings.playerName || 'Player 1';
   const p2Name =
     config.mode === 'ai' || config.mode === 'daily'
-      ? `AI · ${DIFFICULTY_LABELS[config.difficulty ?? 1]}`
+      ? `Bot · ${DIFFICULTY_LABELS[config.difficulty ?? 1]}`
       : settings.opponentName || 'Player 2';
 
   const p1Avatar: 'human' | { kind: 'guest'; label: string } = hotseat

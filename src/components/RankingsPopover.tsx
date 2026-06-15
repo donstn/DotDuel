@@ -28,6 +28,9 @@ interface Props {
   onClose: () => void;
   user: AppUser | null;
   onOpenSignIn?: () => void;
+  /** Which board to open on (Menu's Rated vs Local rankings entries). Falls
+   *  back to global-when-signed-in. Signed-out users always land on local. */
+  initialView?: View;
 }
 
 type ShapeFilter = 'all' | ShapeId;
@@ -205,10 +208,13 @@ function buildAiH2H(diff: Difficulty): H2HRow[] {
   return out;
 }
 
-export function RankingsPopover({ onClose, user, onOpenSignIn }: Props) {
-  // Signed-in users get Global by default (the more interesting view).
-  // Signed-out users get Local so they don't bounce off a sign-in CTA.
-  const [view, setView] = useState<View>(user ? 'global' : 'local');
+export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Props) {
+  // Menu's "Rated"/"Local rankings" entries pass an explicit initialView.
+  // Otherwise: signed-in users get Global by default (the more interesting
+  // view); signed-out users get Local so they don't bounce off a sign-in CTA.
+  const [view, setView] = useState<View>(
+    initialView ?? (user ? 'global' : 'local'),
+  );
   const [stack, setStack] = useState<Subject[]>([]);
   const [shape, setShape] = useState<ShapeFilter>('all');
   const [lbSort, setLbSort] = useState<{ key: LeaderSortKey; dir: SortDir }>({

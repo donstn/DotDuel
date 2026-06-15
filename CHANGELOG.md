@@ -3,6 +3,22 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.7.0] - 2026-06-15
+
+### Changed
+
+- Main menu reorganised into three sections — Single player, Multiplayer,
+  Rankings — each opening a list of full-width cards with their own icons.
+- Computer opponents renamed from "AI" to "Bots" throughout (display only;
+  local stats keys unchanged).
+- Shape and difficulty pickers restyled as the same full-width cards: board
+  shapes shown as dot-cluster icons, bot levels as their escalating faces.
+
+### Fixed
+
+- Android app is locked to portrait — tilting no longer rotates the app or
+  shows a rotate prompt.
+
 ## [Unreleased]
 
 ### Added

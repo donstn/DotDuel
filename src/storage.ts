@@ -179,7 +179,7 @@ export function aiOpponentKey(diff: Difficulty): string {
 }
 
 export function aiOpponentDisplayName(diff: Difficulty): string {
-  return `AI · ${DIFFICULTY_LABELS[diff]}`;
+  return `Bot · ${DIFFICULTY_LABELS[diff]}`;
 }
 
 export function parseAiOpponentKey(key: string): Difficulty | null {

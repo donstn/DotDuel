@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#15291e"/>
+      <stop offset="60%" stop-color="#0a1a12"/>
+      <stop offset="100%" stop-color="#02090b"/>
+    </radialGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#b9d6c4"/>
+    </linearGradient>
+    <radialGradient id="p1Dot" cx="35%" cy="28%" r="65%">
+      <stop offset="0%" stop-color="#9af0b8"/>
+      <stop offset="55%" stop-color="#62cf90"/>
+      <stop offset="100%" stop-color="#0d4a23"/>
+    </radialGradient>
+    <radialGradient id="p2Dot" cx="35%" cy="28%" r="65%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="55%" stop-color="#f0fbcf"/>
+      <stop offset="100%" stop-color="#92a872"/>
+    </radialGradient>
+    <radialGradient id="emptyDot" cx="35%" cy="28%" r="65%">
+      <stop offset="0%" stop-color="#2a3a30"/>
+      <stop offset="100%" stop-color="#0d1812"/>
+    </radialGradient>
+    <filter id="dotShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="3" result="off"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.55"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="500" fill="url(#bg)"/>
+
+  <g opacity="0.18" transform="translate(95 380)">
+    <circle cx="0" cy="0" r="18" fill="url(#p1Dot)"/>
+    <circle cx="58" cy="0" r="18" fill="url(#p1Dot)"/>
+    <circle cx="116" cy="0" r="18" fill="url(#p2Dot)"/>
+    <circle cx="174" cy="0" r="18" fill="url(#p1Dot)"/>
+    <circle cx="232" cy="0" r="18" fill="url(#emptyDot)"/>
+    <line x1="-18" y1="0" x2="192" y2="0" stroke="#2b8a4c" stroke-width="7" stroke-linecap="round"/>
+    <line x1="-18" y1="0" x2="192" y2="0" stroke="#b8f5d3" stroke-width="2.6" stroke-linecap="round" style="mix-blend-mode:screen"/>
+  </g>
+
+  <g opacity="0.18" transform="translate(905 90)">
+    <circle cx="0" cy="0" r="18" fill="url(#p2Dot)"/>
+    <circle cx="0" cy="58" r="18" fill="url(#p2Dot)"/>
+    <circle cx="0" cy="116" r="18" fill="url(#p2Dot)"/>
+    <circle cx="0" cy="174" r="18" fill="url(#p1Dot)"/>
+    <line x1="0" y1="-18" x2="0" y2="134" stroke="#c8c878" stroke-width="7" stroke-linecap="round"/>
+    <line x1="0" y1="-18" x2="0" y2="134" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" style="mix-blend-mode:screen"/>
+  </g>
+
+  <g transform="translate(512 235)" filter="url(#dotShadow)">
+    <g filter="url(#glow)">
+      <circle cx="-300" cy="0" r="38" fill="url(#p1Dot)"/>
+    </g>
+    <ellipse cx="-309" cy="-11" rx="11" ry="7" fill="#ffffff" opacity="0.55"/>
+
+    <text x="0" y="18" text-anchor="middle"
+          font-family="'Segoe UI', -apple-system, Roboto, Arial, sans-serif"
+          font-weight="800" font-size="116" letter-spacing="-1"
+          fill="url(#title)">DotDuel</text>
+
+    <g filter="url(#glow)">
+      <circle cx="300" cy="0" r="38" fill="url(#p2Dot)"/>
+    </g>
+    <ellipse cx="291" cy="-11" rx="11" ry="7" fill="#ffffff" opacity="0.75"/>
+  </g>
+
+  <text x="512" y="350" text-anchor="middle"
+        font-family="'Segoe UI', -apple-system, Roboto, Arial, sans-serif"
+        font-weight="500" font-size="30" fill="#b9d6c4" opacity="0.95">
+    Two-player dot strategy. Take turns. Finish the most lines. Win.
+  </text>
+
+  <text x="512" y="448" text-anchor="middle"
+        font-family="'Segoe UI', -apple-system, Roboto, Arial, sans-serif"
+        font-weight="600" font-size="19" letter-spacing="3" fill="#7bdb95" opacity="0.9">
+    WWW.DOTDUEL.COM
+  </text>
+</svg>

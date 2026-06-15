@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="75%">
+      <stop offset="0%" stop-color="#1a3326"/>
+      <stop offset="60%" stop-color="#0c1d14"/>
+      <stop offset="100%" stop-color="#02090b"/>
+    </radialGradient>
+    <radialGradient id="p1" cx="35%" cy="28%" r="68%">
+      <stop offset="0%" stop-color="#9af0b8"/>
+      <stop offset="55%" stop-color="#62cf90"/>
+      <stop offset="100%" stop-color="#0d4a23"/>
+    </radialGradient>
+    <radialGradient id="p2" cx="35%" cy="28%" r="68%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="55%" stop-color="#f0fbcf"/>
+      <stop offset="100%" stop-color="#92a872"/>
+    </radialGradient>
+    <filter id="ds" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
+      <feOffset dx="0" dy="10"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.45"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g filter="url(#ds)">
+    <circle cx="156" cy="256" r="92" fill="url(#p1)"/>
+    <ellipse cx="128" cy="222" rx="26" ry="17" fill="#ffffff" opacity="0.55"/>
+    <circle cx="356" cy="256" r="92" fill="url(#p2)"/>
+    <ellipse cx="328" cy="222" rx="26" ry="17" fill="#ffffff" opacity="0.85"/>
+  </g>
+</svg>

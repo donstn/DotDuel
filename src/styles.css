@@ -1891,6 +1891,180 @@ button {
   display: block;
 }
 
+/* ---- Achievement badges (faceted medallion + two-tone glyph) ---- */
+.ach-badge {
+  display: inline-grid;
+  place-items: center;
+  line-height: 0;
+}
+.ach-badge svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.ach-frame {
+  fill: rgba(255, 255, 255, 0.035);
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.ach-pips circle {
+  fill: var(--accent);
+}
+/* Earned: lit accent ring + soft theme glow. */
+.ach-badge.is-earned svg {
+  filter: drop-shadow(0 0 4px var(--accent));
+}
+.ach-badge.tier-4.is-earned .ach-frame {
+  stroke-width: 3.5;
+}
+.ach-badge.tier-5.is-earned .ach-frame {
+  stroke-width: 4;
+}
+/* Locked: the same art, desaturated + dimmed (no second drawing). */
+.ach-badge.is-locked svg {
+  filter: grayscale(1) brightness(0.5) opacity(0.5);
+}
+.ach-badge[role='button'] {
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+.ach-badge[role='button']:active {
+  transform: scale(0.95);
+}
+
+/* ---- Achievements page ---- */
+.ach-card {
+  max-width: 560px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+}
+.ach-head {
+  gap: 4px;
+}
+.ach-progress-text {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+.ach-progress-text strong {
+  color: var(--accent);
+}
+.ach-progress {
+  width: 100%;
+  height: 7px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-top: 8px;
+}
+.ach-progress span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--p1-bright), var(--accent));
+  transition: width 450ms ease;
+}
+.ach-detail {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 12px;
+  margin: 12px 0;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+}
+.ach-detail.is-empty {
+  justify-content: center;
+}
+.ach-detail-hint {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+.ach-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.ach-detail-body strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+.ach-detail-body > span {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.25;
+}
+.ach-detail-status {
+  font-weight: 600;
+}
+.ach-detail.is-earned .ach-detail-status {
+  color: var(--accent);
+}
+.ach-scroll {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-right: 4px;
+}
+.ach-section {
+  margin-bottom: 14px;
+}
+.ach-section h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+.ach-section-count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+.ach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+  gap: 10px 6px;
+}
+.ach-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  cursor: pointer;
+  color: var(--text);
+  border-radius: 10px;
+}
+.ach-cell.is-sel {
+  background: var(--glass-bg);
+}
+.ach-cell-name {
+  font-size: 0.64rem;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--text-dim);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 82px;
+}
+.ach-cell:hover .ach-cell-name {
+  color: var(--text);
+}
+
 .player-name {
   font-size: clamp(0.75rem, 2.3vw, 0.92rem);
   font-weight: 600;

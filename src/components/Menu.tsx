@@ -9,6 +9,7 @@ import { TellAFriendButton } from './TellAFriendButton';
 import type { MyDailyAttempt } from '../cloud/dailyLeaderboard';
 import { MAX_ATTEMPTS_PER_DAY } from '../cloud/dailyPuzzleResult';
 import {
+  AchievementsIcon,
   BotSquadIcon,
   DailyIcon,
   DeviceIcon,
@@ -40,6 +41,7 @@ interface Props {
   onStart: (mode: GameMode, shape: ShapeId, difficulty?: Difficulty) => void;
   onSettingsUpdate: (next: Settings) => void;
   onOpenRankings: (view?: 'global' | 'local') => void;
+  onOpenAchievements: () => void;
   onOpenSignIn: () => void;
   onOpenProfile: () => void;
   onSignOut: () => void;
@@ -101,6 +103,7 @@ export function Menu({
   onStart,
   onSettingsUpdate,
   onOpenRankings,
+  onOpenAchievements,
   onOpenSignIn,
   onOpenProfile,
   onSignOut,
@@ -396,6 +399,13 @@ export function Menu({
               icon={<TrophyIcon />}
               title="Rated rankings"
               sub="Global online Elo leaderboard."
+            />
+          </button>
+          <button className="menu-shelf" onClick={onOpenAchievements}>
+            <CardInner
+              icon={<AchievementsIcon />}
+              title="Achievements"
+              sub="Badges you’ve earned for playing."
             />
           </button>
         </div>

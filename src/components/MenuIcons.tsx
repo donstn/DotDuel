@@ -136,6 +136,21 @@ export function TrophyIcon({ className }: IconProps) {
   );
 }
 
+// Achievements — a rosette medal (star disc + ribbon tails).
+export function AchievementsIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M18 27 l-4 15 5-3 4 4 M30 27 l4 15 -5-3 -4 4" />
+      <circle cx="24" cy="18" r="13" />
+      <path
+        d="M24 11 l2.2 4.5 5 .7 -3.6 3.5 .9 5 -4.5-2.4 -4.5 2.4 .9-5 -3.6-3.5 5-.7z"
+        fill="var(--accent, #7bdb95)"
+        stroke="none"
+      />
+    </svg>
+  );
+}
+
 // ---- Board-shape icons: little dot clusters echoing each board. fill, not
 // stroke (the game is made of dots), so they read as miniature boards. ----
 const dotSvg = {

@@ -15,6 +15,7 @@ import { Menu } from './components/Menu';
 import { PrivacyPopover } from './components/PrivacyPopover';
 import { ProfilePopover } from './components/ProfilePopover';
 import { RankingsPopover } from './components/RankingsPopover';
+import { AchievementsPopover } from './achievements/AchievementsPopover';
 import { RulesPopover } from './components/RulesPopover';
 import { SettingsPopover } from './components/SettingsPopover';
 import { SidePanel } from './components/SidePanel';
@@ -226,6 +227,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rankingsOpen, setRankingsOpen] = useState(false);
   const [rankingsView, setRankingsView] = useState<'global' | 'local'>('global');
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
   // Login gate shown on first load while signed out, until the user signs in
   // or explicitly chooses to play anonymously (session-scoped).
@@ -2277,6 +2279,7 @@ export default function App() {
             if (view) setRankingsView(view);
             setRankingsOpen(true);
           }}
+          onOpenAchievements={() => setAchievementsOpen(true)}
           onOpenSignIn={() => setSignInOpen(true)}
           onOpenProfile={() => setProfileOpen(true)}
           onSignOut={() => void onSignOutSafe()}
@@ -2369,6 +2372,9 @@ export default function App() {
             onSelect={setTheme}
             onClose={() => setThemeOpen(false)}
           />
+        )}
+        {achievementsOpen && (
+          <AchievementsPopover onClose={() => setAchievementsOpen(false)} />
         )}
         {rankingsOpen && (
           <RankingsPopover

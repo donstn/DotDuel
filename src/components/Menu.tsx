@@ -2,8 +2,9 @@ import { useState } from 'react';
 import type { AppUser } from '../auth/AppUser';
 import { availableDifficulties, isUnlocked } from '../storage';
 import type { Settings } from '../storage';
-import { DIFFICULTY_LABELS, PLAYABLE_SHAPE_META, SHAPE_META } from '../types';
+import { PLAYABLE_SHAPE_META } from '../types';
 import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
+import { LANGS, useLang, useT } from '../i18n';
 import { FriendsButton } from './FriendsButton';
 import { TellAFriendButton } from './TellAFriendButton';
 import type { MyDailyAttempt } from '../cloud/dailyLeaderboard';
@@ -121,6 +122,9 @@ export function Menu({
   const [category, setCategory] = useState<Category | null>(null);
   const [shape, setShape] = useState<ShapeId | null>(null);
   const [aiDifficulty, setAiDifficulty] = useState<Difficulty | null>(null);
+  const t = useT();
+  const { lang, setLang } = useLang();
+  const [langOpen, setLangOpen] = useState(false);
 
   // ---- Daily-puzzle shelf card (3-state, sign-in gated) ----
   const dailyCard = () => {
@@ -130,36 +134,32 @@ export function Menu({
       const exhausted = attempts >= MAX_ATTEMPTS_PER_DAY;
       if (exhausted) {
         return (
-          <button
-            className="menu-shelf disabled"
-            disabled
-            title="All 3 attempts used. Come back tomorrow."
-          >
+          <button className="menu-shelf disabled" disabled title={t.menu.dailyDoneTitle}>
             <CardInner
               icon={<DailyIcon />}
-              title="Daily puzzle"
-              sub={`✓ Done · best ${best ?? 0} · resets midnight UTC`}
+              title={t.menu.dailyPuzzle}
+              sub={t.menu.dailyDoneSub(best ?? 0)}
             />
           </button>
         );
       }
       const sub =
         attempts > 0
-          ? `Attempt ${attempts + 1}/${MAX_ATTEMPTS_PER_DAY} · best ${best ?? 0}`
-          : `${MAX_ATTEMPTS_PER_DAY} attempts · 3 min · top score wins.`;
+          ? t.menu.dailyAttemptSub(attempts + 1, MAX_ATTEMPTS_PER_DAY, best ?? 0)
+          : t.menu.dailyFreshSub(MAX_ATTEMPTS_PER_DAY);
       return (
         <button className="menu-shelf" onClick={onStartDailyPuzzle}>
-          <CardInner icon={<DailyIcon />} title="Daily puzzle" sub={sub} />
+          <CardInner icon={<DailyIcon />} title={t.menu.dailyPuzzle} sub={sub} />
         </button>
       );
     }
     return (
-      <button
-        className="menu-shelf disabled"
-        disabled
-        title="Sign in to play today's puzzle"
-      >
-        <CardInner icon={<DailyIcon />} title="Daily puzzle" sub="Sign in to play." />
+      <button className="menu-shelf disabled" disabled title={t.menu.dailySignInTitle}>
+        <CardInner
+          icon={<DailyIcon />}
+          title={t.menu.dailyPuzzle}
+          sub={t.common.signInToPlay}
+        />
       </button>
     );
   };
@@ -168,11 +168,11 @@ export function Menu({
   const onlineCard = () => {
     if (!user) {
       return (
-        <button className="menu-shelf disabled" disabled title="Sign in to play online">
+        <button className="menu-shelf disabled" disabled title={t.menu.onlineSignInTitle}>
           <CardInner
             icon={<GlobeIcon />}
-            title="Online ranked game"
-            sub="Sign in to play."
+            title={t.menu.onlineRanked}
+            sub={t.common.signInToPlay}
           />
         </button>
       );
@@ -182,27 +182,23 @@ export function Menu({
         <button
           className="menu-shelf disabled"
           disabled
-          title="Your network is blocking the game server (likely an ad/tracker blocker or DNS filter)"
+          title={t.menu.onlineUnreachableTitle}
         >
           <CardInner
             icon={<GlobeIcon />}
-            title="Online ranked game"
-            sub="Server unreachable — your network may be blocking it."
+            title={t.menu.onlineRanked}
+            sub={t.menu.onlineUnreachable}
           />
         </button>
       );
     }
     if (mpLockedByOther) {
       return (
-        <button
-          className="menu-shelf disabled"
-          disabled
-          title="You have a multiplayer session open on another tab or device"
-        >
+        <button className="menu-shelf disabled" disabled title={t.menu.onlineLockedTitle}>
           <CardInner
             icon={<GlobeIcon />}
-            title="Online ranked game"
-            sub="Active on another tab/device — finish or close it there."
+            title={t.menu.onlineRanked}
+            sub={t.menu.onlineLocked}
           />
         </button>
       );
@@ -211,8 +207,8 @@ export function Menu({
       <button className="menu-shelf" onClick={onOpenMultiplayer}>
         <CardInner
           icon={<GlobeIcon />}
-          title="Online ranked game"
-          sub="Find a rated match."
+          title={t.menu.onlineRanked}
+          sub={t.menu.onlineFindMatch}
         />
       </button>
     );
@@ -223,20 +219,65 @@ export function Menu({
     const welcomeName = gameName ?? user?.email?.split('@')[0] ?? null;
     return (
       <div className="menu">
-        <button
-          type="button"
-          className="menu-theme-btn"
-          onClick={onOpenThemes}
-          aria-label="Change colour theme"
-          title="Change colour theme"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
-            <path
-              fill="currentColor"
-              d="M12 3a9 9 0 0 0 0 18 1.5 1.5 0 0 0 1.16-2.46 1.5 1.5 0 0 1 1.16-2.46H17a4 4 0 0 0 4-4c0-4.97-4.03-9-9-9zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
-            />
-          </svg>
-        </button>
+        {langOpen && (
+          <div className="menu-lang-backdrop" onClick={() => setLangOpen(false)} />
+        )}
+        <div className="menu-topright">
+          <div className="menu-lang">
+            <button
+              type="button"
+              className="menu-lang-btn"
+              onClick={() => setLangOpen((o) => !o)}
+              aria-label={t.lang.label}
+              title={t.lang.label}
+              aria-haspopup="menu"
+              aria-expanded={langOpen}
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 0c2.5 2.6 2.5 15.4 0 18m0-18c-2.5 2.6-2.5 15.4 0 18M3.5 9h17M3.5 15h17"
+                />
+              </svg>
+              <span className="menu-lang-code">{lang.toUpperCase()}</span>
+            </button>
+            {langOpen && (
+              <div className="menu-lang-pop" role="menu">
+                {LANGS.map((l) => (
+                  <button
+                    key={l.code}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={l.code === lang}
+                    className={`menu-lang-opt ${l.code === lang ? 'is-on' : ''}`}
+                    onClick={() => {
+                      setLang(l.code);
+                      setLangOpen(false);
+                    }}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            className="menu-theme-btn"
+            onClick={onOpenThemes}
+            aria-label={t.menu.changeTheme}
+            title={t.menu.changeTheme}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
+              <path
+                fill="currentColor"
+                d="M12 3a9 9 0 0 0 0 18 1.5 1.5 0 0 0 1.16-2.46 1.5 1.5 0 0 1 1.16-2.46H17a4 4 0 0 0 4-4c0-4.97-4.03-9-9-9zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
+              />
+            </svg>
+          </button>
+        </div>
         <h1 className="title">
           <span className="title-dot title-dot-1">●</span>
           <span className="title-text">DotDuel</span>
@@ -245,20 +286,18 @@ export function Menu({
         <p className="subtitle">
           {user && welcomeName ? (
             <>
-              Welcome, <strong className="menu-welcome-name">{welcomeName}</strong> —{' '}
-              take turns placing dots, finish a line to score points for its length. Win by scoring most points while coloring the whole board.
+              {t.menu.welcomeLead}{' '}
+              <strong className="menu-welcome-name">{welcomeName}</strong> — {t.menu.tagline}
             </>
           ) : (
-            <>
-              Take turns placing dots, finish a line to score points for its length. Win by scoring most points while coloring the whole board.
-            </>
+            <>{t.menu.tagline}</>
           )}
         </p>
         <div className="menu-auth-row">
           {user ? (
             <>
               <button type="button" className="menu-auth-btn" onClick={onOpenProfile}>
-                Profile
+                {t.menu.profile}
               </button>
               {onOpenFriends && (
                 <FriendsButton
@@ -274,7 +313,7 @@ export function Menu({
                 className="menu-auth-btn"
               />
               <button type="button" className="menu-auth-btn" onClick={onSignOut}>
-                Sign out
+                {t.menu.signOut}
               </button>
             </>
           ) : (
@@ -283,7 +322,7 @@ export function Menu({
               className="menu-auth-btn menu-auth-btn-cta"
               onClick={onOpenSignIn}
             >
-              Sign in
+              {t.menu.signIn}
             </button>
           )}
         </div>
@@ -296,22 +335,22 @@ export function Menu({
           <button className="menu-shelf" onClick={() => setCategory('single')}>
             <CardInner
               icon={<BotSquadIcon />}
-              title="Single player"
-              sub="Bots & daily puzzle."
+              title={t.menu.singlePlayer}
+              sub={t.menu.singlePlayerSub}
             />
           </button>
           <button className="menu-shelf" onClick={() => setCategory('multi')}>
             <CardInner
               icon={<DuelIcon />}
-              title="Multiplayer"
-              sub="Hot-seat & online ranked."
+              title={t.menu.multiplayer}
+              sub={t.menu.multiplayerSub}
             />
           </button>
           <button className="menu-shelf" onClick={() => setCategory('rankings')}>
             <CardInner
               icon={<PodiumIcon />}
-              title="Rankings"
-              sub="Puzzle, local & rated boards."
+              title={t.menu.rankings}
+              sub={t.menu.rankingsSub}
             />
           </button>
         </div>
@@ -324,16 +363,12 @@ export function Menu({
     return (
       <div className="menu">
         <button className="link-btn back-link" onClick={() => setCategory(null)}>
-          ‹ Back
+          ‹ {t.common.back}
         </button>
-        <h2>Single player</h2>
+        <h2>{t.menu.singlePlayer}</h2>
         <div className="menu-shelves">
           <button className="menu-shelf" onClick={() => setMode('ai')}>
-            <CardInner
-              icon={<BotSquadIcon />}
-              title="Bots"
-              sub="Five levels, gentle to merciless."
-            />
+            <CardInner icon={<BotSquadIcon />} title={t.menu.bots} sub={t.menu.botsSub} />
           </button>
           {dailyCard()}
         </div>
@@ -346,16 +381,12 @@ export function Menu({
     return (
       <div className="menu">
         <button className="link-btn back-link" onClick={() => setCategory(null)}>
-          ‹ Back
+          ‹ {t.common.back}
         </button>
-        <h2>Multiplayer</h2>
+        <h2>{t.menu.multiplayer}</h2>
         <div className="menu-shelves">
           <button className="menu-shelf" onClick={() => setMode('hotseat')}>
-            <CardInner
-              icon={<DeviceIcon />}
-              title="Hot-seat"
-              sub="1 device · 2 players."
-            />
+            <CardInner icon={<DeviceIcon />} title={t.menu.hotseat} sub={t.menu.hotseatSub} />
           </button>
           {onlineCard()}
         </div>
@@ -368,41 +399,41 @@ export function Menu({
     return (
       <div className="menu">
         <button className="link-btn back-link" onClick={() => setCategory(null)}>
-          ‹ Back
+          ‹ {t.common.back}
         </button>
-        <h2>Rankings</h2>
+        <h2>{t.menu.rankings}</h2>
         <div className="menu-shelves">
           <button
             className={`menu-shelf ${user ? '' : 'disabled'}`}
             disabled={!user || !onOpenPuzzleLeaderboard}
             onClick={() => onOpenPuzzleLeaderboard?.()}
-            title={user ? '' : 'Sign in to view'}
+            title={user ? '' : t.common.signInToView}
           >
             <CardInner
               icon={<PuzzleIcon />}
-              title="Puzzle rankings"
-              sub={user ? "Today's best puzzle scores." : 'Sign in to view.'}
+              title={t.menu.puzzleRankings}
+              sub={user ? t.menu.puzzleRankingsSub : t.common.signInToView}
             />
           </button>
           <button className="menu-shelf" onClick={() => onOpenRankings('local')}>
             <CardInner
               icon={<HouseIcon />}
-              title="Local rankings"
-              sub="Your records on this device."
+              title={t.menu.localRankings}
+              sub={t.menu.localRankingsSub}
             />
           </button>
           <button className="menu-shelf" onClick={() => onOpenRankings('global')}>
             <CardInner
               icon={<TrophyIcon />}
-              title="Rated rankings"
-              sub="Global online Elo leaderboard."
+              title={t.menu.ratedRankings}
+              sub={t.menu.ratedRankingsSub}
             />
           </button>
           <button className="menu-shelf" onClick={onOpenAchievements}>
             <CardInner
               icon={<AchievementsIcon />}
-              title="Achievements"
-              sub="Badges you’ve earned for playing."
+              title={t.menu.achievements}
+              sub={t.menu.achievementsSub}
             />
           </button>
         </div>
@@ -413,14 +444,18 @@ export function Menu({
   if (mode === 'hotseat' && !shape) {
     return (
       <div className="menu">
-        <button className="link-btn back-link" onClick={() => setMode(null)}>‹ Back</button>
-        <h2>Choose shape</h2>
+        <button className="link-btn back-link" onClick={() => setMode(null)}>‹ {t.common.back}</button>
+        <h2>{t.menu.chooseShape}</h2>
         <div className="menu-shelves">
           {PLAYABLE_SHAPE_META.map((s) => {
             const ShapeIcon = SHAPE_ICON[s.id];
             return (
               <button key={s.id} className="menu-shelf" onClick={() => setShape(s.id)}>
-                <CardInner icon={<ShapeIcon />} title={s.label} sub={`${s.dots} dots`} />
+                <CardInner
+                  icon={<ShapeIcon />}
+                  title={t.shapes[s.id]}
+                  sub={t.menu.dots(s.dots)}
+                />
               </button>
             );
           })}
@@ -453,8 +488,8 @@ export function Menu({
   if (mode === 'ai' && !shape) {
     return (
       <div className="menu">
-        <button className="link-btn back-link" onClick={() => setMode(null)}>‹ Back</button>
-        <h2>Choose shape</h2>
+        <button className="link-btn back-link" onClick={() => setMode(null)}>‹ {t.common.back}</button>
+        <h2>{t.menu.chooseShape}</h2>
         <div className="menu-shelves">
           {PLAYABLE_SHAPE_META.map((s) => {
             const unlockedAny = progress.unlocked[s.id] > 0;
@@ -465,12 +500,12 @@ export function Menu({
                 className={`menu-shelf ${unlockedAny ? '' : 'disabled'}`}
                 disabled={!unlockedAny}
                 onClick={() => setShape(s.id)}
-                title={unlockedAny ? '' : 'Beat the previous shape on Hard to unlock'}
+                title={unlockedAny ? '' : t.menu.shapeLockedTitle}
               >
                 <CardInner
                   icon={<ShapeIcon />}
-                  title={s.label}
-                  sub={unlockedAny ? `${s.dots} dots` : 'Locked'}
+                  title={t.shapes[s.id]}
+                  sub={unlockedAny ? t.menu.dots(s.dots) : t.common.locked}
                 />
               </button>
             );
@@ -485,9 +520,9 @@ export function Menu({
     const available = availableDifficulties(progress, shape);
     return (
       <div className="menu">
-        <button className="link-btn back-link" onClick={() => setShape(null)}>‹ Back</button>
-        <h2>Choose difficulty</h2>
-        <p className="hint">{SHAPE_META.find((s) => s.id === shape)!.label}</p>
+        <button className="link-btn back-link" onClick={() => setShape(null)}>‹ {t.common.back}</button>
+        <h2>{t.menu.chooseDifficulty}</h2>
+        <p className="hint">{t.shapes[shape]}</p>
         <div className="menu-shelves">
           {all.map((d) => {
             const unlocked = isUnlocked(progress, shape, d) || available.includes(d);
@@ -507,8 +542,8 @@ export function Menu({
                 <CardInner
                   iconClass="is-avatar"
                   icon={<AIAvatar level={d} />}
-                  title={DIFFICULTY_LABELS[d]}
-                  sub={unlocked ? `Level ${d}` : 'Locked'}
+                  title={t.difficulty[d]}
+                  sub={unlocked ? t.menu.level(d) : t.common.locked}
                 />
               </button>
             );
@@ -556,10 +591,10 @@ function VsAISetup({
   onBack,
   onStart,
 }: VsAISetupProps) {
+  const t = useT();
   const [name, setName] = useState(
     lockedName ?? (settings.playerName || 'Player 1'),
   );
-  const meta = SHAPE_META.find((s) => s.id === shape)!;
 
   const start = () => {
     onStart((lockedName ?? name).trim() || 'Player 1');
@@ -571,16 +606,14 @@ function VsAISetup({
 
   return (
     <div className="menu">
-      <button className="link-btn back-link" onClick={onBack}>‹ Back</button>
-      <h2>Who's playing?</h2>
-      <p className="hint">
-        {meta.label} · vs <strong>Bot · {DIFFICULTY_LABELS[difficulty]}</strong>
-      </p>
+      <button className="link-btn back-link" onClick={onBack}>‹ {t.common.back}</button>
+      <h2>{t.menu.whosPlaying}</h2>
+      <p className="hint">{t.menu.vsBot(t.shapes[shape], t.difficulty[difficulty])}</p>
       <div className="hotseat-setup">
         <label className="hotseat-name">
           <span className="hotseat-name-label">
             <span className="dot-swatch dot-swatch-p1" data-swap="0" aria-hidden="true" />
-            Your name — plays first
+            {t.menu.yourNameFirst}
           </span>
           <input
             type="text"
@@ -589,19 +622,15 @@ function VsAISetup({
             onChange={(e) => !lockedName && setName(e.target.value)}
             onKeyDown={onKey}
             maxLength={20}
-            placeholder="Player 1"
+            placeholder={t.menu.player1Placeholder}
             autoFocus={!lockedName}
             readOnly={!!lockedName}
             aria-readonly={!!lockedName}
           />
         </label>
-        {lockedName && (
-          <p className="settings-hint">
-            Signed in as {lockedName}. Change in <strong>Profile</strong>.
-          </p>
-        )}
+        {lockedName && <p className="settings-hint">{t.menu.signedInAs(lockedName)}</p>}
         <button className="hotseat-start" onClick={start}>
-          Start game
+          {t.menu.startGame}
         </button>
       </div>
     </div>
@@ -623,13 +652,12 @@ function HotseatSetup({
   onBack,
   onStart,
 }: HotseatSetupProps) {
+  const t = useT();
   const [p1, setP1] = useState(
     lockedP1Name ?? (settings.playerName || 'Player 1'),
   );
   const [p2, setP2] = useState(settings.opponentName || 'Player 2');
   const [swap, setSwap] = useState(settings.hotseatColorSwap);
-
-  const meta = SHAPE_META.find((s) => s.id === shape)!;
 
   const start = () => {
     const p1Final = (lockedP1Name ?? p1).trim() || 'Player 1';
@@ -642,14 +670,14 @@ function HotseatSetup({
 
   return (
     <div className="menu">
-      <button className="link-btn back-link" onClick={onBack}>‹ Back</button>
-      <h2>Who's playing?</h2>
-      <p className="hint">{meta.label} · confirm or change names before starting</p>
+      <button className="link-btn back-link" onClick={onBack}>‹ {t.common.back}</button>
+      <h2>{t.menu.whosPlaying}</h2>
+      <p className="hint">{t.menu.hotseatHint(t.shapes[shape])}</p>
       <div className="hotseat-setup">
         <label className="hotseat-name">
           <span className="hotseat-name-label">
             <span className="dot-swatch dot-swatch-p1" data-swap={swap ? '1' : '0'} aria-hidden="true" />
-            Player 1 — plays first
+            {t.menu.player1First}
           </span>
           <input
             type="text"
@@ -658,7 +686,7 @@ function HotseatSetup({
             onChange={(e) => !lockedP1Name && setP1(e.target.value)}
             onKeyDown={onKey}
             maxLength={20}
-            placeholder="Player 1"
+            placeholder={t.menu.player1Placeholder}
             autoFocus={!lockedP1Name}
             readOnly={!!lockedP1Name}
             aria-readonly={!!lockedP1Name}
@@ -667,7 +695,7 @@ function HotseatSetup({
         <label className="hotseat-name">
           <span className="hotseat-name-label">
             <span className="dot-swatch dot-swatch-p2" data-swap={swap ? '1' : '0'} aria-hidden="true" />
-            Player 2
+            {t.menu.player2}
           </span>
           <input
             type="text"
@@ -676,7 +704,7 @@ function HotseatSetup({
             onChange={(e) => setP2(e.target.value)}
             onKeyDown={onKey}
             maxLength={20}
-            placeholder="Player 2"
+            placeholder={t.menu.player2Placeholder}
           />
         </label>
         <label className="settings-toggle">
@@ -685,10 +713,10 @@ function HotseatSetup({
             checked={swap}
             onChange={(e) => setSwap(e.target.checked)}
           />
-          <span>Swap colours (Player 1 cream · Player 2 green)</span>
+          <span>{t.menu.swapColours}</span>
         </label>
         <button className="hotseat-start" onClick={start}>
-          Start game
+          {t.menu.startGame}
         </button>
       </div>
     </div>

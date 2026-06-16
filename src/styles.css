@@ -4390,10 +4390,86 @@ h1, h2, h3,
 }
 
 /* Top-right theme toggle on the start menu */
-.menu-theme-btn {
+/* Top-right control cluster on the home menu: language picker + theme button. */
+.menu-topright {
   position: absolute;
   top: clamp(10px, 2.4vh, 18px);
   right: clamp(10px, 2.4vw, 18px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Must sit ABOVE .menu-lang-backdrop (z-index 9) so the popover options are
+     clickable — otherwise the full-screen click-catcher swallows the tap and
+     the language never changes. */
+  z-index: 12;
+}
+
+.menu-lang {
+  position: relative;
+}
+.menu-lang-btn {
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: background 140ms, color 140ms, border-color 140ms;
+}
+.menu-lang-btn:hover {
+  background: var(--glass-bg-strong);
+  color: var(--accent);
+  border-color: var(--glass-border-strong);
+}
+.menu-lang-code {
+  letter-spacing: 0.04em;
+}
+/* Full-screen click-catcher so tapping outside closes the language popover. */
+.menu-lang-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+}
+.menu-lang-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  padding: 6px;
+  gap: 2px;
+  border-radius: 12px;
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border-strong);
+  box-shadow: var(--glass-shadow-strong);
+  z-index: 20;
+}
+.menu-lang-opt {
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 120ms, color 120ms;
+}
+.menu-lang-opt:hover {
+  background: var(--glass-bg);
+}
+.menu-lang-opt.is-on {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.menu-theme-btn {
   width: 38px;
   height: 38px;
   border-radius: 12px;
@@ -4405,7 +4481,6 @@ h1, h2, h3,
   justify-content: center;
   cursor: pointer;
   transition: background 140ms, color 140ms, border-color 140ms, transform 140ms;
-  z-index: 4;
 }
 
 .menu-theme-btn:hover {

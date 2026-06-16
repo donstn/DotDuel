@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { resetStats } from '../storage';
 import type { Settings } from '../storage';
+import { useT } from '../i18n';
 
 type ChallengePolicy = 'everyone' | 'friends-only' | 'nobody';
 
@@ -31,6 +32,7 @@ export function SettingsPopover({
   showPresence,
   onChangePrivacy,
 }: Props) {
+  const t = useT();
   const [local, setLocal] = useState<Settings>(settings);
 
   useEffect(() => {
@@ -67,22 +69,22 @@ export function SettingsPopover({
       onClick={onBackdrop}
       role="dialog"
       aria-modal="true"
-      aria-label="Settings"
+      aria-label={t.settings.aria}
     >
       <div className="rules-card settings-card">
-        <button className="rules-close" onClick={done} aria-label="Close settings">
+        <button className="rules-close" onClick={done} aria-label={t.settings.close}>
           ✕
         </button>
 
         <header className="rules-header">
-          <h2>Settings</h2>
-          <p className="rules-tagline">Saved locally on this device.</p>
+          <h2>{t.settings.title}</h2>
+          <p className="rules-tagline">{t.settings.tagline}</p>
         </header>
 
         <div className="settings-body">
           <section className="settings-section">
             <label className="settings-label">
-              <span>Your name</span>
+              <span>{t.settings.yourName}</span>
               <input
                 type="text"
                 className="settings-input"
@@ -92,22 +94,22 @@ export function SettingsPopover({
                   !cloudDisplayName &&
                   setLocal((s) => ({ ...s, playerName: e.target.value }))
                 }
-                placeholder="Player 1"
+                placeholder={t.menu.player1Placeholder}
                 readOnly={!!cloudDisplayName}
                 aria-readonly={!!cloudDisplayName}
               />
             </label>
             <p className="settings-hint">
               {cloudDisplayName
-                ? `Signed in as ${cloudDisplayName}. Rename in Profile.`
-                : 'Used in Vs-AI mode AND as Player 1 in Hot-seat.'}
+                ? t.settings.yourNameHintSignedIn(cloudDisplayName)
+                : t.settings.yourNameHint}
             </p>
           </section>
 
           <section className="settings-section">
-            <h3>Hot-seat opponent</h3>
+            <h3>{t.settings.hotseatOpponent}</h3>
             <label className="settings-label">
-              <span>Player 2 name</span>
+              <span>{t.settings.player2Name}</span>
               <input
                 type="text"
                 className="settings-input"
@@ -116,7 +118,7 @@ export function SettingsPopover({
                 onChange={(e) =>
                   setLocal((s) => ({ ...s, opponentName: e.target.value }))
                 }
-                placeholder="Player 2"
+                placeholder={t.menu.player2Placeholder}
               />
             </label>
             <label className="settings-toggle">
@@ -127,15 +129,15 @@ export function SettingsPopover({
                   setLocal((s) => ({ ...s, hotseatColorSwap: e.target.checked }))
                 }
               />
-              <span>Swap colours (Player 1 cream · Player 2 green)</span>
+              <span>{t.settings.swapColours}</span>
             </label>
           </section>
 
           {onChangePrivacy && (
             <section className="settings-section">
-              <h3>Privacy</h3>
+              <h3>{t.settings.privacyH}</h3>
               <label className="settings-label">
-                <span>Who can challenge me to a game?</span>
+                <span>{t.settings.whoCanChallenge}</span>
                 <select
                   className="settings-input"
                   value={challengePolicy ?? 'everyone'}
@@ -145,9 +147,9 @@ export function SettingsPopover({
                     })
                   }
                 >
-                  <option value="everyone">Everyone</option>
-                  <option value="friends-only">Friends only</option>
-                  <option value="nobody">Nobody</option>
+                  <option value="everyone">{t.settings.everyone}</option>
+                  <option value="friends-only">{t.settings.friendsOnly}</option>
+                  <option value="nobody">{t.settings.nobody}</option>
                 </select>
               </label>
               <label className="settings-toggle">
@@ -158,12 +160,9 @@ export function SettingsPopover({
                     onChangePrivacy({ showPresence: e.target.checked })
                   }
                 />
-                <span>Show my status to friends</span>
+                <span>{t.settings.showStatus}</span>
               </label>
-              <p className="settings-hint">
-                When off, friends see you as offline. Friend requests still
-                work; only the live status indicator is hidden.
-              </p>
+              <p className="settings-hint">{t.settings.showStatusHint}</p>
             </section>
           )}
 
@@ -172,33 +171,31 @@ export function SettingsPopover({
               <button
                 className="settings-danger-btn"
                 onClick={() => {
-                  if (confirm('Reset progress? Unlocked shapes and levels will be lost.')) {
+                  if (confirm(t.settings.resetProgressConfirm)) {
                     onResetProgress();
                   }
                 }}
               >
-                Reset progress
+                {t.settings.resetProgress}
               </button>
               <button
                 className="settings-danger-btn"
                 onClick={() => {
-                  if (confirm('Reset stats? Every player\'s W/D/L history on this device will be erased.')) {
+                  if (confirm(t.settings.resetStatsConfirm)) {
                     resetStats();
                   }
                 }}
               >
-                Reset stats
+                {t.settings.resetStats}
               </button>
             </div>
-            <p className="settings-hint">
-              Note: renaming yourself starts a fresh stats row. Old name's history is kept under that old name.
-            </p>
+            <p className="settings-hint">{t.settings.renameNote}</p>
           </section>
         </div>
 
         <footer className="rules-footer-bar">
           <button className="rules-got-it" onClick={done}>
-            Done
+            {t.settings.done}
           </button>
         </footer>
       </div>

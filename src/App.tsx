@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useT } from './i18n';
 import { AdBanner } from './components/AdBanner';
 import {
   initNativeAds,
@@ -224,6 +225,7 @@ function renderMpUnreachable({ onLeave }: { onLeave: () => void }) {
 }
 
 export default function App() {
+  const t = useT();
   const [screen, setScreen] = useState<Screen>('menu');
   const [progress, setProgress] = useState<Progress>(() => loadProgress());
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
@@ -2086,13 +2088,13 @@ export default function App() {
           onDismiss={() => setAchToasts((q) => q.slice(1))}
         />
         <div className="game-topbar">
-          <button className="btn-back" onClick={onMpBackPressed} aria-label="Leave match">
+          <button className="btn-back" onClick={onMpBackPressed} aria-label={t.game.leaveMatch}>
             ‹
           </button>
           <div className="topbar-center">
             <div className="remaining-points">
               <span className="remaining-value">{mpRemaining}</span>
-              <span className="remaining-label">pts left</span>
+              <span className="remaining-label">{t.game.ptsLeft}</span>
             </div>
             <div
               className={`pending-indicator${mpState.pending.length === 0 ? ' pending-indicator-hidden' : ''}${pendingFlash ? ' pending-flash' : ''}`}
@@ -2100,16 +2102,14 @@ export default function App() {
             >
               <span className="pending-icon" aria-hidden="true">◌</span>
               <span className="pending-value">{Math.max(mpState.pending.length, 1)}</span>
-              <span className="pending-label">
-                {mpState.pending.length === 1 ? 'line to claim' : 'lines to claim'}
-              </span>
+              <span className="pending-label">{t.game.linesToClaim(mpState.pending.length)}</span>
             </div>
           </div>
           <button
             className="btn-rules"
             onClick={() => setRulesOpen(true)}
-            aria-label="Show rules"
-            title="How to play"
+            aria-label={t.game.showRules}
+            title={t.game.rules}
           >
             ?
           </button>
@@ -2130,7 +2130,7 @@ export default function App() {
               <span className="player-elo">
                 {mpP1Elo}
                 {opponentSlot === 1 && pairing.opponentIsBot && (
-                  <span className="bot-tag" aria-label="AI opponent">BOT</span>
+                  <span className="bot-tag" aria-label={t.game.aiOpponent}>{t.game.bot}</span>
                 )}
               </span>
             }
@@ -2159,7 +2159,7 @@ export default function App() {
               <span className="player-elo">
                 {mpP2Elo}
                 {opponentSlot === 2 && pairing.opponentIsBot && (
-                  <span className="bot-tag" aria-label="AI opponent">BOT</span>
+                  <span className="bot-tag" aria-label={t.game.aiOpponent}>{t.game.bot}</span>
                 )}
               </span>
             }
@@ -2170,9 +2170,9 @@ export default function App() {
             <button
               className="btn-resign-inline"
               onClick={() => setResignConfirmOpen(true)}
-              title="Resign and end the game"
+              title={t.game.resignTitle}
             >
-              Resign
+              {t.game.resign}
             </button>
           </div>
         )}
@@ -2258,11 +2258,11 @@ export default function App() {
             onClick={() => setResignConfirmOpen(false)}
           >
             <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
-              <h3>Resign this ranked game?</h3>
-              <p>It counts as a loss on your rated record.</p>
+              <h3>{t.game.resignRankedTitle}</h3>
+              <p>{t.game.resignRankedBody}</p>
               <div className="confirm-actions">
-                <button onClick={() => setResignConfirmOpen(false)}>Cancel</button>
-                <button className="danger" onClick={onConfirmResign}>Resign</button>
+                <button onClick={() => setResignConfirmOpen(false)}>{t.common.cancel}</button>
+                <button className="danger" onClick={onConfirmResign}>{t.game.resign}</button>
               </div>
             </div>
           </div>
@@ -2667,27 +2667,25 @@ export default function App() {
         onDismiss={() => setAchToasts((q) => q.slice(1))}
       />
       <div className="game-topbar">
-        <button className="btn-back" onClick={backHandler} aria-label="Back to menu">
+        <button className="btn-back" onClick={backHandler} aria-label={t.game.backToMenu}>
           ‹
         </button>
         <div className="topbar-center">
           <div className="remaining-points">
             <span className="remaining-value">{remaining}</span>
-            <span className="remaining-label">pts left</span>
+            <span className="remaining-label">{t.game.ptsLeft}</span>
           </div>
           <div
             className={`pending-indicator${state.pending.length === 0 ? ' pending-indicator-hidden' : ''}${pendingFlash ? ' pending-flash' : ''}`}
-            title={state.pending.length > 0 ? 'Lines waiting to be claimed — tap a coloured dot on one to claim it.' : undefined}
+            title={state.pending.length > 0 ? t.game.pendingTitle : undefined}
             aria-hidden={state.pending.length === 0}
           >
             <span className="pending-icon" aria-hidden="true">◌</span>
             <span className="pending-value">{Math.max(state.pending.length, 1)}</span>
-            <span className="pending-label">
-              {state.pending.length === 1 ? 'line to claim' : 'lines to claim'}
-            </span>
+            <span className="pending-label">{t.game.linesToClaim(state.pending.length)}</span>
           </div>
           {config.mode === 'daily' && (
-            <div className="daily-clock-wrap" title="Your time for this attempt">
+            <div className="daily-clock-wrap" title={t.game.dailyTime}>
               <ClockBadge
                 remainingAtRefMs={dailyClock.remainingAtRefMs}
                 refTime={dailyClock.refTime}
@@ -2701,9 +2699,9 @@ export default function App() {
               className={`btn-claim-toggle${ringsVisible ? ' on' : ' off'}`}
               onClick={onToggleRings}
               aria-pressed={ringsVisible}
-              title={`See unclaimed lines: ${ringsVisible ? 'on' : 'off'}`}
+              title={t.game.seeUnclaimedTitle(ringsVisible)}
             >
-              <span className="claim-toggle-label">See unclaimed lines</span>
+              <span className="claim-toggle-label">{t.game.seeUnclaimed}</span>
               <span className="claim-toggle-switch" aria-hidden="true">
                 <span className="claim-toggle-knob" />
               </span>
@@ -2713,8 +2711,8 @@ export default function App() {
         <button
           className="btn-rules"
           onClick={() => setRulesOpen(true)}
-          aria-label="Show rules"
-          title="How to play"
+          aria-label={t.game.showRules}
+          title={t.game.rules}
         >
           ?
         </button>
@@ -2759,9 +2757,9 @@ export default function App() {
           <button
             className="btn-resign-inline"
             onClick={onConfirmResign}
-            title="Resign and end the game"
+            title={t.game.resignTitle}
           >
-            Resign
+            {t.game.resign}
           </button>
         </div>
       )}
@@ -2799,11 +2797,11 @@ export default function App() {
           onClick={() => setResignConfirmOpen(false)}
         >
           <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
-            <h3>Resign?</h3>
-            <p>You'll lose this game.</p>
+            <h3>{t.game.resignConfirmTitle}</h3>
+            <p>{t.game.resignConfirmBody}</p>
             <div className="confirm-actions">
-              <button onClick={() => setResignConfirmOpen(false)}>Cancel</button>
-              <button className="danger" onClick={onConfirmResign}>Resign</button>
+              <button onClick={() => setResignConfirmOpen(false)}>{t.common.cancel}</button>
+              <button className="danger" onClick={onConfirmResign}>{t.game.resign}</button>
             </div>
           </div>
         </div>

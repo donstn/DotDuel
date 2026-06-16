@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { THEMES, type ThemeId } from '../theme';
+import { useT } from '../i18n';
 
 interface Props {
   current: ThemeId;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function ThemePopover({ current, onSelect, onClose }: Props) {
+  const tr = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -26,50 +28,51 @@ export function ThemePopover({ current, onSelect, onClose }: Props) {
       onClick={onBackdrop}
       role="dialog"
       aria-modal="true"
-      aria-label="Choose a theme"
+      aria-label={tr.theme.aria}
     >
       <div className="rules-card theme-card">
-        <button className="rules-close" onClick={onClose} aria-label="Close themes">
+        <button className="rules-close" onClick={onClose} aria-label={tr.theme.close}>
           ✕
         </button>
 
         <header className="rules-header">
-          <h2>Theme</h2>
-          <p className="rules-tagline">Pick a palette. Saved to this device.</p>
+          <h2>{tr.theme.title}</h2>
+          <p className="rules-tagline">{tr.theme.tagline}</p>
         </header>
 
         <div className="theme-grid">
-          {THEMES.map((t) => {
-            const selected = t.id === current;
+          {THEMES.map((th) => {
+            const selected = th.id === current;
+            const tagline = tr.theme.taglines[th.id] ?? th.tagline;
             return (
               <button
-                key={t.id}
+                key={th.id}
                 type="button"
                 className={`theme-swatch${selected ? ' theme-swatch-selected' : ''}`}
-                onClick={() => onSelect(t.id)}
+                onClick={() => onSelect(th.id)}
                 aria-pressed={selected}
-                title={t.tagline}
+                title={tagline}
               >
                 <div
                   className="theme-swatch-preview"
-                  style={{ background: t.swatch.bg }}
+                  style={{ background: th.swatch.bg }}
                   aria-hidden="true"
                 >
                   <span
                     className="theme-swatch-dot"
-                    style={{ background: t.swatch.p1 }}
+                    style={{ background: th.swatch.p1 }}
                   />
                   <span
                     className="theme-swatch-dot"
-                    style={{ background: t.swatch.p2 }}
+                    style={{ background: th.swatch.p2 }}
                   />
                 </div>
                 <div className="theme-swatch-label">
-                  <strong>{t.label}</strong>
-                  <span>{t.tagline}</span>
+                  <strong>{th.label}</strong>
+                  <span>{tagline}</span>
                 </div>
-                {t.isLight && (
-                  <span className="theme-swatch-tag">Sun-friendly</span>
+                {th.isLight && (
+                  <span className="theme-swatch-tag">{tr.theme.sunFriendly}</span>
                 )}
               </button>
             );
@@ -78,7 +81,7 @@ export function ThemePopover({ current, onSelect, onClose }: Props) {
 
         <footer className="rules-footer-bar">
           <button className="rules-got-it" onClick={onClose}>
-            Done
+            {tr.theme.done}
           </button>
         </footer>
       </div>

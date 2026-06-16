@@ -1,3 +1,5 @@
+import { useT } from '../i18n';
+
 interface Props {
   onOpenRules: () => void;
   onOpenSettings: () => void;
@@ -15,14 +17,12 @@ export function AppFooter({
   onOpenThemes,
   version,
 }: Props) {
+  const t = useT();
   return (
     <footer className="app-footer">
       <div className="app-footer-inner">
-        <span
-          className="app-footer-brand"
-          title="© 2026 DotDuel. All rights reserved. DotDuel and the DotDuel logo are claimed trademarks of their author."
-        >
-          DotDuel © 2026
+        <span className="app-footer-brand" title={t.footer.brandTitle}>
+          {t.footer.brand}
         </span>
         <span className="sep">·</span>
         <a
@@ -32,7 +32,7 @@ export function AppFooter({
             onOpenRules();
           }}
         >
-          Rules
+          {t.footer.rules}
         </a>
         <span className="sep">·</span>
         <a
@@ -42,7 +42,7 @@ export function AppFooter({
             onOpenSettings();
           }}
         >
-          Settings
+          {t.footer.settings}
         </a>
         <span className="sep">·</span>
         <a
@@ -52,7 +52,7 @@ export function AppFooter({
             onOpenPrivacy();
           }}
         >
-          Privacy
+          {t.footer.privacy}
         </a>
         <span className="sep">·</span>
         <a
@@ -62,14 +62,14 @@ export function AppFooter({
             onOpenThemes();
           }}
         >
-          Theme
+          {t.footer.theme}
         </a>
         <span className="sep">·</span>
         <button
           type="button"
           className="app-footer-version app-footer-version-btn"
           onClick={onOpenChangelog}
-          title="See what's new"
+          title={t.footer.versionTitle}
         >
           {version}
         </button>

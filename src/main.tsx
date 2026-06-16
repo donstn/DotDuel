@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { Capacitor } from '@capacitor/core';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App';
+import { LanguageProvider } from './i18n';
 import { APP_VERSION } from './version';
 import { DiagOverlay } from './components/DiagOverlay';
 import { isDiagMode } from './diag';
@@ -44,7 +45,9 @@ console.log(`%cDotDuel ${APP_VERSION} loaded`, 'color:#6fcf8a;font-weight:bold;f
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
-    {isDiagMode() && <DiagOverlay />}
+    <LanguageProvider>
+      <App />
+      {isDiagMode() && <DiagOverlay />}
+    </LanguageProvider>
   </React.StrictMode>
 );

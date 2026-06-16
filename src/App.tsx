@@ -29,6 +29,7 @@ import {
 import { pushUnlocks, syncAchievementsOnSignIn } from './achievements/cloudSync';
 import { getFeatured, onAchievementsChange } from './achievements/store';
 import { ACHIEVEMENT_BY_ID } from './achievements/catalog';
+import { achTitle } from './achievements/localize';
 import { RulesPopover } from './components/RulesPopover';
 import { SettingsPopover } from './components/SettingsPopover';
 import { SidePanel } from './components/SidePanel';
@@ -965,7 +966,7 @@ export default function App() {
       ? {
           icon: ACHIEVEMENT_BY_ID[featuredId].icon,
           tier: ACHIEVEMENT_BY_ID[featuredId].tier,
-          title: ACHIEVEMENT_BY_ID[featuredId].title,
+          title: achTitle(featuredId, t),
         }
       : null;
 
@@ -2033,7 +2034,7 @@ export default function App() {
     const myNum = playerNumFor(onlineGame, user.uid);
     const mpState = optimisticMpState?.state ?? onlineGame.state;
     const mpShape = onlineGame.shape;
-    const myName = effectiveGameName ?? 'You';
+    const myName = effectiveGameName ?? t.common.you;
     const oppName = pairing.opponentDisplayName;
     // pairing.player is THIS user's slot. P1 panel shows whoever holds slot 1.
     const mpP1Name = pairing.player === 1 ? myName : oppName;
@@ -2351,7 +2352,7 @@ export default function App() {
       mainContent = (
         <MatchFoundScreen
           pairing={pairing}
-          myDisplayName={effectiveGameName ?? 'You'}
+          myDisplayName={effectiveGameName ?? t.common.you}
           myRating={cloudProfile?.rating ?? 1000}
           myReady={
             onlineGame?.ready?.[String(pairing.player) as '1' | '2'] === true

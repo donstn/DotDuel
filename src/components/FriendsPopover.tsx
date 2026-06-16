@@ -8,8 +8,8 @@ import {
   sendFriendRequestByUsername,
 } from '../cloud/friends';
 import type { FriendStatus } from '../cloud/presence';
-import { statusLabel } from '../cloud/presence';
 import { TellAFriendButton } from './TellAFriendButton';
+import { useT } from '../i18n';
 
 interface Props {
   myUid: string;
@@ -35,6 +35,7 @@ export function FriendsPopover({
   onClose,
   onInvite,
 }: Props) {
+  const t = useT();
   const [tab, setTab] = useState<Tab>(
     incoming.length > 0 ? 'requests' : 'online',
   );
@@ -68,7 +69,7 @@ export function FriendsPopover({
       window.setTimeout(() => setAddSuccess(false), 2500);
     } catch (e) {
       const msg =
-        (e as { message?: string } | undefined)?.message ?? 'Request failed.';
+        (e as { message?: string } | undefined)?.message ?? t.friends.requestFailed;
       setAddError(msg);
     } finally {
       setAddBusy(false);
@@ -76,7 +77,7 @@ export function FriendsPopover({
   };
 
   const onRemove = async (f: Friend) => {
-    if (!window.confirm(`Remove ${f.displayName} from friends?`)) return;
+    if (!window.confirm(t.friends.removeConfirm(f.displayName))) return;
     try {
       await removeFriend(f.friendshipId);
     } catch (e) {
@@ -85,11 +86,7 @@ export function FriendsPopover({
   };
 
   const onBlock = async (f: Friend) => {
-    if (
-      !window.confirm(
-        `Block ${f.displayName}? They won't be able to send you friend requests or game invites.`,
-      )
-    ) {
+    if (!window.confirm(t.friends.blockConfirm(f.displayName))) {
       return;
     }
     try {
@@ -107,14 +104,14 @@ export function FriendsPopover({
       }}
       role="dialog"
       aria-modal="true"
-      aria-label="Friends"
+      aria-label={t.friends.aria}
     >
       <div className="rules-card friends-card">
-        <button className="rules-close" onClick={onClose} aria-label="Close">
+        <button className="rules-close" onClick={onClose} aria-label={t.friends.close}>
           ✕
         </button>
         <header className="rules-header">
-          <h2>Friends</h2>
+          <h2>{t.friends.title}</h2>
         </header>
 
         <div className="friends-tabs" role="tablist">
@@ -125,7 +122,7 @@ export function FriendsPopover({
             className={`friends-tab${tab === 'online' ? ' is-active' : ''}`}
             onClick={() => setTab('online')}
           >
-            Online {onlineFriends.length > 0 && `(${onlineFriends.length})`}
+            {t.friends.tabOnline} {onlineFriends.length > 0 && `(${onlineFriends.length})`}
           </button>
           <button
             type="button"
@@ -134,7 +131,7 @@ export function FriendsPopover({
             className={`friends-tab${tab === 'all' ? ' is-active' : ''}`}
             onClick={() => setTab('all')}
           >
-            All {friends.length > 0 && `(${friends.length})`}
+            {t.friends.tabAll} {friends.length > 0 && `(${friends.length})`}
           </button>
           <button
             type="button"
@@ -143,7 +140,7 @@ export function FriendsPopover({
             className={`friends-tab${tab === 'requests' ? ' is-active' : ''}`}
             onClick={() => setTab('requests')}
           >
-            Requests
+            {t.friends.tabRequests}
             {incoming.length > 0 && (
               <span className="friends-tab-badge">{incoming.length}</span>
             )}
@@ -158,7 +155,7 @@ export function FriendsPopover({
               onInvite={onInvite}
               onRemove={onRemove}
               onBlock={onBlock}
-              emptyText="No friends online right now."
+              emptyText={t.friends.emptyOnline}
             />
           )}
           {tab === 'all' && (
@@ -168,7 +165,7 @@ export function FriendsPopover({
               onInvite={onInvite}
               onRemove={onRemove}
               onBlock={onBlock}
-              emptyText="No friends yet — add one below."
+              emptyText={t.friends.emptyAll}
             />
           )}
           {tab === 'requests' && (
@@ -182,14 +179,14 @@ export function FriendsPopover({
 
         <div className="friends-add">
           <label htmlFor="friend-add-input" className="friends-add-label">
-            Add a friend by username
+            {t.friends.addByUsername}
           </label>
           <div className="friends-add-row">
             <input
               id="friend-add-input"
               type="text"
               className="friends-add-input"
-              placeholder="username"
+              placeholder={t.friends.usernamePlaceholder}
               value={addInput}
               onChange={(e) => {
                 setAddInput(e.target.value);
@@ -205,15 +202,11 @@ export function FriendsPopover({
               onClick={onSendRequest}
               disabled={addBusy || !addInput.trim()}
             >
-              {addBusy ? 'Sending…' : 'Send'}
+              {addBusy ? t.friends.sending : t.friends.send}
             </button>
           </div>
           {addError && <p className="friends-add-error">{addError}</p>}
-          {addSuccess && (
-            <p className="friends-add-success">
-              Request sent.
-            </p>
-          )}
+          {addSuccess && <p className="friends-add-success">{t.friends.requestSent}</p>}
         </div>
 
         <div className="friends-tell-a-friend">
@@ -241,6 +234,7 @@ function FriendList({
   onBlock,
   emptyText,
 }: FriendListProps) {
+  const t = useT();
   const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null);
 
   if (rows.length === 0) {
@@ -257,9 +251,9 @@ function FriendList({
               <strong className="friends-row-name">{f.displayName}</strong>
               <span
                 className={`friends-row-status status-${status}`}
-                aria-label={`Status: ${statusLabel(status)}`}
+                aria-label={t.friends.statusAria(t.friendStatus[status])}
               >
-                {statusLabel(status)}
+                {t.friendStatus[status]}
               </span>
             </div>
             <div className="friends-row-actions">
@@ -268,9 +262,9 @@ function FriendList({
                 className="friends-row-invite"
                 onClick={() => onInvite(f)}
                 disabled={!canInvite}
-                title={canInvite ? 'Invite to a game' : 'Friend must be on menu'}
+                title={canInvite ? t.friends.inviteToGame : t.friends.friendMustBeOnMenu}
               >
-                Invite
+                {t.friends.invite}
               </button>
               <button
                 type="button"
@@ -278,7 +272,7 @@ function FriendList({
                 onClick={() =>
                   setMenuOpenFor(menuOpenFor === f.friendshipId ? null : f.friendshipId)
                 }
-                aria-label="More"
+                aria-label={t.friends.more}
               >
                 ⋯
               </button>
@@ -292,7 +286,7 @@ function FriendList({
                       void onRemove(f);
                     }}
                   >
-                    Remove friend
+                    {t.friends.removeFriend}
                   </button>
                   <button
                     type="button"
@@ -302,7 +296,7 @@ function FriendList({
                       void onBlock(f);
                     }}
                   >
-                    Block
+                    {t.friends.block}
                   </button>
                 </div>
               )}
@@ -321,10 +315,11 @@ interface RequestsListProps {
 }
 
 function RequestsList({ incoming, outgoing }: RequestsListProps) {
+  const t = useT();
   const [busy, setBusy] = useState<string | null>(null);
 
   if (incoming.length === 0 && outgoing.length === 0) {
-    return <p className="friends-empty">No pending requests.</p>;
+    return <p className="friends-empty">{t.friends.noPending}</p>;
   }
 
   const onAccept = async (r: PendingRequest) => {
@@ -362,13 +357,13 @@ function RequestsList({ incoming, outgoing }: RequestsListProps) {
     <div className="friends-requests">
       {incoming.length > 0 && (
         <>
-          <h3 className="friends-requests-heading">Incoming</h3>
+          <h3 className="friends-requests-heading">{t.friends.incomingH}</h3>
           <ul className="friends-list">
             {incoming.map((r) => (
               <li key={r.friendshipId} className="friends-row">
                 <div className="friends-row-main">
                   <strong className="friends-row-name">{r.otherDisplayName}</strong>
-                  <span className="friends-row-status">wants to be friends</span>
+                  <span className="friends-row-status">{t.friends.wantsToBeFriends}</span>
                 </div>
                 <div className="friends-row-actions">
                   <button
@@ -377,7 +372,7 @@ function RequestsList({ incoming, outgoing }: RequestsListProps) {
                     onClick={() => onAccept(r)}
                     disabled={busy === r.friendshipId}
                   >
-                    Accept
+                    {t.friends.accept}
                   </button>
                   <button
                     type="button"
@@ -385,7 +380,7 @@ function RequestsList({ incoming, outgoing }: RequestsListProps) {
                     onClick={() => onDecline(r)}
                     disabled={busy === r.friendshipId}
                   >
-                    Decline
+                    {t.friends.decline}
                   </button>
                 </div>
               </li>
@@ -395,13 +390,13 @@ function RequestsList({ incoming, outgoing }: RequestsListProps) {
       )}
       {outgoing.length > 0 && (
         <>
-          <h3 className="friends-requests-heading">Sent</h3>
+          <h3 className="friends-requests-heading">{t.friends.sentH}</h3>
           <ul className="friends-list">
             {outgoing.map((r) => (
               <li key={r.friendshipId} className="friends-row">
                 <div className="friends-row-main">
                   <strong className="friends-row-name">{r.otherDisplayName}</strong>
-                  <span className="friends-row-status">waiting for them</span>
+                  <span className="friends-row-status">{t.friends.waitingForThem}</span>
                 </div>
                 <div className="friends-row-actions">
                   <button
@@ -410,7 +405,7 @@ function RequestsList({ incoming, outgoing }: RequestsListProps) {
                     onClick={() => onCancel(r)}
                     disabled={busy === r.friendshipId}
                   >
-                    Cancel
+                    {t.friends.cancel}
                   </button>
                 </div>
               </li>

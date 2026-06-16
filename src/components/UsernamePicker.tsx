@@ -4,7 +4,9 @@ import {
   claimUsername,
   renameUsername,
   validateUsername,
+  type UsernameInvalidReason,
 } from '../cloud/usernames';
+import { useT } from '../i18n';
 
 interface Props {
   mode: 'claim' | 'rename';
@@ -24,7 +26,7 @@ type AvailState =
   | { kind: 'checking' }
   | { kind: 'available' }
   | { kind: 'taken' }
-  | { kind: 'invalid'; reason: string }
+  | { kind: 'invalid'; reason: UsernameInvalidReason }
   | { kind: 'error'; message: string };
 
 const CHECK_DEBOUNCE_MS = 450;
@@ -38,6 +40,7 @@ export function UsernamePicker({
   onCancel,
   onSignOut,
 }: Props) {
+  const t = useT();
   const [name, setName] = useState(initialName);
   const [avail, setAvail] = useState<AvailState>({ kind: 'idle' });
   const [submitting, setSubmitting] = useState(false);
@@ -81,7 +84,7 @@ export function UsernamePicker({
         if (seq !== requestSeq.current) return;
         setAvail({
           kind: 'error',
-          message: (e as Error)?.message ?? 'Check failed.',
+          message: (e as Error)?.message ?? t.username.checkFailed,
         });
       });
     }, CHECK_DEBOUNCE_MS);
@@ -115,7 +118,7 @@ export function UsernamePicker({
       if (msg === 'USERNAME_TAKEN') {
         setAvail({ kind: 'taken' });
       } else {
-        setSubmitError(msg || 'Something went wrong.');
+        setSubmitError(msg || t.username.genericError);
       }
     } finally {
       setSubmitting(false);
@@ -127,20 +130,26 @@ export function UsernamePicker({
     if (e.target === e.currentTarget) onCancel?.();
   };
 
+  const invalidMsg: Record<UsernameInvalidReason, string> = {
+    short: t.username.invalidShort,
+    long: t.username.invalidLong,
+    chars: t.username.invalidChars,
+  };
+
   const availMessage = (() => {
     switch (avail.kind) {
       case 'checking':
-        return <span className="username-status checking">Checking…</span>;
+        return <span className="username-status checking">{t.username.checking}</span>;
       case 'available':
-        return <span className="username-status available">Available</span>;
+        return <span className="username-status available">{t.username.available}</span>;
       case 'taken':
-        return <span className="username-status taken">Taken — try another</span>;
+        return <span className="username-status taken">{t.username.taken}</span>;
       case 'invalid':
-        return <span className="username-status invalid">{avail.reason}</span>;
+        return <span className="username-status invalid">{invalidMsg[avail.reason]}</span>;
       case 'error':
         return <span className="username-status invalid">{avail.message}</span>;
       default:
-        return <span className="username-status hint">3–16 chars · letters, digits, _ or -</span>;
+        return <span className="username-status hint">{t.username.hint}</span>;
     }
   })();
 
@@ -150,14 +159,14 @@ export function UsernamePicker({
       onClick={onBackdrop}
       role="dialog"
       aria-modal="true"
-      aria-label={mode === 'claim' ? 'Pick a game name' : 'Rename'}
+      aria-label={mode === 'claim' ? t.username.ariaClaim : t.username.ariaRename}
     >
       <div className="rules-card username-card">
         {dismissible && (
           <button
             className="rules-close"
             onClick={onCancel}
-            aria-label="Cancel"
+            aria-label={t.username.cancel}
             disabled={submitting}
           >
             ✕
@@ -165,11 +174,9 @@ export function UsernamePicker({
         )}
 
         <header className="rules-header">
-          <h2>{mode === 'claim' ? 'Pick your game name' : 'Rename'}</h2>
+          <h2>{mode === 'claim' ? t.username.titleClaim : t.username.titleRename}</h2>
           <p className="rules-tagline">
-            {mode === 'claim'
-              ? 'This is what other players will see. Unique to you. You can rename later.'
-              : 'Stats follow your account, not the name — they carry over.'}
+            {mode === 'claim' ? t.username.taglineClaim : t.username.taglineRename}
           </p>
         </header>
 
@@ -178,7 +185,7 @@ export function UsernamePicker({
             <input
               type="text"
               className="settings-input"
-              placeholder="e.g. Donatas"
+              placeholder={t.username.placeholder}
               autoComplete="off"
               spellCheck={false}
               maxLength={16}
@@ -193,7 +200,7 @@ export function UsernamePicker({
               className="rules-got-it auth-submit"
               disabled={submitting || avail.kind !== 'available'}
             >
-              {submitting ? '…' : mode === 'claim' ? 'Claim name' : 'Save'}
+              {submitting ? '…' : mode === 'claim' ? t.username.claim : t.username.save}
             </button>
           </form>
 
@@ -210,7 +217,7 @@ export function UsernamePicker({
               onClick={onSignOut}
               disabled={submitting}
             >
-              Sign out
+              {t.username.signOut}
             </button>
           )}
         </div>

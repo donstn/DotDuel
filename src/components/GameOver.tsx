@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { DIFFICULTY_LABELS, SHAPE_LABEL } from '../types';
 import type { Difficulty, GameMode, GameState, Player, ShapeId } from '../types';
 import type { ShareResultData } from '../share/resultShareText';
 import { GameResultShareButton } from './GameResultShareButton';
 import { WinCelebration } from './WinCelebration';
+import { useT, type Messages } from '../i18n';
 
 interface UnlockResult {
   shape: ShapeId | null;
@@ -95,15 +95,16 @@ function RematchButton({
   onRequest: () => void;
   onCancel?: () => void;
 }) {
+  const t = useT();
   // Opponent already wants a rematch — show big "Accept" affordance.
   if (opp && !mine) {
     return (
       <button
         className="primary rematch-accept"
         onClick={onRequest}
-        title="Your opponent wants a rematch"
+        title={t.gameOver.oppWantsRematchTitle}
       >
-        Accept rematch
+        {t.gameOver.acceptRematch}
       </button>
     );
   }
@@ -112,7 +113,7 @@ function RematchButton({
     return (
       <span className="rematch-waiting">
         <button disabled className="rematch-waiting-btn">
-          Waiting for opponent…
+          {t.gameOver.waitingForOpponent}
         </button>
         {onCancel && (
           <button
@@ -120,7 +121,7 @@ function RematchButton({
             className="rematch-cancel-link"
             onClick={onCancel}
           >
-            Cancel
+            {t.gameOver.cancel}
           </button>
         )}
       </span>
@@ -134,36 +135,37 @@ function RematchButton({
   );
 }
 
-function winText(name: string): string {
+function winText(name: string, t: Messages): string {
   // "You" is a pronoun ("You win"); everything else is a third-person noun ("Alice wins").
-  if (name === 'You') return 'You win';
-  return `${name} wins`;
+  if (name === t.common.you) return t.gameOver.youWin;
+  return t.gameOver.playerWins(name);
 }
 
 function multiplayerOutcome(
   me: Player,
   winner: GameState['winner'],
   reason: FinishedReason | undefined,
+  t: Messages,
 ): { title: string; subtitle: string | null } {
   if (reason === 'aborted') {
-    return { title: 'Game aborted', subtitle: 'no first move · no rating change' };
+    return { title: t.gameOver.aborted, subtitle: t.gameOver.abortedSub };
   }
   if (winner === 'draw' || winner == null) {
-    return { title: 'Game ended in a draw', subtitle: null };
+    return { title: t.gameOver.draw, subtitle: null };
   }
   if (winner === me) {
     // Tell the winner HOW they won — symmetric to the loss messaging.
-    let subtitle = 'on points';
-    if (reason === 'timeout') subtitle = 'on time';
-    else if (reason === 'resign') subtitle = 'opponent resigned';
-    else if (reason === 'disconnect') subtitle = 'opponent disconnected';
-    return { title: 'You win', subtitle };
+    let subtitle = t.gameOver.onPoints;
+    if (reason === 'timeout') subtitle = t.gameOver.onTime;
+    else if (reason === 'resign') subtitle = t.gameOver.oppResigned;
+    else if (reason === 'disconnect') subtitle = t.gameOver.oppDisconnected;
+    return { title: t.gameOver.youWin, subtitle };
   }
-  let subtitle = 'on points';
-  if (reason === 'timeout') subtitle = 'on time';
-  else if (reason === 'resign') subtitle = 'you resigned';
-  else if (reason === 'disconnect') subtitle = 'disconnected';
-  return { title: 'You lost', subtitle };
+  let subtitle = t.gameOver.onPoints;
+  if (reason === 'timeout') subtitle = t.gameOver.onTime;
+  else if (reason === 'resign') subtitle = t.gameOver.youResigned;
+  else if (reason === 'disconnect') subtitle = t.gameOver.disconnected;
+  return { title: t.gameOver.youLost, subtitle };
 }
 
 export function GameOver({
@@ -195,6 +197,7 @@ export function GameOver({
   onOpenPuzzleLeaderboard,
   refCode,
 }: Props) {
+  const t = useT();
   const [addFriendState, setAddFriendState] = useState<
     'idle' | 'sending' | 'sent' | 'failed'
   >('idle');
@@ -238,24 +241,24 @@ export function GameOver({
       ? difficulty ?? 1
       : 3;
 
-  let title = 'Draw';
+  let title = t.gameOver.drawTitle;
   let subtitle: string | null = null;
   if (myPlayer !== undefined && mode === 'multiplayer') {
-    const m = multiplayerOutcome(myPlayer, state.winner, finishedReason);
+    const m = multiplayerOutcome(myPlayer, state.winner, finishedReason, t);
     title = m.title;
     subtitle = m.subtitle;
   } else if (state.winner === 1) {
-    title = winText(p1Name);
+    title = winText(p1Name, t);
   } else if (state.winner === 2) {
-    title = winText(p2Name);
+    title = winText(p2Name, t);
   }
 
   let titleClass = '';
   if (humanWon && beatImpossible && isFinalShape) {
-    title = 'DotDuel champion';
+    title = t.gameOver.champion;
     titleClass = 'go-title-champion';
   } else if (beatImpossible) {
-    title = 'Impossible — defeated';
+    title = t.gameOver.impossibleDefeated;
     titleClass = 'go-title-impossible';
   }
 
@@ -289,6 +292,7 @@ export function GameOver({
     isFinalShape,
     nextShape,
     onStartShape,
+    t,
   });
 
   return (
@@ -309,7 +313,7 @@ export function GameOver({
         </div>
         {ratingChange && (
           <div className="go-rating-change">
-            <span className="go-rating-label">Rating</span>
+            <span className="go-rating-label">{t.gameOver.rating}</span>
             <span className="go-rating-before">{ratingChange.before}</span>
             <span className="go-rating-arrow" aria-hidden="true">→</span>
             <span className="go-rating-after">{ratingChange.after}</span>
@@ -333,60 +337,55 @@ export function GameOver({
             {dailyResult ? (
               <>
                 {dailyTimedOut && (
-                  <div className="go-daily-timeout">⏱ Time&rsquo;s up</div>
+                  <div className="go-daily-timeout">{t.gameOver.timesUp}</div>
                 )}
                 <div className="go-daily-margin">
-                  Your score: <strong>{dailyResult.score}</strong>
+                  {t.gameOver.yourScore} <strong>{dailyResult.score}</strong>
                 </div>
                 <div className="go-daily-best">
-                  Best today: <strong>{dailyResult.best}</strong>
+                  {t.gameOver.bestToday} <strong>{dailyResult.best}</strong>
                   <span className="go-daily-attempts">
-                    {' '}
-                    · attempt {dailyResult.attempts}/3
+                    {t.gameOver.attemptOf(dailyResult.attempts)}
                   </span>
                 </div>
                 {dailyResult.current > 0 && (
                   <div className="go-daily-streak">
-                    Streak: <strong>Day {dailyResult.current}</strong>
+                    {t.gameOver.streakLabel} <strong>{t.gameOver.dayN(dailyResult.current)}</strong>
                     {dailyResult.longest > dailyResult.current && (
                       <span className="go-daily-longest">
                         {' '}
-                        (best: Day {dailyResult.longest})
+                        {t.gameOver.bestDay(dailyResult.longest)}
                       </span>
                     )}
                   </div>
                 )}
                 {dailyResult.attemptsRemaining > 0 ? (
                   <p className="settings-hint">
-                    {dailyResult.attemptsRemaining} attempt
-                    {dailyResult.attemptsRemaining === 1 ? '' : 's'} left today.
-                    Your best counts on the leaderboard.
+                    {t.gameOver.attemptsLeft(dailyResult.attemptsRemaining)}
                   </p>
                 ) : (
-                  <p className="settings-hint">
-                    All 3 attempts used. Come back tomorrow at midnight UTC.
-                  </p>
+                  <p className="settings-hint">{t.gameOver.allAttemptsUsed}</p>
                 )}
               </>
             ) : (
-              <p className="settings-hint">Saving result…</p>
+              <p className="settings-hint">{t.gameOver.savingResult}</p>
             )}
           </div>
         )}
         {mode === 'multiplayer' && onLobby ? (
           <>
             <div className="game-over-buttons">
-              <button onClick={onMenu}>Menu</button>
+              <button onClick={onMenu}>{t.gameOver.menu}</button>
               {!opponentIsBot && (
                 <RematchButton
                   mine={!!rematchMine}
                   opp={!!rematchOpp}
-                  label={rematchLabel ?? 'Rematch'}
+                  label={rematchLabel ?? t.gameOver.rematch}
                   onRequest={onPlayAgain}
                   onCancel={onCancelRematch}
                 />
               )}
-              <button onClick={onLobby}>Lobby</button>
+              <button onClick={onLobby}>{t.gameOver.lobby}</button>
             </div>
             {canAddFriend && (
               <div className="go-add-friend-row">
@@ -396,14 +395,14 @@ export function GameOver({
                     className="go-add-friend-btn"
                     onClick={onAddFriendClick}
                   >
-                    ➕ Add {p2Name === 'You' ? p1Name : p2Name} as friend
+                    {t.gameOver.addAsFriend(p2Name === t.common.you ? p1Name : p2Name)}
                   </button>
                 )}
                 {addFriendState === 'sending' && (
-                  <span className="go-add-friend-note">Sending request…</span>
+                  <span className="go-add-friend-note">{t.gameOver.sendingRequest}</span>
                 )}
                 {addFriendState === 'sent' && (
-                  <span className="go-add-friend-note">Friend request sent.</span>
+                  <span className="go-add-friend-note">{t.gameOver.friendRequestSent}</span>
                 )}
                 {addFriendState === 'failed' && (
                   <button
@@ -411,7 +410,7 @@ export function GameOver({
                     className="go-add-friend-btn"
                     onClick={onAddFriendClick}
                   >
-                    Couldn't send — try again
+                    {t.gameOver.couldntSend}
                   </button>
                 )}
               </div>
@@ -421,18 +420,18 @@ export function GameOver({
           <div className="game-over-buttons">
             {dailyResult && dailyResult.attemptsRemaining > 0 && onTryDailyAgain && (
               <button className="primary" onClick={onTryDailyAgain}>
-                Try again ({dailyResult.attemptsRemaining} left)
+                {t.gameOver.tryAgainN(dailyResult.attemptsRemaining)}
               </button>
             )}
             {onOpenPuzzleLeaderboard && (
-              <button onClick={onOpenPuzzleLeaderboard}>Leaderboard</button>
+              <button onClick={onOpenPuzzleLeaderboard}>{t.gameOver.leaderboard}</button>
             )}
-            <button onClick={onMenu}>Menu</button>
+            <button onClick={onMenu}>{t.gameOver.menu}</button>
           </div>
         ) : (
           <div className="game-over-buttons">
-            <button className="primary" onClick={onPlayAgain}>Play again</button>
-            <button onClick={onMenu}>Menu</button>
+            <button className="primary" onClick={onPlayAgain}>{t.gameOver.playAgain}</button>
+            <button onClick={onMenu}>{t.gameOver.menu}</button>
           </div>
         )}
         {shareData && <GameResultShareButton data={shareData} state={state} />}
@@ -451,6 +450,7 @@ function buildSuggestion({
   isFinalShape,
   nextShape,
   onStartShape,
+  t,
 }: {
   state: GameState;
   mode: GameMode;
@@ -462,6 +462,7 @@ function buildSuggestion({
   isFinalShape: boolean;
   nextShape: ShapeId | null;
   onStartShape: (shape: ShapeId, difficulty: Difficulty) => void;
+  t: Messages;
 }) {
   if (mode !== 'ai') return null;
   if (!humanWon) return null;
@@ -470,15 +471,10 @@ function buildSuggestion({
   if (beatImpossible && isFinalShape) {
     return (
       <div className="go-suggestion go-suggestion-champion">
-        <div className="go-suggestion-headline">
-          You've completed DotDuel single player!
-        </div>
-        <p className="go-suggestion-body">
-          You've conquered every shape on every level. The toughest challenge
-          left is real humans.
-        </p>
-        <button className="go-cta go-cta-primary" disabled title="Coming soon">
-          Multiplayer · coming soon
+        <div className="go-suggestion-headline">{t.gameOver.champHeadline}</div>
+        <p className="go-suggestion-body">{t.gameOver.champBody}</p>
+        <button className="go-cta go-cta-primary" disabled title={t.gameOver.comingSoonTitle}>
+          {t.gameOver.multiplayerComingSoon}
         </button>
       </div>
     );
@@ -489,17 +485,16 @@ function buildSuggestion({
     return (
       <div className="go-suggestion go-suggestion-impossible">
         <div className="go-suggestion-headline">
-          You took down the toughest AI on {SHAPE_LABEL[shape]}.
+          {t.gameOver.impossibleHeadline(t.shapes[shape])}
         </div>
         <p className="go-suggestion-body">
-          {SHAPE_LABEL[nextShape]} is your next mountain. Start from Beginner
-          and work your way back up.
+          {t.gameOver.impossibleBody(t.shapes[nextShape], t.difficulty[1])}
         </p>
         <button
           className="go-cta go-cta-primary"
           onClick={() => onStartShape(nextShape, 1)}
         >
-          Try {SHAPE_LABEL[nextShape]}
+          {t.gameOver.tryShape(t.shapes[nextShape])}
         </button>
       </div>
     );
@@ -512,24 +507,23 @@ function buildSuggestion({
     return (
       <div className="go-suggestion go-suggestion-shape">
         <div className="go-suggestion-headline">
-          {SHAPE_LABEL[newShape]} is now unlocked!
+          {t.gameOver.shapeUnlockedHeadline(t.shapes[newShape])}
         </div>
         <p className="go-suggestion-body">
-          A fresh board with new strategy. Or stick with {SHAPE_LABEL[shape]}
-          and step up the difficulty.
+          {t.gameOver.shapeUnlockedBody(t.shapes[shape])}
         </p>
         <button
           className="go-cta go-cta-primary"
           onClick={() => onStartShape(newShape, 1)}
         >
-          Try {SHAPE_LABEL[newShape]}
+          {t.gameOver.tryShape(t.shapes[newShape])}
         </button>
         {sameShapeLevel && (
           <button
             className="go-cta go-cta-secondary"
             onClick={() => onStartShape(shape, sameShapeLevel)}
           >
-            Or push to {DIFFICULTY_LABELS[sameShapeLevel]} on {SHAPE_LABEL[shape]}
+            {t.gameOver.pushTo(t.difficulty[sameShapeLevel], t.shapes[shape])}
           </button>
         )}
       </div>
@@ -542,16 +536,14 @@ function buildSuggestion({
     return (
       <div className="go-suggestion go-suggestion-level">
         <div className="go-suggestion-headline">
-          {DIFFICULTY_LABELS[next]} unlocked.
+          {t.gameOver.levelUnlockedHeadline(t.difficulty[next])}
         </div>
-        <p className="go-suggestion-body">
-          The AI just got smarter. Ready to face it?
-        </p>
+        <p className="go-suggestion-body">{t.gameOver.levelUnlockedBody}</p>
         <button
           className="go-cta go-cta-primary"
           onClick={() => onStartShape(shape, next)}
         >
-          Try {DIFFICULTY_LABELS[next]}
+          {t.gameOver.tryLevel(t.difficulty[next])}
         </button>
       </div>
     );
@@ -563,15 +555,13 @@ function buildSuggestion({
     const stepUp = (difficulty + 1) as Difficulty;
     return (
       <div className="go-suggestion go-suggestion-level">
-        <div className="go-suggestion-headline">Nice one.</div>
-        <p className="go-suggestion-body">
-          Already cleared this. Want a tougher fight?
-        </p>
+        <div className="go-suggestion-headline">{t.gameOver.niceOne}</div>
+        <p className="go-suggestion-body">{t.gameOver.niceOneBody}</p>
         <button
           className="go-cta go-cta-primary"
           onClick={() => onStartShape(shape, stepUp)}
         >
-          Try {DIFFICULTY_LABELS[stepUp]}
+          {t.gameOver.tryLevel(t.difficulty[stepUp])}
         </button>
       </div>
     );

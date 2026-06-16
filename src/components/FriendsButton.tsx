@@ -1,3 +1,5 @@
+import { useT } from '../i18n';
+
 interface Props {
   onlineCount: number;
   totalFriends: number;
@@ -11,14 +13,10 @@ export function FriendsButton({
   badgeCount,
   onClick,
 }: Props) {
+  const t = useT();
   // "3 online" if any are online, else "Friends" with the total count
   // implied — keeps the chip short on phones.
-  const label =
-    onlineCount > 0
-      ? `👥 ${onlineCount} online`
-      : totalFriends > 0
-        ? `👥 Friends`
-        : `👥 Friends`;
+  const label = onlineCount > 0 ? t.friends.online(onlineCount) : t.friends.friends;
 
   return (
     <button
@@ -27,13 +25,13 @@ export function FriendsButton({
       onClick={onClick}
       title={
         totalFriends === 0
-          ? 'Add a friend'
-          : `${onlineCount} of ${totalFriends} online`
+          ? t.friends.addFriendTitle
+          : t.friends.onlineOfTotal(onlineCount, totalFriends)
       }
     >
       {label}
       {badgeCount > 0 && (
-        <span className="friends-btn-badge" aria-label={`${badgeCount} new`}>
+        <span className="friends-btn-badge" aria-label={t.friends.newBadge(badgeCount)}>
           {badgeCount > 9 ? '9+' : badgeCount}
         </span>
       )}

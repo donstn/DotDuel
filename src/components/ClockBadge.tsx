@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useT } from '../i18n';
 
 interface Props {
   remainingAtRefMs: number;
@@ -20,6 +21,7 @@ function format(ms: number): string {
 }
 
 export function ClockBadge({ remainingAtRefMs, refTime, isRunning, skewMs = 0 }: Props) {
+  const t = useT();
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export function ClockBadge({ remainingAtRefMs, refTime, isRunning, skewMs = 0 }:
   return (
     <span
       className={`clock-badge${isRunning ? ' is-running' : ''}${low ? ' is-low' : ''}`}
-      aria-label={`${format(safeRemaining)} remaining`}
+      aria-label={t.clock.remaining(format(safeRemaining))}
     >
       {format(safeRemaining)}
     </span>

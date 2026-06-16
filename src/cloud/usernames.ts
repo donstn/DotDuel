@@ -48,13 +48,14 @@ export function suggestUsername(
   return '';
 }
 
-export function validateUsername(name: string): string | null {
+/** Reason code for an invalid username; null when valid. Localized at the UI. */
+export type UsernameInvalidReason = 'short' | 'long' | 'chars';
+
+export function validateUsername(name: string): UsernameInvalidReason | null {
   const trimmed = name.trim();
-  if (trimmed.length < 3) return 'At least 3 characters.';
-  if (trimmed.length > 16) return 'Max 16 characters.';
-  if (!USERNAME_RE.test(trimmed)) {
-    return 'Letters, digits, _ or - only.';
-  }
+  if (trimmed.length < 3) return 'short';
+  if (trimmed.length > 16) return 'long';
+  if (!USERNAME_RE.test(trimmed)) return 'chars';
   return null;
 }
 

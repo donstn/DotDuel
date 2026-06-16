@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { isNativeApp } from '../nativeAds';
 import { supabase } from '../supabase';
+import { useT, type Messages } from '../i18n';
 import {
   signInWithGoogleNative,
   signInWithGoogleSupabase,
@@ -15,20 +16,21 @@ interface Props {
 }
 
 // Map Supabase auth error messages to friendly copy (Supabase returns prose,
-// not stable codes, so match on substrings).
-function friendlyError(message: string): string {
+// not stable codes, so match on substrings). `s` = the localized signIn strings.
+function friendlyError(message: string, s: Messages['signIn']): string {
   const m = message.toLowerCase();
-  if (m.includes('invalid login credentials')) return 'Email or password is incorrect.';
-  if (m.includes('already registered')) return 'That email is already registered. Sign in instead.';
-  if (m.includes('password should be') || m.includes('weak')) return 'Password must be at least 6 characters.';
-  if (m.includes('invalid email') || m.includes('unable to validate email')) return "That email doesn't look right.";
-  if (m.includes('email not confirmed')) return 'Please confirm your email first (check your inbox).';
-  if (m.includes('rate limit') || m.includes('too many')) return 'Too many attempts. Try again in a minute.';
-  if (m.includes('network')) return 'Network error. Check your connection and try again.';
-  return message || 'Something went wrong.';
+  if (m.includes('invalid login credentials')) return s.errInvalidCreds;
+  if (m.includes('already registered')) return s.errAlreadyRegistered;
+  if (m.includes('password should be') || m.includes('weak')) return s.errWeakPassword;
+  if (m.includes('invalid email') || m.includes('unable to validate email')) return s.errInvalidEmail;
+  if (m.includes('email not confirmed')) return s.errNotConfirmed;
+  if (m.includes('rate limit') || m.includes('too many')) return s.errRateLimit;
+  if (m.includes('network')) return s.errNetwork;
+  return message || s.errGeneric;
 }
 
 export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props) {
+  const t = useT();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -57,7 +59,7 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
       await fn();
       if (closeOnSuccess) onClose();
     } catch (e) {
-      setError(friendlyError((e as { message?: string })?.message ?? ''));
+      setError(friendlyError((e as { message?: string })?.message ?? '', t.signIn));
     } finally {
       setBusy(false);
     }
@@ -81,7 +83,7 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
       });
     } else {
       if (password !== confirmPassword) {
-        setError("Passwords don't match.");
+        setError(t.signIn.errPasswordsMatch);
         setInfo(null);
         return;
       }
@@ -95,9 +97,7 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
             },
           });
           if (err) throw err;
-          setInfo(
-            `Account created. If email confirmation is on, check ${email} (and spam) to verify.`,
-          );
+          setInfo(t.signIn.accountCreated(email));
         },
         { closeOnSuccess: false },
       );
@@ -110,18 +110,22 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
       onClick={onBackdrop}
       role="dialog"
       aria-modal="true"
-      aria-label="Sign in"
+      aria-label={t.signIn.aria}
     >
       <div className={`rules-card auth-card${gate ? ' is-gate' : ''}`}>
         {!gate && (
-          <button className="rules-close" onClick={onClose} aria-label="Close" disabled={busy}>
+          <button className="rules-close" onClick={onClose} aria-label={t.signIn.close} disabled={busy}>
             ✕
           </button>
         )}
 
         <header className="rules-header">
           <h2>
-            {mode === 'signin' ? (gate ? 'Sign in to play' : 'Sign in') : 'Create account'}
+            {mode === 'signin'
+              ? gate
+                ? t.signIn.titleGate
+                : t.signIn.titleSignIn
+              : t.signIn.titleSignUp}
           </h2>
         </header>
 
@@ -133,16 +137,16 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
             disabled={busy}
           >
             <span className="auth-google-g" aria-hidden="true">G</span>
-            <span>Continue with Google</span>
+            <span>{t.signIn.google}</span>
           </button>
 
-          <div className="auth-divider"><span>or with email</span></div>
+          <div className="auth-divider"><span>{t.signIn.orEmail}</span></div>
 
           <form className="auth-form" onSubmit={onEmailSubmit}>
             <input
               type="email"
               className="settings-input"
-              placeholder="you@example.com"
+              placeholder={t.signIn.emailPlaceholder}
               autoComplete="email"
               required
               value={email}
@@ -152,7 +156,7 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
             <input
               type="password"
               className="settings-input"
-              placeholder="Password (min 6 chars)"
+              placeholder={t.signIn.passwordPlaceholder}
               autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
               required
               minLength={6}
@@ -164,7 +168,7 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
               <input
                 type="password"
                 className="settings-input"
-                placeholder="Confirm password"
+                placeholder={t.signIn.confirmPlaceholder}
                 autoComplete="new-password"
                 required
                 minLength={6}
@@ -174,7 +178,7 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
               />
             )}
             <button type="submit" className="rules-got-it auth-submit" disabled={busy}>
-              {busy ? '…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+              {busy ? '…' : mode === 'signin' ? t.signIn.submitSignIn : t.signIn.submitSignUp}
             </button>
           </form>
 
@@ -184,7 +188,7 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
           <div className="auth-toggle">
             {mode === 'signin' ? (
               <span>
-                New here?{' '}
+                {t.signIn.newHere}{' '}
                 <a
                   href="#"
                   onClick={(e) => {
@@ -195,12 +199,12 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
                     setInfo(null);
                   }}
                 >
-                  Create an account
+                  {t.signIn.createAccount}
                 </a>
               </span>
             ) : (
               <span>
-                Already have one?{' '}
+                {t.signIn.haveOne}{' '}
                 <a
                   href="#"
                   onClick={(e) => {
@@ -211,7 +215,7 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
                     setInfo(null);
                   }}
                 >
-                  Sign in
+                  {t.signIn.signInLink}
                 </a>
               </span>
             )}
@@ -224,7 +228,7 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
               onClick={onPlayAnonymous}
               disabled={busy}
             >
-              Want to try anonymous without signing in?
+              {t.signIn.tryAnon}
             </button>
           )}
         </div>

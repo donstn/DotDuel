@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { TIME_CONTROLS } from '../cloud/matchmaking';
 import type { TimeControl } from '../cloud/matchmaking';
+import { useT } from '../i18n';
 
 interface Props {
   timeControl: TimeControl;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function MatchmakingWaiting({ timeControl, onCancel }: Props) {
+  const t = useT();
   const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
@@ -15,13 +17,13 @@ export function MatchmakingWaiting({ timeControl, onCancel }: Props) {
     return () => window.clearInterval(id);
   }, []);
 
-  const tc = TIME_CONTROLS.find((t) => t.id === timeControl);
+  const hasTc = TIME_CONTROLS.some((tc) => tc.id === timeControl);
 
   return (
     <div className="menu">
-      <h2>Finding an opponent…</h2>
+      <h2>{t.matchmaking.finding}</h2>
       <p className="hint">
-        {tc?.label ?? timeControl} · {tc?.per ?? ''}
+        {hasTc ? `${t.timeControls[timeControl].label} · ${t.timeControls[timeControl].per}` : timeControl}
       </p>
       <div className="matchmaking-card">
         <div className="matchmaking-spinner" aria-hidden="true">
@@ -31,19 +33,17 @@ export function MatchmakingWaiting({ timeControl, onCancel }: Props) {
         </div>
         <p className="matchmaking-status">
           {seconds < 15
-            ? `Waiting for a player at your rating (${seconds}s)`
-            : `Still searching — we may pair you with a ranked AI shortly (${seconds}s)`}
+            ? t.matchmaking.waitingAtRating(seconds)
+            : t.matchmaking.stillSearching(seconds)}
         </p>
         <button
           type="button"
           className="menu-auth-btn matchmaking-cancel-btn"
           onClick={onCancel}
         >
-          Cancel search
+          {t.matchmaking.cancelSearch}
         </button>
-        <p className="settings-hint">
-          Match range expands by ~25 Elo per second. We'll pair you with the closest opponent.
-        </p>
+        <p className="settings-hint">{t.matchmaking.rangeHint}</p>
       </div>
     </div>
   );

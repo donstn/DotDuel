@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.10.0',
+    date: '2026-06-17',
+    highlight: 'Fully translated',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'The whole app is now translated, not just the menus. Your Profile, Friends and invites, the multiplayer lobby and match screens, the Game Over screen, Rankings and the daily-puzzle leaderboard, sharing, and all 97 Achievements (names and descriptions) now appear in English, Lithuanian, Spanish, Portuguese, Polish and Czech.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.9.0',
     date: '2026-06-16',
     highlight: 'Languages',

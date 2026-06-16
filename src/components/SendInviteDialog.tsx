@@ -9,6 +9,7 @@ import {
 import { TIME_CONTROLS, type TimeControl } from '../cloud/matchmaking';
 import type { FriendStatus } from '../cloud/presence';
 import { PLAYABLE_SHAPE_META, type ShapeId } from '../types';
+import { useT } from '../i18n';
 
 interface Props {
   friend: Friend;
@@ -22,21 +23,24 @@ interface Props {
 
 type Phase = 'form' | 'sending' | 'waiting' | 'declined';
 
+type ReasonKey = 'offline' | 'searching' | 'inGame';
+
 // The friend must be online AND not busy to receive an invite.
-function availability(status: FriendStatus): { canInvite: boolean; reason: string } {
+function availability(status: FriendStatus): { canInvite: boolean; reasonKey: ReasonKey | null } {
   switch (status) {
     case 'menu':
-      return { canInvite: true, reason: '' };
+      return { canInvite: true, reasonKey: null };
     case 'offline':
-      return { canInvite: false, reason: 'is offline' };
+      return { canInvite: false, reasonKey: 'offline' };
     case 'searching-ranked':
-      return { canInvite: false, reason: 'is searching for a match' };
+      return { canInvite: false, reasonKey: 'searching' };
     default:
-      return { canInvite: false, reason: 'is in a game' };
+      return { canInvite: false, reasonKey: 'inGame' };
   }
 }
 
 export function SendInviteDialog({ friend, friendStatus, hasActivePairing, onClose }: Props) {
+  const t = useT();
   const [shape, setShape] = useState<ShapeId>('triangle');
   const [timeControl, setTimeControl] = useState<TimeControl>('3min');
   const [fromRanked, setFromRanked] = useState(false);
@@ -47,7 +51,14 @@ export function SendInviteDialog({ friend, friendStatus, hasActivePairing, onClo
   // (without a pairing) means the recipient declined / it expired.
   const seenPendingRef = useRef(false);
 
-  const { canInvite, reason } = availability(friendStatus);
+  const { canInvite, reasonKey } = availability(friendStatus);
+  const reason = reasonKey
+    ? reasonKey === 'offline'
+      ? t.invite.reasonOffline
+      : reasonKey === 'searching'
+        ? t.invite.reasonSearching
+        : t.invite.reasonInGame
+    : '';
 
   // Live outgoing invites — used to detect accept (pairing) vs decline/expire.
   useEffect(() => subscribeOutgoingInvites('', setOutgoing), []);
@@ -87,7 +98,7 @@ export function SendInviteDialog({ friend, friendStatus, hasActivePairing, onClo
       await sendInvite({ toUids: [friend.uid], shape, timeControl, fromRanked });
       setPhase('waiting');
     } catch (e) {
-      setError((e as { message?: string } | undefined)?.message ?? 'Invite failed.');
+      setError((e as { message?: string } | undefined)?.message ?? t.invite.inviteFailed);
       setPhase('form');
     }
   };
@@ -119,41 +130,38 @@ export function SendInviteDialog({ friend, friendStatus, hasActivePairing, onClo
       onClick={backdrop}
       role="dialog"
       aria-modal="true"
-      aria-label="Send invite"
+      aria-label={t.invite.aria}
     >
       <div className="rules-card invite-card">
         {phase !== 'sending' && (
-          <button className="rules-close" onClick={onClose} aria-label="Close">
+          <button className="rules-close" onClick={onClose} aria-label={t.invite.close}>
             ✕
           </button>
         )}
         <header className="rules-header">
-          <h2>Invite {friend.displayName}</h2>
+          <h2>{t.invite.title(friend.displayName)}</h2>
         </header>
 
         {phase === 'waiting' ? (
           <div className="invite-waiting">
-            <p className="invite-waiting-text">
-              Invite sent to <strong>{friend.displayName}</strong>. Waiting for them
-              to accept…
-            </p>
+            <p className="invite-waiting-text">{t.invite.waiting(friend.displayName)}</p>
             <div className="invite-actions">
               <button type="button" className="menu-auth-btn" onClick={onCancelInvite}>
-                Cancel invite
+                {t.invite.cancelInvite}
               </button>
             </div>
           </div>
         ) : phase === 'declined' ? (
           <div className="invite-waiting">
-            <p className="invite-waiting-text">
-              <strong>{friend.displayName}</strong> didn't accept the invite.
-            </p>
+            <p className="invite-waiting-text">{t.invite.declined(friend.displayName)}</p>
             {!canInvite && (
-              <p className="invite-ranked-hint">{friend.displayName} {reason}.</p>
+              <p className="invite-ranked-hint">
+                {t.invite.declinedReason(friend.displayName, reason)}
+              </p>
             )}
             <div className="invite-actions">
               <button type="button" className="menu-auth-btn" onClick={onClose}>
-                Close
+                {t.invite.close}
               </button>
               <button
                 type="button"
@@ -161,14 +169,14 @@ export function SendInviteDialog({ friend, friendStatus, hasActivePairing, onClo
                 onClick={onSendAgain}
                 disabled={!canInvite}
               >
-                Send again
+                {t.invite.sendAgain}
               </button>
             </div>
           </div>
         ) : (
           <>
             <div className="invite-section">
-              <h3 className="invite-section-title">Shape</h3>
+              <h3 className="invite-section-title">{t.invite.shapeH}</h3>
               <div className="invite-radio-row">
                 {PLAYABLE_SHAPE_META.map((s) => (
                   <label
@@ -183,14 +191,14 @@ export function SendInviteDialog({ friend, friendStatus, hasActivePairing, onClo
                       onChange={() => setShape(s.id)}
                       disabled={phase === 'sending'}
                     />
-                    <span>{s.label}</span>
+                    <span>{t.shapes[s.id]}</span>
                   </label>
                 ))}
               </div>
             </div>
 
             <div className="invite-section">
-              <h3 className="invite-section-title">Time control</h3>
+              <h3 className="invite-section-title">{t.invite.timeH}</h3>
               <div className="invite-radio-row">
                 {TIME_CONTROLS.map((tc) => (
                   <label
@@ -206,7 +214,7 @@ export function SendInviteDialog({ friend, friendStatus, hasActivePairing, onClo
                       disabled={phase === 'sending'}
                     />
                     <span>
-                      {tc.label} <small>· {tc.per}</small>
+                      {t.timeControls[tc.id].label} <small>· {t.timeControls[tc.id].per}</small>
                     </span>
                   </label>
                 ))}
@@ -221,16 +229,15 @@ export function SendInviteDialog({ friend, friendStatus, hasActivePairing, onClo
                   onChange={(e) => setFromRanked(e.target.checked)}
                   disabled={phase === 'sending'}
                 />
-                <span>Ranked match</span>
+                <span>{t.invite.ranked}</span>
               </label>
-              <p className="invite-ranked-hint">
-                Counts for Elo only if your opponent also accepts ranked.
-                Otherwise it's a casual match.
-              </p>
+              <p className="invite-ranked-hint">{t.invite.rankedHint}</p>
             </div>
 
             {!canInvite && (
-              <p className="invite-error">{friend.displayName} {reason} — can't invite right now.</p>
+              <p className="invite-error">
+                {t.invite.cantInviteNow(friend.displayName, reason)}
+              </p>
             )}
             {error && <p className="invite-error">{error}</p>}
 
@@ -241,7 +248,7 @@ export function SendInviteDialog({ friend, friendStatus, hasActivePairing, onClo
                 onClick={onClose}
                 disabled={phase === 'sending'}
               >
-                Cancel
+                {t.invite.cancel}
               </button>
               <button
                 type="button"
@@ -249,7 +256,7 @@ export function SendInviteDialog({ friend, friendStatus, hasActivePairing, onClo
                 onClick={onSend}
                 disabled={phase === 'sending' || !canInvite}
               >
-                {phase === 'sending' ? 'Sending…' : 'Send invite'}
+                {phase === 'sending' ? t.invite.sending : t.invite.send}
               </button>
             </div>
           </>

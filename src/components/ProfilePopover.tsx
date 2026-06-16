@@ -18,6 +18,7 @@ import {
   type MatchRecord,
 } from '../cloud/matchHistory';
 import { deleteMyAccount, downloadMyData } from '../cloud/account';
+import { useT } from '../i18n';
 
 const PLACEMENT_TOTAL = 10;
 
@@ -40,6 +41,7 @@ export function ProfilePopover({
   onClose,
   onAccountDeleted,
 }: Props) {
+  const t = useT();
   const [exporting, setExporting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -64,7 +66,7 @@ export function ProfilePopover({
   };
 
   const localName =
-    cloudDisplayName?.trim() || settings.playerName || 'Player 1';
+    cloudDisplayName?.trim() || settings.playerName || t.profile.fallbackName;
   const row = getPlayerRow(localName);
   const aiTotal = vsAITotal(row);
   const hsTotal = hotseatTotal(row);
@@ -77,16 +79,16 @@ export function ProfilePopover({
   const providerId = user.provider ?? '';
   const providerLabel =
     providerId === 'google'
-      ? 'Google'
+      ? t.profile.providerGoogle
       : providerId === 'email'
-        ? 'Email & password'
-        : providerId || 'Unknown';
+        ? t.profile.providerEmail
+        : providerId || t.profile.providerUnknown;
 
   const displayName =
     cloudDisplayName?.trim() ||
     user.displayName?.trim() ||
     user.email?.split('@')[0] ||
-    'Account';
+    t.profile.accountFallback;
 
   const handleSignOut = () => {
     onSignOut();
@@ -99,23 +101,23 @@ export function ProfilePopover({
       onClick={onBackdrop}
       role="dialog"
       aria-modal="true"
-      aria-label="Profile"
+      aria-label={t.profile.aria}
     >
       <div className="rules-card profile-card">
-        <button className="rules-close" onClick={onClose} aria-label="Close">
+        <button className="rules-close" onClick={onClose} aria-label={t.profile.close}>
           ✕
         </button>
 
         <header className="rules-header">
-          <h2>Your profile</h2>
-          <p className="rules-tagline">Account info + offline history.</p>
+          <h2>{t.profile.title}</h2>
+          <p className="rules-tagline">{t.profile.tagline}</p>
         </header>
 
         <div className="profile-body">
           <section className="profile-section">
-            <h3>Account</h3>
+            <h3>{t.profile.accountH}</h3>
             <div className="profile-row">
-              <span>Game name</span>
+              <span>{t.profile.gameName}</span>
               <span className="profile-name-row">
                 <strong>{displayName}</strong>
                 <button
@@ -123,28 +125,25 @@ export function ProfilePopover({
                   className="profile-rename-btn"
                   onClick={onRename}
                 >
-                  Rename
+                  {t.profile.rename}
                 </button>
               </span>
             </div>
             <div className="profile-row">
-              <span>Email</span>
+              <span>{t.profile.email}</span>
               <strong className="profile-email">{user.email}</strong>
             </div>
             <div className="profile-row">
-              <span>Sign-in method</span>
+              <span>{t.profile.signInMethod}</span>
               <strong>{providerLabel}</strong>
             </div>
             {!user.emailVerified && providerId === 'email' && (
-              <p className="settings-hint">
-                Email not yet verified. Check your inbox (and spam folder) for the
-                link we sent.
-              </p>
+              <p className="settings-hint">{t.profile.emailUnverified}</p>
             )}
           </section>
 
           <section className="profile-section">
-            <h3>Multiplayer</h3>
+            <h3>{t.profile.multiplayerH}</h3>
             <MultiplayerSection
               cloudProfile={cloudProfile}
               myUid={user.uid}
@@ -153,63 +152,53 @@ export function ProfilePopover({
           </section>
 
           <section className="profile-section">
-            <h3>Daily streak</h3>
+            <h3>{t.profile.streakH}</h3>
             <StreakSection cloudProfile={cloudProfile} />
           </section>
 
           <section className="profile-section">
-            <h3>Offline history — &ldquo;{localName}&rdquo;</h3>
+            <h3>{t.profile.offlineHistoryH(localName)}</h3>
             {totalAll === 0 ? (
-              <p className="settings-hint">
-                No games on this device yet. Start a Vs-AI or Hot-seat match to
-                populate this.
-              </p>
+              <p className="settings-hint">{t.profile.offlineEmpty}</p>
             ) : (
               <>
                 <div className="profile-row">
-                  <span>Total games</span>
+                  <span>{t.profile.totalGames}</span>
                   <strong>{totalAll}</strong>
                 </div>
                 <div className="profile-row">
-                  <span>Vs-Bots · W/D/L</span>
+                  <span>{t.profile.vsBotsWDL}</span>
                   <strong>
                     {aiTotal.wins} / {aiTotal.draws} / {aiTotal.losses}{' '}
                     <em>({safePercent(aiTotal.wins, aiGames)})</em>
                   </strong>
                 </div>
                 <div className="profile-row">
-                  <span>Hot-seat · W/D/L</span>
+                  <span>{t.profile.hotseatWDL}</span>
                   <strong>
                     {hsTotal.wins} / {hsTotal.draws} / {hsTotal.losses}
                   </strong>
                 </div>
                 <div className="profile-row">
-                  <span>Points scored</span>
+                  <span>{t.profile.pointsScored}</span>
                   <strong>
-                    {scored} <em>(avg {avgPerGame(scored, totalAll)})</em>
+                    {scored} <em>({t.profile.avg(avgPerGame(scored, totalAll))})</em>
                   </strong>
                 </div>
                 <div className="profile-row">
-                  <span>Points given</span>
+                  <span>{t.profile.pointsGiven}</span>
                   <strong>
-                    {given} <em>(avg {avgPerGame(given, totalAll)})</em>
+                    {given} <em>({t.profile.avg(avgPerGame(given, totalAll))})</em>
                   </strong>
                 </div>
               </>
             )}
-            <p className="settings-hint">
-              Stored on this device under the name from Settings. Cloud sync
-              comes next.
-            </p>
+            <p className="settings-hint">{t.profile.offlineHint}</p>
           </section>
 
           <section className="profile-section">
-            <h3>Your data</h3>
-            <p className="settings-hint">
-              Under GDPR you can download everything we hold about you, or
-              delete your account entirely. Deletion is immediate and
-              cannot be undone.
-            </p>
+            <h3>{t.profile.dataH}</h3>
+            <p className="settings-hint">{t.profile.dataHint}</p>
             <div className="profile-gdpr-actions">
               <button
                 type="button"
@@ -226,14 +215,14 @@ export function ProfilePopover({
                   }
                 }}
               >
-                {exporting ? 'Preparing…' : 'Download my data'}
+                {exporting ? t.profile.preparing : t.profile.downloadData}
               </button>
               <button
                 type="button"
                 className="settings-danger-btn"
                 onClick={() => setConfirmDelete(true)}
               >
-                Delete my account
+                {t.profile.deleteAccount}
               </button>
             </div>
             {deleteError && (
@@ -244,10 +233,10 @@ export function ProfilePopover({
 
         <footer className="rules-footer-bar profile-footer-bar">
           <button className="settings-danger-btn" onClick={handleSignOut}>
-            Sign out
+            {t.profile.signOut}
           </button>
           <button className="rules-got-it" onClick={onClose}>
-            Done
+            {t.profile.done}
           </button>
         </footer>
       </div>
@@ -263,19 +252,14 @@ export function ProfilePopover({
           }}
         >
           <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
-            <h3>Delete your account?</h3>
-            <p>
-              This permanently removes your account, sign-in, leaderboard
-              entry, and scrubs your name from past matches. Opponents
-              keep their rating history. If you're in a live game it will
-              forfeit. This cannot be undone.
-            </p>
+            <h3>{t.profile.deleteConfirmTitle}</h3>
+            <p>{t.profile.deleteConfirmBody}</p>
             <div className="confirm-actions">
               <button
                 onClick={() => setConfirmDelete(false)}
                 disabled={deleting}
               >
-                Cancel
+                {t.profile.cancel}
               </button>
               <button
                 className="danger"
@@ -291,15 +275,14 @@ export function ProfilePopover({
                     else onSignOut();
                   } catch (e) {
                     const msg =
-                      (e as { message?: string })?.message ??
-                      'Deletion failed. Please try again.';
+                      (e as { message?: string })?.message ?? t.profile.deleteFailed;
                     setDeleteError(msg);
                   } finally {
                     setDeleting(false);
                   }
                 }}
               >
-                {deleting ? 'Deleting…' : 'Delete forever'}
+                {deleting ? t.profile.deleting : t.profile.deleteForever}
               </button>
             </div>
           </div>
@@ -310,29 +293,24 @@ export function ProfilePopover({
 }
 
 function StreakSection({ cloudProfile }: { cloudProfile: CloudProfile | null }) {
+  const t = useT();
   const streak = cloudProfile?.streak;
   if (!streak || streak.current <= 0) {
-    return (
-      <p className="settings-hint">
-        Play today&rsquo;s puzzle to start a streak. (Coming soon.)
-      </p>
-    );
+    return <p className="settings-hint">{t.profile.streakEmpty}</p>;
   }
   return (
     <>
       <div className="profile-row">
-        <span>Current streak</span>
+        <span>{t.profile.currentStreak}</span>
         <strong className="profile-streak-current">
-          <Flame /> Day {streak.current}
+          <Flame /> {t.profile.dayN(streak.current)}
         </strong>
       </div>
       <div className="profile-row">
-        <span>Longest</span>
-        <strong>Day {streak.longest}</strong>
+        <span>{t.profile.longest}</span>
+        <strong>{t.profile.dayN(streak.longest)}</strong>
       </div>
-      <p className="settings-hint">
-        Streak counts daily-puzzle completions. Miss a day and it resets.
-      </p>
+      <p className="settings-hint">{t.profile.streakHint}</p>
     </>
   );
 }
@@ -363,6 +341,7 @@ function MultiplayerSection({
   myUid: string;
   matches: MatchRecord[];
 }) {
+  const t = useT();
   const rating = cloudProfile?.rating ?? 1000;
   const placement = cloudProfile?.placementGamesPlayed ?? 0;
   const provisional = placement < PLACEMENT_TOTAL;
@@ -370,20 +349,22 @@ function MultiplayerSection({
   return (
     <>
       <div className="profile-row">
-        <span>Rating</span>
+        <span>{t.profile.rating}</span>
         <strong className="profile-rating">
           {rating}
           {provisional && (
-            <span className="provisional-badge" title="Rating stabilises after 10 ranked games">
-              Provisional {placement}/{PLACEMENT_TOTAL}
+            <span className="provisional-badge" title={t.profile.provisionalTitle}>
+              {t.profile.provisional(placement, PLACEMENT_TOTAL)}
             </span>
           )}
         </strong>
       </div>
       <div className="match-history">
-        <div className="match-history-label">Last {Math.min(matches.length, 5) || ''} matches</div>
+        <div className="match-history-label">
+          {t.profile.lastMatches(Math.min(matches.length, 5))}
+        </div>
         {matches.length === 0 ? (
-          <p className="settings-hint">No ranked matches yet. Queue up from the menu.</p>
+          <p className="settings-hint">{t.profile.noMatches}</p>
         ) : (
           <ul className="match-history-list">
             {matches.map((m) => {
@@ -392,7 +373,7 @@ function MultiplayerSection({
               return (
                 <li key={m.matchId} className={`match-row match-row-${v.result}`}>
                   <span className={`match-result match-result-${v.result}`}>
-                    {v.result === 'win' ? 'W' : v.result === 'loss' ? 'L' : 'D'}
+                    {v.result === 'win' ? t.common.w : v.result === 'loss' ? t.common.l : t.common.d}
                   </span>
                   <span className="match-opponent" title={v.opponentDisplay}>
                     {v.opponentDisplay}

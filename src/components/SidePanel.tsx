@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { DIFFICULTY_LABELS } from '../types';
 import type { Difficulty, Player } from '../types';
 import { AchievementBadge } from '../achievements/AchievementBadge';
+import { useT } from '../i18n';
 import {
   avgPerGame,
   hotseatTotal,
@@ -57,6 +57,7 @@ export function SidePanel({
   featured,
   onFeaturedClick,
 }: SidePanelProps) {
+  const tr = useT();
   const color = effectiveColor(player, colorSwap);
   const cls = [
     'side-panel',
@@ -101,7 +102,7 @@ export function SidePanel({
             tier={featured.tier}
             earned
             size={22}
-            title={`${featured.title} — tap for achievements`}
+            title={tr.sidePanel.featuredTitle(featured.title)}
             onClick={onFeaturedClick}
           />
         )}
@@ -112,12 +113,13 @@ export function SidePanel({
       )}
       <div className={`player-score${scoreBump ? ' score-bump' : ''}`}>{score}</div>
       {stats && <PointsTotals stats={stats} />}
-      {thinking && <div className="thinking-dots" aria-label="Thinking">···</div>}
+      {thinking && <div className="thinking-dots" aria-label={tr.game.thinking}>···</div>}
     </aside>
   );
 }
 
 function PointsTotals({ stats }: { stats: PlayerRow }) {
+  const t = useT();
   const games = totalGamesForRow(stats);
   if (games === 0) return null;
   const scored = totalPointsScored(stats);
@@ -125,26 +127,30 @@ function PointsTotals({ stats }: { stats: PlayerRow }) {
   return (
     <div
       className="player-points-totals"
-      title={`Across ${games} games: ${scored} pts scored, ${given} pts given. Averages ${avgPerGame(
+      title={t.sidePanel.pointsTitle(
+        games,
         scored,
-        games
-      )} / ${avgPerGame(given, games)} per game.`}
+        given,
+        avgPerGame(scored, games),
+        avgPerGame(given, games),
+      )}
     >
       <div className="pt-row pt-scored">
         <span className="pt-arrow" aria-hidden="true">↑</span>
         <span className="pt-value">{scored}</span>
-        <span className="pt-avg">avg {avgPerGame(scored, games)}</span>
+        <span className="pt-avg">{t.profile.avg(avgPerGame(scored, games))}</span>
       </div>
       <div className="pt-row pt-given">
         <span className="pt-arrow" aria-hidden="true">↓</span>
         <span className="pt-value">{given}</span>
-        <span className="pt-avg">avg {avgPerGame(given, games)}</span>
+        <span className="pt-avg">{t.profile.avg(avgPerGame(given, games))}</span>
       </div>
     </div>
   );
 }
 
 function StatsPanel({ stats }: { stats: PlayerRow }) {
+  const t = useT();
   // Per-difficulty AI rows (only non-empty), then aggregated HS row.
   const aiDiffEntries: { difficulty: Difficulty; stats: ModeStats; total: number }[] = [];
   for (const d of [1, 2, 3, 4, 5] as Difficulty[]) {
@@ -162,7 +168,7 @@ function StatsPanel({ stats }: { stats: PlayerRow }) {
     return (
       <div className="player-stats">
         <div className="stats-line stats-line-empty">
-          <span className="stats-empty">no games yet</span>
+          <span className="stats-empty">{t.sidePanel.noGames}</span>
         </div>
       </div>
     );
@@ -173,14 +179,19 @@ function StatsPanel({ stats }: { stats: PlayerRow }) {
       {aiDiffEntries.map((e) => (
         <StatsLine
           key={`ai-${e.difficulty}`}
-          label={`Bot · ${DIFFICULTY_LABELS[e.difficulty]}`}
-          short={`Bot L${e.difficulty}`}
+          label={t.sidePanel.botLabel(t.difficulty[e.difficulty])}
+          short={t.sidePanel.botShort(e.difficulty)}
           mode={e.stats}
           total={e.total}
         />
       ))}
       {hsTotal > 0 && (
-        <StatsLine label="Hot-seat" short="HS" mode={hs} total={hsTotal} />
+        <StatsLine
+          label={t.sidePanel.hotseat}
+          short={t.sidePanel.hotseatShort}
+          mode={hs}
+          total={hsTotal}
+        />
       )}
     </div>
   );
@@ -197,16 +208,18 @@ function StatsLine({
   mode: ModeStats;
   total: number;
 }) {
+  const t = useT();
+  const record = `${mode.wins}${t.common.w} ${mode.draws}${t.common.d} ${mode.losses}${t.common.l}`;
   return (
     <div
       className="stats-line"
-      title={`${label}: ${total} games · ${mode.wins}W ${mode.draws}D ${mode.losses}L · ${safePercent(mode.wins, total)} wins`}
+      title={t.sidePanel.statsTitle(label, total, record, safePercent(mode.wins, total))}
     >
       <span className="stats-mode">{short}</span>
       <span className="stats-counts">
-        <span className="stats-w">{mode.wins}W</span>
-        <span className="stats-d">{mode.draws}D</span>
-        <span className="stats-l">{mode.losses}L</span>
+        <span className="stats-w">{mode.wins}{t.common.w}</span>
+        <span className="stats-d">{mode.draws}{t.common.d}</span>
+        <span className="stats-l">{mode.losses}{t.common.l}</span>
       </span>
       <span className="stats-pct">{safePercent(mode.wins, total)}</span>
     </div>
@@ -286,7 +299,8 @@ function GuestAvatar({ label, player }: { label: string; player: Player }) {
 }
 
 export function AIAvatar({ level }: { level: Difficulty }) {
-  const label = `AI opponent, ${DIFFICULTY_LABELS[level]} difficulty`;
+  const t = useT();
+  const label = t.sidePanel.aiLabel(t.difficulty[level]);
   switch (level) {
     case 1:
       return <RobotL1 label={label} />;

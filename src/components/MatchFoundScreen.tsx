@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PairingDoc } from '../cloud/matchmaking';
+import { useT } from '../i18n';
 
 interface Props {
   pairing: PairingDoc;
@@ -24,6 +25,7 @@ export function MatchFoundScreen({
   onStartPlaying,
   onLeave,
 }: Props) {
+  const t = useT();
   const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
   const [pressedReady, setPressedReady] = useState(false);
   const startedRef = useRef(false);
@@ -65,51 +67,51 @@ export function MatchFoundScreen({
 
   return (
     <div className="menu">
-      <h2>Opponent found!</h2>
+      <h2>{t.matchFound.opponentFound}</h2>
       <div className="match-found-card">
         <div className="match-found-row">
           <div className="match-found-player">
             <strong>{myDisplayName}</strong>
             <span className="match-found-rating">{myRating}</span>
-            <span className="match-found-tag">You · Player {pairing.player}</span>
+            <span className="match-found-tag">{t.matchFound.youPlayerN(pairing.player)}</span>
             <span
               className={`match-found-ready${effectiveMyReady ? ' is-ready' : ''}`}
               aria-live="polite"
             >
-              {effectiveMyReady ? '✓ Ready' : '— Not ready'}
+              {effectiveMyReady ? t.matchFound.ready : t.matchFound.notReady}
             </span>
           </div>
-          <span className="match-found-vs">vs</span>
+          <span className="match-found-vs">{t.matchFound.vs}</span>
           <div className="match-found-player">
             <strong>
               {pairing.opponentDisplayName}
               {pairing.opponentIsBot && (
-                <span className="bot-tag" aria-label="AI opponent">BOT</span>
+                <span className="bot-tag" aria-label={t.matchFound.aiOpponent}>
+                  {t.matchFound.bot}
+                </span>
               )}
             </strong>
             <span className="match-found-rating">{pairing.opponentRating}</span>
             <span className="match-found-tag">
-              Player {pairing.player === 1 ? 2 : 1}
+              {t.matchFound.playerN(pairing.player === 1 ? 2 : 1)}
             </span>
             <span
               className={`match-found-ready${oppReady ? ' is-ready' : ''}`}
               aria-live="polite"
             >
-              {oppReady ? '✓ Ready' : '— Not ready'}
+              {oppReady ? t.matchFound.ready : t.matchFound.notReady}
             </span>
           </div>
         </div>
         <div className="match-found-countdown" aria-live="polite">
           {effectiveMyReady && oppReady ? (
-            <>Both ready — starting…</>
+            <>{t.matchFound.bothReady}</>
           ) : (
-            <>
-              Starts in <strong>{Math.max(secondsLeft, 0)}</strong>
-            </>
+            <>{t.matchFound.startsIn(Math.max(secondsLeft, 0))}</>
           )}
         </div>
         <p className="settings-hint">
-          Shape: <strong>{pairing.shape ?? 'random'}</strong>. Player 1 moves first.
+          {t.matchFound.shapeLine(pairing.shape ? t.shapes[pairing.shape] : t.matchFound.shapeRandom)}
         </p>
       </div>
       <div className="match-found-actions">
@@ -119,10 +121,10 @@ export function MatchFoundScreen({
           onClick={handlePressReady}
           disabled={effectiveMyReady}
         >
-          {effectiveMyReady ? '✓ Ready — waiting on opponent' : "Ready!"}
+          {effectiveMyReady ? t.matchFound.readyWaiting : t.matchFound.readyBtn}
         </button>
         <button type="button" className="menu-auth-btn" onClick={onLeave}>
-          Back to menu
+          {t.matchFound.backToMenu}
         </button>
       </div>
     </div>

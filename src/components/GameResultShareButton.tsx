@@ -6,8 +6,8 @@ import type { ResultShare, ShareResultData } from '../share/resultShareText';
 import { renderVictoryCard } from '../share/victoryCard';
 import { trackEvent } from '../telemetry';
 import type { GameState } from '../types';
+import { useT } from '../i18n';
 
-const SHARE_TITLE = 'DotDuel — fast 2-player dot strategy';
 const FILE_NAME = 'dotduel-result.png';
 const SHARE_FILE_NAME = 'dotduel-result.jpg';
 
@@ -61,6 +61,7 @@ function isUserCancel(e: unknown): boolean {
 async function tryNativeShare(
   blob: Blob,
   shareText: string,
+  shareTitle: string,
 ): Promise<string | null> {
   if (isNativeApp()) {
     const [{ Filesystem, Directory }, { Share }] = await Promise.all([
@@ -73,7 +74,7 @@ async function tryNativeShare(
       directory: Directory.Cache,
     });
     try {
-      await Share.share({ title: SHARE_TITLE, text: shareText, files: [written.uri] });
+      await Share.share({ title: shareTitle, text: shareText, files: [written.uri] });
       return 'native-app';
     } catch (e) {
       if (isUserCancel(e)) return null;
@@ -85,7 +86,7 @@ async function tryNativeShare(
   });
   if (navigator.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ title: SHARE_TITLE, text: shareText, files: [file] });
+      await navigator.share({ title: shareTitle, text: shareText, files: [file] });
       return 'native';
     } catch (e) {
       if (isUserCancel(e)) return null;
@@ -134,6 +135,7 @@ interface DialogState {
 }
 
 export function GameResultShareButton({ data, state }: Props) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogState | null>(null);
@@ -184,7 +186,7 @@ export function GameResultShareButton({ data, state }: Props) {
         const link = await createShareCardLink(share, blob);
         if (link) outShare = withCardLink(share, link);
       }
-      const method = await tryNativeShare(blob, outShare.shareText);
+      const method = await tryNativeShare(blob, outShare.shareText, t.share.title);
       if (method === 'unsupported') {
         setDialog({
           share: outShare,
@@ -206,7 +208,7 @@ export function GameResultShareButton({ data, state }: Props) {
         completed(outShare, method);
       }
     } catch {
-      flash('Could not share — try again');
+      flash(t.share.couldNotShare);
     } finally {
       setBusy(false);
     }
@@ -219,9 +221,9 @@ export function GameResultShareButton({ data, state }: Props) {
         new ClipboardItem({ 'image/png': dialog.blob }),
       ]);
       completed(dialog.share, 'copy-image');
-      flash('Image copied — paste it anywhere');
+      flash(t.share.imageCopied);
     } catch {
-      flash('Couldn’t copy the image — try Download');
+      flash(t.share.imageCopyFailed);
     }
   };
 
@@ -230,9 +232,9 @@ export function GameResultShareButton({ data, state }: Props) {
     try {
       await navigator.clipboard.writeText(dialog.share.shareText);
       completed(dialog.share, 'copy-text');
-      flash('Text and link copied');
+      flash(t.share.textCopied);
     } catch {
-      flash('Couldn’t copy — try Download');
+      flash(t.share.textCopyFailed);
     }
   };
 
@@ -246,7 +248,7 @@ export function GameResultShareButton({ data, state }: Props) {
     if (!dialog) return;
     downloadBlob(dialog.blob);
     completed(dialog.share, 'download');
-    flash('Image saved');
+    flash(t.share.imageSaved);
   };
 
   return (
@@ -257,7 +259,7 @@ export function GameResultShareButton({ data, state }: Props) {
         onClick={onShare}
         disabled={busy}
       >
-        {busy ? 'Preparing…' : '📤 Share result'}
+        {busy ? t.share.preparing : t.share.shareResult}
       </button>
       {feedback && <span className="go-share-feedback">{feedback}</span>}
       {dialog && (
@@ -265,16 +267,16 @@ export function GameResultShareButton({ data, state }: Props) {
           className="share-dialog-overlay"
           role="dialog"
           aria-modal="true"
-          aria-label="Share your result"
+          aria-label={t.share.dialogAria}
           onClick={closeDialog}
         >
           <div className="share-dialog-card" onClick={(e) => e.stopPropagation()}>
             <div className="share-dialog-head">
-              <h3>Share your result</h3>
+              <h3>{t.share.dialogTitle}</h3>
               <button
                 type="button"
                 className="share-dialog-close"
-                aria-label="Close"
+                aria-label={t.share.close}
                 onClick={closeDialog}
               >
                 ✕
@@ -283,14 +285,14 @@ export function GameResultShareButton({ data, state }: Props) {
             <img
               className="share-dialog-preview"
               src={dialog.previewUrl}
-              alt="Your result card"
+              alt={t.share.resultCardAlt}
             />
             <div className="share-dialog-actions">
               <button type="button" className="share-action primary" onClick={onCopyImage}>
-                📋 Copy image
+                {t.share.copyImage}
               </button>
               <button type="button" className="share-action" onClick={onCopyText}>
-                🔗 Copy text + link
+                {t.share.copyTextLink}
               </button>
             </div>
             <div className="share-dialog-platforms">
@@ -308,12 +310,10 @@ export function GameResultShareButton({ data, state }: Props) {
               </button>
             </div>
             <p className="share-dialog-hint">
-              {dialog.cardLink
-                ? 'Your link shows the card picture automatically when pasted. For an inline image, Copy image and paste it into your post.'
-                : 'Platform buttons share your text and link. To include the picture, use Copy image and paste it into your post.'}
+              {dialog.cardLink ? t.share.hintCardLink : t.share.hintNoCardLink}
             </p>
             <button type="button" className="share-action share-dialog-download" onClick={onDownload}>
-              ⬇ Download image
+              {t.share.downloadImage}
             </button>
             {feedback && <span className="go-share-feedback">{feedback}</span>}
           </div>

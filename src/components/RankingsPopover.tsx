@@ -13,12 +13,13 @@ import {
   type ModeStats,
   type PlayerRow,
 } from '../storage';
-import { PLAYABLE_SHAPE_META, SHAPE_LABEL } from '../types';
+import { PLAYABLE_SHAPE_META } from '../types';
 import type { Difficulty, ShapeId } from '../types';
 import {
   watchLeaderboard,
   type LeaderboardEntry,
 } from '../cloud/leaderboard';
+import { useT } from '../i18n';
 
 const PLACEMENT_TOTAL = 10;
 
@@ -209,6 +210,7 @@ function buildAiH2H(diff: Difficulty): H2HRow[] {
 }
 
 export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Props) {
+  const t = useT();
   // Menu's "Rated"/"Local rankings" entries pass an explicit initialView.
   // Otherwise: signed-in users get Global by default (the more interesting
   // view); signed-out users get Local so they don't bounce off a sign-in CTA.
@@ -370,14 +372,14 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
       onClick={onBackdrop}
       role="dialog"
       aria-modal="true"
-      aria-label="Rankings"
+      aria-label={t.rankings.aria}
     >
       <div className="rules-card rankings-card">
         <button
           className="rules-close"
           onClick={() => (stack.length > 0 ? goBack() : onClose())}
-          aria-label={stack.length > 0 ? 'Back to rankings' : 'Close rankings'}
-          title={stack.length > 0 ? 'Back' : 'Close'}
+          aria-label={stack.length > 0 ? t.rankings.backToRankings : t.rankings.closeRankings}
+          title={stack.length > 0 ? t.rankings.back : t.rankings.close}
         >
           {stack.length > 0 ? '‹' : '✕'}
         </button>
@@ -388,18 +390,16 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
               <h2>
                 <span className="rankings-subject-name">{current.name}</span>
                 <span className="rankings-subject-tag">
-                  {current.kind === 'ai' ? 'AI opponent' : 'Player'}
+                  {current.kind === 'ai' ? t.rankings.aiOpponent : t.rankings.player}
                 </span>
               </h2>
-              <p className="rules-tagline">Head-to-head record by opponent.</p>
+              <p className="rules-tagline">{t.rankings.h2hTagline}</p>
             </>
           ) : (
             <>
-              <h2>Rankings</h2>
+              <h2>{t.rankings.title}</h2>
               <p className="rules-tagline">
-                {view === 'global'
-                  ? 'Global Elo across all multiplayer players.'
-                  : 'Local profiles on this device — vs-AI and hot-seat history.'}
+                {view === 'global' ? t.rankings.globalTagline : t.rankings.localTagline}
               </p>
             </>
           )}
@@ -416,7 +416,7 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
                   setStack([]);
                 }}
               >
-                Global Elo
+                {t.rankings.globalElo}
               </button>
               <button
                 type="button"
@@ -426,7 +426,7 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
                   setStack([]);
                 }}
               >
-                Local
+                {t.rankings.local}
               </button>
             </div>
           )}
@@ -446,13 +446,13 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
           {!current && view === 'local' && (
             <>
               <div className="rankings-toolbar">
-                <span className="rankings-toolbar-label">Shape:</span>
+                <span className="rankings-toolbar-label">{t.rankings.shape}</span>
                 <div className="rankings-pills">
                   <button
                     className={`rankings-pill ${shape === 'all' ? 'active' : ''}`}
                     onClick={() => setShape('all')}
                   >
-                    All
+                    {t.rankings.all}
                   </button>
                   {PLAYABLE_SHAPE_META.map((s) => (
                     <button
@@ -460,7 +460,7 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
                       className={`rankings-pill ${shape === s.id ? 'active' : ''}`}
                       onClick={() => setShape(s.id)}
                     >
-                      {s.label}
+                      {t.shapes[s.id]}
                     </button>
                   ))}
                 </div>
@@ -469,30 +469,30 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
               {leaderRows.length === 0 ? (
                 <p className="rankings-empty">
                   {shape === 'all'
-                    ? 'No games recorded yet on this device.'
-                    : `No games on ${SHAPE_LABEL[shape as ShapeId]} yet.`}
+                    ? t.rankings.emptyLocalAll
+                    : t.rankings.emptyLocalShape(t.shapes[shape as ShapeId])}
                 </p>
               ) : (
                 <div className="rankings-table-wrap">
                   <table className="rankings-table">
                     <thead>
                       <tr>
-                        <th className="col-rank">#</th>
-                        <th className="col-name">Player</th>
+                        <th className="col-rank">{t.rankings.colRank}</th>
+                        <th className="col-name">{t.rankings.colPlayer}</th>
                         <th
                           className={`col-num sortable ${lbSort.key === 'games' ? 'active' : ''}`}
                           onClick={() => toggleLbSort('games')}
                         >
-                          Games <span className="sort-glyph">{sortGlyph(lbSort.key === 'games', lbSort.dir)}</span>
+                          {t.rankings.colGames} <span className="sort-glyph">{sortGlyph(lbSort.key === 'games', lbSort.dir)}</span>
                         </th>
-                        <th className="col-num">W</th>
-                        <th className="col-num">L</th>
-                        <th className="col-num">D</th>
+                        <th className="col-num">{t.common.w}</th>
+                        <th className="col-num">{t.common.l}</th>
+                        <th className="col-num">{t.common.d}</th>
                         <th
                           className={`col-num sortable ${lbSort.key === 'winPct' ? 'active' : ''}`}
                           onClick={() => toggleLbSort('winPct')}
                         >
-                          Win % <span className="sort-glyph">{sortGlyph(lbSort.key === 'winPct', lbSort.dir)}</span>
+                          {t.rankings.colWinPct} <span className="sort-glyph">{sortGlyph(lbSort.key === 'winPct', lbSort.dir)}</span>
                         </th>
                       </tr>
                     </thead>
@@ -535,12 +535,12 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
                       setConfirmDelete({ key: current.key, name: current.name })
                     }
                   >
-                    Delete profile
+                    {t.rankings.deleteProfile}
                   </button>
                 </div>
               )}
               {h2hRows.length === 0 ? (
-                <p className="rankings-empty">No head-to-head games recorded.</p>
+                <p className="rankings-empty">{t.rankings.noH2H}</p>
               ) : (
                 <div className="rankings-table-wrap">
                   <table className="rankings-table h2h-table">
@@ -550,49 +550,49 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
                           className={`col-name sortable ${h2hSort.key === 'name' ? 'active' : ''}`}
                           onClick={() => toggleH2HSort('name')}
                         >
-                          Opponent <span className="sort-glyph">{sortGlyph(h2hSort.key === 'name', h2hSort.dir)}</span>
+                          {t.rankings.colOpponent} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'name', h2hSort.dir)}</span>
                         </th>
                         <th
                           className={`col-num sortable ${h2hSort.key === 'games' ? 'active' : ''}`}
                           onClick={() => toggleH2HSort('games')}
                         >
-                          Games <span className="sort-glyph">{sortGlyph(h2hSort.key === 'games', h2hSort.dir)}</span>
+                          {t.rankings.colGames} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'games', h2hSort.dir)}</span>
                         </th>
                         <th
                           className={`col-num sortable ${h2hSort.key === 'wins' ? 'active' : ''}`}
                           onClick={() => toggleH2HSort('wins')}
                         >
-                          W <span className="sort-glyph">{sortGlyph(h2hSort.key === 'wins', h2hSort.dir)}</span>
+                          {t.common.w} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'wins', h2hSort.dir)}</span>
                         </th>
                         <th
                           className={`col-num sortable ${h2hSort.key === 'losses' ? 'active' : ''}`}
                           onClick={() => toggleH2HSort('losses')}
                         >
-                          L <span className="sort-glyph">{sortGlyph(h2hSort.key === 'losses', h2hSort.dir)}</span>
+                          {t.common.l} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'losses', h2hSort.dir)}</span>
                         </th>
                         <th
                           className={`col-num sortable ${h2hSort.key === 'draws' ? 'active' : ''}`}
                           onClick={() => toggleH2HSort('draws')}
                         >
-                          D <span className="sort-glyph">{sortGlyph(h2hSort.key === 'draws', h2hSort.dir)}</span>
+                          {t.common.d} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'draws', h2hSort.dir)}</span>
                         </th>
                         <th
                           className={`col-num sortable ${h2hSort.key === 'winPct' ? 'active' : ''}`}
                           onClick={() => toggleH2HSort('winPct')}
                         >
-                          W % <span className="sort-glyph">{sortGlyph(h2hSort.key === 'winPct', h2hSort.dir)}</span>
+                          {t.rankings.colWinPctShort} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'winPct', h2hSort.dir)}</span>
                         </th>
                         <th
                           className={`col-num sortable ${h2hSort.key === 'lossPct' ? 'active' : ''}`}
                           onClick={() => toggleH2HSort('lossPct')}
                         >
-                          L % <span className="sort-glyph">{sortGlyph(h2hSort.key === 'lossPct', h2hSort.dir)}</span>
+                          {t.rankings.colLossPctShort} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'lossPct', h2hSort.dir)}</span>
                         </th>
                         <th
                           className={`col-num sortable ${h2hSort.key === 'drawPct' ? 'active' : ''}`}
                           onClick={() => toggleH2HSort('drawPct')}
                         >
-                          D % <span className="sort-glyph">{sortGlyph(h2hSort.key === 'drawPct', h2hSort.dir)}</span>
+                          {t.rankings.colDrawPctShort} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'drawPct', h2hSort.dir)}</span>
                         </th>
                       </tr>
                     </thead>
@@ -632,7 +632,7 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
 
         <footer className="rules-footer-bar">
           <button className="rules-got-it" onClick={onClose}>
-            Done
+            {t.rankings.done}
           </button>
         </footer>
       </div>
@@ -645,25 +645,22 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
         }}
         role="dialog"
         aria-modal="true"
-        aria-label="Confirm delete profile"
+        aria-label={t.rankings.confirmAria}
       >
         <div className="rules-card rankings-confirm-card">
           <header className="rules-header">
-            <h2>Delete profile?</h2>
-            <p className="rules-tagline">
-              <strong className="rankings-confirm-name">{confirmDelete.name}</strong> will be
-              removed from the rankings and from every head-to-head record on this device.
-            </p>
+            <h2>{t.rankings.deleteTitle}</h2>
+            <p className="rules-tagline">{t.rankings.deleteBody(confirmDelete.name)}</p>
           </header>
           <div className="rankings-confirm-body">
-            <p>Do you really want to delete this? Data will be unrecoverable.</p>
+            <p>{t.rankings.deleteConfirm2}</p>
           </div>
           <footer className="rules-footer-bar rankings-confirm-footer">
             <button className="rankings-confirm-cancel" onClick={() => setConfirmDelete(null)}>
-              Cancel
+              {t.rankings.cancel}
             </button>
             <button className="settings-danger-btn rankings-confirm-delete" onClick={doDelete}>
-              Delete profile
+              {t.rankings.deleteProfile}
             </button>
           </footer>
         </div>
@@ -690,19 +687,18 @@ function GlobalLeaderboard({
   myUid: string | null;
   onSignIn?: () => void;
 }) {
+  const t = useT();
   if (!signedIn) {
     return (
       <div className="rankings-global-signin">
-        <p className="rankings-empty">
-          Sign in to see the global Elo leaderboard.
-        </p>
+        <p className="rankings-empty">{t.rankings.signInPrompt}</p>
         {onSignIn && (
           <button
             type="button"
             className="rules-got-it"
             onClick={onSignIn}
           >
-            Sign in
+            {t.rankings.signIn}
           </button>
         )}
       </div>
@@ -711,11 +707,9 @@ function GlobalLeaderboard({
   if (error) {
     return (
       <div className="rankings-global-signin">
-        <p className="rankings-empty">
-          Couldn’t load the leaderboard — check your connection.
-        </p>
+        <p className="rankings-empty">{t.rankings.loadError}</p>
         <button type="button" className="rules-got-it" onClick={onRetry}>
-          Try again
+          {t.rankings.tryAgain}
         </button>
       </div>
     );
@@ -728,10 +722,10 @@ function GlobalLeaderboard({
         <table className="rankings-table">
           <thead>
             <tr>
-              <th className="col-rank">#</th>
-              <th className="col-num">Elo</th>
-              <th className="col-name">Player</th>
-              <th className="col-num">Games</th>
+              <th className="col-rank">{t.rankings.colRank}</th>
+              <th className="col-num">{t.rankings.colElo}</th>
+              <th className="col-name">{t.rankings.colPlayer}</th>
+              <th className="col-num">{t.rankings.colGames}</th>
             </tr>
           </thead>
           <tbody>
@@ -749,21 +743,17 @@ function GlobalLeaderboard({
     );
   }
   if (rows.length === 0) {
-    return (
-      <p className="rankings-empty">
-        No ranked multiplayer games played yet. Be the first to top the chart.
-      </p>
-    );
+    return <p className="rankings-empty">{t.rankings.emptyGlobal}</p>;
   }
   return (
     <div className="rankings-table-wrap">
       <table className="rankings-table">
         <thead>
           <tr>
-            <th className="col-rank">#</th>
-            <th className="col-num">Elo</th>
-            <th className="col-name">Player</th>
-            <th className="col-num">Games</th>
+            <th className="col-rank">{t.rankings.colRank}</th>
+            <th className="col-num">{t.rankings.colElo}</th>
+            <th className="col-name">{t.rankings.colPlayer}</th>
+            <th className="col-num">{t.rankings.colGames}</th>
           </tr>
         </thead>
         <tbody>
@@ -780,19 +770,19 @@ function GlobalLeaderboard({
                     {r.isBot && (
                       <span
                         className="bot-tag"
-                        title="AI opponent"
-                        aria-label="AI opponent"
+                        title={t.rankings.aiOpponent}
+                        aria-label={t.rankings.aiOpponent}
                       >
-                        BOT
+                        {t.matchFound.bot}
                       </span>
                     )}
-                    {isMe && <span className="rankings-global-me-tag">you</span>}
+                    {isMe && <span className="rankings-global-me-tag">{t.rankings.you}</span>}
                     {provisional && !r.isBot && (
                       <span
                         className="provisional-badge"
-                        title="Rating stabilises after 10 ranked games"
+                        title={t.profile.provisionalTitle}
                       >
-                        Provisional {r.placementGamesPlayed}/{PLACEMENT_TOTAL}
+                        {t.profile.provisional(r.placementGamesPlayed, PLACEMENT_TOTAL)}
                       </span>
                     )}
                   </span>
@@ -808,6 +798,7 @@ function GlobalLeaderboard({
 }
 
 function H2HSummary({ rows }: { rows: H2HRow[] }) {
+  const t = useT();
   if (rows.length === 0) return null;
   let games = 0;
   let wins = 0;
@@ -822,15 +813,15 @@ function H2HSummary({ rows }: { rows: H2HRow[] }) {
   return (
     <div className="rankings-summary">
       <span className="rankings-summary-item">
-        <strong>{games}</strong> games
+        <strong>{games}</strong> {t.rankings.summaryGames}
       </span>
       <span className="rankings-summary-sep">·</span>
       <span className="rankings-summary-item">
-        <strong>{wins}</strong>W / <strong>{losses}</strong>L / <strong>{draws}</strong>D
+        <strong>{wins}</strong>{t.common.w} / <strong>{losses}</strong>{t.common.l} / <strong>{draws}</strong>{t.common.d}
       </span>
       <span className="rankings-summary-sep">·</span>
       <span className="rankings-summary-item">
-        <strong>{pctLabel(wins, games)}</strong> win rate
+        <strong>{pctLabel(wins, games)}</strong> {t.rankings.winRate}
       </span>
     </div>
   );

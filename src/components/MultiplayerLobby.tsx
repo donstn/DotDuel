@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { TIME_CONTROLS } from '../cloud/matchmaking';
 import type { TimeControl } from '../cloud/matchmaking';
+import type { ShapeId } from '../types';
+import { useT } from '../i18n';
 
 interface Props {
   rating: number;
@@ -16,29 +18,29 @@ const UNLOCKED_TIME_CONTROLS: TimeControl[] = ['3min'];
 
 // Per-player shape unlocks gated by ranked games played. Must match the
 // server-side gate in functions/src/index.ts matchmake() — keep in sync.
-const SHAPE_UNLOCKS: { games: number; label: string }[] = [
-  { games: 0, label: 'Triangle' },
-  { games: 50, label: 'Square' },
-  { games: 100, label: 'Rectangle' },
+const SHAPE_UNLOCKS: { games: number; id: ShapeId }[] = [
+  { games: 0, id: 'triangle' },
+  { games: 50, id: 'square' },
+  { games: 100, id: 'rectangle' },
 ];
 
 function shapesUnlockedSummary(games: number): {
-  unlocked: string[];
-  nextLabel: string | null;
+  unlocked: ShapeId[];
+  nextId: ShapeId | null;
   nextAt: number | null;
 } {
-  const unlocked: string[] = [];
-  let nextLabel: string | null = null;
+  const unlocked: ShapeId[] = [];
+  let nextId: ShapeId | null = null;
   let nextAt: number | null = null;
   for (const tier of SHAPE_UNLOCKS) {
     if (games >= tier.games) {
-      unlocked.push(tier.label);
-    } else if (nextLabel === null) {
-      nextLabel = tier.label;
+      unlocked.push(tier.id);
+    } else if (nextId === null) {
+      nextId = tier.id;
       nextAt = tier.games;
     }
   }
-  return { unlocked, nextLabel, nextAt };
+  return { unlocked, nextId, nextAt };
 }
 
 export function MultiplayerLobby({
@@ -47,6 +49,7 @@ export function MultiplayerLobby({
   onBack,
   onFindMatch,
 }: Props) {
+  const t = useT();
   const [selected, setSelected] = useState<TimeControl>('3min');
   const shapes = shapesUnlockedSummary(rankedGamesPlayed);
   const remainingToNext =
@@ -55,13 +58,10 @@ export function MultiplayerLobby({
   return (
     <div className="menu">
       <button className="link-btn back-link" onClick={onBack}>
-        ‹ Back
+        {t.lobby.back}
       </button>
-      <h2>Multiplayer</h2>
-      <p className="hint">
-        Pick a time control. We'll match you against another player at a
-        similar rating (yours: <strong>{rating}</strong>).
-      </p>
+      <h2>{t.lobby.title}</h2>
+      <p className="hint">{t.lobby.intro(rating)}</p>
       <div className="menu-grid menu-grid-tc">
         {TIME_CONTROLS.map((tc) => {
           const locked = !UNLOCKED_TIME_CONTROLS.includes(tc.id);
@@ -73,29 +73,24 @@ export function MultiplayerLobby({
               className={`menu-card ${isSelected ? 'menu-card-selected' : ''} ${locked ? 'disabled' : ''}`}
               disabled={locked}
               onClick={() => !locked && setSelected(tc.id)}
-              title={
-                locked
-                  ? 'Locked while the player base grows — only Blitz is open for now to keep matchmaking fast.'
-                  : ''
-              }
+              title={locked ? t.lobby.lockedTitle : ''}
             >
-              <strong>{tc.label}</strong>
-              <span>{tc.per}</span>
+              <strong>{t.timeControls[tc.id].label}</strong>
+              <span>{t.timeControls[tc.id].per}</span>
               <span className="menu-card-sub">
-                {locked ? 'Coming back soon' : tc.sub}
+                {locked ? t.lobby.comingBackSoon : t.timeControls[tc.id].sub}
               </span>
             </button>
           );
         })}
       </div>
       <p className="hint mp-shape-hint">
-        Board:{' '}
-        <strong>{shapes.unlocked.join(' · ') || 'Triangle'}</strong>
-        {shapes.nextLabel && remainingToNext !== null ? (
-          <>
-            {' '}— {shapes.nextLabel} unlocks in {remainingToNext} more
-            ranked {remainingToNext === 1 ? 'game' : 'games'}.
-          </>
+        {t.lobby.board}{' '}
+        <strong>
+          {shapes.unlocked.map((id) => t.shapes[id]).join(' · ') || t.shapes.triangle}
+        </strong>
+        {shapes.nextId && remainingToNext !== null ? (
+          <> {t.lobby.unlockHint(t.shapes[shapes.nextId], remainingToNext)}</>
         ) : null}
       </p>
       <button
@@ -103,7 +98,7 @@ export function MultiplayerLobby({
         className="hotseat-start"
         onClick={() => onFindMatch(selected)}
       >
-        Find ranked match
+        {t.lobby.findMatch}
       </button>
     </div>
   );

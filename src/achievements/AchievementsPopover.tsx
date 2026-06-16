@@ -8,8 +8,11 @@ import {
 import { AchievementBadge } from './AchievementBadge';
 import { getFeatured, onAchievementsChange, setFeatured, unlockedIds } from './store';
 import { pushFeatured } from './cloudSync';
+import { useT } from '../i18n';
+import { achTitle, achDesc, trackLabel } from './localize';
 
 export function AchievementsPopover({ onClose }: { onClose: () => void }) {
+  const t = useT();
   const [, bump] = useState(0);
   useEffect(() => onAchievementsChange(() => bump((n) => n + 1)), []);
   useEffect(() => {
@@ -31,16 +34,16 @@ export function AchievementsPopover({ onClose }: { onClose: () => void }) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
       role="dialog"
       aria-modal="true"
-      aria-label="Achievements"
+      aria-label={t.achievements.aria}
     >
       <div className="rules-card ach-card">
-        <button className="rules-close" onClick={onClose} aria-label="Close">
+        <button className="rules-close" onClick={onClose} aria-label={t.achievements.close}>
           ✕
         </button>
         <header className="rules-header ach-head">
-          <h2>Achievements</h2>
+          <h2>{t.achievements.title}</h2>
           <p className="ach-progress-text">
-            <strong>{earned.size}</strong> / {ACHIEVEMENT_COUNT} unlocked · {pct}%
+            <strong>{earned.size}</strong> / {ACHIEVEMENT_COUNT} {t.achievements.unlocked} · {pct}%
           </p>
           <div className="ach-progress" aria-hidden="true">
             <span style={{ width: `${pct}%` }} />
@@ -52,13 +55,15 @@ export function AchievementsPopover({ onClose }: { onClose: () => void }) {
             <>
               <AchievementBadge icon={selDef.icon} tier={selDef.tier} earned={selEarned} size={52} />
               <div className="ach-detail-body">
-                <strong>{selDef.secret && !selEarned ? '???' : selDef.title}</strong>
+                <strong>{selDef.secret && !selEarned ? t.achievements.secret : achTitle(selDef.id, t)}</strong>
                 <span>
                   {selDef.secret && !selEarned
-                    ? 'Hidden — keep playing to reveal this one.'
-                    : selDef.desc}
+                    ? t.achievements.hiddenReveal
+                    : achDesc(selDef.id, t)}
                 </span>
-                <span className="ach-detail-status">{selEarned ? '✓ Unlocked' : 'Locked'}</span>
+                <span className="ach-detail-status">
+                  {selEarned ? t.achievements.statusUnlocked : t.achievements.statusLocked}
+                </span>
               </div>
               {selEarned && (
                 <button
@@ -69,14 +74,14 @@ export function AchievementsPopover({ onClose }: { onClose: () => void }) {
                     setFeatured(next);
                     void pushFeatured(next);
                   }}
-                  title="Show this badge next to your name in games"
+                  title={t.achievements.pinTitle}
                 >
-                  {featured === sel ? '★ Featured' : 'Pin'}
+                  {featured === sel ? t.achievements.featured : t.achievements.pin}
                 </button>
               )}
             </>
           ) : (
-            <span className="ach-detail-hint">Tap a badge to see what it’s for.</span>
+            <span className="ach-detail-hint">{t.achievements.detailHint}</span>
           )}
         </div>
 
@@ -89,7 +94,7 @@ export function AchievementsPopover({ onClose }: { onClose: () => void }) {
             return (
               <section key={track.label} className="ach-track">
                 <div className="ach-track-head">
-                  <span className="ach-track-label">{track.label}</span>
+                  <span className="ach-track-label">{trackLabel(track.label, t)}</span>
                   <span className="ach-track-count">
                     {got}/{items.length}
                   </span>
@@ -104,8 +109,11 @@ export function AchievementsPopover({ onClose }: { onClose: () => void }) {
                         key={a.id}
                         className={`ach-node ${e ? 'is-earned' : ''} ${capstone ? 'is-capstone' : ''} ${sel === a.id ? 'is-sel' : ''}`}
                         onClick={() => setSel(a.id)}
-                        aria-label={hidden ? 'Hidden achievement' : a.title}
-                        title={`${hidden ? '???' : a.title} — ${hidden ? 'Hidden' : a.desc}`}
+                        aria-label={hidden ? t.achievements.hiddenAria : achTitle(a.id, t)}
+                        title={t.achievements.nodeTitle(
+                          hidden ? t.achievements.secret : achTitle(a.id, t),
+                          hidden ? t.achievements.hidden : achDesc(a.id, t),
+                        )}
                       >
                         <AchievementBadge icon={a.icon} tier={a.tier} earned={e} size={50} />
                       </button>

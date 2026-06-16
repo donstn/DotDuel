@@ -1,16 +1,8 @@
 import { useState } from 'react';
 import { trackEvent } from '../telemetry';
+import { useT } from '../i18n';
 
 const APP_URL = 'https://www.dotduel.com/';
-const SHARE_TITLE = 'DotDuel — fast 2-player dot strategy';
-const TEXTS = {
-  invite: 'Play me a quick game of dots.',
-  share: 'Try DotDuel — a fast 2-player dot strategy game.',
-} as const;
-const LABELS = {
-  invite: '➕ Invite a friend',
-  share: 'Share DotDuel',
-} as const;
 
 interface Props {
   variant: 'invite' | 'share';
@@ -30,13 +22,14 @@ interface Props {
 //     referral relationship (they have no account to invite into).
 // DotDuel never sees the recipient address — privacy-clean and zero cost.
 export function TellAFriendButton({ variant, refCode, className }: Props) {
+  const t = useT();
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const url =
     variant === 'invite' && refCode
       ? `${APP_URL}?ref=${encodeURIComponent(refCode)}`
       : APP_URL;
-  const text = TEXTS[variant];
+  const text = variant === 'invite' ? t.share.textInvite : t.share.textShare;
   const body = `${text}\n\n${url}`;
 
   const onShare = async () => {
@@ -45,7 +38,7 @@ export function TellAFriendButton({ variant, refCode, className }: Props) {
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title: SHARE_TITLE, text, url });
+        await navigator.share({ title: t.share.title, text, url });
         trackEvent('tellafriend_share_completed', { variant, share_method: 'native' });
         return;
       } catch (e) {
@@ -54,7 +47,7 @@ export function TellAFriendButton({ variant, refCode, className }: Props) {
       }
     }
 
-    const mailto = `mailto:?subject=${encodeURIComponent(SHARE_TITLE)}&body=${encodeURIComponent(body)}`;
+    const mailto = `mailto:?subject=${encodeURIComponent(t.share.title)}&body=${encodeURIComponent(body)}`;
     try {
       const w = window.open(mailto, '_self');
       if (w) {
@@ -68,10 +61,10 @@ export function TellAFriendButton({ variant, refCode, className }: Props) {
     try {
       await navigator.clipboard.writeText(url);
       trackEvent('tellafriend_share_completed', { variant, share_method: 'clipboard' });
-      setFeedback('Link copied — paste it anywhere');
+      setFeedback(t.share.linkCopied);
       window.setTimeout(() => setFeedback(null), 2500);
     } catch {
-      setFeedback('Could not share — try again');
+      setFeedback(t.share.couldNotShare);
       window.setTimeout(() => setFeedback(null), 2500);
     }
   };
@@ -79,7 +72,7 @@ export function TellAFriendButton({ variant, refCode, className }: Props) {
   return (
     <>
       <button type="button" className={className ?? 'tell-a-friend-btn'} onClick={onShare}>
-        {LABELS[variant]}
+        {variant === 'invite' ? t.share.labelInvite : t.share.labelShare}
       </button>
       {feedback && <span className="tell-a-friend-feedback">{feedback}</span>}
     </>

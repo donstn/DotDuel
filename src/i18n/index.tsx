@@ -19,6 +19,8 @@ import {
 import { Capacitor } from '@capacitor/core';
 import { Device } from '@capacitor/device';
 import { en, type Messages } from './en';
+
+export type { Messages } from './en';
 import { lt } from './lt';
 import { es } from './es';
 import { pt } from './pt';

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { Invite } from '../cloud/invites';
 import { acceptInvite, declineInvite } from '../cloud/invites';
-import { SHAPE_LABEL } from '../types';
 import { TIME_CONTROLS } from '../cloud/matchmaking';
+import { useT } from '../i18n';
 
 interface Props {
   invites: Invite[];
@@ -17,6 +17,7 @@ export function IncomingInviteToast({
   fromNames,
   onAccepted,
 }: Props) {
+  const t = useT();
   const [busyId, setBusyId] = useState<string | null>(null);
 
   if (invites.length === 0) return null;
@@ -44,20 +45,20 @@ export function IncomingInviteToast({
   };
 
   return (
-    <div className="invite-toast-stack" role="region" aria-label="Game invites">
+    <div className="invite-toast-stack" role="region" aria-label={t.invite.toastAria}>
       {invites.map((invite) => {
-        const tcLabel =
-          TIME_CONTROLS.find((t) => t.id === invite.timeControl)?.label ??
-          invite.timeControl;
-        const fromName = fromNames[invite.from] ?? 'A friend';
+        const tcLabel = TIME_CONTROLS.find((tc) => tc.id === invite.timeControl)
+          ? t.timeControls[invite.timeControl].label
+          : invite.timeControl;
+        const fromName = fromNames[invite.from] ?? t.invite.aFriend;
         const isBusy = busyId === invite.inviteId;
         return (
           <div key={invite.inviteId} className="invite-toast">
             <div className="invite-toast-text">
-              <strong>{fromName}</strong> invites you
+              <strong>{fromName}</strong> {t.invite.invitesYou}
               <div className="invite-toast-meta">
-                {SHAPE_LABEL[invite.shape]} · {tcLabel}
-                {invite.fromRanked && ' · They picked Ranked'}
+                {t.shapes[invite.shape]} · {tcLabel}
+                {invite.fromRanked && ` · ${t.invite.theyPickedRanked}`}
               </div>
             </div>
             <div className="invite-toast-actions">
@@ -66,9 +67,9 @@ export function IncomingInviteToast({
                 className="invite-toast-decline"
                 onClick={() => onDecline(invite)}
                 disabled={isBusy}
-                aria-label={`Decline invite from ${fromName}`}
+                aria-label={t.invite.declineFrom(fromName)}
               >
-                Decline
+                {t.invite.decline}
               </button>
               {invite.fromRanked && (
                 <button
@@ -77,7 +78,7 @@ export function IncomingInviteToast({
                   onClick={() => onAccept(invite, false)}
                   disabled={isBusy}
                 >
-                  Accept casual
+                  {t.invite.acceptCasual}
                 </button>
               )}
               <button
@@ -86,11 +87,7 @@ export function IncomingInviteToast({
                 onClick={() => onAccept(invite, invite.fromRanked)}
                 disabled={isBusy}
               >
-                {isBusy
-                  ? '…'
-                  : invite.fromRanked
-                    ? 'Accept ranked'
-                    : 'Accept'}
+                {isBusy ? '…' : invite.fromRanked ? t.invite.acceptRanked : t.invite.accept}
               </button>
             </div>
           </div>

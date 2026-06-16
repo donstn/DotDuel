@@ -3,6 +3,27 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.10.0] - 2026-06-17
+
+### Changed
+
+- **Full app localization** — extended i18n beyond the menus to the entire app:
+  Profile, Sign-in, Username picker, Friends + Invite (button/popover/dialog/
+  toast), GameOver, the multiplayer flow (lobby, matchmaking, match-found,
+  clock), Rankings (global + local + head-to-head), the daily-puzzle
+  leaderboard, the result-share dialog, SidePanel stats, and all 97
+  Achievements (titles + descriptions, via per-language overrides that fall
+  back to the catalog). ~640 new source keys across 6 languages, all wired
+  through `useT()` / shared `t.shapes`/`t.difficulty`/`t.timeControls`/
+  `t.friendStatus` maps. Achievement text routes through
+  `achievements/localize.ts` so a missing translation degrades to English.
+
+### Fixed
+
+- Temporarily disabled the forced sign-in gate (`LOGIN_GATE_ENABLED=false`) so
+  Google's crawler and signed-out visitors land on the game, not a login wall
+  (AdSense review). The menu still offers Sign in → Profile.
+
 ## [0.4.9.0] - 2026-06-16
 
 ### Added

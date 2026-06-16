@@ -3,6 +3,20 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.8.0] - 2026-06-16
+
+### Added
+
+- **Achievements** — 100 badges earned through play (Bot mastery per shape ×
+  level, win streaks, daily puzzle, day streaks, total-game milestones, ranked,
+  lines, social). Under **Rankings → Achievements**; greyed until earned then
+  lit in the theme's two dot colours; a "🏆 Achievement unlocked" toast on earn;
+  pin one to show beside your name in-game. Offline-first (local single-player
+  unlocks with no network); syncs to Supabase once the achievements migration
+  is applied. ~13 badges (line-length, social events, ranked upset/rematch)
+  await their event hooks. Catalog: `src/achievements/`; migration:
+  `supabase/migrations/20260615010000_achievements.sql` (not yet applied).
+
 ## [0.4.7.0] - 2026-06-15
 
 ### Changed

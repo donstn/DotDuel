@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.8.0',
+    date: '2026-06-16',
+    highlight: 'Achievements',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Achievements! Earn up to 100 badges for playing — beating the Bots on each shape and level, win streaks, daily-puzzle runs, day streaks and big milestones. Find them under Rankings → Achievements; each badge lights up in your theme’s colours when unlocked, and you get a “🏆 Achievement unlocked” pop the moment you earn one.',
+      },
+      {
+        kind: 'added',
+        text: 'Pin a favourite badge to show beside your name while you play.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.7.0',
     date: '2026-06-15',
     highlight: 'New menu + Bots',

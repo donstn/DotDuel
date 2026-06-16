@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
 import {
   ACHIEVEMENTS,
+  ACHIEVEMENT_BY_ID,
   ACHIEVEMENT_COUNT,
-  CATEGORY_LABEL,
-  type AchievementCategory,
+  ACHIEVEMENT_TRACKS,
 } from './catalog';
 import { AchievementBadge } from './AchievementBadge';
 import { getFeatured, onAchievementsChange, setFeatured, unlockedIds } from './store';
 import { pushFeatured } from './cloudSync';
-
-const CATS = Object.keys(CATEGORY_LABEL) as AchievementCategory[];
 
 export function AchievementsPopover({ onClose }: { onClose: () => void }) {
   const [, bump] = useState(0);
@@ -82,32 +80,34 @@ export function AchievementsPopover({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
-        <div className="ach-scroll">
-          {CATS.map((cat) => {
-            const items = ACHIEVEMENTS.filter((a) => a.category === cat);
+        <div className="ach-scroll ach-tracks">
+          {ACHIEVEMENT_TRACKS.map((track) => {
+            const items = track.ids.map((id) => ACHIEVEMENT_BY_ID[id]).filter(Boolean);
             if (!items.length) return null;
             const got = items.filter((a) => earned.has(a.id)).length;
+            const last = items.length - 1;
             return (
-              <section key={cat} className="ach-section">
-                <h3>
-                  {CATEGORY_LABEL[cat]}
-                  <span className="ach-section-count">
+              <section key={track.label} className="ach-track">
+                <div className="ach-track-head">
+                  <span className="ach-track-label">{track.label}</span>
+                  <span className="ach-track-count">
                     {got}/{items.length}
                   </span>
-                </h3>
-                <div className="ach-grid">
-                  {items.map((a) => {
+                </div>
+                <div className="ach-track-line">
+                  {items.map((a, i) => {
                     const e = earned.has(a.id);
                     const hidden = a.secret && !e;
+                    const capstone = i === last;
                     return (
                       <button
                         key={a.id}
-                        className={`ach-cell ${sel === a.id ? 'is-sel' : ''}`}
+                        className={`ach-node ${e ? 'is-earned' : ''} ${capstone ? 'is-capstone' : ''} ${sel === a.id ? 'is-sel' : ''}`}
                         onClick={() => setSel(a.id)}
+                        aria-label={hidden ? 'Hidden achievement' : a.title}
                         title={`${hidden ? '???' : a.title} — ${hidden ? 'Hidden' : a.desc}`}
                       >
-                        <AchievementBadge icon={a.icon} tier={a.tier} earned={e} size={58} />
-                        <span className="ach-cell-name">{hidden ? '???' : a.title}</span>
+                        <AchievementBadge icon={a.icon} tier={a.tier} earned={e} size={50} />
                       </button>
                     );
                   })}

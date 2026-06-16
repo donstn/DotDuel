@@ -28,8 +28,6 @@ interface SidePanelProps {
   colorSwap?: boolean;
   /** Per-name stats. Pass `null` for AI panel (no stats tracked). */
   stats?: PlayerRow | null;
-  /** Optional control rendered directly under the player name (e.g. Resign). */
-  actionSlot?: ReactNode;
   /** Optional content rendered directly under the avatar (e.g. Elo). */
   belowAvatar?: ReactNode;
   /** Featured achievement badge shown beside the name (yours or opponent's). */
@@ -55,7 +53,6 @@ export function SidePanel({
   avatar,
   colorSwap = false,
   stats,
-  actionSlot,
   belowAvatar,
   featured,
   onFeaturedClick,
@@ -109,7 +106,6 @@ export function SidePanel({
           />
         )}
       </div>
-      {actionSlot && <div className="player-action-slot">{actionSlot}</div>}
       {stats && <StatsPanel stats={stats} />}
       {(ratingSlot || rating) && (
         <div className="player-rating">{ratingSlot ?? rating}</div>

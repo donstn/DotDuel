@@ -82,16 +82,13 @@ function CardInner({
   iconClass?: string;
 }) {
   return (
-    <>
+    <span className="menu-shelf-inner">
       <span className={`menu-shelf-ic ${iconClass}`}>{icon}</span>
       <span className="menu-shelf-body">
         <strong>{title}</strong>
         <span className="menu-shelf-sub">{sub}</span>
       </span>
-      <span className="menu-shelf-chev" aria-hidden="true">
-        ›
-      </span>
-    </>
+    </span>
   );
 }
 

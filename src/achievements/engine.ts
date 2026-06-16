@@ -160,13 +160,7 @@ function satisfied(id: string, c: Ctx): boolean {
     case id === 'all-shapes':
       return c.shapesUnlocked >= PLAYABLE.length;
     case id === 'triple-impossible':
-      return PLAYABLE.every((s) => c.beat(s, IMPOSSIBLE));
-    case id === 'blowout-50':
-      return f('blowout50');
-    case id === 'blowout-100':
-      return f('blowout100');
-    case id === 'shutout':
-      return f('shutout');
+      return PLAYABLE.every((s) => c.imp(s) >= 3);
     case id.startsWith('hotseat-'):
       return c.hotseatGames >= num(id, 'hotseat-');
     case id === 'daily-first':
@@ -263,9 +257,6 @@ export function recordLocalGame(g: LocalGameResult, env: EvalEnv): string[] {
       a.impWins[g.shape] = (a.impWins[g.shape] ?? 0) + 1;
     }
   }
-  if (g.won && g.oppScore === 0) addFlag(a, 'shutout');
-  if (g.won && g.myScore - g.oppScore >= 50) addFlag(a, 'blowout50');
-  if (g.won && g.myScore - g.oppScore >= 100) addFlag(a, 'blowout100');
   if ((g.maxLine ?? 0) >= 8) addFlag(a, 'line8');
   if ((g.maxLine ?? 0) >= 6) addFlag(a, 'bigLine');
   if (g.scoredCorner) addFlag(a, 'corner');

@@ -2134,17 +2134,6 @@ export default function App() {
                 )}
               </span>
             }
-            actionSlot={
-              myNum === 1 && !mpState.finished ? (
-                <button
-                  className="btn-resign-inline"
-                  onClick={() => setResignConfirmOpen(true)}
-                  title="Resign and end the game"
-                >
-                  Resign
-                </button>
-              ) : null
-            }
           />
           <Board
             state={mpState}
@@ -2174,19 +2163,19 @@ export default function App() {
                 )}
               </span>
             }
-            actionSlot={
-              myNum === 2 && !mpState.finished ? (
-                <button
-                  className="btn-resign-inline"
-                  onClick={() => setResignConfirmOpen(true)}
-                  title="Resign and end the game"
-                >
-                  Resign
-                </button>
-              ) : null
-            }
           />
         </div>
+        {myNum && !mpState.finished && (
+          <div className="ingame-actions">
+            <button
+              className="btn-resign-inline"
+              onClick={() => setResignConfirmOpen(true)}
+              title="Resign and end the game"
+            >
+              Resign
+            </button>
+          </div>
+        )}
         {mpShowOver && (
           <GameOver
             state={mpState}
@@ -2269,8 +2258,8 @@ export default function App() {
             onClick={() => setResignConfirmOpen(false)}
           >
             <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
-              <h3>Resign?</h3>
-              <p>You'll lose this game.</p>
+              <h3>Resign this ranked game?</h3>
+              <p>It counts as a loss on your rated record.</p>
               <div className="confirm-actions">
                 <button onClick={() => setResignConfirmOpen(false)}>Cancel</button>
                 <button className="danger" onClick={onConfirmResign}>Resign</button>
@@ -2742,17 +2731,6 @@ export default function App() {
           stats={p1Stats}
           featured={myFeatured}
           onFeaturedClick={() => setAchievementsOpen(true)}
-          actionSlot={
-            aiResignAvailable ? (
-              <button
-                className="btn-resign-inline"
-                onClick={() => setResignConfirmOpen(true)}
-                title="Resign and end the game"
-              >
-                Resign
-              </button>
-            ) : null
-          }
         />
         <Board
           state={state}
@@ -2776,6 +2754,17 @@ export default function App() {
           stats={p2StatsRow}
         />
       </div>
+      {aiResignAvailable && (
+        <div className="ingame-actions">
+          <button
+            className="btn-resign-inline"
+            onClick={onConfirmResign}
+            title="Resign and end the game"
+          >
+            Resign
+          </button>
+        </div>
+      )}
       <AdBanner placement="ingame" />
       {showOver && (
         <GameOver

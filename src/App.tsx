@@ -224,6 +224,13 @@ function renderMpUnreachable({ onLeave }: { onLeave: () => void }) {
   );
 }
 
+// TEMPORARY (AdSense review): the full-screen sign-in gate makes Google's
+// crawler see a login wall instead of the game, which got the site rejected
+// ("site down or unavailable"). Disabled so visitors (and the crawler) land
+// straight on the menu; the menu still offers a Sign in button (→ Profile once
+// signed in). Flip back to `true` once AdSense approves the site.
+const LOGIN_GATE_ENABLED = false;
+
 export default function App() {
   const t = useT();
   const [screen, setScreen] = useState<Screen>('menu');
@@ -2514,7 +2521,7 @@ export default function App() {
           </div>
         )}
         {signInOpen && <SignInPopover onClose={() => setSignInOpen(false)} />}
-        {!authLoading && !user && !gateDismissed && (
+        {LOGIN_GATE_ENABLED && !authLoading && !user && !gateDismissed && (
           <SignInPopover
             gate
             onClose={() => setGateDismissed(true)}

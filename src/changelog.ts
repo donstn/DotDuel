@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.9.0',
+    date: '2026-06-16',
+    highlight: 'Languages',
+    changes: [
+      {
+        kind: 'added',
+        text: 'DotDuel now speaks six languages: English, Lithuanian, Spanish, Portuguese, Polish and Czech. Pick yours from the language button in the top-right of the menu.',
+      },
+      {
+        kind: 'added',
+        text: 'The game now starts in your language automatically — from your browser settings on the web, and from your device language on the app.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.8.0',
     date: '2026-06-16',
     highlight: 'Achievements',

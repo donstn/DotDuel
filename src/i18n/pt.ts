@@ -229,7 +229,7 @@ export const pt: Messages = {
       'royal-court': 'Veludo violeta contra ouro antigo.',
       'tempo-rivals': 'Vermelho-vinho contra azul-céu. Clássico.',
       'sunset-catan': 'Desertos de terracota, peças de pergaminho.',
-      'coral-reef': 'Águas verde-azuladas profundas, companheiras de coral.',
+      'coral-reef': 'Águas verde-azuladas profundas, peças de coral.',
       'twilight-cosmos': 'Vazio índigo contra ciano elétrico.',
       'monochrome-pro': 'Peças em preto e branco sobre madeira. Contraste máximo.',
       'vintage-press': 'Tinta bordô e azul-marinho sobre pergaminho. Bom sob o sol.',
@@ -264,7 +264,7 @@ export const pt: Messages = {
       'e-mail, nome de exibição, provedor de login (Google ou senha) e data de criação da conta. Fonte: você, pelo Supabase Auth ao se cadastrar.',
     collectRatingLead: 'Classificação multijogador:',
     collectRating:
-      'seu Elo atual, o contador de partidas de posicionamento e a data/hora da última partida. Fonte: calculada no servidor ao fim de cada partida ranqueada.',
+      'seu Elo atual, o contador de partidas de colocação e a data/hora da última partida. Fonte: calculada no servidor ao fim de cada partida ranqueada.',
     collectHistoryLead: 'Histórico de partidas:',
     collectHistory:
       'cada partida ranqueada armazena os IDs de ambos os jogadores, os nomes de exibição, as pontuações finais, as variações de classificação, a forma, o controle de tempo, a duração e como a partida terminou (normal / tempo esgotado / desistência).',
@@ -273,10 +273,10 @@ export const pt: Messages = {
       'enquanto uma partida multijogador está em andamento, armazenamos o tabuleiro, o relógio e de quem é a vez no nosso banco de dados em tempo real. Isso é excluído logo após o fim da partida.',
     collectFriendsLead: 'Amigos e convites:',
     collectFriends:
-      'sua lista de amigos, pedidos pendentes, status online e convites para partidas. Se você entrou pelo link de convite ou QR code de outro jogador, registramos qual jogador convidou você (o código de convite aleatório dele, para que futuras recompensas por indicação possam ser honradas).',
+      'sua lista de amigos, pedidos pendentes, status online e convites para partidas. Se você entrou pelo link de convite ou QR code de outro jogador, registramos qual jogador convidou você (o código de convite aleatório dele, para que futuras recompensas por indicação possam ser concedidas).',
     collectDeviceLead: 'Dados apenas do dispositivo:',
     collectDevice:
-      'seu progresso de um jogador, as estatísticas contra IA / de partida local, a preferência de tema e a marca de “tutorial visto”. Armazenados no localStorage do seu navegador e nunca transmitidos para nós.',
+      'seu progresso de um jogador, as estatísticas contra IA / de partida local, a preferência de tema e o indicador de “tutorial visto”. Armazenados no localStorage do seu navegador e nunca transmitidos para nós.',
     collectAnalyticsLead: 'Análises (somente se você aceitar):',
     collectAnalytics:
       'eventos coletados automaticamente pelo Google Analytics: visualizações de página, modelo do dispositivo, idioma, tamanho da tela e ID de sessão anônimo. Não vinculado à sua conta no nosso sistema.',
@@ -323,7 +323,7 @@ export const pt: Messages = {
     rightObject: 'às análises: use o botão abaixo ou clique em Recusar no aviso na primeira abertura.',
     rightComplainLead: 'Apresentar uma reclamação',
     rightComplain:
-      'à sua autoridade nacional de proteção de dados se você acreditar que tratamos mal os seus dados.',
+      'à sua autoridade nacional de proteção de dados se você acreditar que tratamos seus dados de forma inadequada.',
     rankingsNoteLead: 'Observação importante sobre as classificações.',
     rankingsNote:
       'Se você excluir sua conta (ou for removido por qualquer motivo), seu nome de exibição e o identificador da conta são apagados de todos os registros públicos. No entanto, as mudanças de classificação que você causou no Elo de outros jogadores NÃO são revertidas: as partidas passadas são imutáveis. Os oponentes contra quem você jogou mantêm seus ganhos e perdas de classificação; o histórico de partidas deles mostra “Jogador excluído” onde antes estava o seu nome.',

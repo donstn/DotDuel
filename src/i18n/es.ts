@@ -141,7 +141,7 @@ export const es: Messages = {
     resignRankedBody: 'Contará como una derrota en tu historial clasificatorio.',
     thinking: 'Pensando',
     bot: 'BOT',
-    aiOpponent: 'Oponente con IA',
+    aiOpponent: 'Oponente IA',
   },
 
   rules: {
@@ -174,7 +174,7 @@ export const es: Messages = {
       'Cuando todos los puntos están coloreados y todas las líneas terminadas han sido reclamadas. Gana quien tenga más puntos; si hay igualdad, es empate.',
     tipsH: 'Consejos',
     tip1: 'Evita jugadas que completen dos líneas: regalas el resto.',
-    tip2: 'Llévate siempre una esquina gratis o una gran finalización.',
+    tip2: 'Llévate siempre una esquina gratis o una línea larga.',
     tip3: 'A veces bloquear (0 puntos) es más listo que puntuar poco.',
     tip4: 'Al final de la partida, busca líneas sin reclamar antes de colocar.',
     modesH: 'Modos',
@@ -193,7 +193,7 @@ export const es: Messages = {
     title: 'Ajustes',
     tagline: 'Se guarda localmente en este dispositivo.',
     yourName: 'Tu nombre',
-    yourNameHintSignedIn: (name: string) => `Sesión iniciada como ${name}. Renómbrate en Perfil.`,
+    yourNameHintSignedIn: (name: string) => `Sesión iniciada como ${name}. Cambia tu nombre en Perfil.`,
     yourNameHint: 'Se usa en el modo contra Bot Y como Jugador 1 en la partida local.',
     hotseatOpponent: 'Oponente de partida local',
     player2Name: 'Nombre del Jugador 2',

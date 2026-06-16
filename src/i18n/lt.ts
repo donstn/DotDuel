@@ -44,7 +44,7 @@ export const lt: Messages = {
   },
 
   difficulty: {
-    1: 'Pradedantysis',
+    1: 'Naujokas',
     2: 'Lengvas',
     3: 'Vidutinis',
     4: 'Sunkus',
@@ -173,7 +173,7 @@ export const lt: Messages = {
     score5: '5 taškų linija → 5 tšk.',
     score8: '8 taškų linija → 8 tšk.',
     scoreCorner: 'Vienas kampinis taškas laikomas 1 tšk. „linija“',
-    catchH: 'Gudrybė – vienas ėjimas, vienas įvertinimas',
+    catchH: 'Gudrybė – vienas ėjimas, vieni taškai',
     catchP:
       'Jei jūsų taškas iškart užbaigia kelias linijas, gausite taškų tik už ilgiausią. Kitos užbaigtos linijos tampa nepaimtos – bet kuris žaidėjas gali jas pasiimti vėlesniu ėjimu.',
     watchH: 'Stebėkite lentą',
@@ -263,14 +263,14 @@ export const lt: Messages = {
     aria: 'Privatumo politika',
     close: 'Uždaryti',
     title: 'Privatumo politika',
-    tagline: 'Ką renkame, kodėl renkame ir kaip ištrinti.',
+    tagline: 'Ką renkame, kodėl renkame ir kaip tai ištrinti.',
     whoH: 'Kas mes esame',
     whoP: 'DotDuel yra nepriklausomas dviejų žaidėjų taškų spalvinimo žaidimas. Pagal BDAR jūsų asmens duomenų valdytojas yra kūrėjas. Kontaktas:',
     collectH: 'Ką renkame',
     collectP: 'Tik tai, ko reikia, kad žaidimas veiktų ir liktų sąžiningas.',
     collectAccountLead: 'Paskyra:',
     collectAccount:
-      'el. paštas, rodomas vardas, prisijungimo tiekėjas (Google ar slaptažodis), paskyros sukūrimo data. Šaltinis: jūs, registruodamiesi per Supabase Auth.',
+      'el. paštas, rodomas vardas, prisijungimo būdas (Google ar slaptažodis), paskyros sukūrimo data. Šaltinis: jūs, registruodamiesi per Supabase Auth.',
     collectRatingLead: 'Kelių žaidėjų reitingas:',
     collectRating:
       'jūsų dabartinis Elo, vertinamųjų žaidimų skaitiklis ir paskutinio žaidimo laikas. Šaltinis: apskaičiuojama serveryje kiekvieno reitinguojamo žaidimo pabaigoje.',
@@ -279,7 +279,7 @@ export const lt: Messages = {
       'kiekvienas reitinguojamas žaidimas saugo abiejų žaidėjų ID, rodomus vardus, galutinius rezultatus, reitingo pokyčius, figūrą, laiko kontrolę, trukmę ir kaip žaidimas baigėsi (įprastai / pasibaigus laikui / pasidavus).',
     collectLiveLead: 'Tiesioginė žaidimo būsena:',
     collectLive:
-      'kol vyksta kelių žaidėjų žaidimas, mūsų tikralaikėje duomenų bazėje saugome lentą, laikrodį ir kieno ėjimas. Tai ištrinama netrukus po žaidimo pabaigos.',
+      'kol vyksta kelių žaidėjų žaidimas, mūsų tikralaikėje duomenų bazėje saugome lentą, laikrodį ir tai, kieno eilė eiti. Tai ištrinama netrukus po žaidimo pabaigos.',
     collectFriendsLead: 'Draugai ir kvietimai:',
     collectFriends:
       'jūsų draugų sąrašas, laukiantys prašymai, prisijungimo būsena ir žaidimo kvietimai. Jei prisijungėte per kito žaidėjo kvietimo nuorodą ar QR kodą, įrašome, kuris žaidėjas jus pakvietė (jo atsitiktinį kvietimo kodą – kad ateityje būtų galima atsidėkoti už rekomendacijas).',
@@ -290,13 +290,13 @@ export const lt: Messages = {
     collectAnalytics:
       'Google Analytics automatiškai renkami įvykiai – puslapių peržiūros, įrenginio modelis, kalba, ekrano dydis, anoniminis seanso ID. Mūsų sistemoje nesusieta su jūsų paskyra.',
     whyH: 'Kodėl tai renkame (teisiniai pagrindai)',
-    whyContractLead: 'Sutartis (6.1.b str.):',
+    whyContractLead: 'Sutartis (6 str. 1 d. b p.):',
     whyContract:
       'paskyra, reitingas, žaidimų istorija, tiesioginė žaidimo būsena – visa tai būtina teikti kelių žaidėjų paslaugą, kuriai užsiregistravote.',
-    whyLegitLead: 'Teisėtas interesas (6.1.f str.):',
+    whyLegitLead: 'Teisėtas interesas (6 str. 1 d. f p.):',
     whyLegit:
       'lyderių lentelė ir reitinguojami žaidimai – kad visiems žaidėjams būtų užtikrinta sąžininga, konkurencinga aplinka.',
-    whyConsentLead: 'Sutikimas (6.1.a str.):',
+    whyConsentLead: 'Sutikimas (6 str. 1 d. a p.):',
     whyConsentAds:
       'Google Analytics IR Google AdSense – abu įsijungia tik paspaudus „Sutinku“ sutikimo juostoje. Atsisakius ar neapsisprendus, neįsijungia nė vienas.',
     whyConsentNoAds:

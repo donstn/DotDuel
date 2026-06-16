@@ -3,6 +3,20 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.9.0] - 2026-06-16
+
+### Added
+
+- **Languages** — full UI localization in six languages: English, Lithuanian,
+  Spanish, Portuguese (pt-BR), Polish and Czech. Custom zero-dependency i18n
+  (`src/i18n/`, `en.ts` is the typed source of truth); language picker in the
+  menu top-right. Each language applies its own plural/grammar rules; the GDPR
+  privacy policy is fully translated. Reviewed via per-language native-reviewer
+  passes.
+- **Automatic language detection** — the app starts in the player's language:
+  browser preferences on the web, real device locale on the native app (via
+  `@capacitor/device`). An explicit pick is remembered and always wins.
+
 ## [0.4.8.0] - 2026-06-16
 
 ### Added

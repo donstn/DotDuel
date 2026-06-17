@@ -8,10 +8,9 @@
  * stage a board; the illustrative move/claim then runs through the engine and
  * scores for real (biggest-only + pending falls out naturally).
  */
-import { applyClaim, applyMove } from '../../game';
-import { createGame } from '../../game';
+import { applyAction, applyClaim, applyMove, createGame, pointsIfPlayed } from '../../game';
 import { getBoard } from '../../geometry';
-import type { GameState, Player, ShapeId } from '../../types';
+import type { GameAction, GameState, Player, ShapeId } from '../../types';
 
 export interface SceneScore {
   dotId: number;
@@ -55,6 +54,11 @@ class Rec {
   /** Snapshot the current board (e.g. an empty/hold frame). */
   hold(ms: number) {
     this.snap(ms, null, null);
+  }
+
+  /** Apply a real action for `by` WITHOUT snapshotting (fast-forward). */
+  applySilent(action: GameAction, by: Player) {
+    this.state = applyAction({ ...this.state, current: by }, action);
   }
 
   /** Colour dots without running the engine — pure staging, never scores. */
@@ -225,6 +229,85 @@ function sceneSqFourWays(): Scene {
   return { id: 'sqFourWays', shape, frames: rec.frames };
 }
 
+/**
+ * Play a full deterministic game (greedy: take the most valuable action — claim
+ * the longest pending line or place the highest-scoring dot, lowest id breaks
+ * ties). Returns the action sequence; the finish scene replays just its tail.
+ */
+function playoutActions(shape: ShapeId): { action: GameAction; by: Player }[] {
+  const board = getBoard(shape);
+  const out: { action: GameAction; by: Player }[] = [];
+  let state = createGame(shape, 'hotseat');
+  let guard = 0;
+  while (!state.finished && guard++ < 2000) {
+    const by = state.current;
+    let bestClaim: string | null = null;
+    let bestClaimVal = -1;
+    for (const lid of state.pending) {
+      const len = board.lines.find((l) => l.id === lid)?.length ?? 0;
+      if (len > bestClaimVal) {
+        bestClaimVal = len;
+        bestClaim = lid;
+      }
+    }
+    let bestDot = -1;
+    let bestGain = -1;
+    for (const d of board.dots) {
+      if (state.colored[d.id]) continue;
+      const { gained } = pointsIfPlayed(state, board, d.id);
+      if (gained > bestGain) {
+        bestGain = gained;
+        bestDot = d.id;
+      }
+    }
+    let action: GameAction;
+    if (bestDot < 0) {
+      action = { kind: 'claim', lineId: bestClaim! }; // no dots left → forced claim
+    } else if (bestClaim !== null && bestClaimVal >= bestGain && bestClaimVal > 0) {
+      action = { kind: 'claim', lineId: bestClaim };
+    } else {
+      action = { kind: 'dot', dotId: bestDot };
+    }
+    out.push({ action, by });
+    state = applyAction(state, action);
+  }
+  return out;
+}
+
+/**
+ * How the game ends: most of the board already played, the last 3 dots per
+ * player go down, the final lines get claimed, and the board completes with a
+ * winner — all dots placed AND all lines claimed.
+ */
+function sceneFinish(): Scene {
+  const shape: ShapeId = 'triangle';
+  const board = getBoard(shape);
+  const actions = playoutActions(shape);
+  const total = board.dots.length;
+  // Split so the LAST 6 placements (3 per player) + trailing claims animate.
+  let placed = 0;
+  let split = actions.length;
+  for (let i = 0; i < actions.length; i++) {
+    if (actions[i].action.kind === 'dot') {
+      placed++;
+      if (placed === total - 6) {
+        split = i + 1;
+        break;
+      }
+    }
+  }
+  const rec = new Rec(shape);
+  for (let i = 0; i < split; i++) rec.applySilent(actions[i].action, actions[i].by);
+  rec.hold(1500); // the near-full board, ~3 moves left each
+  for (let i = split; i < actions.length; i++) {
+    const { action, by } = actions[i];
+    if (action.kind === 'dot') rec.place(action.dotId, by);
+    else rec.claim(action.lineId, by, lineDots(shape, action.lineId)[0]);
+  }
+  rec.hold(2600); // game over — all dots placed, all lines claimed, winner stands
+  return { id: 'finish', shape, frames: rec.frames };
+}
+
 /** Built once (geometry is static). Order = display order in the popover. */
 let _scenes: Scene[] | null = null;
 export function getScenes(): Scene[] {
@@ -235,6 +318,7 @@ export function getScenes(): Scene[] {
       sceneClaim(),
       sceneTriThreeWays(),
       sceneSqFourWays(),
+      sceneFinish(),
     ];
   }
   return _scenes;

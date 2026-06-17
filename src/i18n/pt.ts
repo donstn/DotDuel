@@ -970,6 +970,10 @@ export const pt: Messages = {
         title: 'Quadrado: 4 direções',
         body: 'As linhas correm na horizontal, na vertical e ao longo das duas diagonais.',
       },
+      finish: {
+        title: 'Encerrando a partida',
+        body: 'A partida termina quando todos os pontos estão colocados e todas as linhas marcadas. Vence quem tiver mais pontos; em caso de igualdade, é empate.',
+      },
     } as Record<string, { title: string; body: string }>,
   },
 };

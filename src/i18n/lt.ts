@@ -975,6 +975,10 @@ export const lt: Messages = {
         title: 'Kvadratas: 4 kryptys',
         body: 'Linijos eina skersai, žemyn ir abiem įstrižainėmis.',
       },
+      finish: {
+        title: 'Žaidimo pabaiga',
+        body: 'Žaidimas baigiasi, kai užpildomi visi taškai ir paimamos visos linijos. Laimi daugiausiai taškų surinkęs; lygus rezultatas – lygiosios.',
+      },
     } as Record<string, { title: string; body: string }>,
   },
 };

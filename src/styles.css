@@ -2286,6 +2286,16 @@ button {
   color: var(--text-dim);
   font-weight: 600;
 }
+/* Game-over: frame the scoreboard and flag the winner. */
+.howto-score.is-final {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 18px rgba(var(--accent-rgb, 123, 219, 149), 0.22);
+}
+.howto-score-side.is-winner .howto-score-num {
+  color: var(--accent);
+  transform: scale(1.14);
+  display: inline-block;
+}
 
 .howto-caption {
   text-align: center;

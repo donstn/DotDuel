@@ -977,6 +977,10 @@ export const cs: Messages = {
         title: 'Čtverec: 4 směry',
         body: 'Linie vedou napříč, dolů a podél obou úhlopříček.',
       },
+      finish: {
+        title: 'Konec hry',
+        body: 'Hra končí, když jsou všechny tečky položené a všechny linie zabrané. Vyhrává nejvíce bodů; shodné skóre znamená remízu.',
+      },
     } as Record<string, { title: string; body: string }>,
   },
 };

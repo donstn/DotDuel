@@ -979,6 +979,10 @@ export const pl: Messages = {
         title: 'Kwadrat: 4 kierunki',
         body: 'Linie biegną w poprzek, w dół oraz wzdłuż obu przekątnych.',
       },
+      finish: {
+        title: 'Koniec gry',
+        body: 'Gra kończy się, gdy wszystkie kropki są postawione i wszystkie linie zajęte. Wygrywa najwięcej punktów; równy wynik to remis.',
+      },
     } as Record<string, { title: string; body: string }>,
   },
 };

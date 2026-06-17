@@ -44,21 +44,31 @@ function useSceneFrame(scene: Scene, paused: boolean, reduced: boolean) {
   return scene.frames[shown];
 }
 
-function ScoreBoard({ scores, t }: { scores: Record<Player, number>; t: ReturnType<typeof useT> }) {
+function ScoreBoard({
+  scores,
+  winner,
+  t,
+}: {
+  scores: Record<Player, number>;
+  winner: 1 | 2 | 'draw' | null;
+  t: ReturnType<typeof useT>;
+}) {
+  const cls = (p: Player) =>
+    `howto-score-side howto-score-p${p}${winner === p ? ' is-winner' : ''}`;
   return (
     <div
-      className="howto-score"
+      className={`howto-score${winner ? ' is-final' : ''}`}
       role="img"
       aria-label={`${t.matchFound.playerN(1)} ${scores[1]}, ${t.matchFound.playerN(2)} ${scores[2]}`}
     >
-      <span className="howto-score-side howto-score-p1">
+      <span className={cls(1)}>
         <span className="howto-score-dot" aria-hidden="true" />
         <span className="howto-score-num">{scores[1]}</span>
       </span>
       <span className="howto-score-sep" aria-hidden="true">
         –
       </span>
-      <span className="howto-score-side howto-score-p2">
+      <span className={cls(2)}>
         <span className="howto-score-num">{scores[2]}</span>
         <span className="howto-score-dot" aria-hidden="true" />
       </span>
@@ -120,7 +130,11 @@ export function HowToPlayPopover({ onClose }: { onClose: () => void }) {
         </header>
 
         <div className="howto-body">
-          <ScoreBoard scores={frame.state.scores} t={t} />
+          <ScoreBoard
+            scores={frame.state.scores}
+            winner={frame.state.finished ? frame.state.winner : null}
+            t={t}
+          />
 
           <div
             className="howto-stage"

@@ -867,6 +867,10 @@ export const en = {
         title: 'Square: 4 directions',
         body: 'Lines run across, down, and along both diagonals.',
       },
+      finish: {
+        title: 'Finishing the game',
+        body: 'The game ends once every dot is placed and every line is claimed. Most points wins — equal scores draw.',
+      },
     } as Record<string, { title: string; body: string }>,
   },
 };

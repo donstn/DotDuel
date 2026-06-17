@@ -967,6 +967,10 @@ export const es: Messages = {
         title: 'Cuadrado: 4 direcciones',
         body: 'Las líneas van en horizontal, en vertical y a lo largo de ambas diagonales.',
       },
+      finish: {
+        title: 'Terminar la partida',
+        body: 'La partida termina cuando todos los puntos están colocados y todas las líneas reclamadas. Gana quien tenga más puntos; en empate, hay tablas.',
+      },
     } as Record<string, { title: string; body: string }>,
   },
 };

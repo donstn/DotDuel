@@ -126,6 +126,7 @@ export const lt: Messages = {
   },
 
   footer: {
+    howToPlay: 'Kaip žaisti',
     rules: 'Taisyklės',
     settings: 'Nustatymai',
     privacy: 'Privatumas',
@@ -227,6 +228,9 @@ export const lt: Messages = {
       'Atstatyti statistiką? Bus ištrinta visų žaidėjų pergalių/lygiųjų/pralaimėjimų istorija šiame įrenginyje.',
     renameNote:
       'Pastaba: pasivadinę kitaip, pradėsite naują statistikos eilutę. Senojo vardo istorija išsaugoma po tuo vardu.',
+    appearanceH: 'Išvaizda',
+    colourTheme: 'Spalvų tema',
+    changeTheme: 'Keisti',
     done: 'Atlikta',
   },
 
@@ -936,5 +940,41 @@ export const lt: Messages = {
     hiddenAria: 'Paslėptas pasiekimas',
     nodeTitle: (name: string, descOrHidden: string) => `${name} — ${descOrHidden}`,
     toastKicker: '🏆 Pasiekimas atrakintas',
+  },
+
+  howto: {
+    aria: 'Kaip žaisti',
+    close: 'Uždaryti',
+    title: 'Kaip žaisti',
+    tagline: 'Stebėkite kiekvieną ėjimą – lenta parodo, kas tiksliai vyksta.',
+    prev: 'Atgal',
+    next: 'Toliau',
+    done: 'Supratau',
+    scenes: {
+      place: {
+        title: 'Padėkite tašką',
+        body: 'Per savo ėjimą bakstelėkite bet kurį tuščią tašką, kad jį nuspalvintumėte. Tada eilė pereina varžovui.',
+      },
+      corner: {
+        title: 'Kampas duoda 1',
+        body: 'Vienas kampinis taškas laikomas 1 ilgio linija – jis pats vienas duoda 1 tašką.',
+      },
+      lineScored: {
+        title: 'Užbaikite liniją',
+        body: 'Nuspalvinkite visus tiesios linijos taškus ir ji duos tiek taškų, koks jos ilgis.',
+      },
+      claim: {
+        title: 'Pasiimkite laukiančias linijas',
+        body: 'Vienas ėjimas gali užbaigti kelias linijas – taškus duoda tik ilgiausia, kitos laukia (švyti). Bakstelėkite laukiančios linijos tašką, kad pasiimtumėte jos taškus. Jas gali pasiimti bet kuris žaidėjas.',
+      },
+      triThreeWays: {
+        title: 'Trikampis: 3 kryptys',
+        body: 'Linijos eina skersai ir abiem įstrižainėmis.',
+      },
+      sqFourWays: {
+        title: 'Kvadratas: 4 kryptys',
+        body: 'Linijos eina skersai, žemyn ir abiem įstrižainėmis.',
+      },
+    } as Record<string, { title: string; body: string }>,
   },
 };

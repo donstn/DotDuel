@@ -115,6 +115,7 @@ export const pt: Messages = {
   },
 
   footer: {
+    howToPlay: 'Como jogar',
     rules: 'Regras',
     settings: 'Configurações',
     privacy: 'Privacidade',
@@ -218,6 +219,9 @@ export const pt: Messages = {
       'Redefinir estatísticas? O histórico de vitórias/empates/derrotas de todos os jogadores neste dispositivo será apagado.',
     renameNote:
       'Observação: mudar seu nome inicia uma nova linha de estatísticas. O histórico do nome antigo é mantido com aquele nome.',
+    appearanceH: 'Aparência',
+    colourTheme: 'Tema de cores',
+    changeTheme: 'Mudar',
     done: 'Concluído',
   },
 
@@ -931,5 +935,41 @@ export const pt: Messages = {
     hiddenAria: 'Conquista oculta',
     nodeTitle: (name: string, descOrHidden: string) => `${name} — ${descOrHidden}`,
     toastKicker: '🏆 Conquista desbloqueada',
+  },
+
+  howto: {
+    aria: 'Como jogar',
+    close: 'Fechar',
+    title: 'Como jogar',
+    tagline: 'Acompanhe cada jogada — o tabuleiro mostra exatamente o que acontece.',
+    prev: 'Anterior',
+    next: 'Próximo',
+    done: 'Entendi',
+    scenes: {
+      place: {
+        title: 'Coloque um ponto',
+        body: 'No seu turno, toque em qualquer ponto vazio para colori-lo. Depois é a vez do seu oponente.',
+      },
+      corner: {
+        title: 'Um canto vale 1',
+        body: 'Um ponto de canto conta como uma linha de 1 — sozinho, ele vale 1 ponto.',
+      },
+      lineScored: {
+        title: 'Complete uma linha',
+        body: 'Pinte todos os pontos de uma linha reta e ela vale tantos pontos quanto o seu comprimento.',
+      },
+      claim: {
+        title: 'Marque linhas pendentes',
+        body: 'Um movimento pode concluir várias linhas — só a mais longa pontua, as outras ficam esperando (brilhando). Toque em um ponto de uma linha pendente para marcar os pontos dela. Qualquer jogador pode pegá-las.',
+      },
+      triThreeWays: {
+        title: 'Triângulo: 3 direções',
+        body: 'As linhas correm na horizontal e ao longo das duas diagonais.',
+      },
+      sqFourWays: {
+        title: 'Quadrado: 4 direções',
+        body: 'As linhas correm na horizontal, na vertical e ao longo das duas diagonais.',
+      },
+    } as Record<string, { title: string; body: string }>,
   },
 };

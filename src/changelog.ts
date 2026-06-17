@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.11.0',
+    date: '2026-06-17',
+    highlight: 'How to play',
+    changes: [
+      {
+        kind: 'added',
+        text: 'New “How to play” guide with little animated examples on a real board — watch a corner score 1, a line complete, several lines wait to be claimed, and how lines run in every direction on the Triangle (3 ways) and Square (4 ways). Open it from the footer, next to Rules; tap a board to pause, swipe or use the arrows to browse.',
+      },
+      {
+        kind: 'changed',
+        text: 'The colour theme is now chosen from Settings (it moved out of the footer to make room for “How to play”).',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.10.1',
     date: '2026-06-17',
     highlight: 'Fixes',

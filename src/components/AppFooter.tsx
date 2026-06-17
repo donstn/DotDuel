@@ -1,20 +1,20 @@
 import { useT } from '../i18n';
 
 interface Props {
+  onOpenHowTo: () => void;
   onOpenRules: () => void;
   onOpenSettings: () => void;
   onOpenPrivacy: () => void;
   onOpenChangelog: () => void;
-  onOpenThemes: () => void;
   version: string;
 }
 
 export function AppFooter({
+  onOpenHowTo,
   onOpenRules,
   onOpenSettings,
   onOpenPrivacy,
   onOpenChangelog,
-  onOpenThemes,
   version,
 }: Props) {
   const t = useT();
@@ -24,6 +24,16 @@ export function AppFooter({
         <span className="app-footer-brand" title={t.footer.brandTitle}>
           {t.footer.brand}
         </span>
+        <span className="sep">·</span>
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            onOpenHowTo();
+          }}
+        >
+          {t.footer.howToPlay}
+        </a>
         <span className="sep">·</span>
         <a
           href="#"
@@ -53,16 +63,6 @@ export function AppFooter({
           }}
         >
           {t.footer.privacy}
-        </a>
-        <span className="sep">·</span>
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            onOpenThemes();
-          }}
-        >
-          {t.footer.theme}
         </a>
         <span className="sep">·</span>
         <button

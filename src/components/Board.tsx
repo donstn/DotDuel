@@ -504,7 +504,7 @@ export function Board({
                 filter={isLast && owner ? 'url(#dot-shadow)' : undefined}
                 role={interactive ? 'button' : 'img'}
                 aria-label={ariaLabel}
-                tabIndex={d.id === rovingId ? 0 : -1}
+                tabIndex={!disabled && d.id === rovingId ? 0 : -1}
                 ref={(el) => {
                   dotRefs.current.set(d.id, el);
                 }}

@@ -115,6 +115,7 @@ export const es: Messages = {
   },
 
   footer: {
+    howToPlay: 'Cómo jugar',
     rules: 'Reglas',
     settings: 'Ajustes',
     privacy: 'Privacidad',
@@ -217,6 +218,9 @@ export const es: Messages = {
       '¿Restablecer estadísticas? Se borrará el historial de victorias/empates/derrotas de todos los jugadores en este dispositivo.',
     renameNote:
       'Nota: cambiarte el nombre inicia una nueva fila de estadísticas. El historial del nombre antiguo se conserva con ese nombre.',
+    appearanceH: 'Apariencia',
+    colourTheme: 'Tema de color',
+    changeTheme: 'Cambiar',
     done: 'Hecho',
   },
 
@@ -928,5 +932,41 @@ export const es: Messages = {
     hiddenAria: 'Logro oculto',
     nodeTitle: (name: string, descOrHidden: string) => `${name} — ${descOrHidden}`,
     toastKicker: '🏆 Logro desbloqueado',
+  },
+
+  howto: {
+    aria: 'Cómo jugar',
+    close: 'Cerrar',
+    title: 'Cómo jugar',
+    tagline: 'Mira cada jugada: el tablero muestra justo lo que ocurre.',
+    prev: 'Anterior',
+    next: 'Siguiente',
+    done: 'Entendido',
+    scenes: {
+      place: {
+        title: 'Coloca un punto',
+        body: 'En tu turno, toca cualquier punto vacío para colorearlo. Luego le toca a tu rival.',
+      },
+      corner: {
+        title: 'Una esquina vale 1',
+        body: 'Un punto de esquina cuenta como una línea de 1: anota 1 punto por sí solo.',
+      },
+      lineScored: {
+        title: 'Completa una línea',
+        body: 'Colorea todos los puntos de una línea recta y anota tantos puntos como su longitud.',
+      },
+      claim: {
+        title: 'Reclama líneas en espera',
+        body: 'Un movimiento puede terminar varias líneas: solo anota la más larga; el resto espera. Toca un punto de una línea en espera para reclamar sus puntos. Cualquiera de los dos jugadores puede llevárselos.',
+      },
+      triThreeWays: {
+        title: 'Triángulo: 3 direcciones',
+        body: 'Las líneas van en horizontal y a lo largo de ambas diagonales.',
+      },
+      sqFourWays: {
+        title: 'Cuadrado: 4 direcciones',
+        body: 'Las líneas van en horizontal, en vertical y a lo largo de ambas diagonales.',
+      },
+    } as Record<string, { title: string; body: string }>,
   },
 };

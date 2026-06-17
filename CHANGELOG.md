@@ -3,6 +3,24 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.11.0] - 2026-06-17
+
+### Added
+
+- **“How to play” tutorial** — a carousel of looping scenes that drive the REAL
+  engine (`applyMove`/`applyClaim`) through scripted moves, so the tutorial can
+  never drift from the game. Scenes: place a dot, corner = 1pt, complete a line,
+  biggest-only + claim several pending, Triangle 3 directions, Square 4
+  directions (`src/components/howto/sceneBuilders.ts`, `HowToPlayPopover.tsx`).
+  Carousel honours `prefers-reduced-motion` (freezes on the completed frame),
+  tap-to-pause, swipe + arrow nav, 24px dot tap targets. Opened from the footer
+  next to Rules. Captions localized in all 6 languages.
+
+### Changed
+
+- Colour-theme picker moved from the footer into **Settings → Appearance** to
+  make room for the “How to play” link (still reachable from the menu top-right).
+
 ## [0.4.10.1] - 2026-06-17
 
 ### Fixed

@@ -124,6 +124,7 @@ export const cs: Messages = {
   },
 
   footer: {
+    howToPlay: 'Jak hrát',
     rules: 'Pravidla',
     settings: 'Nastavení',
     privacy: 'Soukromí',
@@ -227,6 +228,9 @@ export const cs: Messages = {
       'Resetovat statistiky? Historie výher/remíz/proher všech hráčů na tomto zařízení bude vymazána.',
     renameNote:
       'Poznámka: přejmenováním sebe sama začneš nový řádek statistik. Historie starého jména zůstane uložena pod tímto jménem.',
+    appearanceH: 'Vzhled',
+    colourTheme: 'Barevné téma',
+    changeTheme: 'Změnit',
     done: 'Hotovo',
   },
 
@@ -938,5 +942,41 @@ export const cs: Messages = {
     hiddenAria: 'Skrytý úspěch',
     nodeTitle: (name: string, descOrHidden: string) => `${name} — ${descOrHidden}`,
     toastKicker: '🏆 Úspěch odemčen',
+  },
+
+  howto: {
+    aria: 'Jak hrát',
+    close: 'Zavřít',
+    title: 'Jak hrát',
+    tagline: 'Sleduj každý tah — deska ukáže přesně, co se děje.',
+    prev: 'Předchozí',
+    next: 'Další',
+    done: 'Rozumím',
+    scenes: {
+      place: {
+        title: 'Polož tečku',
+        body: 'Ve svém tahu klepni na libovolnou prázdnou tečku, abys ji vybarvil. Pak je na řadě soupeř.',
+      },
+      corner: {
+        title: 'Roh dá 1 bod',
+        body: 'Jediná rohová tečka se počítá jako linie z 1 — sama o sobě dá 1 bod.',
+      },
+      lineScored: {
+        title: 'Dokonči linii',
+        body: 'Vybarvi všechny tečky na rovné linii a získáš tolik bodů, kolik je její délka.',
+      },
+      claim: {
+        title: 'Zaber čekající linie',
+        body: 'Jeden tah může dokončit několik linií — boduje jen ta nejdelší, ostatní čekají (svítí). Klepni na tečku na čekající linii, abys zabral její body. Zabrat je může kterýkoli hráč.',
+      },
+      triThreeWays: {
+        title: 'Trojúhelník: 3 směry',
+        body: 'Linie vedou napříč a podél obou úhlopříček.',
+      },
+      sqFourWays: {
+        title: 'Čtverec: 4 směry',
+        body: 'Linie vedou napříč, dolů a podél obou úhlopříček.',
+      },
+    } as Record<string, { title: string; body: string }>,
   },
 };

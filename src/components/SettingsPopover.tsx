@@ -20,6 +20,8 @@ interface Props {
     challengePolicy?: ChallengePolicy;
     showPresence?: boolean;
   }) => void;
+  /** Opens the colour-theme picker (relocated here from the footer). */
+  onOpenThemes: () => void;
 }
 
 export function SettingsPopover({
@@ -31,6 +33,7 @@ export function SettingsPopover({
   challengePolicy,
   showPresence,
   onChangePrivacy,
+  onOpenThemes,
 }: Props) {
   const t = useT();
   const [local, setLocal] = useState<Settings>(settings);
@@ -131,6 +134,23 @@ export function SettingsPopover({
               />
               <span>{t.settings.swapColours}</span>
             </label>
+          </section>
+
+          <section className="settings-section">
+            <h3>{t.settings.appearanceH}</h3>
+            <div className="settings-theme-row">
+              <span>{t.settings.colourTheme}</span>
+              <button
+                type="button"
+                className="settings-theme-btn"
+                onClick={() => {
+                  done();
+                  onOpenThemes();
+                }}
+              >
+                {t.settings.changeTheme}
+              </button>
+            </div>
           </section>
 
           {onChangePrivacy && (

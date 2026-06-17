@@ -140,6 +140,7 @@ export const en = {
 
   // Persistent footer (also shown in-game).
   footer: {
+    howToPlay: 'How to play',
     rules: 'Rules',
     settings: 'Settings',
     privacy: 'Privacy',
@@ -245,6 +246,9 @@ export const en = {
     resetStatsConfirm: "Reset stats? Every player's W/D/L history on this device will be erased.",
     renameNote:
       "Note: renaming yourself starts a fresh stats row. Old name's history is kept under that old name.",
+    appearanceH: 'Appearance',
+    colourTheme: 'Colour theme',
+    changeTheme: 'Change',
     done: 'Done',
   },
 
@@ -827,6 +831,43 @@ export const en = {
     hiddenAria: 'Hidden achievement',
     nodeTitle: (name: string, descOrHidden: string) => `${name} — ${descOrHidden}`,
     toastKicker: '🏆 Achievement unlocked',
+  },
+
+  // "How to play" popover — looping animated scenes (carousel).
+  howto: {
+    aria: 'How to play',
+    close: 'Close',
+    title: 'How to play',
+    tagline: 'Watch each move — the board shows exactly what happens.',
+    prev: 'Previous',
+    next: 'Next',
+    done: 'Got it',
+    scenes: {
+      place: {
+        title: 'Place a dot',
+        body: 'On your turn, tap any empty dot to colour it. Then it’s your opponent’s turn.',
+      },
+      corner: {
+        title: 'A corner scores 1',
+        body: 'A single corner dot counts as a line of 1 — it scores 1 point on its own.',
+      },
+      lineScored: {
+        title: 'Complete a line',
+        body: 'Colour every dot on a straight line and it scores its length in points.',
+      },
+      claim: {
+        title: 'Claim waiting lines',
+        body: 'One move can finish several lines — only the longest scores, the rest wait (glowing). Tap a dot on a waiting line to claim its points. Either player can grab them.',
+      },
+      triThreeWays: {
+        title: 'Triangle: 3 directions',
+        body: 'Lines run across and along both diagonals.',
+      },
+      sqFourWays: {
+        title: 'Square: 4 directions',
+        body: 'Lines run across, down, and along both diagonals.',
+      },
+    } as Record<string, { title: string; body: string }>,
   },
 };
 

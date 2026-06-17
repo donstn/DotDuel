@@ -31,6 +31,7 @@ import { getFeatured, onAchievementsChange } from './achievements/store';
 import { ACHIEVEMENT_BY_ID } from './achievements/catalog';
 import { achTitle } from './achievements/localize';
 import { RulesPopover } from './components/RulesPopover';
+import { HowToPlayPopover } from './components/HowToPlayPopover';
 import { SettingsPopover } from './components/SettingsPopover';
 import { SidePanel } from './components/SidePanel';
 import { SignInPopover } from './auth/SignInPopover';
@@ -246,6 +247,7 @@ export default function App() {
     difficulty: Difficulty | null;
   }>({ shape: null, difficulty: null });
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [howToOpen, setHowToOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rankingsOpen, setRankingsOpen] = useState(false);
   const [rankingsView, setRankingsView] = useState<'global' | 'local'>('global');
@@ -2312,14 +2314,15 @@ export default function App() {
           </div>
         )}
         <AppFooter
+          onOpenHowTo={() => setHowToOpen(true)}
           onOpenRules={() => setRulesOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPrivacy={() => setPrivacyOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
-          onOpenThemes={() => setThemeOpen(true)}
           version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
+        {howToOpen && <HowToPlayPopover onClose={() => setHowToOpen(false)} />}
         {privacyOpen && (
           <PrivacyPopover
             onClose={() => setPrivacyOpen(false)}
@@ -2447,14 +2450,15 @@ export default function App() {
           <AdBanner placement="menu" />
         )}
         <AppFooter
+          onOpenHowTo={() => setHowToOpen(true)}
           onOpenRules={() => setRulesOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPrivacy={() => setPrivacyOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
-          onOpenThemes={() => setThemeOpen(true)}
           version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
+        {howToOpen && <HowToPlayPopover onClose={() => setHowToOpen(false)} />}
         {privacyOpen && (
           <PrivacyPopover
             onClose={() => setPrivacyOpen(false)}
@@ -2486,6 +2490,7 @@ export default function App() {
             onChange={updateSettings}
             onResetProgress={onProgressResetWiped}
             onClose={() => setSettingsOpen(false)}
+            onOpenThemes={() => setThemeOpen(true)}
             challengePolicy={user ? cloudProfile?.challengePolicy : undefined}
             showPresence={user ? cloudProfile?.showPresence ?? true : undefined}
             onChangePrivacy={
@@ -2851,14 +2856,15 @@ export default function App() {
         </div>
       )}
       <AppFooter
+        onOpenHowTo={() => setHowToOpen(true)}
         onOpenRules={() => setRulesOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenPrivacy={() => setPrivacyOpen(true)}
         onOpenChangelog={() => setChangelogOpen(true)}
-        onOpenThemes={() => setThemeOpen(true)}
         version={APP_VERSION}
       />
       {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
+      {howToOpen && <HowToPlayPopover onClose={() => setHowToOpen(false)} />}
       {privacyOpen && (
         <PrivacyPopover
           onClose={() => setPrivacyOpen(false)}
@@ -2890,6 +2896,7 @@ export default function App() {
           onChange={updateSettings}
           onResetProgress={onProgressResetWiped}
           onClose={() => setSettingsOpen(false)}
+          onOpenThemes={() => setThemeOpen(true)}
         />
       )}
       {signInOpen && <SignInPopover onClose={() => setSignInOpen(false)} />}

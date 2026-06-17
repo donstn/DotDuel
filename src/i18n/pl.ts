@@ -126,6 +126,7 @@ export const pl: Messages = {
   },
 
   footer: {
+    howToPlay: 'Jak grać',
     rules: 'Zasady',
     settings: 'Ustawienia',
     privacy: 'Prywatność',
@@ -229,6 +230,9 @@ export const pl: Messages = {
       'Zresetować statystyki? Historia wygranych/remisów/porażek wszystkich graczy na tym urządzeniu zostanie usunięta.',
     renameNote:
       'Uwaga: zmiana imienia rozpoczyna nowy wiersz statystyk. Historia starego imienia jest zachowywana pod tym imieniem.',
+    appearanceH: 'Wygląd',
+    colourTheme: 'Motyw kolorystyczny',
+    changeTheme: 'Zmień',
     done: 'Gotowe',
   },
 
@@ -940,5 +944,41 @@ export const pl: Messages = {
     hiddenAria: 'Ukryte osiągnięcie',
     nodeTitle: (name: string, descOrHidden: string) => `${name} — ${descOrHidden}`,
     toastKicker: '🏆 Osiągnięcie odblokowane',
+  },
+
+  howto: {
+    aria: 'Jak grać',
+    close: 'Zamknij',
+    title: 'Jak grać',
+    tagline: 'Obserwuj każdy ruch — plansza pokazuje dokładnie, co się dzieje.',
+    prev: 'Poprzedni',
+    next: 'Dalej',
+    done: 'Rozumiem',
+    scenes: {
+      place: {
+        title: 'Postaw kropkę',
+        body: 'W swojej turze dotknij dowolnej pustej kropki, aby ją pokolorować. Potem ruch ma przeciwnik.',
+      },
+      corner: {
+        title: 'Róg to 1 punkt',
+        body: 'Pojedyncza kropka w rogu liczy się jako linia z 1 kropki — daje 1 punkt.',
+      },
+      lineScored: {
+        title: 'Ukończ linię',
+        body: 'Pokoloruj wszystkie kropki na prostej linii, a zdobędziesz tyle punktów, ile wynosi jej długość.',
+      },
+      claim: {
+        title: 'Zajmuj czekające linie',
+        body: 'Jeden ruch może ukończyć kilka linii — punktuje tylko najdłuższa, reszta czeka (świecąc). Dotknij kropki na czekającej linii, aby zająć jej punkty. Może to zrobić każdy z graczy.',
+      },
+      triThreeWays: {
+        title: 'Trójkąt: 3 kierunki',
+        body: 'Linie biegną w poprzek oraz wzdłuż obu przekątnych.',
+      },
+      sqFourWays: {
+        title: 'Kwadrat: 4 kierunki',
+        body: 'Linie biegną w poprzek, w dół oraz wzdłuż obu przekątnych.',
+      },
+    } as Record<string, { title: string; body: string }>,
   },
 };

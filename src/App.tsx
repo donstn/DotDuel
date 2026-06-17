@@ -252,6 +252,10 @@ export default function App() {
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [achToasts, setAchToasts] = useState<string[]>([]);
   const achBackfilled = useRef(false);
+  // True once the cloud achievement set has been merged into local for the
+  // current signed-in user. Until then the stat-backfill must NOT toast, or a
+  // sign-in on a new device floods toasts for badges earned on other devices.
+  const [achCloudSynced, setAchCloudSynced] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
   // Login gate shown on first load while signed out, until the user signs in
   // or explicitly chooses to play anonymously (session-scoped).
@@ -684,6 +688,19 @@ export default function App() {
       }
     }
     if (config.mode === 'ai' || config.mode === 'hotseat') {
+      // Did the local player (P1 — the human in vs-AI; P1 in hot-seat) score a
+      // 1-point corner line, and how long was their biggest line this game?
+      // Drives the corner / biggest-line / line-8 achievements (these were never
+      // being fed, so those badges could never unlock).
+      const lineLen = new Map(getBoard(config.shape).lines.map((l) => [l.id, l.length]));
+      let maxLine = 0;
+      let scoredCorner = false;
+      for (const c of state.completed) {
+        if (c.player !== 1) continue;
+        const len = lineLen.get(c.lineId) ?? 0;
+        if (len > maxLine) maxLine = len;
+        if (len === 1) scoredCorner = true;
+      }
       fireAch(
         recordLocalGame(
           {
@@ -694,6 +711,8 @@ export default function App() {
             draw: winnerSide === 'draw' || winnerSide === null,
             myScore: s1,
             oppScore: s2,
+            maxLine,
+            scoredCorner,
           },
           achEnv(),
         ),
@@ -944,16 +963,33 @@ export default function App() {
     // Wait for the cloud profile (rating/streak) to settle for signed-in users,
     // so the profile arriving doesn't toast already-earned Elo/streak badges.
     if (user && !cloudProfileLoaded) return;
+    // Also wait for the cloud achievement set to be merged in (below), so the
+    // first silent backfill absorbs badges earned on OTHER devices instead of
+    // toasting them on this one.
+    if (sbUser && !achCloudSynced) return;
     const fresh = evaluateAchievements(achEnv());
     if (achBackfilled.current) fireAch(fresh);
     else achBackfilled.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, cloudProfileLoaded, cloudProfile?.rating, cloudProfile?.streak?.current, progress]);
+  }, [user, cloudProfileLoaded, achCloudSynced, cloudProfile?.rating, cloudProfile?.streak?.current, progress]);
 
-  // On sign-in: union cloud achievements into local (silent — earned elsewhere).
+  // On sign-in: union cloud achievements into local (silent — earned elsewhere),
+  // THEN open the toast gate. Re-backfill silently for the new account so its
+  // already-earned badges don't toast.
   useEffect(() => {
-    if (!sbUser) return;
-    void syncAchievementsOnSignIn();
+    if (!sbUser) {
+      setAchCloudSynced(false);
+      return;
+    }
+    setAchCloudSynced(false);
+    achBackfilled.current = false;
+    let alive = true;
+    void syncAchievementsOnSignIn().finally(() => {
+      if (alive) setAchCloudSynced(true);
+    });
+    return () => {
+      alive = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sbUser?.uid]);
 

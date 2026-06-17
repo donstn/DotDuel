@@ -2122,14 +2122,22 @@ button {
   z-index: 9999;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 9px 16px 9px 10px;
-  border-radius: 16px;
-  background: var(--glass-bg-strong);
+  gap: 14px;
+  padding: 14px 22px 14px 14px;
+  border-radius: 18px;
+  /* Stack the glass tint several times + a heavy blur so the toast reads as a
+     solid surface over board/menu text behind it (previously a single
+     translucent layer with no blur, so underlying text bled through). */
+  background:
+    linear-gradient(var(--glass-bg-strong), var(--glass-bg-strong)),
+    linear-gradient(var(--glass-bg-strong), var(--glass-bg-strong)),
+    linear-gradient(var(--glass-bg-strong), var(--glass-bg-strong));
+  backdrop-filter: blur(22px) saturate(1.5);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
   border: 1px solid var(--accent);
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.6);
   cursor: pointer;
-  max-width: min(92vw, 360px);
+  max-width: min(94vw, 420px);
   animation: ach-toast-in 340ms cubic-bezier(0.2, 0.9, 0.3, 1.25);
 }
 @keyframes ach-toast-in {
@@ -2145,10 +2153,10 @@ button {
 .ach-toast-body {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 3px;
 }
 .ach-toast-kicker {
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--accent);
@@ -2156,7 +2164,8 @@ button {
 }
 .ach-toast-body strong {
   color: var(--text-bright);
-  font-size: 0.95rem;
+  font-size: 1.1rem;
+  line-height: 1.2;
 }
 
 /* Featured-badge pin button (achievements detail) */
@@ -4446,7 +4455,14 @@ h1, h2, h3,
   padding: 6px;
   gap: 2px;
   border-radius: 12px;
-  background: var(--glass-bg-strong);
+  /* Stacked glass tint + blur so the dropdown is opaque and readable over the
+     menu text behind it (was a single translucent layer with no blur). */
+  background:
+    linear-gradient(var(--glass-bg-strong), var(--glass-bg-strong)),
+    linear-gradient(var(--glass-bg-strong), var(--glass-bg-strong)),
+    linear-gradient(var(--glass-bg-strong), var(--glass-bg-strong));
+  backdrop-filter: blur(22px) saturate(1.5);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
   border: 1px solid var(--glass-border-strong);
   box-shadow: var(--glass-shadow-strong);
   z-index: 20;

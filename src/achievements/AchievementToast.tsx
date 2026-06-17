@@ -32,7 +32,7 @@ export function AchievementToast({
   if (!def) return null;
   return (
     <div className="ach-toast" role="status" aria-live="polite" onClick={onDismiss}>
-      <AchievementBadge icon={def.icon} tier={def.tier} earned size={46} />
+      <AchievementBadge icon={def.icon} tier={def.tier} earned size={56} />
       <div className="ach-toast-body">
         <span className="ach-toast-kicker">{t.achievements.toastKicker}</span>
         <strong>{achTitle(def.id, t)}</strong>

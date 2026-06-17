@@ -30,6 +30,25 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.10.1',
+    date: '2026-06-17',
+    highlight: 'Fixes',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Achievement-unlock pop-ups and the language menu are now solid and easy to read (they used to be see-through, so text behind showed through). The achievement pop-up is also bigger.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Signing in on a new device no longer pops up every achievement you had already earned.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The “Cornered” achievement (score a 1-point corner line) now unlocks — it wasn’t being tracked before.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.10.0',
     date: '2026-06-17',
     highlight: 'Fully translated',

@@ -3,6 +3,20 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.10.1] - 2026-06-17
+
+### Fixed
+
+- Achievement-unlock toast and the language popover are now opaque + blurred
+  (stacked glass tint + `backdrop-filter`) instead of see-through over content;
+  toast enlarged (padding/font/badge).
+- Sign-in on a new device no longer floods achievement toasts for badges earned
+  elsewhere: the stat-backfill now waits on `syncAchievementsOnSignIn` (gated by
+  `achCloudSynced`) so the first pass silently absorbs the cloud set.
+- `corner` / `biggest-line` / `line-8` achievements now actually unlock — the
+  GameOver handler never passed `scoredCorner`/`maxLine` to `recordLocalGame`;
+  now computed from P1's `state.completed` lines via board geometry.
+
 ## [0.4.10.0] - 2026-06-17
 
 ### Changed

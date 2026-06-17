@@ -108,52 +108,51 @@ function cornerDots(shape: ShapeId): Set<number> {
   return s;
 }
 
+const other = (p: Player): Player => (p === 1 ? 2 : 1);
+
 /**
- * Build one line and score it. Corner dots on the line (which are themselves
- * 1-point lines) are pre-filled silently so they don't fire stray +1s; the rest
- * animate in, and the final placement scores ONLY the target line.
+ * Build one line and score it. Players ALTERNATE (so the line is two-coloured,
+ * not one) — teaching that whoever places the LAST dot scores the whole line,
+ * not whoever owns the most dots. Corner dots on the line (themselves 1-point
+ * lines) are pre-filled silently so they don't fire stray +1s.
  */
-function playLine(rec: Rec, shape: ShapeId, lineId: string, by: Player) {
+function playLine(rec: Rec, shape: ShapeId, lineId: string, startBy: Player = 1) {
   const corners = cornerDots(shape);
-  const dots = lineDots(shape, lineId);
+  // Skip dots already on the board (shared with a previously-drawn line) so we
+  // can accumulate several lines without re-placing — the line still scores its
+  // full geometric length when its last NEW dot lands.
+  const dots = lineDots(shape, lineId).filter((d) => !rec.state.colored[d]);
   const pre = dots.filter((d) => corners.has(d));
   const seq = dots.filter((d) => !corners.has(d));
-  if (pre.length) rec.prefill(pre, by);
-  seq.forEach((id, i) =>
-    rec.place(id, by, i === seq.length - 1 ? HOLD_SCORE : HOLD_STEP),
-  );
+  if (pre.length) rec.prefill(pre, 2);
+  seq.forEach((id, i) => {
+    const by: Player = i % 2 === 0 ? startBy : other(startBy);
+    rec.place(id, by, i === seq.length - 1 ? HOLD_SCORE : HOLD_STEP);
+  });
 }
 
-/** Score one full line on a fresh board. */
-function buildScoreLine(shape: ShapeId, lineId: string, by: Player): Rec {
+/** Score one full line on a fresh board (players alternate). */
+function buildScoreLine(shape: ShapeId, lineId: string, startBy: Player = 1): Rec {
   const rec = new Rec(shape);
   rec.hold(HOLD_EMPTY);
-  playLine(rec, shape, lineId, by);
+  playLine(rec, shape, lineId, startBy);
   rec.hold(HOLD_END);
   return rec;
 }
 
 // ---- scenes ----
 
-/** Place a dot — the absolute basics. */
-function scenePlaceDot(): Scene {
-  const shape: ShapeId = 'triangle';
-  const rec = new Rec(shape);
-  rec.hold(HOLD_EMPTY);
-  rec.place(dotId(shape, 2, 1), 1, 900);
-  rec.place(dotId(shape, 3, 2), 2, 900);
-  rec.place(dotId(shape, 1, 0), 1, 900);
-  rec.hold(HOLD_END);
-  return { id: 'place', shape, frames: rec.frames };
-}
-
-/** A single corner dot is a 1-point line. */
+/**
+ * A single corner dot is a 1-point line. Corners are usually grabbed first, so
+ * this leads the tutorial: place a dot, and the corner scores 1 immediately.
+ */
 function sceneCorner(): Scene {
   const shape: ShapeId = 'triangle';
   const rec = new Rec(shape);
-  // a little neutral context so it doesn't read as an empty board
-  rec.prefill([dotId(shape, 0, 3), dotId(shape, 1, 2), dotId(shape, 2, 3)], 2);
   rec.hold(HOLD_EMPTY);
+  // a couple of opponent dots first → shows it's a two-player game
+  rec.place(dotId(shape, 1, 2), 2, 850);
+  rec.place(dotId(shape, 2, 3), 1, 850);
   // the apex is its own 1-dot horizontal line → scores 1 when placed
   rec.place(dotId(shape, 7, 0), 1, HOLD_SCORE);
   rec.hold(HOLD_END);
@@ -196,13 +195,13 @@ function sceneClaim(): Scene {
 function sceneTriThreeWays(): Scene {
   const shape: ShapeId = 'triangle';
   const rec = new Rec(shape);
+  // Accumulate all three lines on ONE board so the score visibly climbs and the
+  // final frame shows every direction at once (also the reduced-motion view).
   const ways: string[] = ['h:r3', 'd1:c2', 'd2:s4'];
+  rec.hold(HOLD_EMPTY);
   ways.forEach((lid, wi) => {
-    // Reset to empty BEFORE each way (not after) so the final frame keeps the
-    // last completed line on screen — used as the reduced-motion static view.
-    if (wi > 0) rec.state = createGame(shape, 'hotseat');
-    rec.hold(wi === 0 ? HOLD_EMPTY : 500);
-    playLine(rec, shape, lid, 1);
+    if (wi > 0) rec.hold(500);
+    playLine(rec, shape, lid, ((wi % 2) + 1) as Player);
     rec.hold(700);
   });
   rec.hold(HOLD_END);
@@ -213,11 +212,13 @@ function sceneTriThreeWays(): Scene {
 function sceneSqFourWays(): Scene {
   const shape: ShapeId = 'square';
   const rec = new Rec(shape);
+  // Accumulate all four lines (they cross at the centre) so the score climbs and
+  // the final frame is a four-pointed star of completed lines.
   const ways: string[] = ['h:r3', 'v:c3', 'd1:d0', 'd2:s6'];
+  rec.hold(HOLD_EMPTY);
   ways.forEach((lid, wi) => {
-    if (wi > 0) rec.state = createGame(shape, 'hotseat');
-    rec.hold(wi === 0 ? HOLD_EMPTY : 450);
-    playLine(rec, shape, lid, 1);
+    if (wi > 0) rec.hold(450);
+    playLine(rec, shape, lid, ((wi % 2) + 1) as Player);
     rec.hold(650);
   });
   rec.hold(HOLD_END);
@@ -229,7 +230,6 @@ let _scenes: Scene[] | null = null;
 export function getScenes(): Scene[] {
   if (!_scenes) {
     _scenes = [
-      scenePlaceDot(),
       sceneCorner(),
       sceneLineScored(),
       sceneClaim(),

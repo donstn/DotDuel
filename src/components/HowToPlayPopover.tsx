@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Board } from './Board';
 import { getScenes, type Scene } from './howto/sceneBuilders';
+import type { Player } from '../types';
 import { useT } from '../i18n';
 
 function usePrefersReducedMotion(): boolean {
@@ -17,24 +18,17 @@ function usePrefersReducedMotion(): boolean {
 }
 
 /**
- * Loops one scene's frames on their per-frame hold durations. Honours
- * prefers-reduced-motion (freezes on the most-complete frame, no JS loop) and a
- * paused flag (tap to freeze on the current frame).
+ * Current frame of a looping scene. Honours prefers-reduced-motion (freezes on
+ * the most-complete frame, no JS loop) and a paused flag (freeze on the current
+ * frame). Resets to the first frame when the scene changes.
  */
-function ScenePlayer({
-  scene,
-  paused,
-  reduced,
-}: {
-  scene: Scene;
-  paused: boolean;
-  reduced: boolean;
-}) {
+function useSceneFrame(scene: Scene, paused: boolean, reduced: boolean) {
   const [i, setI] = useState(0);
-
-  useEffect(() => {
-    setI(0);
-  }, [scene.id]);
+  const prevId = useRef(scene.id);
+  if (prevId.current !== scene.id) {
+    prevId.current = scene.id;
+    setI(0); // reset during render on scene change (no flicker)
+  }
 
   useEffect(() => {
     if (paused || reduced) return;
@@ -46,17 +40,29 @@ function ScenePlayer({
     return () => window.clearTimeout(timer);
   }, [i, scene, paused, reduced]);
 
-  // Reduced motion → show the last frame (the fully-played board); it teaches
-  // far more than an empty frame 0.
   const shown = reduced ? scene.frames.length - 1 : Math.min(i, scene.frames.length - 1);
-  const frame = scene.frames[shown];
+  return scene.frames[shown];
+}
+
+function ScoreBoard({ scores, t }: { scores: Record<Player, number>; t: ReturnType<typeof useT> }) {
   return (
-    <Board
-      state={frame.state}
-      disabled
-      lastDot={frame.lastDot}
-      scoreEvent={paused || reduced ? null : frame.score}
-    />
+    <div
+      className="howto-score"
+      role="img"
+      aria-label={`${t.matchFound.playerN(1)} ${scores[1]}, ${t.matchFound.playerN(2)} ${scores[2]}`}
+    >
+      <span className="howto-score-side howto-score-p1">
+        <span className="howto-score-dot" aria-hidden="true" />
+        <span className="howto-score-num">{scores[1]}</span>
+      </span>
+      <span className="howto-score-sep" aria-hidden="true">
+        –
+      </span>
+      <span className="howto-score-side howto-score-p2">
+        <span className="howto-score-num">{scores[2]}</span>
+        <span className="howto-score-dot" aria-hidden="true" />
+      </span>
+    </div>
   );
 }
 
@@ -69,6 +75,8 @@ export function HowToPlayPopover({ onClose }: { onClose: () => void }) {
   const scene = scenes[idx];
   const swipeX = useRef<number | null>(null);
   const swiped = useRef(false);
+
+  const frame = useSceneFrame(scene, paused, reduced);
 
   const go = (delta: number) =>
     setIdx((p) => (p + delta + scenes.length) % scenes.length);
@@ -112,6 +120,8 @@ export function HowToPlayPopover({ onClose }: { onClose: () => void }) {
         </header>
 
         <div className="howto-body">
+          <ScoreBoard scores={frame.state.scores} t={t} />
+
           <div
             className="howto-stage"
             onPointerDown={(e) => {
@@ -148,9 +158,13 @@ export function HowToPlayPopover({ onClose }: { onClose: () => void }) {
                 if (!reduced) setPaused((p) => !p);
               }}
               aria-label={`${cap.title}. ${cap.body}`}
-              title={paused ? t.howto.next : undefined}
             >
-              <ScenePlayer scene={scene} paused={paused} reduced={reduced} />
+              <Board
+                state={frame.state}
+                disabled
+                lastDot={frame.lastDot}
+                scoreEvent={paused || reduced ? null : frame.score}
+              />
             </button>
             <button
               type="button"

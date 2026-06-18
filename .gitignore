@@ -156,6 +156,7 @@ vite.config.ts.timestamp-*
 # Local synthesised review reports (kept local, not shipped)
 final_review_age_based_before_pushing.txt
 monetization_plan.md
+android_internal_testing_results.md
 supabase/functions/_shared/engine/
 
 # Session scratchpad — current prompt + live findings, survives restarts.

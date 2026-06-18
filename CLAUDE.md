@@ -5,6 +5,7 @@ Two-player dot-coloring strategy game. Players alternate coloring dots on a geom
 - **Production: https://www.dotduel.com** (GH Pages, auto-deployed from `main` via `.github/workflows/deploy.yml`, Vite `base: '/'`). Also ships as a **Capacitor Android app** (Play Store submission in progress — see `PLAY_STORE_GUIDE.md`).
 - Version: `src/version.ts` (`APP_VERSION`), in lock-step with `src/changelog.ts` (in-app modal) and `CHANGELOG.md`.
 - **Check `bugs.md` first** when a familiar symptom recurs — diagnoses are recorded there.
+- **Internal-testing UI bugs to fix in the next review pass are in `android_internal_testing_results.md`** (git-ignored, local). As of 2026-06-17: language selector overlaps the logo (move top-left), player cards not symmetric (shared `SidePanel`), and hot-seat/Settings colour swatches + "swap colours" label hardcoded to cream/green instead of theme `--p1`/`--p2`. All three also affect the web game — batch-fix together, don't fix piecemeal.
 
 ## Tech stack
 

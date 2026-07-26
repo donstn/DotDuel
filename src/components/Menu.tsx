@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AppUser } from '../auth/AppUser';
 import { availableDifficulties, isUnlocked } from '../storage';
 import type { Settings } from '../storage';
@@ -64,6 +64,13 @@ interface Props {
   myDailyAttempt?: MyDailyAttempt | null;
   // 2b-v2: open the public puzzle leaderboard popover.
   onOpenPuzzleLeaderboard?: () => void;
+  // In-app back navigation (hardware/browser back button — see App.tsx's
+  // performInAppBack): App increments backSignal to ask the menu to pop one
+  // level of its own category/mode/shape drill-down; the menu reports back
+  // whether it CAN do that via onDepthChange, so App knows when the menu is
+  // at its true root (nothing left to pop → the back press should exit/leave).
+  backSignal?: number;
+  onDepthChange?: (canGoBack: boolean) => void;
 }
 
 /** Top-level grouping of the home menu (0.4.7 redesign). */
@@ -117,6 +124,8 @@ export function Menu({
   onStartDailyPuzzle,
   myDailyAttempt = null,
   onOpenPuzzleLeaderboard,
+  backSignal,
+  onDepthChange,
 }: Props) {
   const [mode, setMode] = useState<GameMode | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
@@ -125,6 +134,21 @@ export function Menu({
   const t = useT();
   const { lang, setLang } = useLang();
   const [langOpen, setLangOpen] = useState(false);
+
+  useEffect(() => {
+    onDepthChange?.(category !== null || mode !== null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, mode, shape, aiDifficulty]);
+
+  const prevBackSignal = useRef(backSignal);
+  useEffect(() => {
+    if (backSignal === undefined || prevBackSignal.current === backSignal) return;
+    prevBackSignal.current = backSignal;
+    if (aiDifficulty !== null) setAiDifficulty(null);
+    else if (shape !== null) setShape(null);
+    else if (mode !== null) setMode(null);
+    else if (category !== null) setCategory(null);
+  }, [backSignal, aiDifficulty, shape, mode, category]);
 
   // ---- Daily-puzzle shelf card (3-state, sign-in gated) ----
   const dailyCard = () => {
@@ -222,7 +246,7 @@ export function Menu({
         {langOpen && (
           <div className="menu-lang-backdrop" onClick={() => setLangOpen(false)} />
         )}
-        <div className="menu-topright">
+        <div className="menu-topleft">
           <div className="menu-lang">
             <button
               type="button"
@@ -263,6 +287,8 @@ export function Menu({
               </div>
             )}
           </div>
+        </div>
+        <div className="menu-topright">
           <button
             type="button"
             className="menu-theme-btn"

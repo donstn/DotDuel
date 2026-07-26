@@ -132,7 +132,7 @@ export const en = {
     player1First: 'Player 1 — plays first',
     player2: 'Player 2',
     signedInAs: (name: string) => `Signed in as ${name}. Change in Profile.`,
-    swapColours: 'Swap colours (Player 1 cream · Player 2 green)',
+    swapColours: 'Swap colours (Player 1 ↔ Player 2)',
     startGame: 'Start game',
     player1Placeholder: 'Player 1',
     player2Placeholder: 'Player 2',
@@ -171,6 +171,11 @@ export const en = {
     // Online-ranked resign confirm.
     resignRankedTitle: 'Resign this ranked game?',
     resignRankedBody: 'It counts as a loss on your rated record.',
+    // Daily-puzzle back-out confirm — leaving mid-attempt forfeits it.
+    dailyForfeitTitle: 'Leave this puzzle attempt?',
+    dailyForfeitBody: (remaining: number, max: number) =>
+      `This will use 1 of your ${max} daily tries — ${remaining} remaining after this.`,
+    dailyForfeitConfirm: 'Leave',
     thinking: 'Thinking',
     bot: 'BOT',
     aiOpponent: 'AI opponent',
@@ -231,7 +236,7 @@ export const en = {
     yourNameHint: 'Used in Vs-AI mode AND as Player 1 in Hot-seat.',
     hotseatOpponent: 'Hot-seat opponent',
     player2Name: 'Player 2 name',
-    swapColours: 'Swap colours (Player 1 cream · Player 2 green)',
+    swapColours: 'Swap colours (Player 1 ↔ Player 2)',
     privacyH: 'Privacy',
     whoCanChallenge: 'Who can challenge me to a game?',
     everyone: 'Everyone',

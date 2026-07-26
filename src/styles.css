@@ -1101,19 +1101,19 @@ button {
 }
 
 .dot-swatch-p1[data-swap='0'] {
-  background: radial-gradient(circle at 35% 28%, #62cf90, #0d4a23 60%, #02160a);
+  background: radial-gradient(circle at 35% 28%, var(--p1-glow), var(--p1) 60%, var(--p1-deep));
 }
 
 .dot-swatch-p1[data-swap='1'] {
-  background: radial-gradient(circle at 35% 28%, #ffffff, #d3ecaa 55%, #7a9560);
+  background: radial-gradient(circle at 35% 28%, var(--p2-bright), var(--p2) 55%, var(--p2-deep));
 }
 
 .dot-swatch-p2[data-swap='0'] {
-  background: radial-gradient(circle at 35% 28%, #ffffff, #d3ecaa 55%, #7a9560);
+  background: radial-gradient(circle at 35% 28%, var(--p2-bright), var(--p2) 55%, var(--p2-deep));
 }
 
 .dot-swatch-p2[data-swap='1'] {
-  background: radial-gradient(circle at 35% 28%, #62cf90, #0d4a23 60%, #02160a);
+  background: radial-gradient(circle at 35% 28%, var(--p1-glow), var(--p1) 60%, var(--p1-deep));
 }
 
 .hotseat-start {
@@ -4355,6 +4355,18 @@ h1, h2, h3,
     /* Scale fluidly: tiny on small phones, larger on tablets. */
     width: clamp(32px, 10vw, 50px);
     flex-shrink: 0;
+    order: 1;
+  }
+
+  .player-below-avatar {
+    width: auto;
+    margin: 0;
+    flex-shrink: 0;
+    order: 2;
+  }
+
+  .player-name-row {
+    order: 3;
   }
 
   .player-name {
@@ -4369,18 +4381,22 @@ h1, h2, h3,
     padding: 0;
   }
 
-  .player-below-avatar {
-    width: auto;
-    margin: 0;
-    flex-shrink: 0;
-  }
-
   .btn-resign-inline {
     padding: 3px 9px;
     font-size: 0.75rem;
   }
 
+  .player-rating {
+    order: 4;
+    font-size: 0.75rem;
+    padding: 0;
+    margin-top: 1px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
   .player-score {
+    order: 5;
     font-size: 1.8rem;
     margin: 0 0 0 auto;
     line-height: 1;
@@ -4395,18 +4411,6 @@ h1, h2, h3,
     display: none;
   }
 
-  /* Show the rating slot on mobile so the MP clock is visible.
-     SidePanel only renders this div when there's actual content
-     (ratingSlot or rating prop), so in vs-AI / hot-seat where the
-     rating prop is undefined the slot is absent entirely. */
-  .player-rating {
-    font-size: 0.75rem;
-    padding: 0;
-    margin-top: 1px;
-    color: var(--text-dim);
-    text-align: center;
-  }
-
   .thinking-dots {
     position: absolute;
     right: 6px;
@@ -4414,6 +4418,31 @@ h1, h2, h3,
     margin: 0;
     font-size: 0.85rem;
     pointer-events: none;
+  }
+
+  /* Mirror the right-hand card so the two panels are true mirror images
+     instead of both flowing left-to-right the same way: with a shared
+     visual order (avatar, elo, name, rating, score) and .player-score's
+     margin-left:auto pushing to the physical right, side-panel-left ends
+     up with its avatar on the outer edge and score on the inner edge
+     (next to the board) — but side-panel-right got the SAME layout, so
+     its avatar sat on the inner edge and score on the outer edge: the
+     reverse of a mirror. Flip the visual order here instead so
+     side-panel-right's avatar sits outer-right and its score sits
+     inner-left, matching side-panel-left's mirror image. */
+  .side-panel-right .avatar-frame { order: 5; margin-left: auto; margin-right: 0; }
+  .side-panel-right .player-below-avatar { order: 4; }
+  .side-panel-right .player-name-row { order: 3; }
+  .side-panel-right .player-rating { order: 2; }
+  .side-panel-right .player-score {
+    order: 1;
+    margin: 0;
+    text-align: left;
+    padding: 0 2px 0 0;
+  }
+  .side-panel-right .thinking-dots {
+    right: auto;
+    left: 6px;
   }
 }
 
@@ -4606,8 +4635,21 @@ h1, h2, h3,
   margin: 2px 0 22px;
 }
 
-/* Top-right theme toggle on the start menu */
-/* Top-right control cluster on the home menu: language picker + theme button. */
+/* Top-left language picker + top-right theme button on the start menu —
+   symmetric clusters flanking the logo so neither overlaps it. */
+.menu-topleft {
+  position: absolute;
+  top: clamp(10px, 2.4vh, 18px);
+  left: clamp(10px, 2.4vw, 18px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Must sit ABOVE .menu-lang-backdrop (z-index 9) so the popover options are
+     clickable — otherwise the full-screen click-catcher swallows the tap and
+     the language never changes. */
+  z-index: 12;
+}
+
 .menu-topright {
   position: absolute;
   top: clamp(10px, 2.4vh, 18px);
@@ -4615,9 +4657,6 @@ h1, h2, h3,
   display: flex;
   align-items: center;
   gap: 8px;
-  /* Must sit ABOVE .menu-lang-backdrop (z-index 9) so the popover options are
-     clickable — otherwise the full-screen click-catcher swallows the tap and
-     the language never changes. */
   z-index: 12;
 }
 
@@ -4656,7 +4695,7 @@ h1, h2, h3,
 .menu-lang-pop {
   position: absolute;
   top: calc(100% + 6px);
-  right: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
   min-width: 150px;

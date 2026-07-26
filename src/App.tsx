@@ -98,7 +98,7 @@ import {
   type MyDailyAttempt,
 } from './cloud/dailyLeaderboard';
 import { dateToUtcKey, fetchDailyPuzzleDef } from './dailyPuzzles';
-import { finalizeDailyPuzzle } from './cloud/dailyPuzzleResult';
+import { finalizeDailyPuzzle, MAX_ATTEMPTS_PER_DAY } from './cloud/dailyPuzzleResult';
 import { syncProfileName } from './cloud/supabaseProfile';
 import type { Friend, PendingRequest } from './cloud/friends';
 import {
@@ -306,6 +306,13 @@ export default function App() {
   const [incomingInvites, setIncomingInvites] = useState<Invite[]>([]);
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [sendInviteFor, setSendInviteFor] = useState<Friend | null>(null);
+
+  // In-app back navigation (hardware/browser back — see performInAppBack
+  // below). menuCanGoBack mirrors whether the Menu component has its own
+  // category/mode/shape drill-down open; menuBackSignal is incremented to
+  // ask Menu to pop one level of it.
+  const [menuCanGoBack, setMenuCanGoBack] = useState(false);
+  const [menuBackSignal, setMenuBackSignal] = useState(0);
 
   const { user, loading: authLoading, signOut } = useAuth();
   // Supabase identity (established by the dual-auth bridge). Migrated features
@@ -878,22 +885,19 @@ export default function App() {
   }, []);
 
   // Android hardware back button. Default Capacitor behavior exits the app
-  // from anywhere — including mid-game. Instead: an open dialog closes (every
-  // popover renders role="dialog" and already listens for Escape), the menu
-  // exits, and any other screen ignores it (in-app back arrows handle
-  // navigation; accidental exit mid-ranked-game is the failure mode we block).
-  const screenRef = useRef(screen);
-  screenRef.current = screen;
+  // from anywhere — including mid-game. Routes through performInAppBackRef
+  // (defined below, after the screen-specific back handlers it calls) so
+  // hardware back does exactly what the in-app '‹' buttons already do —
+  // close a dialog, resign-confirm out of a ranked/AI/daily game, leave a
+  // lobby/queue, or pop one level of the menu's own drill-down — and only
+  // exits the app once there's truly nothing left to back through.
   useEffect(() => {
     if (!isNativeApp()) return;
     let remove: (() => void) | null = null;
     void import('@capacitor/app').then(({ App: CapApp }) => {
       const sub = CapApp.addListener('backButton', () => {
-        if (document.querySelector('[role="dialog"]')) {
-          window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-          return;
-        }
-        if (screenRef.current === 'menu') void CapApp.exitApp();
+        const handled = performInAppBackRef.current();
+        if (!handled) void CapApp.exitApp();
       });
       remove = () => void sub.then((s) => s.remove());
     });
@@ -1508,6 +1512,104 @@ export default function App() {
     }
     setResignConfirmOpen(true);
   };
+
+  // Single source of truth for "what does back do right now" — shared by the
+  // Android hardware back button and the web history guard below, so both
+  // do exactly what the in-app '‹' buttons already do instead of exiting the
+  // app / leaving the site outright. Returns true once it has handled the
+  // press in-app (closed a dialog, opened a resign confirmation, popped a
+  // screen/menu level); returns false only once there's truly nothing left
+  // to back through, so the caller can exit the app / let the browser leave.
+  const performInAppBack = (): boolean => {
+    if (document.querySelector('[role="dialog"]')) {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      return true;
+    }
+    if (screen === 'mpgame') {
+      onMpBackPressed();
+      return true;
+    }
+    if (screen === 'matchFound') {
+      onLeaveMatch();
+      return true;
+    }
+    if (screen === 'matchmaking') {
+      onCancelMatch();
+      return true;
+    }
+    if (screen === 'lobby') {
+      onLeaveLobby();
+      return true;
+    }
+    if (screen === 'game') {
+      if (config?.mode === 'ai' || config?.mode === 'daily') onAiBackPressed();
+      else backToMenu();
+      return true;
+    }
+    // screen === 'menu': pop one level of the menu's own drill-down if it has one.
+    if (menuCanGoBack) {
+      setMenuBackSignal((n) => n + 1);
+      return true;
+    }
+    return false;
+  };
+  const performInAppBackRef = useRef(performInAppBack);
+  performInAppBackRef.current = performInAppBack;
+
+  // The named Popover components each wire their own Escape-key listener,
+  // but these two inline resign confirm-overlays didn't — which meant the
+  // Escape keydown performInAppBack dispatches above silently did nothing
+  // while one was open. Give them the same behaviour (back = cancel, never
+  // confirm, matching the "don't weaken ranked/daily protection" rule).
+  useEffect(() => {
+    if (!resignConfirmOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setResignConfirmOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [resignConfirmOpen]);
+
+  // Web back button/gesture: with no history entries of our own, pressing
+  // back jumps straight past the app to whatever page was previously in
+  // browser history (e.g. the referring page), skipping in-app navigation
+  // entirely. Push one synthetic history entry whenever there's something
+  // to back through in-app, and re-arm it after every popstate
+  // performInAppBack still handles, so back drains the in-app stack first —
+  // dialogs, then the current screen, then the menu's own drill-down — and
+  // only reaches the real previous page once it's genuinely at the root
+  // menu with nothing open. Native app: the hardware back button above
+  // covers this instead.
+  const anyPopoverOpen =
+    rulesOpen || howToOpen || settingsOpen || rankingsOpen || achievementsOpen ||
+    signInOpen || profileOpen || renameOpen || resignConfirmOpen || themeOpen ||
+    privacyOpen || changelogOpen || friendsOpen || puzzleLbOpen || !!sendInviteFor;
+  const hasInAppBackTarget = screen !== 'menu' || menuCanGoBack || anyPopoverOpen;
+  const wasAtAppRootRef = useRef(true);
+  useEffect(() => {
+    if (isNativeApp()) return;
+    if (hasInAppBackTarget && wasAtAppRootRef.current) {
+      window.history.pushState({ dotduelGuard: true }, '');
+      wasAtAppRootRef.current = false;
+    } else if (!hasInAppBackTarget) {
+      wasAtAppRootRef.current = true;
+    }
+  }, [hasInAppBackTarget]);
+
+  useEffect(() => {
+    if (isNativeApp()) return;
+    const onPopState = () => {
+      const handled = performInAppBackRef.current();
+      if (handled) {
+        window.history.pushState({ dotduelGuard: true }, '');
+        wasAtAppRootRef.current = false;
+      } else {
+        wasAtAppRootRef.current = true;
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   // Same-opponent rematch: flag this player as wanting one. The server's
   // rematchGame Cloud Function spawns a new game + pairing when BOTH sides
@@ -2440,6 +2542,8 @@ export default function App() {
           onStartDailyPuzzle={startDailyPuzzle}
           myDailyAttempt={myDailyAttempt}
           onOpenPuzzleLeaderboard={user ? () => setPuzzleLbOpen(true) : undefined}
+          backSignal={menuBackSignal}
+          onDepthChange={setMenuCanGoBack}
         />
       );
     }
@@ -2846,11 +2950,30 @@ export default function App() {
           onClick={() => setResignConfirmOpen(false)}
         >
           <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
-            <h3>{t.game.resignConfirmTitle}</h3>
-            <p>{t.game.resignConfirmBody}</p>
+            {config.mode === 'daily' ? (
+              <>
+                <h3>{t.game.dailyForfeitTitle}</h3>
+                <p>
+                  {t.game.dailyForfeitBody(
+                    Math.max(
+                      MAX_ATTEMPTS_PER_DAY - (myDailyAttempt?.attempts ?? 0) - 1,
+                      0,
+                    ),
+                    MAX_ATTEMPTS_PER_DAY,
+                  )}
+                </p>
+              </>
+            ) : (
+              <>
+                <h3>{t.game.resignConfirmTitle}</h3>
+                <p>{t.game.resignConfirmBody}</p>
+              </>
+            )}
             <div className="confirm-actions">
               <button onClick={() => setResignConfirmOpen(false)}>{t.common.cancel}</button>
-              <button className="danger" onClick={onConfirmResign}>{t.game.resign}</button>
+              <button className="danger" onClick={onConfirmResign}>
+                {config.mode === 'daily' ? t.game.dailyForfeitConfirm : t.game.resign}
+              </button>
             </div>
           </div>
         </div>

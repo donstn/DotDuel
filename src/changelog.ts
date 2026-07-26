@@ -30,6 +30,29 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.12.0',
+    date: '2026-07-26',
+    highlight: 'Polish pass',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Moved the language picker to the top-left so it no longer overlaps the logo (theme button stays top-right).',
+      },
+      {
+        kind: 'fixed',
+        text: 'The two player cards on phones now mirror each other properly instead of looking lopsided.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Hot-seat colour swatches and the “swap colours” setting now match your chosen theme instead of always showing cream/green.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The back button/gesture now steps back through menus and screens one at a time instead of leaving the app — ranked games and daily puzzle attempts still ask for confirmation first.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.11.0',
     date: '2026-06-17',
     highlight: 'How to play',

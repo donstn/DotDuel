@@ -171,3 +171,6 @@ visual_bug.png
 visual bug.jpeg
 visual_bug.*
 .claude/hooks/.last-response-uuid
+
+# Generated status reports (working notes, not shipped).
+.status-reports/

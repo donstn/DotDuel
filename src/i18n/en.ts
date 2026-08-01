@@ -154,6 +154,13 @@ export const en = {
   // In-game screen.
   game: {
     ptsLeft: 'PTS LEFT',
+    boardAriaLabel: (shape: string) => `${shape} game board`,
+    // Screen-reader-only aria-live turn/result announcements (Board.tsx).
+    liveDraw: (s1: number, s2: number) => `Game over. It's a draw, ${s1} to ${s2}.`,
+    liveWin: (winner: number, s1: number, s2: number) =>
+      `Game over. Player ${winner} wins, ${s1} to ${s2}.`,
+    liveTurn: (current: number, s1: number, s2: number) =>
+      `Player ${current} to move. Score: Player 1, ${s1}; Player 2, ${s2}.`,
     linesToClaim: (n: number): string => (n === 1 ? 'line to claim' : 'lines to claim'),
     pendingTitle: 'Lines waiting to be claimed — tap a coloured dot on one to claim it.',
     leaveMatch: 'Leave match',
@@ -290,6 +297,14 @@ export const en = {
     fixed: 'Fixed',
     done: 'Done',
     months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    // Per-version translated entry bodies, keyed by CHANGELOG[].version
+    // (src/changelog.ts — the English source of truth). `changes` must be
+    // the SAME LENGTH and ORDER as that version's `changes` array. English
+    // itself reads straight from changelog.ts, so this stays `{}` here;
+    // ChangelogPopover falls back to the English text for any version
+    // missing from a language's map (e.g. a brand-new entry not yet
+    // translated), so this never needs 1:1 parity to compile or ship.
+    entries: {} as Record<string, { highlight?: string; changes: string[] }>,
   },
 
   // Privacy Policy (GDPR). Legal text — review carefully before shipping.
@@ -665,7 +680,8 @@ export const en = {
     title: 'Multiplayer',
     intro: (rating: number) =>
       `Pick a time control. We'll match you against another player at a similar rating (yours: ${rating}).`,
-    lockedTitle: 'Locked while the player base grows — only Blitz is open for now to keep matchmaking fast.',
+    lockedTitle: (openLabel: string) =>
+      `Locked while the player base grows — only ${openLabel} is open for now to keep matchmaking fast.`,
     comingBackSoon: 'Coming back soon',
     board: 'Board:',
     unlockHint: (nextLabel: string, n: number) =>
@@ -704,6 +720,27 @@ export const en = {
     remaining: (time: string) => `${time} remaining`,
   },
 
+  // Shown on any mp-flow screen when the Supabase realtime server has been
+  // unreachable for >15s (App.tsx renderMpUnreachable).
+  mpUnavailable: {
+    heading: 'Multiplayer unavailable',
+    blockedHint:
+      'Your network is blocking the game server. The most common cause is an ad/tracker blocker (Whalebone, AdGuard, NextDNS, Pi-hole) or a DNS filter on your phone or router.',
+    tryLabel: 'Try:',
+    tryWifi: 'another Wi-Fi network or mobile data',
+    tryBrowser: 'another browser',
+    tryDisableFilters: 'disabling DNS filters / VPN for a moment',
+    tryWhitelist: (domain: string) => `whitelisting ${domain} in your blocker`,
+    offlineHint: 'Single-player vs the bots works offline — open Menu and pick Bots.',
+  },
+
+  // "Connecting to match…" transitional screen (App.tsx, screen === 'mpgame'
+  // before the online game/pairing data has arrived).
+  mpConnecting: {
+    heading: 'Connecting to match…',
+    hint: "Linking up with the game server. If this hangs for more than ~10 seconds, something's wrong — back out and try again.",
+  },
+
   // Share / invite-a-friend buttons (native share sheet + clipboard fallback)
   // + the result-share dialog (GameResultShareButton). Platform names (X,
   // WhatsApp, Telegram, Facebook) stay as-is (brands).
@@ -733,6 +770,60 @@ export const en = {
     hintNoCardLink:
       'Platform buttons share your text and link. To include the picture, use Copy image and paste it into your post.',
     downloadImage: '⬇ Download image',
+
+    // Generated victory-card share text/image (buildResultShare,
+    // victoryCard.ts) — the actual copy posted to social media / clipboard.
+    result: {
+      genericBot: 'Bot',
+      ptsLabel: 'pts',
+      scanCaption: 'Scan to play now!',
+      ctaWin: 'Can you beat me?',
+      ctaLoss: 'Think you can do better?',
+      ctaDraw: 'Break the tie?',
+
+      tagDaily: 'DAILY PUZZLE',
+      tagVsBot: (shape: string) => `VS BOT · ${shape.toUpperCase()}`,
+      tagRanked: (shape: string) => `RANKED · ${shape.toUpperCase()}`,
+      tagHotseat: (shape: string) => `HOT-SEAT · ${shape.toUpperCase()}`,
+
+      dailyHeadline: 'Today’s puzzle',
+      dailyCta: 'Can you beat it?',
+      dailyShareText: (score: number, url: string) =>
+        `I scored ${score} on today’s DotDuel puzzle — can you beat it?\n${url}`,
+
+      aiHeadlineWin: (level: string) => `${level} Bot — defeated`,
+      aiHeadlineLoss: (level: string) => `${level} Bot wins this one`,
+      aiHeadlineDraw: (level: string) => `Draw vs ${level} Bot`,
+      aiShareTextWin: (level: string, s1: number, s2: number, shape: string, url: string) =>
+        `I beat the ${level} Bot ${s1}–${s2} on the ${shape} board in DotDuel — can you?\n${url}`,
+      aiShareTextLoss: (level: string, s2: number, s1: number, url: string) =>
+        `The ${level} Bot got me ${s2}–${s1} in DotDuel. Think you can do better?\n${url}`,
+      aiShareTextDraw: (level: string, s1: number, s2: number, url: string) =>
+        `I drew the ${level} Bot ${s1}–${s2} in DotDuel. Can you finish the job?\n${url}`,
+
+      rankedHeadlineWin: (elo: string) => `Ranked win${elo}`,
+      rankedHeadlineLoss: 'Tough ranked match',
+      rankedHeadlineDraw: 'Ranked draw',
+      rankedShareTextWin: (myScore: number, oppScore: number, elo: string, url: string) =>
+        `I just won a ranked DotDuel match ${myScore}–${oppScore}${elo} — can you beat me?\n${url}`,
+      rankedShareTextLoss: (myScore: number, oppScore: number, url: string) =>
+        `Just played a ranked DotDuel match (${myScore}–${oppScore}). Up for a game?\n${url}`,
+      rankedShareTextDraw: (myScore: number, oppScore: number, url: string) =>
+        `Dead-even ranked DotDuel match (${myScore}–${oppScore}). Settle it for us?\n${url}`,
+
+      hotseatHeadlineWin: (winnerName: string) => `${winnerName} wins`,
+      hotseatHeadlineDraw: 'Dead even',
+      hotseatShareTextWin: (
+        winnerName: string,
+        loserName: string,
+        winnerScore: number,
+        loserScore: number,
+        url: string,
+      ) =>
+        `${winnerName} beat ${loserName} ${winnerScore}–${loserScore} in DotDuel. Think you can do better?\n${url}`,
+      hotseatShareTextDraw: (p1: string, p2: string, s1: number, s2: number, url: string) =>
+        `${p1} and ${p2} drew ${s1}–${s2} in DotDuel. Settle it for us?\n${url}`,
+    },
   },
 
   // Rankings popover (global Elo leaderboard + local profiles + head-to-head).

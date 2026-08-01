@@ -139,6 +139,12 @@ export const lt: Messages = {
 
   game: {
     ptsLeft: 'TAŠKŲ LIKO',
+    boardAriaLabel: (shape: string) => `${shape} žaidimo lenta`,
+    liveDraw: (s1: number, s2: number) => `Žaidimas baigtas. Lygiosios, ${s1} prieš ${s2}.`,
+    liveWin: (winner: number, s1: number, s2: number) =>
+      `Žaidimas baigtas. Laimėjo ${winner} žaidėjas, ${s1} prieš ${s2}.`,
+    liveTurn: (current: number, s1: number, s2: number) =>
+      `Eina ${current} žaidėjas. Rezultatas: 1 žaidėjas – ${s1}; 2 žaidėjas – ${s2}.`,
     linesToClaim: (n: number) => plural(n, 'paimtina linija', 'paimtinos linijos', 'paimtinų linijų'),
     pendingTitle: 'Linijos laukia paėmimo – bakstelėkite spalvotą vienos iš jų tašką, kad ją paimtumėte.',
     leaveMatch: 'Palikti žaidimą',
@@ -269,6 +275,416 @@ export const lt: Messages = {
     fixed: 'Pataisyta',
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
+    entries: {
+      'Alpha 0.4.12.2': {
+        highlight: 'Programėlė dabar dar geriau kalba jūsų kalba',
+        changes: [
+          'DI varžovo vardas, bendrinamas pergalės paveikslėlis / tekstas ir keli ryšio būsenos ekranai likdavo anglų kalba nepriklausomai nuo jūsų kalbos nustatymo — dabar išversta.',
+          'Visos ankstesnės naujienos šiame sąraše (iki pat pradžios) dabar prieinamos lietuvių, ispanų, portugalų, lenkų ir čekų kalbomis, ne tik anglų.',
+        ],
+      },
+      'Alpha 0.4.12.1': {
+        highlight: 'Pataisymas',
+        changes: [
+          'Pataisyta: telefonuose lenta nebešokinėja/nebesitraukia, kai rezultatas peršoka iš 2 į 3 skaitmenis.',
+        ],
+      },
+      'Alpha 0.4.12.0': {
+        highlight: 'Tobulinimai',
+        changes: [
+          'Kalbos pasirinkimas perkeltas į viršutinį kairįjį kampą, kad nebedengtų logotipo (temos mygtukas liko viršutiniame dešiniajame).',
+          'Dvi žaidėjų kortelės telefonuose dabar tinkamai veidrodinės, o ne atrodo asimetriškos.',
+          'Vietinio žaidimo spalvų pavyzdžiai ir nuostata „sukeisti spalvas“ dabar atitinka pasirinktą temą, o ne visada rodo kreminę/žalią.',
+          'Atgal mygtukas / gestas dabar žingsnis po žingsnio grąžina per meniu ir ekranus, o ne uždaro programėlę — reitinguojami žaidimai ir dienos galvosūkio bandymai vis tiek paprašys patvirtinimo.',
+        ],
+      },
+      'Alpha 0.4.11.0': {
+        highlight: 'Kaip žaisti',
+        changes: [
+          'Naujas vadovas „Kaip žaisti“ su animuotais pavyzdžiais tikroje lentoje — pamatykite, kaip kampas duoda 1 tašką, kaip užbaigiama linija, kaip kelios linijos laukia paėmimo, ir kaip linijos eina visomis kryptimis Trikampyje (3 kryptys) bei Kvadrate (4 kryptys). Atidarykite jį poraštėje, šalia Taisyklių; bakstelėkite lentą, kad sustabdytumėte, braukite arba naudokite rodykles naršymui.',
+          'Spalvų tema dabar renkama Nustatymuose (perkelta iš poraštės, kad atsirastų vietos „Kaip žaisti“).',
+        ],
+      },
+      'Alpha 0.4.10.1': {
+        highlight: 'Pataisymai',
+        changes: [
+          'Pasiekimo atrakinimo iššokantis pranešimas ir kalbos meniu dabar nepermatomi ir lengviau įskaitomi (anksčiau per juos prasišviesdavo fonas). Pasiekimo pranešimas taip pat padidintas.',
+          'Prisijungus naujame įrenginyje, nebebus rodomi jau anksčiau pelnyti pasiekimai.',
+          'Pasiekimas „Kampuotas“ (surinkti 1 tašką už kampinę liniją) dabar atrakinamas — anksčiau tai nebuvo sekama.',
+        ],
+      },
+      'Alpha 0.4.10.0': {
+        highlight: 'Pilnai išversta',
+        changes: [
+          'Visa programėlė dabar išversta, ne tik meniu. Jūsų profilis, draugai ir kvietimai, kelių žaidėjų laukiamasis ir rungtynių ekranai, žaidimo pabaigos ekranas, reitingai bei dienos galvosūkio lyderių lentelė, dalijimasis ir visi 97 pasiekimai (pavadinimai ir aprašymai) dabar rodomi anglų, lietuvių, ispanų, portugalų, lenkų ir čekų kalbomis.',
+        ],
+      },
+      'Alpha 0.4.9.0': {
+        highlight: 'Kalbos',
+        changes: [
+          '„DotDuel“ dabar kalba šešiomis kalbomis: anglų, lietuvių, ispanų, portugalų, lenkų ir čekų. Pasirinkite savąją kalbos mygtuku viršutiniame dešiniajame meniu kampe.',
+          'Žaidimas dabar automatiškai paleidžiamas jūsų kalba — internete pagal naršyklės nustatymus, o programėlėje pagal įrenginio kalbą.',
+        ],
+      },
+      'Alpha 0.4.8.0': {
+        highlight: 'Pasiekimai',
+        changes: [
+          'Pasiekimai! Žaisdami pelnykite iki 100 ženklelių — už botų įveikimą kiekvienoje figūroje ir lygyje, pergalių serijas, dienos galvosūkio bandymus, dienų serijas ir svarbius etapus. Raskite juos po Reitingai → Pasiekimai; kiekvienas ženklelis įsižiebia jūsų temos spalvomis, kai atrakinamas, o jį pelnius iškart pasirodo pranešimas „🏆 Pasiekimas atrakintas“.',
+          'Prisekite mėgstamą ženklelį, kad jis būtų rodomas šalia jūsų vardo žaidžiant.',
+        ],
+      },
+      'Alpha 0.4.7.0': {
+        highlight: 'Naujas meniu + Botai',
+        changes: [
+          'Pagrindinis meniu pertvarkytas į tris aiškias dalis — Vienas žaidėjas, Keli žaidėjai ir Reitingai — kiekviena atidaro tvarkingą sąrašą su savomis piktogramomis.',
+          'Kompiuterio varžovai visur dabar vadinami „Botais“, o ne „DI“.',
+          'Renkantis lentos figūrą ar boto lygį dabar rodoma atitinkama piktograma — lentos figūra ir kiekvieno boto savitas veidas pagal sudėtingumą.',
+          'Android programėlė dabar išlieka vertikalioje padėtyje, net pakreipus telefoną.',
+        ],
+      },
+      'Alpha 0.4.6.2': {
+        changes: [
+          'Perdaryta dalijimosi rezultato kortelė: didesnė lenta, rezultatas rodomas paprastai kaip Pergalė / Pralaimėjimas / Lygiosios, o QR kodas dabar žaidimo spalvų ir lentos viduryje su užrašu „Nuskaitykite ir žaiskite dabar!“.',
+        ],
+      },
+      'Alpha 0.4.6.0': {
+        changes: [
+          'Dalijimosi rezultato kortelėse dabar yra nuskaitomas QR kodas — draugai gali nukreipti kamerą (arba ilgai paspausti paveikslėlį), kad iškart patektų į žaidimą. Kvietimo nuorodose naudojamas privatus kvietimo kodas, o ne jūsų paskyros ID.',
+        ],
+      },
+      'Alpha 0.4.5.3': {
+        changes: [
+          'Dalijimosi kortelė perdaryta: lenta dabar sėdi ant tikro 3D veltinio stalo kaip žaidime, tekstas centruotas, o adresas DotDuel.com daug lengviau perskaitomas.',
+        ],
+      },
+      'Alpha 0.4.5.2': {
+        changes: [
+          'Dalijimosi kortelė dabar generuojama dvigubos raiškos — nebematyti pikselių atidarius paveikslėlį per visą ekraną „Messenger“ ar „WhatsApp“ programėlėje.',
+        ],
+      },
+      'Alpha 0.4.5.1': {
+        changes: [
+          'Dalijimosi kortelė: lenta dabar atrodo kaip tikrame žaidime (suvienodintas linijų storis; taškai nebepasimeta tankiose lentose), o rezultatas nebesidengia su žyme „tšk.“.',
+        ],
+      },
+      'Alpha 0.4.5.0': {
+        highlight: 'Greičiau telefonuose',
+        changes: [
+          'Lengvesni grafikos efektai žaidžiant — žaidimas veikia pastebimai sklandžiau pigesniuose telefonuose, o išvaizda nesikeičia.',
+          'Lyderių lentelė dabar rodo vietos rezervavimo eilutes kraunantis ir bandymo pakartoti mygtuką, jei nutrūksta ryšys.',
+          'Atnaujinta privatumo politika: pataisytas serverio teikėjas į Supabase, pridėti Android programėlės ir AdMob atskleidimai.',
+          'Android programėlė: atgal mygtukas dabar uždaro atvirus iššokančius langus, o ne uždaro žaidimą.',
+        ],
+      },
+      'Alpha 0.4.4.0': {
+        highlight: 'Dalinkitės rezultatu',
+        changes: [
+          'Naujas mygtukas „Dalintis rezultatu“ žaidimo pabaigos ekrane — jis sukuria jūsų baigtos lentos paveikslėlį su rezultatu ir leidžia juo dalintis bet kur, kartu su nuoroda, kuria draugai gali su jumis susižaisti.',
+        ],
+      },
+      'Alpha 0.4.3.0': {
+        highlight: 'Švaresnė lenta, didesnis tekstas',
+        changes: [
+          'Pašalinti žaidimo metu iššokantys patarimų debesėliai — jie mirgėdavo per greitai, kad būtų perskaitomi, ir tik trukdė. Taisyklių ekranas ir vaizdas „Rodyti nepaimtas linijas“ vis tiek moko taškų skaičiavimo.',
+          'Visas smulkus tekstas visoje programėlėje padidintas iki minimalaus įskaitomo dydžio geresniam matomumui ir prieinamumui.',
+        ],
+      },
+      'Alpha 0.4.2.0': {
+        highlight: 'Dienos galvosūkis atgimė — viena bendra lenta, lenktynės su laikrodžiu',
+        changes: [
+          'Dienos galvosūkis dabar visiems tas pats kiekvieną dieną: atsitiktinė figūra su iš anksto suformuota pradžia, tada 3 minutės laikrodžio sukaupti kuo didesniam rezultatui. Geriausias iš 3 bandymų.',
+          'Dienos reitingas dabar pagal jūsų rezultatą (o ne persvarą prieš DI), o lyderių lentelė rodo kiekvienos iš paskutinių 30 dienų nugalėtoją.',
+        ],
+      },
+      'Alpha 0.4.1.0': {
+        highlight: 'Spalvų temos perdažo visą lentą',
+        changes: [
+          'Spalvų temos dabar perdažo visą lentą — žaidimo paviršių, figūras, pergalės šventę ir mygtukus, atitinkančius jūsų pasirinktą paletę, o ne žalią lentą po bet kuria tema.',
+          'Internetiniuose žaidimuose, kas eina pirmas, dabar sprendžiama sąžiningu monetos metimu, o revanšuose pirmumas keičiasi paeiliui — tad per seriją kiekvienas gaunate pirmą ėjimą maždaug pusę laiko.',
+          'Kompiuterio varžovas eina greičiau, tad žaidimai prieš DI jaučiasi žvalesni.',
+          'Meniu, iššokantys langai ir žaidimo pabaigos ekranas atsidaro sklandžiau, su mažesniu vėlavimu.',
+          'Užrakintos figūros ir sudėtingumo lygiai dabar rodo aiškią spynelę, o ne atrodo pilki ar sugedę.',
+          'El. pašto ir slaptažodžio prisijungimo laukai dabar aiškiai matomi, o figūros geriau išsiskiria lentoje kiekvienoje temoje.',
+        ],
+      },
+      'Alpha 0.4.0.0': {
+        highlight: 'Serverio atnaujinimas + sklandesnis kelių žaidėjų režimas',
+        changes: [
+          'Kelių žaidėjų režimas perkeltas į naują, greitesnį serverį patikimesnėms rungtynėms.',
+          'Kelių žaidėjų laikrodžiai dabar sklandūs ir sąžiningi — jūsų laikrodis nebešokinėja ir nebeteka toliau po ėjimo.',
+          'Žaidimo kvietimai lieka ekrane, kol draugas atsako, ir juos galite priimti tiesiai iš rezultatų ekrano.',
+          'Dabar jus automatiškai galima rasti pagal vartotojo vardą, tad draugai gali jus pridėti be papildomų žingsnių.',
+        ],
+      },
+      'Alpha 0.3.7.0': {
+        highlight: 'Automatiškai atsinaujinanti programėlė + meniu slinkties pataisymas',
+        changes: [
+          'Programėlė dabar atsinaujina automatiškai — jei pridėjote „DotDuel“ prie pradžios ekrano, ji pati atsisiunčia naujas versijas, o ne užstringa ant senos podėlio versijos.',
+          'Telefonuose meniu dabar tinkamai slenka, tad apačioje esanti Reitingų kortelė visiškai matoma.',
+        ],
+      },
+      'Alpha 0.3.6.1': {
+        highlight: 'Lentos padėtis mobiliajame',
+        changes: [
+          'Mobiliojoje versijoje lenta dabar iš tiesų pasislenka arčiau žaidėjų kortelių (ankstesnis bandymas neveikė).',
+        ],
+      },
+      'Alpha 0.3.6.0': {
+        highlight: 'Prisijunkite, kad žaistumėte',
+        changes: [
+          'Pirmą kartą paleidus dabar rodomas ekranas „Prisijunkite, kad žaistumėte“ — prisijunkite dėl kelių žaidėjų režimo ir pažangos sinchronizavimo debesyje, arba pasirinkite „žaisti anonimiškai“, kad iškart pradėtumėte.',
+          'Telefonuose lenta dabar pakyla arčiau žaidėjų kortelių, o ne palieka didelį tarpą virš savęs.',
+        ],
+      },
+      'Alpha 0.3.5.0': {
+        highlight: 'Ankstesni galvosūkio nugalėtojai + tvarkingesni reitingai',
+        changes: [
+          'Galvosūkio lyderių lentelėje dabar yra skirtukas „Naujausi nugalėtojai“ — kas laimėjo kiekvieną iš paskutinių 30 dienų, su data šalia kiekvieno vardo.',
+          'Pasauliniame Elo reitinge dabar pirmiausia rodomas reitingas: vieta, Elo, tada žaidėjo vardas.',
+        ],
+      },
+      'Alpha 0.3.4.0': {
+        highlight: 'Pergalės šventė auga su sudėtingumu',
+        changes: [
+          'Jūsų pergalės šventė dabar auga su iššūkiu — nedidelis pliūpsnis už pergalę prieš Naujoką, vis didėjantis iki pilno auksinio šou už Neįmanomo įveikimą.',
+        ],
+      },
+      'Alpha 0.3.3.0': {
+        highlight: 'Švaresnė, tvarkingesnė lenta — pasiruošusi beta versijai',
+        changes: [
+          'Perdarytas lentos rėmas: veltinis dabar tolygiai apgaubtas lygiu, apvaliais kampais rėmeliu su subtiliu įdubusiu 3D efektu — ir jis tinkamai apgaubia kiekvieną figūrą, įskaitant trikampio smailų kampą (anksčiau kontūras atrodė netolygus).',
+          'Žaidimo žaidėjų kortelės dabar visiškai telpa ekrane kaip apvalūs stačiakampiai, o ne išsikiša už kraštų.',
+          'Pataisytas žaidimo patarimo iššokantis langas, kurio tekstas galėjo išsikišti už lentos ribų.',
+        ],
+      },
+      'Alpha 0.3.2.0': {
+        highlight: 'Prašmatnesnė išvaizda · pergalės šventės',
+        changes: [
+          'Vizualinis patobulinimas — mygtukai bei prieš DI / figūros / sudėtingumo kortelės dabar turi tikrą apčiuopiamą 3D gylį (jos pakyla užvedus pelę ir įsispaudžia paspaudus), o pagrindiniai mygtukai atitinka kiekvienos temos spalvą, o ne visada būna žali.',
+          'Pergalės šventės! Baigus žaidimą pergale, paleidžiami fejerverkai ir konfeti — su itin įspūdingu auksiniu šou už Neįmanomo DI įveikimą.',
+        ],
+      },
+      'Alpha 0.3.1.0': {
+        highlight: 'Tiesiai į žaidimą · aiškesnis pradžios ekrano paaiškinimas',
+        changes: [
+          'Pašalintas įžanginis mokomasis iššokantis langas — žaidimas dabar iškart atsidaro meniu. Kaip žaisti paaiškinta viena aiškia eilute pradžios ekrane, o pilnos taisyklės visada per vieną bakstelėjimą mygtuku „?“.',
+        ],
+      },
+      'Alpha 0.3.0.0': {
+        highlight: 'Reklama palaiko nemokamą žaidimą · apsauga nuo neatvykusio žaidėjo',
+        changes: [
+          'Nedidelė reklama dabar rodoma meniu ir nemokamuose vieno žaidėjo ekranuose (Prieš botą, Vietinis žaidimas, Dienos galvosūkis), kad „DotDuel“ išliktų nemokamas. Reitinguojamuose kelių žaidėjų žaidimuose reklamos nėra. Sutikimą tvarko Google privatumo langas.',
+          'Apsauga nuo neatvykusio žaidėjo kelių žaidėjų režime: jei žaidėjas nepadaro pirmo ėjimo per 10 sekundžių, žaidimas nutraukiamas be reitingo pokyčio abiem pusėms — tad atsijungimas ar išsiblaškymas pradžioje niekada nekainuoja.',
+        ],
+      },
+      'Alpha 0.2.9.0': {
+        highlight: 'Vizualinis atnaujinimas + įskaitoma kiekvienoje temoje',
+        changes: [
+          'Nauja išvaizda: nauja tipografija, rėminta lenta, atitinkanti kiekvieną figūrą (trikampis, rombas, kvadratas), ryškesnės figūros ir aiškesni rezultatai.',
+          'Žaidėjų skydeliai sklandžiai mažėja mažėjant ekranui — telefonuose jie susitraukia į kompaktišką kortelę su avataru šalia vardo, taip suteikiant lentai daugiau vietos.',
+          'Nustatymai, Taisyklės ir Privatumas sutvarkyti į švarias, lengviau peržvelgiamas korteles.',
+          'Tušti taškai dabar aiškiai matomi kiekvienoje temoje, o ne išnyksta lentos fone — ypač šviesiose temose.',
+          'Mygtukai, žaidimo pabaigos ekranas ir iššokantys langai nebesunkiai įskaitomi šviesiose temose („Monochrome Pro“, „Vintage Press“) — tekstas ir fonas dabar visur išlaiko tinkamą kontrastą.',
+        ],
+      },
+      'Alpha 0.2.8.0': {
+        highlight: 'Pilnas žaidimas klaviatūra',
+        changes: [
+          'Pilnas žaidimas klaviatūra: „Tab“ pereikite prie lentos, rodyklių klavišais judėkite tarp taškų, „Enter“ ar tarpo klavišu padėkite tašką arba pasiimkite liniją.',
+          'Reitinguojamos rungtynės dabar suranda boto varžovą per apie 15 sekundžių, kai nėra žmogaus, o ne per iki minutės.',
+        ],
+      },
+      'Alpha 0.2.7.2': {
+        highlight: 'Pataisymas: mirgėjimas / juodas ekranas žaidimo pabaigoje',
+        changes: [
+          'Dingo žaidimo vidurio–pabaigos mirgėjimas (ir retkarčiais juodas ekranas) tankesnėse lentose. Kiekviena užbaigta linija anksčiau buvo piešiama su papildomo maišymo efektu ryškesniam paryškinimui; Kvadrate ir Stačiakampyje tai sukrauna dešimtis GPU sluoksnių, galiausiai perpildydama mobiliojo įrenginio grafikos atmintį. Linijos dabar piešiamos paprastomis, ryškaus kontrasto spalvomis — ryškus „juostelės“ vaizdas išlieka, o strigimas – ne.',
+        ],
+      },
+      'Alpha 0.2.7.1': {
+        highlight: 'Pataisymas: nebemirga Kvadratas/Stačiakampis',
+        changes: [
+          'Paryškinimas „Rodyti nepaimtas linijas“ dabar rodomas tik Trikampio lentoje. Kvadrate ir Stačiakampyje jis kartais sukeldavo ekrano mirgėjimą ir patamsėjimą, kai buvo daug nepaimtų linijų. Šis jungiklis šiose figūrose paslėptas, kol bus pataisyta pagrindinė vizualinė klaida.',
+        ],
+      },
+      'Alpha 0.2.7.0': {
+        highlight: 'Dienos galvosūkis: 3 bandymai + lyderių lentelė',
+        changes: [
+          'Dabar turite 3 bandymus šiandienos galvosūkiui, o ne 1. Skaičiuojama geriausia jūsų persvara — serija vis tiek pridedama po pirmo dienos užbaigimo.',
+          'Nauja kortelė „Galvosūkio lyderių lentelė“ meniu. Šiandienos geriausios persvaros gyvai, rikiuojamos nuo didžiausios iki mažiausios. Lygiąsias lemia, kas baigė pirmas. Istorinės lyderių lentelės (pagal dieną, mėnesį, vardo paiešką) netrukus.',
+        ],
+      },
+      'Alpha 0.2.6.0': {
+        highlight: 'Šiandienos galvosūkis',
+        changes: [
+          'Nauja kortelė „Šiandienos galvosūkis“ meniu. Vienas bandymas per dieną prieš Sunkų DI kintančioje figūroje. Rezultatas – jūsų persvara (jūs minus DI), o kiekviena pergalė prideda dieną prie jūsų profilio serijos. Rytojaus galvosūkis atsirakina vidurnaktį (UTC).',
+          'Norint žaisti dienos galvosūkį ir kaupti seriją, reikia prisijungti — serija saugoma jūsų paskyroje, tad veikia visuose įrenginiuose.',
+        ],
+      },
+      'Alpha 0.2.5.0': {
+        highlight: 'Dienos serijos pagrindas',
+        changes: [
+          'Nauja skiltis „Dienos serija“ jūsų profilyje, paruošta dienos galvosūkiui (netrukus). Kai galvosūkis pasirodys, jo užbaigimas kiekvieną dieną kaups jūsų seriją visuose įrenginiuose — saugoma jūsų paskyroje, o ne naršyklėje, tad išlieka net išvalius podėlį ar pakeitus įrenginį.',
+        ],
+      },
+      'Alpha 0.2.4.0': {
+        highlight: 'Dalinimasis ir kvietimas iš meniu',
+        changes: [
+          'Dabar galite dalintis „DotDuel“ tiesiai iš pagrindinio meniu. Prisijungę žaidėjai gauna „Pakviesti draugą“ — nuorodose yra jūsų rekomendacijos kodas, tad užsiregistravus jis automatiškai tampa jūsų draugu. Neprisijungę žaidėjai po prisijungimo mato nuorodą „Dalintis „DotDuel““ greitam ir švariam pasidalinimui žaidimu.',
+        ],
+      },
+      'Alpha 0.2.3.0': {
+        highlight: 'Mokomosios užuominos + nepaimtų linijų jungiklis',
+        changes: [
+          'Kontekstinės užuominos, pasirodančios vieną kartą mokantis: pirmą kartą surinkus taškų, pirmą kartą vienam ėjimui uždarius dvi linijas (didžiausios-vienos taisyklė), pirmą kartą jūsų ėjimo pradžioje laukiant nepaimtai linijai ir arti žaidimo pabaigos.',
+          'Naujas akies piktogramos jungiklis „Rodyti paimtinas linijas“ šalia taisyklių mygtuko žaidžiant prieš DI lygiuose Naujokas/Lengvas/Vidutinis/Sunkus. Numatytai įjungtas Naujoko–Vidutinio lygiuose, išjungtas Sunkiame. Paslėptas Neįmanomame, vietiniame ir kelių žaidėjų režimuose — lentos skaitymas yra dalis iššūkio.',
+          'Atnaujinta vidinė nustatymų saugykla; jūsų bus paprašyta iš naujo įvesti vardą, o pirmą kartą paleidus vėl pasirodys mokomasis iššokantis langas. Statistika, atrakinimai ir paskyros duomenys nepakis.',
+        ],
+      },
+      'Alpha 0.2.2.0': {
+        highlight: 'Matomas taškų skaičiavimas',
+        changes: [
+          'Taškų skaičiavimas dabar matomas: nuo liniją užbaigiančio taško iššoka plūduriuojantis +N jūsų spalva, jūsų rezultato ženkliukas pulsuoja pasikeitus, o ženkliukas „paimtinos linijos“ sublyksi atsiradus naujai laukiančiai linijai.',
+        ],
+      },
+      'Alpha 0.2.1.0': {
+        highlight: 'Užkulisinė telemetrija',
+        changes: [
+          'Vidinis pakeitimas: pridėta anoniminė žaidėjų kelio analitika tiems, kurie sutiko su slapukų juosta — padeda pamatyti, kur naujiems žaidėjams kyla sunkumų, kad galėtume juos ištaisyti. Jokie asmeniniai duomenys neišeina iš įrenginio.',
+        ],
+      },
+      'Alpha 0.2.0.0': {
+        highlight: 'Draugai ir kvietimai',
+        changes: [
+          'Draugų sąrašas. Pridėkite draugą pagal vartotojo vardą, matykite, kurie draugai prisijungę ir ką veikia (žaidžia prieš DI, vietinį žaidimą, reitinguojamas rungtynes), pakvieskite draugą į konkretų žaidimą (jūsų pasirinkta figūra, laiko kontrolė, reitinguojamas ar įprastas). Kvietimai, gauti žaidžiant, lieka eilėje ir pasirodo, kai tik grįžtate į meniu. Reitinguojamas kvietimas skaičiuojamas Elo tik jei abi pusės pasirinko reitinguojamą; kitu atveju tai įprastas žaidimas. Po kelių žaidėjų rungtynių varžovą galite pridėti kaip draugą vienu bakstelėjimu.',
+          'Pakviesk draugą: kvieskite žmones išbandyti „DotDuel“ — jiems dar nereikia paskyros. Naudoja telefono dalijimosi langą arba el. pašto programą; mes niekada nematome jų adreso. Kai jie užsiregistruoja, automatiškai gaunate draugystės prašymą iš jų.',
+          'Nustatymai → Privatumas: pasirinkite, kas gali jus iškviesti žaidimui (Visi / Tik draugai / Niekas) ir ar jūsų tiesioginė būsena matoma draugams.',
+        ],
+      },
+      'Alpha 0.1.5.0': {
+        highlight: 'Serverio dalies sutvarkymas',
+        changes: [
+          'Vidinis pakeitimas: kelių žaidėjų žaidimo būsena visiškai perkelta į naują transportą. Senasis „Realtime Database“ kelias žaidimo duomenims nebenaudojamas. Matomo skirtumo nėra — nebent žaidimas šiek tiek žvalesnis.',
+        ],
+      },
+      'Alpha 0.1.4.4': {
+        highlight: 'Atnaujinimas grąžina į namus',
+        changes: [
+          'Visiškai atnaujinus puslapį po baigto žaidimo, dabar grįžtama į pagrindinį meniu, o ne kaskart iš naujo rodomas tas pats žaidimo pabaigos ekranas.',
+        ],
+      },
+      'Alpha 0.1.4.3': {
+        highlight: 'Mygtukas „Pasiruošęs“ + pasenusių skirtukų tvarkymas',
+        changes: [
+          'Mygtukas „Pasiruošęs“ dabar reaguoja iškart bakstelėjus, o ne laukia ryšio su serveriu, o žaidžiant prieš DI žaidimas prasideda tą akimirką, kai jį paspaudžiate (nelaukiant atgalinės atskaitos).',
+          'Jei perėmėte kelių žaidėjų sesiją antrame įrenginyje, pirmasis įrenginys nebeberodo iliuzinio žaidimo pabaigos ekrano žaidimui, kurį baigėte kitur.',
+        ],
+      },
+      'Alpha 0.1.4.2': {
+        highlight: 'Sesijos užrakto atstatymas',
+        changes: [
+          'Jei ankstesnė sesija užstrigo laikydama kelių žaidėjų užraktą, dabar galite bakstelėti mygtuką „Keli žaidėjai“, kad perimtumėte čia, o ne laukti, kol jis atsilaisvins.',
+          'Užstrigę sesijos užraktai dabar išsivalo du kartus greičiau (per 45 s vietoj 90 s), kai laikantis skirtukas dingsta.',
+        ],
+      },
+      'Alpha 0.1.4.1': {
+        highlight: 'Kelių žaidėjų patobulinimai',
+        changes: [
+          'Mygtukas „Pasiruošęs“ dabar iš tiesų pradeda žaidimą, kai tik jį paspaudžia abi pusės (prieš DI – kai tik jį paspaudžiate jūs).',
+          'Pirmas rungtynių ėjimas nebeužtrunka 8–9 sekundes, kol varžovas sureaguoja.',
+          'Prisijungimas antrame įrenginyje nebeįmeta jo atsitiktinai į jūsų aktyvų žaidimą pirmajame.',
+          'Meniu mygtukai sulyginti to paties dydžio švaresnei išvaizdai.',
+        ],
+      },
+      'Alpha 0.1.4.0': {
+        highlight: 'Keli žaidėjai dabar veikia daugiau tinklų',
+        changes: [
+          'Kelių žaidėjų režimas dabar prisijungia tinkluose, kurie anksčiau blokuodavo žaidimo serverį (Whalebone, AdGuard, NextDNS, Brave Shields ir panašūs DNS lygio filtrai). Žaidimas naudoja naują transporto kelią, kuris keliauja standartiniu HTTPS ir nėra blokuojamas sekiklių blokavimo sąrašų. Jei anksčiau kelių žaidėjų režimas jums užstrigdavo kraunamame ekrane, pabandykite dar kartą.',
+        ],
+      },
+      'Alpha 0.1.3.6': {
+        highlight: 'Laikrodžio rodymo pataisymas',
+        changes: [
+          'Kelių žaidėjų laikrodžio rodmuo nebemirga po kiekvieno ėjimo.',
+        ],
+      },
+      'Alpha 0.1.3.5': {
+        highlight: 'Draugiškas pranešimas be ryšio',
+        changes: [
+          'Jei jūsų tinklas blokuoja žaidimo serverį (dažna su mobiliaisiais reklamų/sekiklių blokatoriais, tokiais kaip AdGuard, NextDNS ar Whalebone), Kelių žaidėjų režimas dabar rodo aiškų paaiškinimą su trikčių šalinimo patarimais, o ne užstringa kraunamame ekrane. Vieno žaidėjo režimas prieš DI kaip įprasta veikia neprisijungus.',
+        ],
+      },
+      'Alpha 0.1.3.1': {
+        highlight: 'Mobiliojo mygtuko pataisymas',
+        changes: [
+          'Mygtukai „Keli žaidėjai“ ir „Atsijungti“ kartais nieko nedarydavo griežtų privatumo nustatymų mobiliosiose naršyklėse (Brave, Firefox Focus). Dabar sąsaja iškart pereina toliau, o tvarkymas vyksta fone.',
+        ],
+      },
+      'Alpha 0.1.3.0': {
+        highlight: 'Botų armija — niekada nelaukite vieni',
+        changes: [
+          'Jei per ~15 s nerandama žmogaus, būsite suporuotas su reitinguojamu DI varžovu (Pip, Cricket, Ranger, Knight arba Voidstar). Jie skaičiuojami į Elo ir rodomi lyderių lentelėje.',
+          'Paieškos ekranas dabar praneša, kada gali įsijungti botas.',
+          'Revanšo mygtukas dabar paslepiamas, kai varžovas buvo botas (botai revanšų nepriima).',
+        ],
+      },
+      'Alpha 0.1.2.5': {
+        highlight: 'Registracijos pataisymo tąsa',
+        changes: [
+          'Vartotojo vardo pasirinkimas dabar veikia, net jei ankstesnis registracijos bandymas paliko iki galo neužbaigtą profilį',
+          'Vardo pasirinkimo ekrane atsirado atsijungimo mygtukas, kad niekada neužstrigtumėte',
+        ],
+      },
+      'Alpha 0.1.2.4': {
+        highlight: 'Registracijos pataisymas',
+        changes: [
+          'Registruojantis nauja paskyra, vartotojo vardo pasirinkimas nebebeklaidina pranešimu apie trūkstamus leidimus',
+        ],
+      },
+      'Alpha 0.1.2.3': {
+        highlight: 'Nuorodos dalijimuisi + saugumo sustiprinimas',
+        changes: [
+          'Naršyklės skirtuko ir pradžios ekrano piktograma — du „DotDuel“ taškai pasirodo, kad ir kur pridėtumėte žymę ar įdiegtumėte žaidimą',
+          'Dalijimosi peržiūros — įklijavus „DotDuel“ nuorodą į Discord, Telegram, Slack ar Twitter dabar pasirodo kortelė su logotipu ir šūkiu, o ne tuščias langelis',
+          'Vartotojo vardo keitimas dabar vyksta atomiškai — senas vardas atlaisvinamas, o naujas užimamas tuo pačiu veiksmu',
+          'Užkulisinis saugumo sustiprinimas — griežtesnė turinio saugumo politika, serverio pusės greičio ribojimai trinant paskyrą ir tikrinant vardus, suplanuotas baigtų žaidimų valymas (per ~24 val. pagal privatumo politiką) ir maišos funkcija apdoroti UID serverio žurnaluose',
+        ],
+      },
+      'Alpha 0.1.2.2': {
+        highlight: 'Kelių žaidėjų tempas + įskaitomumas',
+        changes: [
+          'Kelių žaidėjų lentos figūros atrakinamos po 50 ir 100 reitinguojamų žaidimų (Kvadratas, tada Stačiakampis)',
+          'Žaibas (1 min) ir Greitasis (5 min) laikinai užrakinti — kol auga žaidėjų ratas, prieinamas tik Blicas (3 min)',
+          'Taisyklių languje dabar rašoma, kad keli žaidėjai jau veikia',
+          'Antraštės „DotDuel čempionas“ ir „Neįmanomas – įveiktas“ buvo nematomos šviesiose temose',
+        ],
+      },
+      'Alpha 0.1.2.1': {
+        highlight: 'Temų patobulinimas',
+        changes: [
+          'Kiekviena spalvų tema dabar turi savo teksto ir logotipo spalvas, o ne perima numatytąją žalią',
+          'Preliminarus ženkliukas buvo nematomas „Vintage Press“ pergamento temoje',
+        ],
+      },
+      'Alpha 0.1.2': {
+        highlight: 'Naudojimo patobulinimai',
+        changes: [
+          'Temos pasirinkimas dabar pasiekiamas iš kiekvieno ekrano per poraštę',
+          'Laikrodis matomas mobiliajame kelių žaidėjų režime',
+          'Paskutinio ėjimo paryškinimas dabar rodo varžovo, o ne jūsų tašką',
+          'Pergalės ekranas dabar praneša, KAIP laimėjote (pagal laiką / pagal taškus / varžovas pasidavė)',
+          'Mobiliuosius iššokančius langus buvo neįmanoma uždaryti — uždarymo mygtukas dabar patikimai pasiekiamas',
+          'Poraštės kapsulė siaurame telefone dabar persikelia į antrą eilutę, o ne nukertama',
+          'Temos pasirinkimas ir kiti iššokantys langai dabar tinkamai slenka, kai turinys aukštesnis už ekraną',
+          'Iššokantys langai buvo neįskaitomi kompiuteryje, kai buvo matoma slapukų juosta — dabar lango dydis tinkamai rezervuoja vietą',
+        ],
+      },
+      'Alpha 0.1': {
+        highlight: '„DotDuel“ pradeda veikti!',
+        changes: [
+          'Vieša alfa versijos pradžia — keli žaidėjai, reitingai, temos, saulėje patogus režimas',
+        ],
+      },
+    } as Record<string, { highlight?: string; changes: string[] }>,
   },
 
   privacy: {
@@ -635,7 +1051,8 @@ export const lt: Messages = {
     title: 'Keli žaidėjai',
     intro: (rating: number) =>
       `Pasirinkite laiko kontrolę. Suporuosime jus su kitu panašaus reitingo žaidėju (jūsų: ${rating}).`,
-    lockedTitle: 'Užrakinta, kol auga žaidėjų ratas – kol kas atviras tik „Blicas“, kad poravimas liktų greitas.',
+    lockedTitle: (openLabel: string) =>
+      `Užrakinta, kol auga žaidėjų ratas – kol kas atviras tik „${openLabel}“, kad poravimas liktų greitas.`,
     comingBackSoon: 'Netrukus sugrįš',
     board: 'Lenta:',
     unlockHint: (nextLabel: string, n: number) =>
@@ -674,6 +1091,23 @@ export const lt: Messages = {
     remaining: (time: string) => `liko ${time}`,
   },
 
+  mpUnavailable: {
+    heading: 'Keli žaidėjai nepasiekiami',
+    blockedHint:
+      'Jūsų tinklas blokuoja žaidimo serverį. Dažniausia priežastis – reklamų/sekiklių blokatorius (Whalebone, AdGuard, NextDNS, Pi-hole) arba DNS filtras telefone ar maršrutizatoriuje.',
+    tryLabel: 'Pabandykite:',
+    tryWifi: 'kitą „Wi-Fi“ tinklą arba mobilųjį internetą',
+    tryBrowser: 'kitą naršyklę',
+    tryDisableFilters: 'trumpam išjungti DNS filtrus / VPN',
+    tryWhitelist: (domain: string) => `įtraukti ${domain} į blokatoriaus išimtis`,
+    offlineHint: 'Žaidimas su botu veikia neprisijungus – atidarykite meniu ir pasirinkite „Botai“.',
+  },
+
+  mpConnecting: {
+    heading: 'Jungiamasi prie žaidimo…',
+    hint: 'Jungiamasi prie žaidimo serverio. Jei tai užtrunka ilgiau nei ~10 sekundžių, kažkas negerai — grįžkite atgal ir bandykite dar kartą.',
+  },
+
   share: {
     title: 'DotDuel — greita 2 žaidėjų taškų strategija',
     textInvite: 'Sužaisk su manimi greitą taškų partiją.',
@@ -700,6 +1134,58 @@ export const lt: Messages = {
     hintNoCardLink:
       'Platformų mygtukai dalijasi jūsų tekstu ir nuoroda. Norėdami pridėti paveikslėlį, paspauskite „Kopijuoti paveikslėlį“ ir įklijuokite jį į įrašą.',
     downloadImage: '⬇ Atsisiųsti paveikslėlį',
+
+    result: {
+      genericBot: 'Botas',
+      ptsLabel: 'tšk.',
+      scanCaption: 'Nuskaitykite ir žaiskite dabar!',
+      ctaWin: 'Ar pralenksite mane?',
+      ctaLoss: 'Manote, kad galite geriau?',
+      ctaDraw: 'Išspręskite lygiąsias?',
+
+      tagDaily: 'DIENOS GALVOSŪKIS',
+      tagVsBot: (shape: string) => `PRIEŠ BOTĄ · ${shape.toUpperCase()}`,
+      tagRanked: (shape: string) => `REITINGUOJAMAS · ${shape.toUpperCase()}`,
+      tagHotseat: (shape: string) => `VIETINIS ŽAIDIMAS · ${shape.toUpperCase()}`,
+
+      dailyHeadline: 'Šiandienos galvosūkis',
+      dailyCta: 'Ar pralenksite?',
+      dailyShareText: (score: number, url: string) =>
+        `Surinkau ${pts(score)} šiandienos „DotDuel“ galvosūkyje — ar pralenksite?\n${url}`,
+
+      aiHeadlineWin: (level: string) => `${level} botas — nugalėtas`,
+      aiHeadlineLoss: (level: string) => `${level} botas laimėjo šįkart`,
+      aiHeadlineDraw: (level: string) => `Lygiosios su ${level} botu`,
+      aiShareTextWin: (level: string, s1: number, s2: number, shape: string, url: string) =>
+        `Įveikiau ${level} botą ${s1}–${s2} „${shape}“ lentoje „DotDuel“ žaidime — ar pavyks jums?\n${url}`,
+      aiShareTextLoss: (level: string, s2: number, s1: number, url: string) =>
+        `${level} botas mane įveikė ${s2}–${s1} „DotDuel“ žaidime. Manote, kad galite geriau?\n${url}`,
+      aiShareTextDraw: (level: string, s1: number, s2: number, url: string) =>
+        `Sužaidžiau lygiosiomis su ${level} botu ${s1}–${s2} „DotDuel“ žaidime. Ar baigsite darbą?\n${url}`,
+
+      rankedHeadlineWin: (elo: string) => `Reitinguota pergalė${elo}`,
+      rankedHeadlineLoss: 'Sunkios reitinguotos rungtynės',
+      rankedHeadlineDraw: 'Reitinguotos lygiosios',
+      rankedShareTextWin: (myScore: number, oppScore: number, elo: string, url: string) =>
+        `Ką tik laimėjau reitinguotas „DotDuel“ rungtynes ${myScore}–${oppScore}${elo} — ar pralenksite mane?\n${url}`,
+      rankedShareTextLoss: (myScore: number, oppScore: number, url: string) =>
+        `Ką tik sužaidžiau reitinguotas „DotDuel“ rungtynes (${myScore}–${oppScore}). Norite sužaisti?\n${url}`,
+      rankedShareTextDraw: (myScore: number, oppScore: number, url: string) =>
+        `Reitinguotos rungtynės baigėsi lygiosiomis (${myScore}–${oppScore}). Išspręskite už mus?\n${url}`,
+
+      hotseatHeadlineWin: (winnerName: string) => `${winnerName} laimėjo`,
+      hotseatHeadlineDraw: 'Lygiosios',
+      hotseatShareTextWin: (
+        winnerName: string,
+        loserName: string,
+        winnerScore: number,
+        loserScore: number,
+        url: string,
+      ) =>
+        `${winnerName} įveikė ${loserName} ${winnerScore}–${loserScore} „DotDuel“ žaidime. Manote, kad galite geriau?\n${url}`,
+      hotseatShareTextDraw: (p1: string, p2: string, s1: number, s2: number, url: string) =>
+        `${p1} ir ${p2} sužaidė lygiosiomis ${s1}–${s2} „DotDuel“ žaidime. Išspręskite už mus?\n${url}`,
+    },
   },
 
   rankings: {

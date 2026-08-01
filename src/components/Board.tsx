@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getBoard } from '../geometry';
+import { useT } from '../i18n';
 import type { GameState, Line, Player } from '../types';
 
 interface ScoreEvent {
@@ -191,6 +192,7 @@ export function Board({
   showHints = false,
   scoreEvent = null,
 }: Props) {
+  const t = useT();
   const board = getBoard(state.shape);
   const vb = board.viewBox;
   const dotRadius = state.shape === 'triangle' ? 0.32 : 0.34;
@@ -328,16 +330,16 @@ export function Board({
 
   const liveMessage = state.finished
     ? state.winner === 'draw'
-      ? `Game over. It's a draw, ${state.scores[1]} to ${state.scores[2]}.`
-      : `Game over. Player ${state.winner} wins, ${state.scores[1]} to ${state.scores[2]}.`
-    : `Player ${state.current} to move. Score: Player 1, ${state.scores[1]}; Player 2, ${state.scores[2]}.`;
+      ? t.game.liveDraw(state.scores[1], state.scores[2])
+      : t.game.liveWin(state.winner as Player, state.scores[1], state.scores[2])
+    : t.game.liveTurn(state.current, state.scores[1], state.scores[2]);
 
   return (
     <div className="board-wrap">
       <svg
         className="board"
         role="group"
-        aria-label={`${board.label} game board`}
+        aria-label={t.game.boardAriaLabel(t.shapes[state.shape])}
         viewBox={`${vbExp.x} ${vbExp.y} ${vbExp.w} ${vbExp.h}`}
         preserveAspectRatio="xMidYMid meet"
       >

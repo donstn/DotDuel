@@ -608,12 +608,18 @@ export interface VictoryCardInput {
   share: ResultShare;
   state: GameState;
   shape: ShapeId;
+  /** Localized "pts" unit label drawn next to the big score numbers. */
+  ptsLabel: string;
+  /** Localized "Scan to play now!" caption under the QR medallion. */
+  scanCaption: string;
 }
 
 export async function renderVictoryCard({
   share,
   state,
   shape,
+  ptsLabel,
+  scanCaption,
 }: VictoryCardInput): Promise<Blob> {
   // Make sure the display fonts are usable on canvas before measuring text.
   try {
@@ -698,7 +704,7 @@ export async function renderVictoryCard({
         y: rect.y,
         w: rect.w,
         capH: rect.w * (ASPECT - 1),
-        caption: 'Scan to play now!',
+        caption: scanCaption,
         skin: {
           tile: cssVar('--p2-glow', '#f0fbcf'),
           module: darken(cssVar('--p1', '#0d4a23'), 0.62),
@@ -826,7 +832,7 @@ export async function renderVictoryCard({
     ctx.font = `700 38px ${FONT_DISPLAY}`;
     ctx.fillStyle = theme.textDim;
     ctx.textAlign = 'left';
-    ctx.fillText('pts', numCX + nW / 2 + 20, scoreBase);
+    ctx.fillText(ptsLabel, numCX + nW / 2 + 20, scoreBase);
     ctx.textAlign = 'center';
     ctx.font = `600 25px ${FONT_BODY}`;
     const soloName = truncate(ctx, share.a.name, 300);

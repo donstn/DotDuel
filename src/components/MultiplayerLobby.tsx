@@ -73,7 +73,7 @@ export function MultiplayerLobby({
               className={`menu-card ${isSelected ? 'menu-card-selected' : ''} ${locked ? 'disabled' : ''}`}
               disabled={locked}
               onClick={() => !locked && setSelected(tc.id)}
-              title={locked ? t.lobby.lockedTitle : ''}
+              title={locked ? t.lobby.lockedTitle(t.timeControls['3min'].label) : ''}
             >
               <strong>{t.timeControls[tc.id].label}</strong>
               <span>{t.timeControls[tc.id].per}</span>

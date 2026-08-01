@@ -68,14 +68,6 @@ export interface Progress {
   wins: Record<string, boolean>;
 }
 
-export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
-  1: 'Beginner',
-  2: 'Easy',
-  3: 'Medium',
-  4: 'Hard',
-  5: 'Impossible',
-};
-
 export interface ShapeMeta {
   id: ShapeId;
   label: string;
@@ -93,13 +85,6 @@ export const BANNED_SHAPES: ReadonlySet<ShapeId> = new Set(['rhombus']);
 export const PLAYABLE_SHAPE_META: ShapeMeta[] = SHAPE_META.filter(
   (s) => !BANNED_SHAPES.has(s.id),
 );
-
-export const SHAPE_LABEL: Record<ShapeId, string> = {
-  triangle: 'Triangle',
-  square: 'Square',
-  rectangle: 'Rectangle',
-  rhombus: 'Rhombus',
-};
 
 // =============================================================================
 // Multiplayer backend transport flag (Firestore migration in progress)

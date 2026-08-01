@@ -1,5 +1,5 @@
-import { DIFFICULTY_LABELS, SHAPE_LABEL } from '../types';
 import type { Difficulty, GameMode, Player, ShapeId } from '../types';
+import type { Messages } from '../i18n';
 
 const APP_URL = 'https://www.dotduel.com/';
 
@@ -44,55 +44,55 @@ function outcomeFor(me: Player, winner: Player | 'draw' | null): ShareOutcome {
   return winner === me ? 'win' : 'loss';
 }
 
-const CTA: Record<ShareOutcome, string> = {
-  win: 'Can you beat me?',
-  loss: 'Think you can do better?',
-  draw: 'Break the tie?',
-};
-
-export function buildResultShare(d: ShareResultData): ResultShare {
+export function buildResultShare(d: ShareResultData, t: Messages): ResultShare {
   const url = d.refCode
     ? `${APP_URL}?ref=${encodeURIComponent(d.refCode)}`
     : APP_URL;
-  const shapeLabel = SHAPE_LABEL[d.shape];
+  const r = t.share.result;
+  const shapeLabel = t.shapes[d.shape];
+  const cta: Record<ShareOutcome, string> = {
+    win: r.ctaWin,
+    loss: r.ctaLoss,
+    draw: r.ctaDraw,
+  };
 
   if (d.mode === 'daily') {
     const score = d.dailyScore ?? d.scores[1];
     return {
-      tag: 'DAILY PUZZLE',
-      headline: 'Today’s puzzle',
+      tag: r.tagDaily,
+      headline: r.dailyHeadline,
       a: { name: d.p1Name, score, player: 1 },
       b: null,
-      cta: 'Can you beat it?',
-      shareText: `I scored ${score} on today’s DotDuel puzzle — can you beat it?\n${url}`,
+      cta: r.dailyCta,
+      shareText: r.dailyShareText(score, url),
       url,
       outcome: 'win',
     };
   }
 
   if (d.mode === 'ai') {
-    const level = d.difficulty ? DIFFICULTY_LABELS[d.difficulty] : 'Bot';
+    const level = d.difficulty ? t.difficulty[d.difficulty] : r.genericBot;
     const outcome = outcomeFor(1, d.winner);
     const s1 = d.scores[1];
     const s2 = d.scores[2];
     const headline =
       outcome === 'win'
-        ? `${level} Bot — defeated`
+        ? r.aiHeadlineWin(level)
         : outcome === 'loss'
-          ? `${level} Bot wins this one`
-          : `Draw vs ${level} Bot`;
+          ? r.aiHeadlineLoss(level)
+          : r.aiHeadlineDraw(level);
     const shareText =
       outcome === 'win'
-        ? `I beat the ${level} Bot ${s1}–${s2} on the ${shapeLabel} board in DotDuel — can you?\n${url}`
+        ? r.aiShareTextWin(level, s1, s2, shapeLabel, url)
         : outcome === 'loss'
-          ? `The ${level} Bot got me ${s2}–${s1} in DotDuel. Think you can do better?\n${url}`
-          : `I drew the ${level} Bot ${s1}–${s2} in DotDuel. Can you finish the job?\n${url}`;
+          ? r.aiShareTextLoss(level, s2, s1, url)
+          : r.aiShareTextDraw(level, s1, s2, url);
     return {
-      tag: `VS BOT · ${shapeLabel.toUpperCase()}`,
+      tag: r.tagVsBot(shapeLabel),
       headline,
       a: { name: d.p1Name, score: s1, player: 1 },
       b: { name: d.p2Name, score: s2, player: 2 },
-      cta: CTA[outcome],
+      cta: cta[outcome],
       shareText,
       url,
       outcome,
@@ -113,22 +113,22 @@ export function buildResultShare(d: ShareResultData): ResultShare {
         : '';
     const headline =
       outcome === 'win'
-        ? `Ranked win${elo}`
+        ? r.rankedHeadlineWin(elo)
         : outcome === 'loss'
-          ? 'Tough ranked match'
-          : 'Ranked draw';
+          ? r.rankedHeadlineLoss
+          : r.rankedHeadlineDraw;
     const shareText =
       outcome === 'win'
-        ? `I just won a ranked DotDuel match ${myScore}–${oppScore}${elo} — can you beat me?\n${url}`
+        ? r.rankedShareTextWin(myScore, oppScore, elo, url)
         : outcome === 'loss'
-          ? `Just played a ranked DotDuel match (${myScore}–${oppScore}). Up for a game?\n${url}`
-          : `Dead-even ranked DotDuel match (${myScore}–${oppScore}). Settle it for us?\n${url}`;
+          ? r.rankedShareTextLoss(myScore, oppScore, url)
+          : r.rankedShareTextDraw(myScore, oppScore, url);
     return {
-      tag: `RANKED · ${shapeLabel.toUpperCase()}`,
+      tag: r.tagRanked(shapeLabel),
       headline,
       a: { name: myName, score: myScore, player: me },
       b: { name: oppName, score: oppScore, player: opp },
-      cta: CTA[outcome],
+      cta: cta[outcome],
       shareText,
       url,
       outcome,
@@ -144,23 +144,23 @@ export function buildResultShare(d: ShareResultData): ResultShare {
     const winnerName = w === 1 ? d.p1Name : d.p2Name;
     const loserName = w === 1 ? d.p2Name : d.p1Name;
     return {
-      tag: `HOT-SEAT · ${shapeLabel.toUpperCase()}`,
-      headline: `${winnerName} wins`,
+      tag: r.tagHotseat(shapeLabel),
+      headline: r.hotseatHeadlineWin(winnerName),
       a: { name: winnerName, score: d.scores[w], player: w },
       b: { name: loserName, score: d.scores[l], player: l },
-      cta: CTA.win,
-      shareText: `${winnerName} beat ${loserName} ${d.scores[w]}–${d.scores[l]} in DotDuel. Think you can do better?\n${url}`,
+      cta: cta.win,
+      shareText: r.hotseatShareTextWin(winnerName, loserName, d.scores[w], d.scores[l], url),
       url,
       outcome: 'win',
     };
   }
   return {
-    tag: `HOT-SEAT · ${shapeLabel.toUpperCase()}`,
-    headline: 'Dead even',
+    tag: r.tagHotseat(shapeLabel),
+    headline: r.hotseatHeadlineDraw,
     a: { name: d.p1Name, score: s1, player: 1 },
     b: { name: d.p2Name, score: s2, player: 2 },
-    cta: CTA.draw,
-    shareText: `${d.p1Name} and ${d.p2Name} drew ${s1}–${s2} in DotDuel. Settle it for us?\n${url}`,
+    cta: cta.draw,
+    shareText: r.hotseatShareTextDraw(d.p1Name, d.p2Name, s1, s2, url),
     url,
     outcome: 'draw',
   };

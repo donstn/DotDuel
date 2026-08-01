@@ -173,12 +173,18 @@ export function GameResultShareButton({ data, state }: Props) {
 
   const onShare = async () => {
     if (busy) return;
-    const share = buildResultShare(data);
+    const share = buildResultShare(data, t);
     trackEvent('result_share_clicked', { mode: data.mode, outcome: share.outcome });
     setBusy(true);
     setFeedback(null);
     try {
-      const blob = await renderVictoryCard({ share, state, shape: data.shape });
+      const blob = await renderVictoryCard({
+        share,
+        state,
+        shape: data.shape,
+        ptsLabel: t.share.result.ptsLabel,
+        scanCaption: t.share.result.scanCaption,
+      });
       let outShare = share;
       if (isNativeApp()) {
         // The native plugin has no user-activation deadline — safe to upload

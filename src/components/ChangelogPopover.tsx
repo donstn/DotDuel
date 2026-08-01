@@ -59,9 +59,16 @@ export function ChangelogPopover({ onClose }: Props) {
           )}
 
           {CHANGELOG.map((entry) => {
+            // Translated body for this version, if this language has one yet —
+            // falls back to the English text per-field so a partially- or
+            // not-yet-translated entry still renders correctly.
+            const tr = t.changelog.entries[entry.version];
+            const highlight = tr?.highlight ?? entry.highlight;
             const grouped = KIND_ORDER.map((kind) => ({
               kind,
-              items: entry.changes.filter((c) => c.kind === kind),
+              items: entry.changes
+                .map((c, idx) => ({ ...c, idx }))
+                .filter((c) => c.kind === kind),
             })).filter((g) => g.items.length > 0);
 
             return (
@@ -70,8 +77,8 @@ export function ChangelogPopover({ onClose }: Props) {
                   <h3>{entry.version}</h3>
                   <span className="changelog-date">{formatDate(entry.date)}</span>
                 </header>
-                {entry.highlight && (
-                  <p className="changelog-highlight">{entry.highlight}</p>
+                {highlight && (
+                  <p className="changelog-highlight">{highlight}</p>
                 )}
                 {grouped.length === 0 && (
                   <p className="changelog-empty">{t.changelog.entryEmpty}</p>
@@ -80,8 +87,8 @@ export function ChangelogPopover({ onClose }: Props) {
                   <div key={kind} className={`changelog-group changelog-group-${kind}`}>
                     <h4>{KIND_LABEL[kind]}</h4>
                     <ul>
-                      {items.map((c, i) => (
-                        <li key={i}>{c.text}</li>
+                      {items.map((c) => (
+                        <li key={c.idx}>{tr?.changes[c.idx] ?? c.text}</li>
                       ))}
                     </ul>
                   </div>

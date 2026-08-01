@@ -1,5 +1,5 @@
-import { DIFFICULTY_LABELS } from './types';
 import type { Difficulty, Progress, ShapeId } from './types';
+import type { Messages } from './i18n';
 
 const KEY = 'dotduel:progress:v3';
 
@@ -178,8 +178,8 @@ export function aiOpponentKey(diff: Difficulty): string {
   return `${AI_OPPONENT_KEY_PREFIX}${diff}`;
 }
 
-export function aiOpponentDisplayName(diff: Difficulty): string {
-  return `Bot · ${DIFFICULTY_LABELS[diff]}`;
+export function aiOpponentDisplayName(diff: Difficulty, t: Messages): string {
+  return t.sidePanel.botLabel(t.difficulty[diff]);
 }
 
 export function parseAiOpponentKey(key: string): Difficulty | null {

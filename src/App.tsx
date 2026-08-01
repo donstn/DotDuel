@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useT } from './i18n';
+import type { Messages } from './i18n';
 import { AdBanner } from './components/AdBanner';
 import {
   initNativeAds,
@@ -128,6 +129,7 @@ import { pickAIAction } from './ai';
 import { applyAction, applyClaim, applyMove, createGame } from './game';
 import { getBoard } from './geometry';
 import {
+  aiOpponentDisplayName,
   aiOpponentKey,
   getPlayerRow,
   loadProgress,
@@ -141,7 +143,6 @@ import {
   saveSettings,
   type Settings,
 } from './storage';
-import { DIFFICULTY_LABELS } from './types';
 import type { Difficulty, GameAction, GameMode, GameState, Progress, ShapeId } from './types';
 import { APP_VERSION } from './version';
 import { bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './telemetry';
@@ -200,27 +201,21 @@ function ringToggleAvailable(
 // Replaces matchmaking/matchFound/mpgame-loading with a clear explanation
 // + Back to menu escape, instead of letting the user stare at a frozen
 // "Searching for opponent" screen.
-function renderMpUnreachable({ onLeave }: { onLeave: () => void }) {
+function renderMpUnreachable({ onLeave, t }: { onLeave: () => void; t: Messages }) {
   return (
     <div className="menu mp-offline">
-      <h2>Multiplayer unavailable</h2>
+      <h2>{t.mpUnavailable.heading}</h2>
+      <p className="hint">{t.mpUnavailable.blockedHint}</p>
       <p className="hint">
-        Your network is blocking the game server. The most common cause is
-        an ad/tracker blocker (Whalebone, AdGuard, NextDNS, Pi-hole) or a
-        DNS filter on your phone or router.
+        <strong>{t.mpUnavailable.tryLabel}</strong>
+        <br />· {t.mpUnavailable.tryWifi}
+        <br />· {t.mpUnavailable.tryBrowser}
+        <br />· {t.mpUnavailable.tryDisableFilters}
+        <br />· {t.mpUnavailable.tryWhitelist('*.supabase.co')}
       </p>
-      <p className="hint">
-        <strong>Try:</strong>
-        <br />· another Wi-Fi network or mobile data
-        <br />· another browser
-        <br />· disabling DNS filters / VPN for a moment
-        <br />· whitelisting <code>*.supabase.co</code> in your blocker
-      </p>
-      <p className="hint">
-        Single-player vs the bots works offline — open Menu and pick Bots.
-      </p>
+      <p className="hint">{t.mpUnavailable.offlineHint}</p>
       <button type="button" className="menu-auth-btn" onClick={onLeave}>
-        Back to menu
+        {t.game.backToMenu}
       </button>
     </div>
   );
@@ -2152,21 +2147,18 @@ export default function App() {
         pairingMatchId: pairing?.matchId,
       });
       if (mpUnreachable) {
-        return renderMpUnreachable({ onLeave: () => onLeaveMpGame() });
+        return renderMpUnreachable({ onLeave: () => onLeaveMpGame(), t });
       }
       return (
         <div className="menu">
-          <h2>Connecting to match…</h2>
-          <p className="hint">
-            Linking up with the game server. If this hangs for more than ~10
-            seconds, something's wrong — back out and try again.
-          </p>
+          <h2>{t.mpConnecting.heading}</h2>
+          <p className="hint">{t.mpConnecting.hint}</p>
           <button
             type="button"
             className="menu-auth-btn"
             onClick={onLeaveMpGame}
           >
-            Back to menu
+            {t.game.backToMenu}
           </button>
         </div>
       );
@@ -2481,6 +2473,7 @@ export default function App() {
           if (screen === 'matchmaking') void onCancelMatch();
           else void onLeaveMatch();
         },
+        t,
       });
     } else if (screen === 'matchmaking' && queueTimeControl) {
       mainContent = (
@@ -2789,7 +2782,7 @@ export default function App() {
       : settings.playerName || 'Player 1';
   const p2Name =
     config.mode === 'ai' || config.mode === 'daily'
-      ? `Bot · ${DIFFICULTY_LABELS[config.difficulty ?? 1]}`
+      ? aiOpponentDisplayName(config.difficulty ?? 1, t)
       : settings.opponentName || 'Player 2';
 
   const p1Avatar: 'human' | { kind: 'guest'; label: string } = hotseat

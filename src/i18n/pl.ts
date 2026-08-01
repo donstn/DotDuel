@@ -139,6 +139,12 @@ export const pl: Messages = {
 
   game: {
     ptsLeft: 'POZOSTAŁO',
+    boardAriaLabel: (shape: string) => `Plansza gry: ${shape}`,
+    liveDraw: (s1: number, s2: number) => `Koniec gry. Remis, ${s1} do ${s2}.`,
+    liveWin: (winner: number, s1: number, s2: number) =>
+      `Koniec gry. Gracz ${winner} wygrywa, ${s1} do ${s2}.`,
+    liveTurn: (current: number, s1: number, s2: number) =>
+      `Ruch gracza ${current}. Wynik: Gracz 1 – ${s1}; Gracz 2 – ${s2}.`,
     linesToClaim: (n: number) =>
       plural(n, 'linia do zajęcia', 'linie do zajęcia', 'linii do zajęcia'),
     pendingTitle:
@@ -271,6 +277,416 @@ export const pl: Messages = {
     fixed: 'Naprawiono',
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
+    entries: {
+      'Alpha 0.4.12.2': {
+        highlight: 'Aplikacja mówi teraz jeszcze lepiej w Twoim języku',
+        changes: [
+          'Nazwa przeciwnika AI, obraz/tekst udostępnianej karty zwycięstwa oraz kilka ekranów stanu połączenia pozostawały po angielsku niezależnie od wybranego języka — teraz są przetłumaczone.',
+          'Wszystkie wcześniejsze wpisy w tej liście zmian (od samego początku) są teraz dostępne po litewsku, hiszpańsku, portugalsku, polsku i czesku, nie tylko po angielsku.',
+        ],
+      },
+      'Alpha 0.4.12.1': {
+        highlight: 'Poprawka',
+        changes: [
+          'Naprawiono przeskakiwanie/kurczenie się planszy na telefonach, gdy wynik zmieniał się z 2 na 3 cyfry.',
+        ],
+      },
+      'Alpha 0.4.12.0': {
+        highlight: 'Poprawki',
+        changes: [
+          'Przeniesiono wybór języka w lewy górny róg, aby nie zachodził na logo (przycisk motywu został w prawym górnym rogu).',
+          'Karty obu graczy na telefonach są teraz lustrzanym odbiciem siebie, zamiast wyglądać nierówno.',
+          'Próbki kolorów w grze lokalnej oraz ustawienie „zamień kolory” dopasowują się teraz do wybranego motywu, zamiast zawsze pokazywać kremowy/zielony.',
+          'Przycisk/gest cofania przechodzi teraz krok po kroku przez menu i ekrany zamiast zamykać aplikację — gry rankingowe i próby codziennej łamigłówki nadal proszą najpierw o potwierdzenie.',
+        ],
+      },
+      'Alpha 0.4.11.0': {
+        highlight: 'Jak grać',
+        changes: [
+          'Nowy przewodnik „Jak grać” z animowanymi przykładami na prawdziwej planszy — zobacz, jak róg daje 1 punkt, jak kończy się linia, jak kilka linii czeka na zajęcie oraz jak linie biegną we wszystkich kierunkach na Trójkącie (3 kierunki) i Kwadracie (4 kierunki). Otwórz go ze stopki, obok Zasad; dotknij planszy, aby zatrzymać, przesuwaj palcem lub użyj strzałek do przeglądania.',
+          'Motyw kolorystyczny wybiera się teraz w Ustawieniach (przeniesiono go ze stopki, aby zrobić miejsce na „Jak grać”).',
+        ],
+      },
+      'Alpha 0.4.10.1': {
+        highlight: 'Poprawki',
+        changes: [
+          'Wyskakujące okienka odblokowania osiągnięć oraz menu języka są teraz nieprzezroczyste i czytelne (wcześniej były przezroczyste, przez co widać było tekst w tle). Okienko osiągnięcia jest też większe.',
+          'Logowanie na nowym urządzeniu nie pokazuje już ponownie wszystkich wcześniej zdobytych osiągnięć.',
+          'Osiągnięcie „Zapędzony w róg” (zdobądź 1 punkt za linię narożną) teraz się odblokowuje — wcześniej nie było śledzone.',
+        ],
+      },
+      'Alpha 0.4.10.0': {
+        highlight: 'Pełne tłumaczenie',
+        changes: [
+          'Cała aplikacja jest teraz przetłumaczona, nie tylko menu. Twój Profil, Znajomi i zaproszenia, poczekalnia i ekrany meczów wieloosobowych, ekran końca gry, Rankingi i tabela wyników codziennej łamigłówki, udostępnianie oraz wszystkie 97 Osiągnięć (nazwy i opisy) pojawiają się teraz po angielsku, litewsku, hiszpańsku, portugalsku, polsku i czesku.',
+        ],
+      },
+      'Alpha 0.4.9.0': {
+        highlight: 'Języki',
+        changes: [
+          'DotDuel mówi teraz w sześciu językach: angielskim, litewskim, hiszpańskim, portugalskim, polskim i czeskim. Wybierz swój za pomocą przycisku języka w prawym górnym rogu menu.',
+          'Gra uruchamia się teraz automatycznie w Twoim języku — na podstawie ustawień przeglądarki w wersji webowej oraz języka urządzenia w aplikacji.',
+        ],
+      },
+      'Alpha 0.4.8.0': {
+        highlight: 'Osiągnięcia',
+        changes: [
+          'Osiągnięcia! Zdobądź do 100 odznak za grę — pokonywanie botów na każdym kształcie i poziomie, serie zwycięstw, rozgrywki w codziennej łamigłówce, serie dni i wielkie kamienie milowe. Znajdziesz je w Rankingi → Osiągnięcia; każda odznaka zapala się w kolorach Twojego motywu po odblokowaniu, a w chwili zdobycia zobaczysz okienko „🏆 Osiągnięcie odblokowane”.',
+          'Przypnij ulubioną odznakę, aby pokazywała się obok Twojego imienia podczas gry.',
+        ],
+      },
+      'Alpha 0.4.7.0': {
+        highlight: 'Nowe menu i Boty',
+        changes: [
+          'Menu główne zostało przeorganizowane w trzy przejrzyste sekcje — Jeden gracz, Wielu graczy i Rankingi — każda otwiera uporządkowaną listę z własnymi ikonami.',
+          'Przeciwnicy komputerowi są teraz wszędzie nazywani „Botami” zamiast „AI”.',
+          'Wybór kształtu planszy lub poziomu bota pokazuje teraz pasującą ikonę — kształt planszy oraz własną twarz każdego bota dla jego poziomu trudności.',
+          'Na Androidzie aplikacja pozostaje teraz w orientacji pionowej po przechyleniu telefonu.',
+        ],
+      },
+      'Alpha 0.4.6.2': {
+        changes: [
+          'Przeprojektowano udostępnianą kartę wyniku: większa plansza, wynik pokazany po prostu jako Wygrana / Przegrana / Remis, a kod QR jest teraz w kolorach gry, umieszczony na środku planszy, z podpisem „Zeskanuj i zagraj!”.',
+        ],
+      },
+      'Alpha 0.4.6.0': {
+        changes: [
+          'Udostępniane karty wyniku zawierają teraz skanowalny kod QR — znajomi mogą skierować na niego aparat (lub przytrzymać obraz), aby od razu przejść do gry. Linki z zaproszeniem używają teraz prywatnego kodu zaproszenia zamiast identyfikatora Twojego konta.',
+        ],
+      },
+      'Alpha 0.4.5.3': {
+        changes: [
+          'Przeprojektowano kartę udostępniania: plansza leży teraz na prawdziwym 3D stole z filcu, tak jak w grze, tekst jest wyśrodkowany, a adres DotDuel.com jest znacznie łatwiejszy do odczytania.',
+        ],
+      },
+      'Alpha 0.4.5.2': {
+        changes: [
+          'Karta udostępniania jest teraz renderowana w podwójnej rozdzielczości — nie widać już pikseli po otwarciu obrazu na pełnym ekranie w Messengerze lub WhatsApp.',
+        ],
+      },
+      'Alpha 0.4.5.1': {
+        changes: [
+          'Karta udostępniania: plansza wygląda teraz jak w prawdziwej grze (dopasowano grubość linii; kropki nie są już zagubione na zapełnionych planszach), a wynik nie zachodzi już na etykietę „pkt”.',
+        ],
+      },
+      'Alpha 0.4.5.0': {
+        highlight: 'Szybciej na telefonach',
+        changes: [
+          'Lżejsze efekty graficzne podczas gry — gra działa zauważalnie płynniej na tańszych telefonach, bez zmiany wyglądu.',
+          'Tabela wyników pokazuje teraz zastępcze wiersze podczas ładowania oraz przycisk ponowienia, gdy połączenie zostanie przerwane.',
+          'Zaktualizowano politykę prywatności: poprawiono dostawcę backendu na Supabase, dodano informacje o aplikacji na Androida i AdMob.',
+          'Aplikacja na Androida: przycisk cofania zamyka teraz otwarte okienka zamiast zamykać grę.',
+        ],
+      },
+      'Alpha 0.4.4.0': {
+        highlight: 'Udostępnij swój wynik',
+        changes: [
+          'Nowy przycisk „Udostępnij wynik” na ekranie końca gry — tworzy obraz ukończonej planszy z wynikiem i pozwala udostępnić go gdziekolwiek, wraz z linkiem, dzięki któremu znajomi mogą z Tobą zagrać.',
+        ],
+      },
+      'Alpha 0.4.3.0': {
+        highlight: 'Czystsza plansza, większy tekst',
+        changes: [
+          'Usunięto dymki z podpowiedziami pojawiające się w trakcie gry — migały zbyt szybko, by je przeczytać, i tylko przeszkadzały. Ekran Zasad oraz widok „Pokaż niezajęte linie” nadal uczą zasad punktacji.',
+          'Powiększono każdy mały tekst do minimalnego czytelnego rozmiaru w całej aplikacji, dla lepszej czytelności i dostępności.',
+        ],
+      },
+      'Alpha 0.4.2.0': {
+        highlight: 'Codzienna łamigłówka odrodzona — jedna wspólna plansza, wyścig z czasem',
+        changes: [
+          'Codzienna łamigłówka to teraz ta sama plansza dla wszystkich, każdego dnia: losowy kształt z rozegranym już otwarciem, a potem 3 minuty na zegarze, by zdobyć jak najwyższy wynik. Liczy się najlepsza z 3 prób.',
+          'Codzienny ranking opiera się teraz na Twoim wyniku (nie na przewadze nad AI), a tabela wyników pokazuje zwycięzcę każdego z ostatnich 30 dni.',
+        ],
+      },
+      'Alpha 0.4.1.0': {
+        highlight: 'Motywy kolorystyczne zmieniają wygląd całej planszy',
+        changes: [
+          'Motywy kolorystyczne zmieniają teraz wygląd całej planszy — powierzchnia gry, pionki, świętowanie zwycięstwa i przyciski dopasowują się do wybranego schematu, zamiast pokazywać zieloną planszę pod każdym motywem.',
+          'W meczach online o tym, kto rusza pierwszy, decyduje teraz uczciwy rzut monetą, a rewanże na przemian zmieniają, kto zaczyna — dzięki temu w serii gier każdy z Was ma pierwszy ruch mniej więcej połowę czasu.',
+          'Przeciwnik komputerowy rusza się szybciej, dzięki czemu gry przeciw AI są bardziej responsywne.',
+          'Menu, okienka i ekran końca gry otwierają się teraz płynniej, z mniejszymi opóźnieniami.',
+          'Zablokowane kształty i poziomy trudności pokazują teraz wyraźną kłódkę zamiast wyglądać na wyszarzone lub zepsute.',
+          'Pola logowania e-mailem i hasłem są teraz wyraźnie widoczne, a pionki lepiej odcinają się od planszy w każdym motywie.',
+        ],
+      },
+      'Alpha 0.4.0.0': {
+        highlight: 'Aktualizacja serwera i płynniejsza rozgrywka wieloosobowa',
+        changes: [
+          'Przeniesiono tryb wieloosobowy na nowy, szybszy backend, dla bardziej niezawodnych meczów.',
+          'Zegary w trybie wieloosobowym są teraz płynne i sprawiedliwe — Twój zegar nie przeskakuje już ani nie działa dalej po wykonaniu ruchu.',
+          'Zaproszenia do gry pozostają na ekranie, dopóki znajomy nie odpowie, a Ty możesz je zaakceptować od razu z ekranu wyników.',
+          'Można Cię teraz automatycznie znaleźć po nazwie użytkownika, dzięki czemu znajomi mogą dodać Cię bez dodatkowych kroków.',
+        ],
+      },
+      'Alpha 0.3.7.0': {
+        highlight: 'Automatyczna aktualizacja aplikacji i poprawka przewijania menu',
+        changes: [
+          'Aplikacja aktualizuje się teraz automatycznie — jeśli dodałeś DotDuel do ekranu głównego, sama pobiera nowe wersje, zamiast utknąć na starej wersji z pamięci podręcznej.',
+          'Na telefonach menu przewija się teraz prawidłowo, dzięki czemu karta Rankingi na dole jest w pełni widoczna.',
+        ],
+      },
+      'Alpha 0.3.6.1': {
+        highlight: 'Pozycja planszy na telefonie',
+        changes: [
+          'Plansza na telefonie faktycznie przesuwa się teraz w górę, bliżej kart graczy (poprzednia próba nie zadziałała).',
+        ],
+      },
+      'Alpha 0.3.6.0': {
+        highlight: 'Zaloguj się, aby zagrać',
+        changes: [
+          'Pierwsze uruchomienie otwiera się teraz ekranem „Zaloguj się, aby zagrać” — zaloguj się, aby grać wieloosobowo i mieć postęp zsynchronizowany w chmurze, albo wybierz „graj anonimowo”, by wejść od razu do gry.',
+          'Na telefonach plansza znajduje się teraz bliżej kart graczy, zamiast zostawiać nad sobą dużą pustą przestrzeń.',
+        ],
+      },
+      'Alpha 0.3.5.0': {
+        highlight: 'Poprzedni zwycięzcy łamigłówki i uporządkowane rankingi',
+        changes: [
+          'Tabela wyników łamigłówki ma teraz zakładkę „Ostatni zwycięzcy” — kto wygrał każdego z ostatnich 30 dni, z datą obok każdego imienia.',
+          'Globalny ranking Elo zaczyna się teraz od rankingu: pozycja, Elo, a potem imię gracza.',
+        ],
+      },
+      'Alpha 0.3.4.0': {
+        highlight: 'Świętowanie zwycięstwa skaluje się z poziomem trudności',
+        changes: [
+          'Świętowanie zwycięstwa rośnie teraz wraz z wyzwaniem — niewielki pokaz za wygraną z Początkującym, stopniowo rosnący aż po pełny złoty pokaz za pokonanie Niemożliwego.',
+        ],
+      },
+      'Alpha 0.3.3.0': {
+        highlight: 'Czystsza, dopracowana plansza — gotowa na betę',
+        changes: [
+          'Przeprojektowano ramę planszy: filc leży teraz w równomiernie rozłożonej, gładkiej obudowie z zaokrąglonymi rogami i subtelnym wgłębionym efektem 3D — i prawidłowo obejmuje każdy kształt, w tym ostry wierzchołek trójkąta (wcześniej obrys wyglądał nierówno).',
+          'Karty graczy w grze mieszczą się teraz w pełni na ekranie jako zaokrąglone karty, zamiast wychodzić poza krawędzie.',
+          'Naprawiono okienko podpowiedzi w grze, którego tekst mógł wychodzić poza planszę.',
+        ],
+      },
+      'Alpha 0.3.2.0': {
+        highlight: 'Bardziej premium wygląd · świętowanie zwycięstwa',
+        changes: [
+          'Poprawki wizualne — przyciski oraz karty wyboru trybu Przeciw AI / kształtu / poziomu trudności mają teraz prawdziwą, namacalną głębię 3D (unoszą się po najechaniu i wciskają się po kliknięciu), a główne przyciski dopasowują się kolorem do każdego motywu, zamiast być zawsze zielone.',
+          'Świętowanie zwycięstwa! Zakończenie gry wygraną odpala fajerwerki i konfetti — z przesadnym złotym pokazem za pokonanie Niemożliwego AI.',
+        ],
+      },
+      'Alpha 0.3.1.0': {
+        highlight: 'Prosto do gry · czytelniejsze wyjaśnienie na ekranie głównym',
+        changes: [
+          'Usunięto wprowadzające okienko samouczka — gra otwiera się teraz od razu w menu. Instrukcja gry to teraz jedna, przejrzysta linijka na ekranie głównym, a pełne zasady są zawsze w zasięgu jednego dotknięcia przycisku ?.',
+        ],
+      },
+      'Alpha 0.3.0.0': {
+        highlight: 'Reklamy wspierają darmową grę · ochrona przed brakiem stawienia się w trybie wieloosobowym',
+        changes: [
+          'Na ekranie menu oraz darmowych ekranach jednoosobowych (Przeciw AI, Gra lokalna, Codzienna łamigłówka) pojawiają się teraz małe reklamy, aby DotDuel mógł pozostać darmowy. Brak reklam podczas rankingowych gier wieloosobowych. Zgodą zarządza monit prywatności Google.',
+          'Ochrona przed brakiem stawienia się w trybie wieloosobowym: jeśli gracz nie wykona pierwszego ruchu w ciągu 10 sekund, gra zostaje przerwana bez zmiany rankingu dla żadnej ze stron — dzięki temu rozłączenie lub chwila nieuwagi na starcie nigdy Cię nie kosztuje.',
+        ],
+      },
+      'Alpha 0.2.9.0': {
+        highlight: 'Odświeżony wygląd i czytelność na każdym motywie',
+        changes: [
+          'Świeży wygląd: nowa typografia, oprawiona plansza dopasowana do każdego kształtu (trójkąt, romb, kwadrat), jaśniejsze pionki i czytelniejsze wyniki.',
+          'Panele graczy płynnie zmniejszają się wraz z ekranem — na telefonach zwijają się do kompaktowej karty z awatarem obok imienia, dając planszy więcej miejsca.',
+          'Ustawienia, Zasady i Prywatność zostały uporządkowane w przejrzyste karty, łatwiejsze do przejrzenia.',
+          'Puste kropki są teraz wyraźnie widoczne na każdym motywie, zamiast zlewać się z planszą — zwłaszcza na jasnych motywach.',
+          'Przyciski, ekran końca gry i okienka nie są już trudne do odczytania na jasnych motywach (Monochrome Pro, Vintage Press) — tekst i tła zachowują teraz wszędzie odpowiedni kontrast.',
+        ],
+      },
+      'Alpha 0.2.8.0': {
+        highlight: 'Pełna gra na klawiaturze',
+        changes: [
+          'Pełna gra na klawiaturze: Tab, aby przejść do planszy, strzałki, aby poruszać się między kropkami, Enter lub Spacja, aby postawić kropkę lub zająć linię.',
+          'Mecze rankingowe znajdują teraz przeciwnika-bota w około 15 sekund, gdy brak dostępnego człowieka, zamiast nawet minuty.',
+        ],
+      },
+      'Alpha 0.2.7.2': {
+        highlight: 'Poprawka: miganie / czarny ekran w końcówce gry',
+        changes: [
+          'Miganie w środkowej i końcowej fazie gry (oraz okazjonalny czarny ekran) na bardziej zapełnionych planszach zniknęło. Każda ukończona linia była wcześniej renderowana z efektem dodatkowego blendowania dla jaśniejszego podświetlenia; na Kwadracie i Prostokącie powodowało to nakładanie się dziesiątek warstw kompozytora GPU, co ostatecznie przeciążało pamięć graficzną telefonu. Linie są teraz renderowane prostymi, kontrastowymi kolorami — jasny wygląd „wstążki” pozostał, awaria już nie.',
+        ],
+      },
+      'Alpha 0.2.7.1': {
+        highlight: 'Poprawka: koniec migania na Kwadracie/Prostokącie',
+        changes: [
+          'Podświetlenie „Pokaż niezajęte linie” pojawia się teraz tylko na planszy Trójkąt. Na Kwadracie i Prostokącie powodowało czasami miganie i ciemnienie ekranu, gdy wiele linii było niezajętych. Przełącznik jest ukryty na tych kształtach, dopóki błąd wizualny nie zostanie naprawiony.',
+        ],
+      },
+      'Alpha 0.2.7.0': {
+        highlight: 'Codzienna łamigłówka: 3 próby i tabela wyników',
+        changes: [
+          'Masz teraz 3 próby na dzisiejszą łamigłówkę zamiast 1. Liczy się Twoja najlepsza przewaga — passa nadal rośnie po pierwszym ukończeniu danego dnia.',
+          'Nowa karta „Tabela wyników łamigłówki” w menu. Dzisiejsze najlepsze przewagi na żywo, posortowane od największej do najmniejszej. Remisy rozstrzyga, kto skończył pierwszy. Historyczne tabele wyników (wg dnia, miesiąca, wyszukiwania po imieniu) już wkrótce.',
+        ],
+      },
+      'Alpha 0.2.6.0': {
+        highlight: 'Dzisiejsza łamigłówka',
+        changes: [
+          'Nowa karta „Dzisiejsza łamigłówka” w menu. Jedna próba dziennie przeciw Trudnemu AI na zmieniającym się kształcie. Wynik to Twoja przewaga (Ty minus AI), a każda wygrana dodaje dzień do Twojej passy w Profilu. Jutrzejsza łamigłówka odblokowuje się o północy UTC.',
+          'Logowanie jest wymagane, aby grać w codzienną łamigłówkę i budować passę — passa jest przypisana do konta, więc działa na wszystkich urządzeniach.',
+        ],
+      },
+      'Alpha 0.2.5.0': {
+        highlight: 'Fundament pod codzienną passę',
+        changes: [
+          'Nowa sekcja „Dzienna passa” w Twoim Profilu, przygotowana pod codzienną łamigłówkę (nadchodzi wkrótce). Gdy łamigłówka zostanie wprowadzona, jej codzienne ukończanie będzie budować Twoją passę na wszystkich urządzeniach — przechowywaną na koncie, nie w przeglądarce, więc przetrwa czyszczenie pamięci podręcznej i zmianę urządzenia.',
+        ],
+      },
+      'Alpha 0.2.4.0': {
+        highlight: 'Udostępnianie i zapraszanie z menu',
+        changes: [
+          'Możesz teraz udostępnić DotDuel bezpośrednio z menu głównego. Zalogowani gracze widzą „Zaproś znajomego” — linki niosą Twoje polecenie, więc po rejestracji automatycznie zostajecie znajomymi. Osoby niezalogowane widzą link „Udostępnij DotDuel” pod przyciskiem logowania, do szybkiego, prostego udostępnienia gry.',
+        ],
+      },
+      'Alpha 0.2.3.0': {
+        highlight: 'Podpowiedzi dla nowych graczy i przełącznik zajmowalnych linii',
+        changes: [
+          'Kontekstowe podpowiedzi pojawiające się jednorazowo w trakcie nauki: przy pierwszym zdobyciu punktów, przy pierwszym ruchu kończącym dwie linie naraz (zasada „liczy się tylko największa”), przy pierwszej linii czekającej na zajęcie na początku Twojej tury oraz pod koniec gry.',
+          'Nowy przełącznik z ikoną oka „Pokaż zajmowalne linie” obok przycisku zasad w trybie przeciw AI na poziomach Początkujący/Łatwy/Średni/Trudny. Domyślnie włączony dla Początkującego–Średniego, wyłączony dla Trudnego. Ukryty w Niemożliwym, grze lokalnej i trybie wieloosobowym — odczytywanie planszy jest częścią wyzwania.',
+          'Zaktualizowano wewnętrzny sposób przechowywania ustawień; przy pierwszym uruchomieniu zostaniesz poproszony o ponowne wpisanie imienia i ponownie zobaczysz okienko samouczka. Statystyki, odblokowania i dane konta pozostają nienaruszone.',
+        ],
+      },
+      'Alpha 0.2.2.0': {
+        highlight: 'Widoczna punktacja',
+        changes: [
+          'Punktacja jest teraz widoczna: unoszące się +N wyskakuje z kropki kończącej linię w Twoim kolorze, odznaka Twojego wyniku pulsuje przy zmianie, a odznaka „linii do zajęcia” błyska, gdy nowa linia staje się czekająca.',
+        ],
+      },
+      'Alpha 0.2.1.0': {
+        highlight: 'Telemetria w tle',
+        changes: [
+          'Wewnętrznie: dodano anonimową analitykę lejka dla graczy, którzy zaakceptowali baner cookies — pomaga nam zobaczyć, w którym miejscu gra frustruje nowych graczy, abyśmy mogli to wygładzić. Żadne dane osobowe nie opuszczają urządzenia.',
+        ],
+      },
+      'Alpha 0.2.0.0': {
+        highlight: 'Znajomi i zaproszenia',
+        changes: [
+          'Lista znajomych. Dodaj znajomego po nazwie użytkownika, zobacz, którzy znajomi są online i co robią (przeciw AI, gra lokalna, mecz rankingowy), zaproś znajomego do konkretnej gry (wybierz kształt, kontrolę czasu, rankingową lub towarzyską). Zaproszenia otrzymane w trakcie gry pozostają w kolejce i pojawiają się w chwili powrotu do menu. Zaproszenie rankingowe liczy się do Elo tylko, gdy obie strony wybiorą opcję rankingową; w przeciwnym razie to mecz towarzyski. Po meczu wieloosobowym możesz dodać przeciwnika do znajomych jednym dotknięciem.',
+          'Poleć znajomemu: zaproś ludzi do wypróbowania DotDuel — nie potrzebują jeszcze konta. Korzysta z menu udostępniania Twojego telefonu lub klienta e-mail; nigdy nie widzimy ich adresu. Gdy się zarejestrują, automatycznie otrzymasz od nich prośbę o znajomość.',
+          'Ustawienia → Prywatność: wybierz, kto może rzucić Ci wyzwanie (Wszyscy / Tylko znajomi / Nikt) oraz czy Twój status na żywo jest widoczny dla znajomych.',
+        ],
+      },
+      'Alpha 0.1.5.0': {
+        highlight: 'Porządki w backendzie',
+        changes: [
+          'Wewnętrznie: stan gry wieloosobowej został w całości przeniesiony na nowy transport. Stara ścieżka Realtime Database nie jest już używana do danych gry. Brak widocznej różnicy — jeśli już, to lekko szybciej.',
+        ],
+      },
+      'Alpha 0.1.4.4': {
+        highlight: 'Odświeżenie wraca do menu',
+        changes: [
+          'Twarde odświeżenie strony po zakończonej grze wraca teraz do menu głównego, zamiast pokazywać ten sam ekran końca gry przy każdym odświeżeniu.',
+        ],
+      },
+      'Alpha 0.1.4.3': {
+        highlight: 'Przycisk Gotów i porządkowanie nieaktywnych kart',
+        changes: [
+          'Przycisk Gotów reaguje teraz natychmiast po dotknięciu, zamiast czekać na komunikację z serwerem, a w trybie przeciw AI gra zaczyna się od razu po jego wciśnięciu (bez czekania na odliczanie).',
+          'Jeśli przejąłeś sesję wieloosobową na drugim urządzeniu, pierwsze urządzenie nie pokazuje już fantomowego ekranu końca gry dla rozgrywki zakończonej tam wcześniej.',
+        ],
+      },
+      'Alpha 0.1.4.2': {
+        highlight: 'Odzyskiwanie zablokowanej sesji',
+        changes: [
+          'Jeśli poprzednia sesja utknęła, trzymając blokadę trybu wieloosobowego, możesz teraz dotknąć przycisku Wielu graczy, aby przejąć ją tutaj, zamiast czekać, aż się zwolni.',
+          'Zablokowane sesje zwalniają się teraz dwa razy szybciej (45s zamiast 90s), gdy karta trzymająca blokadę zniknie.',
+        ],
+      },
+      'Alpha 0.1.4.1': {
+        highlight: 'Dopracowanie trybu wieloosobowego',
+        changes: [
+          'Przycisk Gotów faktycznie rozpoczyna teraz grę, gdy tylko obie strony go wciśną (w trybie przeciw AI oznacza to natychmiast po Twoim wciśnięciu).',
+          'Pierwszy ruch w meczu nie wymaga już 8–9 sekund, zanim zareaguje przeciwnik.',
+          'Zalogowanie się na drugim urządzeniu nie wrzuca go już przypadkiem do Twojej aktywnej gry na pierwszym.',
+          'Przyciski menu wyrównano do tego samego rozmiaru, dla czystszego wyglądu.',
+        ],
+      },
+      'Alpha 0.1.4.0': {
+        highlight: 'Tryb wieloosobowy działa teraz w większej liczbie sieci',
+        changes: [
+          'Tryb wieloosobowy łączy się teraz w sieciach, które wcześniej blokowały serwer gry (Whalebone, AdGuard, NextDNS, Brave Shields i podobne filtry na poziomie DNS). Gra korzysta z nowej ścieżki transportu, która przechodzi przez standardowe HTTPS i nie jest blokowana przez listy blokujące trackery. Jeśli tryb wieloosobowy wcześniej zawieszał się na ekranie ładowania, spróbuj ponownie.',
+        ],
+      },
+      'Alpha 0.1.3.6': {
+        highlight: 'Poprawka wyświetlania zegara',
+        changes: [
+          'Wyświetlanie zegara w trybie wieloosobowym nie miga już przy każdym ruchu.',
+        ],
+      },
+      'Alpha 0.1.3.5': {
+        highlight: 'Przyjazny komunikat offline',
+        changes: [
+          'Jeśli Twoja sieć blokuje serwer gry (częste przy mobilnych blokerach reklam/śledzenia takich jak AdGuard, NextDNS czy Whalebone), tryb wieloosobowy pokazuje teraz jasne wyjaśnienie ze wskazówkami zamiast zawieszać się na ekranie ładowania. Tryb jednoosobowy przeciw AI działa offline jak zwykle.',
+        ],
+      },
+      'Alpha 0.1.3.1': {
+        highlight: 'Poprawka przycisków na telefonie',
+        changes: [
+          'Przyciski Wielu graczy i Wyloguj czasami nie reagowały w przeglądarkach mobilnych z rygorystyczną prywatnością (Brave, Firefox Focus). Interfejs przechodzi teraz od razu do kolejnego ekranu, a porządkowanie odbywa się w tle.',
+        ],
+      },
+      'Alpha 0.1.3.0': {
+        highlight: 'Armia botów — nigdy nie czekaj sam',
+        changes: [
+          'Jeśli w ciągu ~15 sekund nie znajdzie się żaden człowiek, zostaniesz sparowany z rankingowym przeciwnikiem AI (Pip, Cricket, Ranger, Knight lub Voidstar). Liczą się oni do Elo i pojawiają się w tabeli wyników.',
+          'Ekran wyszukiwania informuje teraz, kiedy może wkroczyć bot.',
+          'Przycisk rewanżu ukrywa się teraz, gdy przeciwnikiem był bot (boty nie akceptują rewanżów).',
+        ],
+      },
+      'Alpha 0.1.2.5': {
+        highlight: 'Dalsza poprawka rejestracji',
+        changes: [
+          'Wybór nazwy użytkownika działa teraz nawet, jeśli poprzednia próba rejestracji zostawiła niedokończony profil.',
+          'Przycisk wylogowania na ekranie wyboru nazwy, abyś nigdy nie utknął.',
+        ],
+      },
+      'Alpha 0.1.2.4': {
+        highlight: 'Poprawka rejestracji',
+        changes: [
+          'Rejestracja nowego konta nie kończy się już błędem „brak uprawnień” podczas wyboru nazwy użytkownika.',
+        ],
+      },
+      'Alpha 0.1.2.3': {
+        highlight: 'Linki do udostępniania i wzmocnienie bezpieczeństwa',
+        changes: [
+          'Ikona karty przeglądarki i ikona ekranu głównego — dwie kropki DotDuel pojawiają się wszędzie tam, gdzie dodasz grę do zakładek lub zainstalujesz ją.',
+          'Podglądy udostępniania — wklejenie linku DotDuel na Discordzie, Telegramie, Slacku lub Twitterze pokazuje teraz kartę z logotypem i hasłem zamiast pustego pola.',
+          'Zmiana nazwy użytkownika odbywa się teraz atomowo — stara nazwa jest zwalniana, a nowa zajmowana w tej samej operacji.',
+          'Wzmocnienie bezpieczeństwa w tle — bardziej rygorystyczna polityka bezpieczeństwa treści, limity zapytań po stronie serwera dla usuwania konta i sprawdzania nazw użytkownika, zaplanowane porządkowanie zakończonych gier (w ciągu ~24h zgodnie z polityką prywatności) oraz haszowane identyfikatory UID w logach serwera.',
+        ],
+      },
+      'Alpha 0.1.2.2': {
+        highlight: 'Tempo trybu wieloosobowego i czytelność',
+        changes: [
+          'Kolejne kształty planszy w trybie wieloosobowym odblokowują się po 50 i 100 grach rankingowych (najpierw Kwadrat, potem Prostokąt).',
+          'Tryby Kulka (1 min) i Szybka (5 min) tymczasowo zablokowane — dostępna jest tylko Błyskawica (3 min), dopóki baza graczy rośnie.',
+          'Okienko zasad informuje teraz, że tryb wieloosobowy jest dostępny.',
+          'Tytuły „mistrz DotDuel” i „Niemożliwy — pokonany” były niewidoczne na jasnych motywach.',
+        ],
+      },
+      'Alpha 0.1.2.1': {
+        highlight: 'Dopracowanie motywów',
+        changes: [
+          'Każdy motyw kolorystyczny ma teraz własne kolory tekstu i logotypu, zamiast korzystać z domyślnej zieleni.',
+          'Odznaka „wstępny” była niewidoczna na pergaminowym motywie Vintage Press.',
+        ],
+      },
+      'Alpha 0.1.2': {
+        highlight: 'Dopracowanie UX',
+        changes: [
+          'Wybór motywu jest teraz dostępny z każdego ekranu poprzez stopkę.',
+          'Zegar widoczny na telefonie w trybie wieloosobowym.',
+          'Podświetlenie ostatniego ruchu pokazuje teraz kropkę przeciwnika, nie Twoją.',
+          'Ekran wygranej pokazuje teraz, JAK wygrałeś (na czas / na punkty / przeciwnik się poddał).',
+          'Nie dało się zamknąć okienek na telefonie — przycisk zamknięcia jest teraz niezawodnie dostępny.',
+          'Pigułka w stopce zawija się na drugą linię na wąskich telefonach, zamiast być ucinana.',
+          'Wybór motywu i inne okienka są teraz prawidłowo przewijalne, gdy treść jest wyższa niż ekran.',
+          'Okienka były nieczytelne na komputerze, gdy widoczny był baner cookies — rozmiar okienek teraz prawidłowo rezerwuje miejsce.',
+        ],
+      },
+      'Alpha 0.1': {
+        highlight: 'DotDuel wystartował!',
+        changes: [
+          'Publiczny start alfa — tryb wieloosobowy, ranking, motywy, tryb czytelny w słońcu.',
+        ],
+      },
+    },
   },
 
   privacy: {
@@ -491,9 +907,9 @@ export const pl: Messages = {
   },
 
   timeControls: {
-    '1min': { label: 'Bullet', per: '1 minuta na gracza', sub: 'Szybko i nerwowo.' },
-    '3min': { label: 'Blitz', per: '3 minuty na gracza', sub: 'Zrównoważony domyślny.' },
-    '5min': { label: 'Rapid', per: '5 minut na gracza', sub: 'Czas na myślenie.' },
+    '1min': { label: 'Kulka', per: '1 minuta na gracza', sub: 'Szybko i nerwowo.' },
+    '3min': { label: 'Błyskawica', per: '3 minuty na gracza', sub: 'Zrównoważony domyślny.' },
+    '5min': { label: 'Szybka', per: '5 minut na gracza', sub: 'Czas na myślenie.' },
   },
 
   friends: {
@@ -637,7 +1053,8 @@ export const pl: Messages = {
     title: 'Wielu graczy',
     intro: (rating: number) =>
       `Wybierz kontrolę czasu. Dobierzemy Ci przeciwnika o podobnym rankingu (Twój: ${rating}).`,
-    lockedTitle: 'Zablokowane, dopóki baza graczy rośnie — na razie otwarty jest tylko Blitz, by dobieranie było szybkie.',
+    lockedTitle: (openLabel: string) =>
+      `Zablokowane, dopóki baza graczy rośnie — na razie otwarty jest tylko tryb ${openLabel}, aby dobieranie przeciwników było szybkie.`,
     comingBackSoon: 'Wkrótce powraca',
     board: 'Plansza:',
     unlockHint: (nextLabel: string, n: number) =>
@@ -676,6 +1093,23 @@ export const pl: Messages = {
     remaining: (time: string) => `pozostało ${time}`,
   },
 
+  mpUnavailable: {
+    heading: 'Tryb wieloosobowy niedostępny',
+    blockedHint:
+      'Twoja sieć blokuje serwer gry. Najczęstszą przyczyną jest bloker reklam/śledzenia (Whalebone, AdGuard, NextDNS, Pi-hole) lub filtr DNS na Twoim telefonie lub routerze.',
+    tryLabel: 'Spróbuj:',
+    tryWifi: 'innej sieci Wi-Fi lub danych mobilnych',
+    tryBrowser: 'innej przeglądarki',
+    tryDisableFilters: 'chwilowo wyłączyć filtry DNS / VPN',
+    tryWhitelist: (domain: string) => `dodać ${domain} do wyjątków w swoim blokerze`,
+    offlineHint: 'Tryb jednoosobowy przeciw botom działa offline — otwórz Menu i wybierz Boty.',
+  },
+
+  mpConnecting: {
+    heading: 'Łączenie z grą…',
+    hint: 'Łączymy się z serwerem gry. Jeśli trwa to dłużej niż ~10 sekund, coś poszło nie tak — wróć i spróbuj ponownie.',
+  },
+
   share: {
     title: 'DotDuel — szybka strategia w kropki dla 2 graczy',
     textInvite: 'Zagraj ze mną szybką partię w kropki.',
@@ -702,6 +1136,58 @@ export const pl: Messages = {
     hintNoCardLink:
       'Przyciski platform udostępniają Twój tekst i link. Aby dołączyć obraz, użyj Kopiuj obraz i wklej go do swojego posta.',
     downloadImage: '⬇ Pobierz obraz',
+
+    result: {
+      genericBot: 'Bot',
+      ptsLabel: 'pkt',
+      scanCaption: 'Zeskanuj i zagraj!',
+      ctaWin: 'Pokonasz mnie?',
+      ctaLoss: 'Myślisz, że zrobisz to lepiej?',
+      ctaDraw: 'Rozstrzygniesz remis?',
+
+      tagDaily: 'CODZIENNA ŁAMIGŁÓWKA',
+      tagVsBot: (shape: string) => `PRZECIW BOTOWI · ${shape.toUpperCase()}`,
+      tagRanked: (shape: string) => `RANKINGOWA · ${shape.toUpperCase()}`,
+      tagHotseat: (shape: string) => `GRA LOKALNA · ${shape.toUpperCase()}`,
+
+      dailyHeadline: 'Dzisiejsza łamigłówka',
+      dailyCta: 'Pokonasz ten wynik?',
+      dailyShareText: (score: number, url: string) =>
+        `Mój wynik w dzisiejszej łamigłówce DotDuel: ${score} pkt — pokonasz go?\n${url}`,
+
+      aiHeadlineWin: (level: string) => `Bot (${level}) — pokonany`,
+      aiHeadlineLoss: (level: string) => `Bot (${level}) wygrywa tę rundę`,
+      aiHeadlineDraw: (level: string) => `Remis z botem (${level})`,
+      aiShareTextWin: (level: string, s1: number, s2: number, shape: string, url: string) =>
+        `Wynik meczu z botem (${level}) na planszy ${shape} w DotDuel: ${s1}–${s2} dla mnie — dasz radę?\n${url}`,
+      aiShareTextLoss: (level: string, s2: number, s1: number, url: string) =>
+        `Bot (${level}) był górą w DotDuel: ${s2}–${s1}. Myślisz, że zrobisz to lepiej?\n${url}`,
+      aiShareTextDraw: (level: string, s1: number, s2: number, url: string) =>
+        `Remis z botem (${level}) w DotDuel: ${s1}–${s2}. Dokończysz to za mnie?\n${url}`,
+
+      rankedHeadlineWin: (elo: string) => `Zwycięstwo rankingowe${elo}`,
+      rankedHeadlineLoss: 'Zacięty mecz rankingowy',
+      rankedHeadlineDraw: 'Remis rankingowy',
+      rankedShareTextWin: (myScore: number, oppScore: number, elo: string, url: string) =>
+        `Wygrany mecz rankingowy w DotDuel: ${myScore}–${oppScore}${elo} — pokonasz mnie?\n${url}`,
+      rankedShareTextLoss: (myScore: number, oppScore: number, url: string) =>
+        `Rozegrany mecz rankingowy w DotDuel (${myScore}–${oppScore}). Masz ochotę na partię?\n${url}`,
+      rankedShareTextDraw: (myScore: number, oppScore: number, url: string) =>
+        `Remisowy mecz rankingowy w DotDuel (${myScore}–${oppScore}). Rozstrzygniesz go za nas?\n${url}`,
+
+      hotseatHeadlineWin: (winnerName: string) => `${winnerName} wygrywa`,
+      hotseatHeadlineDraw: 'Remis',
+      hotseatShareTextWin: (
+        winnerName: string,
+        loserName: string,
+        winnerScore: number,
+        loserScore: number,
+        url: string,
+      ) =>
+        `Wynik w DotDuel: ${winnerName} – ${winnerScore}, ${loserName} – ${loserScore}. Myślisz, że zrobisz to lepiej?\n${url}`,
+      hotseatShareTextDraw: (p1: string, p2: string, s1: number, s2: number, url: string) =>
+        `Remis w DotDuel: ${p1} – ${s1}, ${p2} – ${s2}. Rozstrzygniesz to za nas?\n${url}`,
+    },
   },
 
   rankings: {

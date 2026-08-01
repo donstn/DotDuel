@@ -137,6 +137,12 @@ export const cs: Messages = {
 
   game: {
     ptsLeft: 'ZBÝVÁ BODŮ',
+    boardAriaLabel: (shape: string) => `Herní deska: ${shape}`,
+    liveDraw: (s1: number, s2: number) => `Konec hry. Remíza, ${s1}:${s2}.`,
+    liveWin: (winner: number, s1: number, s2: number) =>
+      `Konec hry. Vyhrává hráč ${winner}, ${s1}:${s2}.`,
+    liveTurn: (current: number, s1: number, s2: number) =>
+      `Na tahu je hráč ${current}. Skóre: hráč 1, ${s1}; hráč 2, ${s2}.`,
     linesToClaim: (n: number) =>
       plural(n, 'linie k zabrání', 'linie k zabrání', 'linií k zabrání'),
     pendingTitle:
@@ -269,6 +275,416 @@ export const cs: Messages = {
     fixed: 'Opraveno',
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
+    entries: {
+      'Alpha 0.4.12.2': {
+        highlight: 'Aplikace teď mluví ještě víc vaším jazykem',
+        changes: [
+          'Jméno soupeře AI, sdílený obrázek/text karty vítězství a několik obrazovek stavu připojení zůstávaly anglicky bez ohledu na nastavený jazyk — teď jsou přeložené.',
+          'Všechny dřívější poznámky ke změnám v tomto seznamu (až úplně dozadu) jsou teď dostupné v litevštině, španělštině, portugalštině, polštině a češtině, ne jen v angličtině.',
+        ],
+      },
+      'Alpha 0.4.12.1': {
+        highlight: 'Oprava',
+        changes: [
+          'Opravili jsme poskakování/zmenšování desky na telefonech, když skóre přešlo z 2 na 3 číslice.',
+        ],
+      },
+      'Alpha 0.4.12.0': {
+        highlight: 'Vyladění',
+        changes: [
+          'Přesunuli jsme přepínač jazyka doleva nahoru, aby nepřekrýval logo (přepínač tématu zůstává vpravo nahoře).',
+          'Obě hráčské karty na telefonech se nyní správně zrcadlí místo nesouměrného vzhledu.',
+          'Barevné vzorky v místní hře a nastavení „prohodit barvy“ teď odpovídají zvolenému tématu místo pevné krémové/zelené kombinace.',
+          'Tlačítko zpět / gesto zpět nyní krok po kroku prochází menu a obrazovky místo opuštění aplikace — hodnocené hry a pokusy o denní hádanku se stále nejprve zeptají na potvrzení.',
+        ],
+      },
+      'Alpha 0.4.11.0': {
+        highlight: 'Jak hrát',
+        changes: [
+          'Nový průvodce „Jak hrát“ s krátkými animovanými ukázkami na skutečné desce — sleduj, jak roh dá 1 bod, jak se dokončí linie, jak několik linií čeká na zabrání a jak linie vedou všemi směry na Trojúhelníku (3 směry) a Čtverci (4 směry). Otevřeš ho z patičky, vedle Pravidel; klepnutím na desku pozastavíš, přejetím nebo šipkami procházíš.',
+          'Barevné téma se nyní vybírá v Nastavení (přesunuto z patičky, aby bylo místo pro „Jak hrát“).',
+        ],
+      },
+      'Alpha 0.4.10.1': {
+        highlight: 'Opravy',
+        changes: [
+          'Vyskakovací okno odemčeného úspěchu a jazykové menu jsou nyní neprůhledné a čitelné (dříve byla průhledná a prosvítal skrz ně text). Okno úspěchu je také větší.',
+          'Přihlášení na novém zařízení už znovu nezobrazí všechny úspěchy, které jsi už dřív získal.',
+          'Úspěch „Do rohu“ (získej body za rohovou linii za 1 bod) se nyní správně odemyká — dříve se nesledoval.',
+        ],
+      },
+      'Alpha 0.4.10.0': {
+        highlight: 'Kompletní překlad',
+        changes: [
+          'Celá aplikace je nyní přeložená, nejen menu. Tvůj Profil, Přátelé a pozvánky, lobby a obrazovky zápasů pro více hráčů, obrazovka konce hry, Žebříčky a žebříček denní hádanky, sdílení a všech 97 Úspěchů (názvy i popisy) se nyní zobrazují v angličtině, litevštině, španělštině, portugalštině, polštině a češtině.',
+        ],
+      },
+      'Alpha 0.4.9.0': {
+        highlight: 'Jazyky',
+        changes: [
+          'DotDuel nyní mluví šesti jazyky: anglicky, litevsky, španělsky, portugalsky, polsky a česky. Vyber si svůj pomocí tlačítka jazyka vpravo nahoře v menu.',
+          'Hra se nyní automaticky spustí ve tvém jazyce — podle nastavení prohlížeče na webu a podle jazyka zařízení v aplikaci.',
+        ],
+      },
+      'Alpha 0.4.8.0': {
+        highlight: 'Úspěchy',
+        changes: [
+          'Úspěchy! Získej až 100 odznaků za hraní — poražení Botů na každém tvaru a úrovni, série výher, běhy denní hádanky, denní série a velké milníky. Najdeš je pod Žebříčky → Úspěchy; každý odznak se po odemknutí rozsvítí v barvách tvého tématu a hned dostaneš upozornění „🏆 Úspěch odemčen“.',
+          'Připni si oblíbený odznak, aby se zobrazoval vedle tvého jména během hraní.',
+        ],
+      },
+      'Alpha 0.4.7.0': {
+        highlight: 'Nové menu + Boti',
+        changes: [
+          'Hlavní menu je nově přehledně rozdělené do tří sekcí — Jeden hráč, Více hráčů a Žebříčky — každá otevírá úhledný seznam s vlastními ikonami.',
+          'Počítačoví soupeři se nyní všude nazývají „Boti“ místo „AI“.',
+          'Výběr tvaru desky nebo úrovně bota nyní zobrazuje odpovídající ikonu — tvar desky a vlastní tvář každého bota podle jeho obtížnosti.',
+          'Na Androidu aplikace nyní zůstává na výšku i při naklonění telefonu.',
+        ],
+      },
+      'Alpha 0.4.6.2': {
+        changes: [
+          'Přepracovali jsme sdílenou výsledkovou kartu: větší deska, výsledek zobrazený jednoduše jako Výhra / Prohra / Remíza a QR kód nyní v herních barvách uprostřed desky s popiskem „Naskenuj a hraj hned!“.',
+        ],
+      },
+      'Alpha 0.4.6.0': {
+        changes: [
+          'Sdílené výsledkové karty nyní obsahují skenovatelný QR kód — přátelé namíří kameru (nebo podrží prst na obrázku) a rovnou se dostanou do hry. Odkazy s pozvánkou používají soukromý kód pozvánky místo tvého ID účtu.',
+        ],
+      },
+      'Alpha 0.4.5.3': {
+        changes: [
+          'Přepracovaná sdílená karta: deska nyní leží na skutečném 3D plstěném stole jako ve hře, text je vystředěný a adresu DotDuel.com je mnohem snazší přečíst.',
+        ],
+      },
+      'Alpha 0.4.5.2': {
+        changes: [
+          'Sdílená karta se nyní vykresluje ve dvojnásobném rozlišení — žádné viditelné pixely při zobrazení obrázku na celou obrazovku v Messengeru nebo WhatsAppu.',
+        ],
+      },
+      'Alpha 0.4.5.1': {
+        changes: [
+          'Sdílená karta: deska teď vypadá jako ve skutečné hře (sjednocená tloušťka čar, tečky se už neztrácejí na plných deskách) a skóre se už nepřekrývá s popiskem „pts“.',
+        ],
+      },
+      'Alpha 0.4.5.0': {
+        highlight: 'Rychlejší na telefonech',
+        changes: [
+          'Odlehčené grafické efekty během hry — hra běží znatelně plynuleji na levnějších telefonech, vzhled se přitom nezměnil.',
+          'Žebříček nyní během načítání zobrazuje zástupné řádky a při výpadku připojení tlačítko pro opakování.',
+          'Aktualizovány zásady ochrany osobních údajů: opraven poskytovatel backendu na Supabase, doplněna oznámení o Android aplikaci a AdMob.',
+          'Android aplikace: tlačítko zpět nyní zavírá otevřená vyskakovací okna místo ukončení hry.',
+        ],
+      },
+      'Alpha 0.4.4.0': {
+        highlight: 'Sdílej svůj výsledek',
+        changes: [
+          'Nové tlačítko „Sdílet výsledek“ na obrazovce konce hry — vytvoří obrázek tvé dokončené desky se skóre a sdílí ho kamkoli, spolu s odkazem, přes který si tě přátelé mohou zahrát.',
+        ],
+      },
+      'Alpha 0.4.3.0': {
+        highlight: 'Přehlednější deska, větší text',
+        changes: [
+          'Odstranili jsme bubliny s tipy, které se objevovaly uprostřed zápasu — mihly se moc rychle na přečtení a překážely. Obrazovka Pravidel a pohled „Zobrazit nezabrané linie“ stále učí bodování.',
+          'Zvětšili jsme veškerý drobný text v celé aplikaci na minimální čitelnou velikost kvůli lepší čitelnosti a přístupnosti.',
+        ],
+      },
+      'Alpha 0.4.2.0': {
+        highlight: 'Denní hádanka znovuzrozena — jedna sdílená deska, závod s časem',
+        changes: [
+          'Denní hádanka je nyní pro všechny stejná deska, každý den: náhodný tvar s předehraným začátkem, poté 3 minuty na hodinách na co nejvyšší skóre. Počítá se nejlepší ze 3 pokusů.',
+          'Denní žebříček se nyní řídí tvým skóre (ne rozdílem oproti AI) a žebříček ukazuje vítěze každého dne za posledních 30 dní.',
+        ],
+      },
+      'Alpha 0.4.1.0': {
+        highlight: 'Barevná témata přebarví celou desku',
+        changes: [
+          'Barevná témata nyní přebarví celou desku — hrací plochu, kameny, oslavu výhry i tlačítka podle zvoleného schématu, místo aby pod každým tématem prosvítala zelená deska.',
+          'V online zápasech se o tom, kdo táhne první, nyní rozhoduje férový hod mincí a u odvet se střídá, kdo začíná — takže v sérii zápasů má každý první tah zhruba polovinu času.',
+          'Počítačový soupeř táhne rychleji, takže hry proti AI působí svižněji.',
+          'Menu, vyskakovací okna a obrazovka konce hry se nyní otevírají plynuleji, s menším zpožděním.',
+          'Zamčené tvary a obtížnosti nyní zobrazují jasný zámek místo vypadání jako vyšedlé nebo rozbité.',
+          'Pole pro přihlašovací e-mail a heslo jsou nyní jasně viditelná a kameny jsou lépe čitelné na desce v každém tématu.',
+        ],
+      },
+      'Alpha 0.4.0.0': {
+        highlight: 'Vylepšení serveru + plynulejší hra pro více hráčů',
+        changes: [
+          'Přesunuli jsme hru pro více hráčů na nový, rychlejší backend pro spolehlivější zápasy.',
+          'Hodiny ve hře pro více hráčů jsou nyní plynulé a férové — tvé hodiny už neposkakují ani neběží dál po tvém tahu.',
+          'Pozvánky do hry zůstávají na obrazovce, dokud přítel neodpoví, a přijmout je můžeš přímo z obrazovky výsledků.',
+          'Nyní tě lze automaticky najít podle uživatelského jména, takže tě přátelé mohou přidat bez dalších kroků.',
+        ],
+      },
+      'Alpha 0.3.7.0': {
+        highlight: 'Automaticky se aktualizující aplikace + oprava posouvání menu',
+        changes: [
+          'Aplikace se nyní aktualizuje sama — pokud sis přidal DotDuel na plochu, nové verze se stáhnou automaticky místo uvíznutí na staré verzi z mezipaměti.',
+          'Na telefonech se menu nyní správně posouvá, takže je karta Žebříčky dole plně vidět.',
+        ],
+      },
+      'Alpha 0.3.6.1': {
+        highlight: 'Pozice desky na mobilu',
+        changes: [
+          'Deska na mobilu se nyní opravdu posune nahoru k hráčským kartám (předchozí pokus se neprojevil).',
+        ],
+      },
+      'Alpha 0.3.6.0': {
+        highlight: 'Přihlas se a hraj',
+        changes: [
+          'První načtení nyní otevře obrazovku „Přihlas se a hraj“ — přihlas se pro hru pro více hráčů a postup synchronizovaný v cloudu, nebo zvol „hrát anonymně“ a naskoč rovnou do hry.',
+          'Na telefonech se deska nyní posune nahoru k hráčským kartám místo velké mezery nad ní.',
+        ],
+      },
+      'Alpha 0.3.5.0': {
+        highlight: 'Minulí vítězové hádanky + přehlednější žebříčky',
+        changes: [
+          'Žebříček hádanky má nyní záložku „Nedávní vítězové“ — kdo vyhrál v každém z posledních 30 dní, s datem u každého jména.',
+          'Světový žebříček Elo nyní na prvním místě ukazuje hodnocení: pořadí, Elo, pak jméno hráče.',
+        ],
+      },
+      'Alpha 0.3.4.0': {
+        highlight: 'Oslavy výhry podle obtížnosti',
+        changes: [
+          'Tvá oslava výhry nyní roste s výzvou — malá sprška pro výhru nad Začátečnickým botem, postupně sílí až po plnou zlatou show za poražení Nemožného.',
+        ],
+      },
+      'Alpha 0.3.3.0': {
+        highlight: 'Čistší, vypilovanější deska — připraveno na betu',
+        changes: [
+          'Přepracovaný rám desky: plsť nyní sedí v rovnoměrně rozloženém, hladce zaobleném rámu s jemným vsazeným 3D vzhledem — a správně orámuje každý tvar, včetně ostrého hrotu trojúhelníku (dříve vypadal obrys nerovnoměrně).',
+          'Hráčské karty ve hře nyní sedí celé na obrazovce jako zaoblené karty místo přetékání přes okraje.',
+          'Opravena vyskakovací nápověda ve hře, jejíž text mohl přetékat přes desku.',
+        ],
+      },
+      'Alpha 0.3.2.0': {
+        highlight: 'Prémiovější vzhled · oslavy výhry',
+        changes: [
+          'Vizuální vylepšení — tlačítka a karty Proti botovi / tvar / obtížnost nyní mají skutečnou hmatatelnou 3D hloubku (při najetí myší se nadzvednou, po kliknutí se zamáčknou) a hlavní tlačítka odpovídají barvě aktuálního tématu místo stálé zelené.',
+          'Oslavy výhry! Dokončení hry výhrou spustí ohňostroj a konfety — s přehnanou zlatou show za poražení Nemožné AI.',
+        ],
+      },
+      'Alpha 0.3.1.0': {
+        highlight: 'Rovnou do hry · přehlednější návod na hlavní obrazovce',
+        changes: [
+          'Odstranili jsme úvodní vyskakovací výukový program — hra se nyní otevře rovnou do menu. Návod, jak hrát, je jeden jasný řádek přímo na hlavní obrazovce a kompletní pravidla jsou vždy na dosah přes tlačítko ?.',
+        ],
+      },
+      'Alpha 0.3.0.0': {
+        highlight: 'Reklamy podporují bezplatnou hru · ochrana proti nenastoupení ve hře pro více hráčů',
+        changes: [
+          'V menu a na bezplatných obrazovkách pro jednoho hráče (Proti botovi, Místní hra, Denní) se nyní zobrazují malé reklamy, aby DotDuel zůstal zdarma. Během hodnocených zápasů pro více hráčů žádné reklamy nejsou. Souhlas řeší dialog ochrany soukromí od Google.',
+          'Ochrana proti nenastoupení ve hře pro více hráčů: pokud hráč neprovede svůj první tah do 10 sekund, hra se přeruší beze změny hodnocení pro obě strany — takže odpojení nebo rozptýlení na začátku tě nikdy nic nestojí.',
+        ],
+      },
+      'Alpha 0.2.9.0': {
+        highlight: 'Vizuální proměna + čitelnost v každém tématu',
+        changes: [
+          'Nový vzhled: nové písmo, orámovaná deska odpovídající každému tvaru (trojúhelník, kosočtverec, čtverec), jasnější kameny a přehlednější skóre.',
+          'Hráčské panely se plynule zmenšují s velikostí obrazovky — na telefonech se sbalí do kompaktní karty s avatarem vedle jména, čímž deska získá více místa.',
+          'Nastavení, Pravidla a Soukromí jsou nyní uspořádány do přehledných karet, které se snáz procházejí.',
+          'Prázdné tečky jsou nyní dobře čitelné v každém tématu místo splývání s deskou — zejména u světlých témat.',
+          'Tlačítka, obrazovka konce hry a vyskakovací okna už nejsou špatně čitelná u světlých témat (Monochrome Pro, Vintage Press) — text a pozadí mají všude správný kontrast.',
+        ],
+      },
+      'Alpha 0.2.8.0': {
+        highlight: 'Plné ovládání klávesnicí',
+        changes: [
+          'Plné ovládání klávesnicí: Tabem přejdi na desku, šipkami se pohybuj mezi tečkami, Enterem nebo mezerníkem polož tečku nebo zaber linii.',
+          'Hodnocené zápasy ti nyní najdou botího soupeře asi za 15 sekund, pokud není k dispozici žádný člověk, místo až minuty.',
+        ],
+      },
+      'Alpha 0.2.7.2': {
+        highlight: 'Oprava: blikání / černá obrazovka v koncovce',
+        changes: [
+          'Blikání (a občasná černá obrazovka) uprostřed až na konci hry na plnějších deskách je pryč. Každá dokončená linie se dříve vykreslovala s aditivním prolínacím efektem pro jasnější zvýraznění; na Čtverci a Obdélníku to naskládalo desítky vrstev GPU kompozitoru, což nakonec přetížilo grafickou paměť mobilu. Linie se nyní vykreslují jednoduchými barvami s vysokým kontrastem — jasný „stužkový“ vzhled zůstal, pád aplikace ne.',
+        ],
+      },
+      'Alpha 0.2.7.1': {
+        highlight: 'Oprava: konec blikání na Čtverci/Obdélníku',
+        changes: [
+          'Zvýraznění „Zobrazit nezabrané linie“ se nyní zobrazuje jen na desce Trojúhelník. Na Čtverci a Obdélníku občas způsobovalo blikání a ztmavnutí obrazovky, když bylo nezabraných linií hodně. Přepínač je na těchto tvarech skrytý, dokud nebude tato vizuální chyba opravena.',
+        ],
+      },
+      'Alpha 0.2.7.0': {
+        highlight: 'Denní hádanka: 3 pokusy + žebříček',
+        changes: [
+          'Na dnešní hádanku nyní máš 3 pokusy místo 1. Počítá se tvůj nejlepší rozdíl — série se stále navýší po tvém prvním dokončení dne.',
+          'Nová karta „Žebříček hádanky“ v menu. Živě ukazuje dnešní nejlepší rozdíly seřazené od největšího po nejmenší. Při shodě rozhoduje, kdo dokončil dřív. Historické žebříčky (podle dne, měsíce, hledání jména) přijdou brzy.',
+        ],
+      },
+      'Alpha 0.2.6.0': {
+        highlight: 'Dnešní hádanka',
+        changes: [
+          'Nová karta „Dnešní hádanka“ v menu. Jeden pokus denně proti Těžkému botovi na střídajícím se tvaru. Skóre je tvůj rozdíl (ty mínus AI) a každá výhra přidá den do tvé série v Profilu. Zítřejší hádanka se odemkne o půlnoci (UTC).',
+          'Pro hraní denní hádanky a budování série je nutné přihlášení — série je vázaná na tvůj účet, takže funguje napříč zařízeními.',
+        ],
+      },
+      'Alpha 0.2.5.0': {
+        highlight: 'Základy denní série',
+        changes: [
+          'Nová sekce „Denní série“ v tvém Profilu, připravená na denní hádanku (přijde příště). Jakmile hádanka vyjde, její denní dokončování buduje tvou sérii napříč všemi zařízeními — uloženo na tvém účtu, ne v prohlížeči, takže přežije vymazání mezipaměti i výměnu zařízení.',
+        ],
+      },
+      'Alpha 0.2.4.0': {
+        highlight: 'Sdílení + pozvánka z menu',
+        changes: [
+          'Nyní můžeš sdílet DotDuel přímo z hlavního menu. Přihlášení hráči mají „Pozvat přítele“ — odkazy nesou tvé doporučení, takže se s tebou noví hráči automaticky spřátelí po registraci. Nepřihlášení uvidí pod přihlášením odkaz „Sdílet DotDuel“ pro rychlé jednoduché sdílení hry.',
+        ],
+      },
+      'Alpha 0.2.3.0': {
+        highlight: 'Nápovědy při učení + přepínač zabratelných linií',
+        changes: [
+          'Kontextové nápovědy, které se zobrazí jen jednou, jak se učíš hrát: poprvé, když skóruješ, poprvé, když jeden tah uzavře dvě linie (pravidlo „boduje jen nejdelší“), poprvé, když na tebe na začátku tahu čeká nezabraná linie, a ke konci hry.',
+          'Nový přepínač s ikonou oka „Zobrazit zabratelné linie“ vedle tlačítka pravidel v režimu proti botovi Začátečník/Snadná/Střední/Těžká. Ve výchozím stavu zapnuto pro Začátečník–Střední, vypnuto pro Těžkou. Skryto v Nemožné, místní hře a hře pro více hráčů — čtení desky je součástí výzvy.',
+          'Vnitřní úložiště nastavení bylo aktualizováno; budeš požádán o opětovné zadání jména a při prvním načtení znovu uvidíš úvodní vyskakovací okno. Statistiky, odemčení a data účtu nejsou ovlivněny.',
+        ],
+      },
+      'Alpha 0.2.2.0': {
+        highlight: 'Viditelné bodování',
+        changes: [
+          'Bodování je nyní viditelné: plovoucí +N vyskočí z tečky, která dokončila linii, ve tvé barvě, tvůj odznak skóre se rozpulzuje při změně a odznak „linie k zabrání“ se rozbliká, jakmile přibude nová čekající linie.',
+        ],
+      },
+      'Alpha 0.2.1.0': {
+        highlight: 'Telemetrie v zákulisí',
+        changes: [
+          'Interní: přidána anonymní analytika chování pro hráče, kteří přijali cookie lištu — pomáhá nám vidět, kde nové hráče hra frustruje, abychom to mohli vyladit. Žádná osobní data neopouštějí zařízení.',
+        ],
+      },
+      'Alpha 0.2.0.0': {
+        highlight: 'Přátelé a pozvánky',
+        changes: [
+          'Seznam přátel. Přidej přítele podle uživatelského jména, sleduj, kteří přátelé jsou online a co dělají (proti botovi, místní hra, hodnocený zápas), pozvi přítele do konkrétní hry (vlastní volba tvaru, měření času, hodnocená nebo přátelská). Pozvánky, které dostaneš během hry, zůstanou ve frontě a objeví se, jakmile se vrátíš do menu. Hodnocená pozvánka se počítá do Elo, jen pokud obě strany zvolí Hodnocenou; jinak jde o přátelský zápas. Po zápase pro více hráčů můžeš soupeře jedním klepnutím přidat jako přítele.',
+          'Pozvi přítele: pozvi lidi, ať zkusí DotDuel — zatím nepotřebují účet. Použij sdílecí nabídku telefonu nebo e-mailového klienta; jejich adresu nikdy neuvidíme. Až se zaregistrují, automaticky od nich dostaneš žádost o přátelství.',
+          'Nastavení → Soukromí: vyber, kdo tě může vyzvat na hru (Všichni / Jen přátelé / Nikdo) a jestli je tvůj stav naživo viditelný přátelům.',
+        ],
+      },
+      'Alpha 0.1.5.0': {
+        highlight: 'Úklid backendu',
+        changes: [
+          'Interní: stav hry pro více hráčů zcela přesunut na nový přenosový kanál. Stará cesta přes Realtime Database se pro herní data už nepoužívá. Žádný viditelný rozdíl — pokud vůbec, tak nepatrně svižnější.',
+        ],
+      },
+      'Alpha 0.1.4.4': {
+        highlight: 'Obnovení vede domů',
+        changes: [
+          'Tvrdé obnovení stránky po dokončené hře nyní vede zpět do hlavního menu místo opětovného přehrání stejné obrazovky konce hry při každém načtení.',
+        ],
+      },
+      'Alpha 0.1.4.3': {
+        highlight: 'Tlačítko Připraven + úklid neaktivních karet',
+        changes: [
+          'Tlačítko Připraven nyní reaguje okamžitě po klepnutí místo čekání na síťovou odezvu, a proti botovi hra začne ve chvíli, kdy ho stiskneš (bez čekání na odpočet).',
+          'Pokud jsi převzal relaci pro více hráčů na druhém zařízení, první zařízení už nezobrazuje přízračný konec hry za zápas, který jsi dokončil jinde.',
+        ],
+      },
+      'Alpha 0.1.4.2': {
+        highlight: 'Obnova zamčené relace',
+        changes: [
+          'Pokud předchozí relace uvízla s podrženým zámkem pro více hráčů, nyní můžeš klepnutím na tlačítko Více hráčů relaci zde převzít, místo čekání, až se zámek sám uvolní.',
+          'Uvíznuté zámky relace se nyní samy uvolní dvakrát rychleji (za 45 s místo 90 s), když je držící karta pryč.',
+        ],
+      },
+      'Alpha 0.1.4.1': {
+        highlight: 'Vyladění hry pro více hráčů',
+        changes: [
+          'Tlačítko Připraven nyní opravdu spustí hru, jakmile ho stisknou obě strany (proti botovi to znamená hned, jak ho stiskneš ty).',
+          'První tah zápasu už soupeři netrvá 8-9 sekund, než zareaguje.',
+          'Přihlášení na druhém zařízení už tě omylem nepřehodí do tvé aktivní hry na prvním.',
+          'Tlačítka menu zarovnána na stejnou velikost pro čistší vzhled.',
+        ],
+      },
+      'Alpha 0.1.4.0': {
+        highlight: 'Hra pro více hráčů nyní funguje na více sítích',
+        changes: [
+          'Hra pro více hráčů se nyní připojí i v sítích, které dříve herní server blokovaly (Whalebone, AdGuard, NextDNS, Brave Shields a podobné DNS filtry). Hra používá novou přenosovou cestu, která jde přes běžné HTTPS a není blokována seznamy proti sledovacím prvkům. Pokud ti hra pro více hráčů dřív uvízla na načítací obrazovce, zkus to znovu.',
+        ],
+      },
+      'Alpha 0.1.3.6': {
+        highlight: 'Oprava zobrazení hodin',
+        changes: [
+          'Zobrazení hodin ve hře pro více hráčů už při každém tahu neblikne.',
+        ],
+      },
+      'Alpha 0.1.3.5': {
+        highlight: 'Přátelská zpráva o offline stavu',
+        changes: [
+          'Pokud tvá síť blokuje herní server (běžné u mobilních blokovačů reklam/sledování jako AdGuard, NextDNS nebo Whalebone), hra pro více hráčů nyní místo uvíznutí na načítací obrazovce zobrazí jasné vysvětlení s tipy na řešení. Hra proti botovi funguje offline jako obvykle.',
+        ],
+      },
+      'Alpha 0.1.3.1': {
+        highlight: 'Oprava tlačítek na mobilu',
+        changes: [
+          'Tlačítka Více hráčů a Odhlásit se občas v prohlížečích s přísným soukromím na mobilu (Brave, Firefox Focus) nic neudělala. Rozhraní se nyní přepne okamžitě a úklid proběhne na pozadí.',
+        ],
+      },
+      'Alpha 0.1.3.0': {
+        highlight: 'Armáda botů — nikdy nečekej sám',
+        changes: [
+          'Pokud se do ~15 s nenajde žádný člověk, spárujeme tě s hodnoceným AI soupeřem (Pip, Cricket, Ranger, Knight nebo Voidstar). Počítají se do Elo a objevují se v žebříčku.',
+          'Obrazovka hledání ti nyní řekne, kdy může nastoupit bot.',
+          'Tlačítko Odveta se nyní skryje, když byl soupeřem bot (boti odvety nepřijímají).',
+        ],
+      },
+      'Alpha 0.1.2.5': {
+        highlight: 'Navazující oprava registrace',
+        changes: [
+          'Výběr uživatelského jména nyní funguje, i když předchozí pokus o registraci zanechal napůl dokončený profil',
+          'Tlačítko Odhlásit se na obrazovce výběru jména, abys nikdy nezůstal zaseknutý',
+        ],
+      },
+      'Alpha 0.1.2.4': {
+        highlight: 'Oprava registrace',
+        changes: [
+          'Registrace nového účtu už při výběru uživatelského jména neselže s chybou „chybějící oprávnění“',
+        ],
+      },
+      'Alpha 0.1.2.3': {
+        highlight: 'Sdílitelné odkazy + zabezpečení',
+        changes: [
+          'Ikona na kartě prohlížeče a ikona na ploše — dvě tečky DotDuelu se objeví všude, kam si hru přidáš do záložek nebo nainstaluješ.',
+          'Náhledy při sdílení — vložení odkazu na DotDuel do Discordu, Telegramu, Slacku nebo Twitteru nyní vykreslí kartu se slovní značkou a sloganem místo prázdného rámečku.',
+          'Změny uživatelského jména nyní probíhají atomicky — staré jméno se uvolní a nové zabere v jedné operaci.',
+          'Zákulisní zpřísnění zabezpečení — přísnější zásady zabezpečení obsahu, limity počtu požadavků na serveru pro mazání účtu a kontrolu jmen, plánovaný úklid dokončených her (do ~24 h dle zásad soukromí) a hashovaná ID uživatelů v serverových záznamech.',
+        ],
+      },
+      'Alpha 0.1.2.2': {
+        highlight: 'Tempo hry pro více hráčů + čitelnost',
+        changes: [
+          'Tvar desky pro hru pro více hráčů se odemyká po 50 a 100 hodnocených hrách (Čtverec, poté Obdélník).',
+          'Kulka (1 min) a Rapid (5 min) dočasně zamčené — zatím dostupný jen Blesk (3 min), dokud poroste hráčská základna.',
+          'Vyskakovací pravidla nyní uvádí, že hra pro více hráčů je spuštěná.',
+          'Nadpisy „Šampion DotDuel“ a „Nemožná — poražena“ byly na světlých tématech neviditelné.',
+        ],
+      },
+      'Alpha 0.1.2.1': {
+        highlight: 'Vyladění tématu',
+        changes: [
+          'Každé barevné téma má nyní vlastní barvy textu a slovní značky místo přebírání výchozí zelené.',
+          'Odznak „Předběžné“ byl na pergamenovém tématu Vintage Press neviditelný.',
+        ],
+      },
+      'Alpha 0.1.2': {
+        highlight: 'Vylepšení UX',
+        changes: [
+          'Výběr tématu je nyní dostupný z každé obrazovky přes patičku.',
+          'Hodiny viditelné na mobilu ve hře pro více hráčů.',
+          'Zvýraznění posledního tahu nyní ukazuje soupeřovu tečku, ne tvou.',
+          'Obrazovka výhry ti nyní řekne, JAK jsi vyhrál (na čas / na body / soupeř se vzdal).',
+          'Vyskakovací okna na mobilu nešlo zavřít — tlačítko zavřít je nyní spolehlivě dosažitelné.',
+          'Pilulka v patičce se na úzkých telefonech nyní zalomí na druhý řádek místo oříznutí.',
+          'Výběr tématu a další vyskakovací okna jsou nyní správně posouvatelná, když je obsah vyšší než obrazovka.',
+          'Vyskakovací okna byla na desktopu nečitelná, když byla vidět cookie lišta — velikost vyskakovacích oken nyní správně počítá s místem pro ni.',
+        ],
+      },
+      'Alpha 0.1': {
+        highlight: 'DotDuel jde do světa!',
+        changes: [
+          'Veřejné spuštění alfa verze — hra pro více hráčů, žebříček, témata, režim vhodný na slunce.',
+        ],
+      },
+    } as Record<string, { highlight?: string; changes: string[] }>,
   },
 
   privacy: {
@@ -489,8 +905,8 @@ export const cs: Messages = {
   },
 
   timeControls: {
-    '1min': { label: 'Bullet', per: '1 minuta na hráče', sub: 'Rychlé a zběsilé.' },
-    '3min': { label: 'Blitz', per: '3 minuty na hráče', sub: 'Vyvážená volba.' },
+    '1min': { label: 'Kulka', per: '1 minuta na hráče', sub: 'Rychlé a zběsilé.' },
+    '3min': { label: 'Blesk', per: '3 minuty na hráče', sub: 'Vyvážená volba.' },
     '5min': { label: 'Rapid', per: '5 minut na hráče', sub: 'Čas na přemýšlení.' },
   },
 
@@ -635,7 +1051,8 @@ export const cs: Messages = {
     title: 'Více hráčů',
     intro: (rating: number) =>
       `Vyber měření času. Spárujeme tě s jiným hráčem s podobným hodnocením (tvé: ${rating}).`,
-    lockedTitle: 'Zamčeno, dokud poroste hráčská základna — zatím je otevřen jen Blitz, aby bylo párování rychlé.',
+    lockedTitle: (openLabel: string) =>
+      `Zamčeno, dokud poroste hráčská základna — zatím je otevřen jen režim ${openLabel}, aby bylo párování rychlé.`,
     comingBackSoon: 'Brzy se vrátí',
     board: 'Deska:',
     unlockHint: (nextLabel: string, n: number) =>
@@ -674,6 +1091,23 @@ export const cs: Messages = {
     remaining: (time: string) => `${time} zbývá`,
   },
 
+  mpUnavailable: {
+    heading: 'Hra pro více hráčů není dostupná',
+    blockedHint:
+      'Tvá síť blokuje herní server. Nejčastější příčinou je blokovač reklam/sledování (Whalebone, AdGuard, NextDNS, Pi-hole) nebo DNS filtr v telefonu či routeru.',
+    tryLabel: 'Zkus:',
+    tryWifi: 'jinou Wi-Fi síť nebo mobilní data',
+    tryBrowser: 'jiný prohlížeč',
+    tryDisableFilters: 'na chvíli vypnout DNS filtry / VPN',
+    tryWhitelist: (domain: string) => `povolit ${domain} ve svém blokovači`,
+    offlineHint: 'Hra proti botům funguje i offline — otevři Menu a vyber Boti.',
+  },
+
+  mpConnecting: {
+    heading: 'Připojuji se ke hře…',
+    hint: 'Navazuji spojení s herním serverem. Pokud to trvá déle než ~10 sekund, něco je špatně — vrať se zpět a zkus to znovu.',
+  },
+
   share: {
     title: 'DotDuel — rychlá tečková strategie pro 2 hráče',
     textInvite: 'Zahraj si se mnou rychlou partii teček.',
@@ -700,6 +1134,58 @@ export const cs: Messages = {
     hintNoCardLink:
       'Tlačítka platforem sdílejí tvůj text a odkaz. Chceš-li přidat obrázek, použij Kopírovat obrázek a vlož ho do svého příspěvku.',
     downloadImage: '⬇ Stáhnout obrázek',
+
+    result: {
+      genericBot: 'Bot',
+      ptsLabel: 'b.',
+      scanCaption: 'Naskenuj a hraj hned!',
+      ctaWin: 'Troufneš si mě porazit?',
+      ctaLoss: 'Myslíš, že bys to zvládl líp?',
+      ctaDraw: 'Rozhodneš to?',
+
+      tagDaily: 'DENNÍ HÁDANKA',
+      tagVsBot: (shape: string) => `PROTI BOTOVI · ${shape.toUpperCase()}`,
+      tagRanked: (shape: string) => `HODNOCENÁ HRA · ${shape.toUpperCase()}`,
+      tagHotseat: (shape: string) => `MÍSTNÍ HRA · ${shape.toUpperCase()}`,
+
+      dailyHeadline: 'Dnešní hádanka',
+      dailyCta: 'Troufneš si ji porazit?',
+      dailyShareText: (score: number, url: string) =>
+        `Dnes jsem v DotDuel hádance získal ${score} bodů — troufneš si mě porazit?\n${url}`,
+
+      aiHeadlineWin: (level: string) => `Bot ${level} — poražen`,
+      aiHeadlineLoss: (level: string) => `Bot ${level} tentokrát vyhrává`,
+      aiHeadlineDraw: (level: string) => `Remíza proti botovi ${level}`,
+      aiShareTextWin: (level: string, s1: number, s2: number, shape: string, url: string) =>
+        `Porazil jsem bota ${level} ${s1}:${s2} na desce ${shape} v DotDuel — troufneš si taky?\n${url}`,
+      aiShareTextLoss: (level: string, s2: number, s1: number, url: string) =>
+        `Bot ${level} mě porazil ${s2}:${s1} v DotDuel. Myslíš, že bys to zvládl líp?\n${url}`,
+      aiShareTextDraw: (level: string, s1: number, s2: number, url: string) =>
+        `Remízoval jsem s botem ${level} ${s1}:${s2} v DotDuel. Dokončíš to za mě?\n${url}`,
+
+      rankedHeadlineWin: (elo: string) => `Hodnocená výhra${elo}`,
+      rankedHeadlineLoss: 'Těžký hodnocený zápas',
+      rankedHeadlineDraw: 'Hodnocená remíza',
+      rankedShareTextWin: (myScore: number, oppScore: number, elo: string, url: string) =>
+        `Právě jsem vyhrál hodnocený zápas v DotDuel ${myScore}:${oppScore}${elo} — troufneš si mě porazit?\n${url}`,
+      rankedShareTextLoss: (myScore: number, oppScore: number, url: string) =>
+        `Odehrál jsem hodnocený zápas v DotDuel (${myScore}:${oppScore}). Nedáme si hru?\n${url}`,
+      rankedShareTextDraw: (myScore: number, oppScore: number, url: string) =>
+        `Naprosto vyrovnaný hodnocený zápas v DotDuel (${myScore}:${oppScore}). Rozhodneš to za nás?\n${url}`,
+
+      hotseatHeadlineWin: (winnerName: string) => `${winnerName} vyhrává`,
+      hotseatHeadlineDraw: 'Naprostá remíza',
+      hotseatShareTextWin: (
+        winnerName: string,
+        loserName: string,
+        winnerScore: number,
+        loserScore: number,
+        url: string,
+      ) =>
+        `${winnerName} porazil/a ${loserName} ${winnerScore}:${loserScore} v DotDuel. Myslíš, že bys to zvládl líp?\n${url}`,
+      hotseatShareTextDraw: (p1: string, p2: string, s1: number, s2: number, url: string) =>
+        `${p1} a ${p2} remízovali ${s1}:${s2} v DotDuel. Rozhodneš to za nás?\n${url}`,
+    },
   },
 
   rankings: {

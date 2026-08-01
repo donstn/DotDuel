@@ -20,6 +20,7 @@ import {
   type LeaderboardEntry,
 } from '../cloud/leaderboard';
 import { useT } from '../i18n';
+import type { Messages } from '../i18n';
 
 const PLACEMENT_TOTAL = 10;
 
@@ -151,7 +152,7 @@ function sortH2HRows(rows: H2HRow[], key: H2HSortKey, dir: SortDir): H2HRow[] {
   });
 }
 
-function buildPlayerH2H(row: PlayerRow): H2HRow[] {
+function buildPlayerH2H(row: PlayerRow, t: Messages): H2HRow[] {
   const all = loadAllPlayerRows();
   const nameByKey = new Map<string, string>();
   for (const r of all) nameByKey.set(normKey(r.name), r.name);
@@ -164,7 +165,7 @@ function buildPlayerH2H(row: PlayerRow): H2HRow[] {
       const diff = parseAiOpponentKey(key)!;
       out.push({
         key,
-        display: aiOpponentDisplayName(diff),
+        display: aiOpponentDisplayName(diff, t),
         isAI: true,
         diff,
         wins: bucket.wins,
@@ -320,11 +321,11 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
       current.kind === 'player'
         ? (() => {
             const row = playerRows.find((r) => normKey(r.name) === current.key);
-            return row ? buildPlayerH2H(row) : [];
+            return row ? buildPlayerH2H(row, t) : [];
           })()
         : buildAiH2H(current.diff);
     return sortH2HRows(base, h2hSort.key, h2hSort.dir);
-  }, [current, playerRows, h2hSort]);
+  }, [current, playerRows, h2hSort, t]);
 
   const openSubject = (next: Subject) => {
     setStack((s) => [...s, next]);

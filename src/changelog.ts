@@ -30,6 +30,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.12.2',
+    date: '2026-08-01',
+    highlight: 'More of the app speaks your language',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'The AI opponent’s name, the shared victory-card image/text, and a couple of connection-status screens were stuck in English regardless of your language setting — now translated.',
+      },
+      {
+        kind: 'added',
+        text: 'Every past patch note in this changelog (all the way back) is now available in Lithuanian, Spanish, Portuguese, Polish, and Czech, not just English.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.12.1',
     date: '2026-08-01',
     highlight: 'Fix',

@@ -62,6 +62,27 @@ Entries are dated and grouped by symptom domain. Most recent first within each s
 
 ## ⚙️ Layout / responsive
 
+### Board shifts/shrinks on phones when a score crosses a digit boundary (Alpha 0.4.12.1 — 2026-08-01)
+
+**Symptom**
+- On phones (≤720px, the stacked-card layout), the board visibly jumped down and got shorter partway through a game — reported from production via screen recording. User pinpointed it to score digit-count changes: 1→2 digits, then 2→3 digits.
+
+**Root cause**
+- The mobile player card is a `flex-wrap: wrap` row (avatar · name · rating · score). `.player-score` had `min-width: 0` — its box width was purely driven by digit count.
+- When a score crossed a digit boundary (verified by scripting a full Rectangle game: 99 → 106), the score text widened enough that the row no longer fit on one line and wrapped, growing that card's height from 54px to 87px.
+- `.game-body` is a CSS Grid (`grid-template-rows: auto 1fr`, `align-items: stretch`) with both cards in the `auto` row. The row auto-sizes to the *tallest* card, and `align-items: stretch` forces the **other** card to match — even though only one side's score changed. The board sits in the sibling `1fr` row, so it got squeezed and pushed down to make room.
+- Confirmed via a scripted Playwright run at 375×667: `board-wrap`'s `top`/`height` was byte-identical across dozens of score changes until the exact frame a digit boundary was crossed, then it jumped and never fully reverted in normal play (scores only increase).
+
+**Fix**
+- `.player-score` (mobile block, `src/styles.css`): `min-width: 3ch` (DotDuel's max shape total is 252, so 3 digits covers every real score) + `font-variant-numeric: tabular-nums`. Reserves the score's width up front so digit-count changes never alter row width, which removes the wrap trigger entirely.
+- Re-ran the same scripted game after the fix (fill all 63 Rectangle dots + claim all pending lines, scores reaching 127/125): `board-wrap` rect never changed once.
+
+**Forward-looking notes**
+- Any element inside a `flex-wrap` row that sits in a CSS Grid `auto`-height row with `align-items: stretch` can silently resize *sibling* grid cells the moment its content width changes — even content in a cell that itself didn't grow. Audit for this pattern before adding new dynamic-width content (badges, counters, live text) to the mobile card row.
+- General principle for "nothing may reflow" surfaces: reserve width/height for the *maximum* value a dynamic number can take (`ch` units + `tabular-nums`), don't rely on `min-width: 0` + wrap to "just work."
+
+---
+
 ### Eye-toggle button invisible on iPhone-SE topbar (Alpha 0.2.3.0 — 2026-05-31)
 
 **Symptom**

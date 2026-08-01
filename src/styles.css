@@ -4401,7 +4401,14 @@ h1, h2, h3,
     margin: 0 0 0 auto;
     line-height: 1;
     flex-shrink: 0;
-    min-width: 0;
+    /* Reserve room for the largest realistic score (3 digits, shapes cap at
+       252 pts total) so the card's content width never depends on digit
+       count — otherwise a score crossing a digit boundary (e.g. 99 -> 106)
+       widens the row past its wrap threshold, the card grows a second line,
+       and since .game-body stretches both cards to the taller one, the
+       board row (1fr) gets squeezed and visibly shifts. */
+    min-width: 3ch;
+    font-variant-numeric: tabular-nums;
     text-align: right;
     padding: 0 0 0 2px;
   }

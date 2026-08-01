@@ -3,6 +3,21 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.12.1] - 2026-08-01
+
+### Fixed
+
+- **Player cards forcing the board to shift/shrink on phones** — the mobile
+  card row (avatar · name · rating · score) used `flex-wrap: wrap` with the
+  score's box width driven purely by its digit count (`min-width: 0`). Once a
+  score crossed a digit boundary (e.g. 99 → 106), the row no longer fit on one
+  line and wrapped, growing that card's height (54px → 87px). `.game-body` is
+  a CSS grid (`auto 1fr` rows, `align-items: stretch`), so the taller card
+  stretched **both** cards' row and squeezed/shifted the board (`1fr` row)
+  below it. Fixed by giving `.player-score` a reserved `min-width: 3ch` (max
+  realistic score is 3 digits) plus `font-variant-numeric: tabular-nums`, so
+  the card's content width never depends on the score value.
+
 ## [0.4.11.0] - 2026-06-17
 
 ### Added

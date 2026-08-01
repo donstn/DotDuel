@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.12.1',
+    date: '2026-08-01',
+    highlight: 'Fix',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Fixed the board jumping/shrinking on phones when a score crossed from 2 to 3 digits.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.12.0',
     date: '2026-07-26',
     highlight: 'Polish pass',

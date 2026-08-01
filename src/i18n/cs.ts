@@ -276,6 +276,12 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.12.3': {
+        highlight: 'Karty hráčů teď skutečně sedí',
+        changes: [
+          'Na telefonech mohly dvě karty hráčů vypadat úplně jinak — avatar a skóre na jedné kartě byly jinde než na druhé. Teď jsou avatar, jméno a skóre vždy na stejném místě na obou kartách.',
+        ],
+      },
       'Alpha 0.4.12.2': {
         highlight: 'Aplikace teď mluví ještě víc vaším jazykem',
         changes: [

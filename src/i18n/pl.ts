@@ -278,6 +278,12 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.12.3': {
+        highlight: 'Karty graczy w końcu się zgadzają',
+        changes: [
+          'Na telefonach dwie karty graczy czasem wyglądały zupełnie inaczej — awatar i wynik na jednej karcie były w innym miejscu niż na drugiej. Teraz awatar, imię i wynik zawsze znajdują się w tym samym miejscu na obu kartach.',
+        ],
+      },
       'Alpha 0.4.12.2': {
         highlight: 'Aplikacja mówi teraz jeszcze lepiej w Twoim języku',
         changes: [

@@ -267,6 +267,12 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.12.3': {
+        highlight: 'Os cartões dos jogadores agora realmente se alinham',
+        changes: [
+          'No celular, os dois cartões de jogador às vezes pareciam completamente diferentes — o avatar e a pontuação de um ficavam em um lugar diferente do outro. Agora o avatar, o nome e a pontuação ficam sempre no mesmo lugar nos dois cartões.',
+        ],
+      },
       'Alpha 0.4.12.2': {
         highlight: 'O app agora fala ainda mais o seu idioma',
         changes: [

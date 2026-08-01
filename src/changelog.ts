@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.12.3',
+    date: '2026-08-01',
+    highlight: 'Player cards actually line up now',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'On phones, the two player cards could end up looking nothing alike — one card’s avatar and score in different spots than the other’s. Avatar, name, and score now sit in the exact same place on both cards, always.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.12.2',
     date: '2026-08-01',
     highlight: 'More of the app speaks your language',

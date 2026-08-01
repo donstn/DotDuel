@@ -266,6 +266,12 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.12.3': {
+        highlight: 'Las tarjetas de jugador ahora sí coinciden',
+        changes: [
+          'En el móvil, las dos tarjetas de jugador a veces no se parecían en nada — el avatar y la puntuación de una quedaban en un lugar distinto al de la otra. Ahora el avatar, el nombre y la puntuación están siempre en el mismo lugar en ambas tarjetas.',
+        ],
+      },
       'Alpha 0.4.12.2': {
         highlight: 'La app ahora habla más tu idioma',
         changes: [

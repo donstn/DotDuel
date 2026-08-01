@@ -62,6 +62,25 @@ Entries are dated and grouped by symptom domain. Most recent first within each s
 
 ## ⚙️ Layout / responsive
 
+### Mobile player cards not actually mirrored — avatar/name/score land in different slots per card (Alpha 0.4.12.3 — 2026-08-01)
+
+**Symptom**
+- On phones, the two player cards could look wildly different from each other: one card's avatar+name on line 1 and score dropped to line 2, while the OTHER card showed its score+name on line 1 and its (much smaller-looking) avatar on line 2 — nothing lined up between the two cards. Screenshot from production: P1 "Doncikaz" card had a big avatar top-left + score bottom-right; the bot's card had its score top-left + a tiny avatar bottom-right. Reported the same day as (and looks related to) the digit-boundary board-shift bug above.
+
+**Root cause**
+- The mobile card was `display:flex; flex-wrap: wrap` with a *reversed visual `order`* on `.side-panel-right` to fake a left-right mirror (avatar outer edge, score inner edge, on both cards — see the now-deleted comment in `styles.css`). Flex-wrap doesn't guarantee where content breaks to a second line — it depends on each card's own content width (name length, badge presence). Once one card's content overflowed and wrapped, its second line took on whatever was next in that card's *own* `order`, which was the *opposite* item from the other card's second line (avatar vs. score), because the two cards use reversed `order` values. Two independently-wrapping flex rows with mirrored `order` will only ever look mirrored when NEITHER wraps — the moment either one does, they diverge completely.
+- This is architecturally the same root cause as "Board shifts/shrinks..." below: a `flex-wrap` row whose overflow behavior is a side-effect of content length, not a designed state.
+
+**Fix**
+- Replaced the flex-wrap row with a `display: grid` layout: `grid-template-columns: auto minmax(0,1fr) auto; grid-template-rows: auto auto;`. Avatar is always `grid-column:1 / grid-row:1`, name always `grid-column:2 / grid-row:1`, rating always `grid-column:2 / grid-row:2`, score always `grid-column:3`, spanning both rows (vertically centered). This is the exact same CSS for `.side-panel-left` AND `.side-panel-right` — the entire `order`-reversal block for `.side-panel-right` was deleted. No more wrapping is possible: grid columns don't reflow on overflow the way flex-wrap does, so overflow in the name column just triggers its own `text-overflow: ellipsis` (already in place) instead of restructuring the whole card.
+- Also shrank the score's mobile font-size to `clamp(1.3rem, 6vw, 1.7rem)` (was a fixed 1.8rem) and trimmed card gap/padding slightly — the fixed-slot grid reserves `min-width: 3ch` for the score column same as before, which combined with the old font-size left too little room for the name column and caused overly aggressive truncation.
+
+**Forward-looking notes**
+- **General principle, same lesson twice in one day**: `flex-wrap: wrap` inside a fixed-width container is fine ONLY if you can guarantee it never actually wraps (reserve worst-case width for every child) — the instant it might wrap, treat that as a real second layout state that needs its own explicit design, or better, avoid wrap-based layouts entirely in favor of CSS Grid with named/fixed template areas, which don't have an "overflow reflows arbitrarily" failure mode.
+- If a future request asks for the two cards to be a true left-right MIRROR (avatar on the outer edge of each card, near the screen edge, score on the inner edge near the board) rather than identical twins, that's a deliberate design choice to make explicitly (e.g., via `.side-panel-right { direction: rtl }` + `direction: ltr` on children, which mirrors visually without needing per-child order overrides) — don't reintroduce it via `order` reversal on a wrap-capable container.
+
+---
+
 ### Board shifts/shrinks on phones when a score crosses a digit boundary (Alpha 0.4.12.1 — 2026-08-01)
 
 **Symptom**

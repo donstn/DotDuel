@@ -276,6 +276,12 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.12.3': {
+        highlight: 'Žaidėjų kortelės dabar tikrai sutampa',
+        changes: [
+          'Telefonuose dvi žaidėjų kortelės kartais atrodydavo visiškai skirtingai — vienoje avataras ir rezultatas būdavo kitoje vietoje nei kitoje. Dabar avataras, vardas ir rezultatas visada yra toje pačioje vietoje abiejose kortelėse.',
+        ],
+      },
       'Alpha 0.4.12.2': {
         highlight: 'Programėlė dabar dar geriau kalba jūsų kalba',
         changes: [

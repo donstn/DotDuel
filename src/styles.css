@@ -4328,22 +4328,30 @@ h1, h2, h3,
     height: auto;
   }
 
-  /* Mobile card layout: a compact horizontal row — avatar beside the name
-     (flex:1, truncates), score on the right. Cards sit side-by-side above
-     the board via the game-body grid. Stats/totals are already hidden by the
-     progressive breakpoints above. */
+  /* Mobile card layout: a fixed-slot GRID, not a wrapping flex row.
+     avatar/belowAvatar always occupy column 1 (row 1 / row 2), name/rating
+     always column 2 (row 1 / row 2), score always column 3 spanning both
+     rows. This is IDENTICAL for both side-panel-left and side-panel-right —
+     no left/right "mirroring" — so avatar/name/score sit in the exact same
+     slot on both cards no matter what. A flex-wrap row here previously let
+     long names or 3-digit scores force a second line, and because the two
+     cards independently decided what to wrap, they landed in wildly
+     different-looking layouts (see bugs.md, "Board shifts/shrinks..." for
+     the related score-width incident). Grid areas don't reflow like that —
+     overflow in column 2 (name) just triggers its own ellipsis truncation,
+     everything else stays put. */
   .side-panel,
   .side-panel-left,
   .side-panel-right {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 7px;
+    row-gap: 2px;
     width: auto;
     min-width: 0;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 9px;
-    row-gap: 5px;
-    padding: 7px 11px;
+    padding: 7px 9px;
     border-radius: var(--radius);
     margin: 0;
     border: 1px solid var(--glass-border);
@@ -4354,19 +4362,22 @@ h1, h2, h3,
   .avatar-frame {
     /* Scale fluidly: tiny on small phones, larger on tablets. */
     width: clamp(32px, 10vw, 50px);
-    flex-shrink: 0;
-    order: 1;
+    grid-column: 1;
+    grid-row: 1;
   }
 
   .player-below-avatar {
     width: auto;
     margin: 0;
-    flex-shrink: 0;
-    order: 2;
+    grid-column: 1;
+    grid-row: 2;
   }
 
   .player-name-row {
-    order: 3;
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    justify-content: flex-start;
   }
 
   .player-name {
@@ -4387,30 +4398,30 @@ h1, h2, h3,
   }
 
   .player-rating {
-    order: 4;
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
     font-size: 0.75rem;
     padding: 0;
     margin-top: 1px;
     color: var(--text-dim);
-    text-align: center;
+    text-align: left;
   }
 
   .player-score {
-    order: 5;
-    font-size: 1.8rem;
-    margin: 0 0 0 auto;
+    grid-column: 3;
+    grid-row: 1 / 3;
+    font-size: clamp(1.3rem, 6vw, 1.7rem);
+    margin: 0;
     line-height: 1;
-    flex-shrink: 0;
     /* Reserve room for the largest realistic score (3 digits, shapes cap at
        252 pts total) so the card's content width never depends on digit
        count — otherwise a score crossing a digit boundary (e.g. 99 -> 106)
-       widens the row past its wrap threshold, the card grows a second line,
-       and since .game-body stretches both cards to the taller one, the
-       board row (1fr) gets squeezed and visibly shifts. */
+       widens the column past its available space. */
     min-width: 3ch;
     font-variant-numeric: tabular-nums;
     text-align: right;
-    padding: 0 0 0 2px;
+    padding: 0;
   }
 
   .player-stats,
@@ -4425,31 +4436,6 @@ h1, h2, h3,
     margin: 0;
     font-size: 0.85rem;
     pointer-events: none;
-  }
-
-  /* Mirror the right-hand card so the two panels are true mirror images
-     instead of both flowing left-to-right the same way: with a shared
-     visual order (avatar, elo, name, rating, score) and .player-score's
-     margin-left:auto pushing to the physical right, side-panel-left ends
-     up with its avatar on the outer edge and score on the inner edge
-     (next to the board) — but side-panel-right got the SAME layout, so
-     its avatar sat on the inner edge and score on the outer edge: the
-     reverse of a mirror. Flip the visual order here instead so
-     side-panel-right's avatar sits outer-right and its score sits
-     inner-left, matching side-panel-left's mirror image. */
-  .side-panel-right .avatar-frame { order: 5; margin-left: auto; margin-right: 0; }
-  .side-panel-right .player-below-avatar { order: 4; }
-  .side-panel-right .player-name-row { order: 3; }
-  .side-panel-right .player-rating { order: 2; }
-  .side-panel-right .player-score {
-    order: 1;
-    margin: 0;
-    text-align: left;
-    padding: 0 2px 0 0;
-  }
-  .side-panel-right .thinking-dots {
-    right: auto;
-    left: 6px;
   }
 }
 

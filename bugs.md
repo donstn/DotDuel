@@ -214,6 +214,27 @@ Entries are dated and grouped by symptom domain. Most recent first within each s
 
 ## ☁️ Backend / sync
 
+### Retention sweep could permanently delete a finished game before Elo finalization (found by Codex adversarial review, 2026-08-02)
+
+**Symptom**
+- Not yet observed in the wild — caught by an adversarial code review of `supabase/migrations/20260727000000_retention_sweep.sql` before/shortly after it shipped, not a user report.
+
+**Root cause**
+- `retention_sweep()` purged `public.games` rows by age alone: `status = 'finished' and finished_at < now() - interval '24 hours'`, on the assumption that `finalize_game()` had already copied the permanent record into `public.matches` (same `id` as the game).
+- `finalize_game` runs as a **separate follow-up RPC call** from `submit-move` (`supabase/functions/submit-move/index.ts`), after the `games` row is already written with `status='finished'`. A transient failure in that RPC (network blip, engine exception) leaves the game finished with **no `matches` row at all** — and since `finalize_game`'s insert is one statement, a failure partway through leaves nothing, not a partial row.
+- The sweep had no check for this: it would delete the finished game 24h later regardless, destroying the only copy of the game (board/clock/score state) with no way to retry finalization or reconstruct the result.
+
+**Fix**
+- Purge query now joins `public.matches` and requires `m.elo_finalized = true` before a game is eligible for deletion.
+- Finished-but-unfinalized games are never deleted. Instead, `retention_sweep()` retries `finalize_game(id)` for each of them every run (any age, so it self-heals within the hour), one at a time in a `begin/exception when others` block so one permanently-broken game can't raise an exception and abort the rest of the sweep (including the unrelated 24-month match-history purge).
+- Logs a `raise warning` with the count whenever a game has been stuck unfinalized for >24h, so a persistently-failing case is visible (e.g. via Supabase log alerts) instead of silently accumulating forever.
+
+**Forward-looking notes**
+- General pattern: any retention/purge job that assumes "a permanent copy already exists elsewhere" must verify that copy actually committed (a join + status flag), never infer it from age/status on the source row alone — the write that creates the copy can fail independently of the write that marks the source "done".
+- If `finalize_game`'s signature or the `matches.elo_finalized` column ever changes, update both the purge join and the retry loop here.
+
+---
+
 ### `acceptInvite` 500 error (Alpha 0.2.0.0 polish, commit ff9dda7)
 
 **Symptom**

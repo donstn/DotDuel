@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.12.4',
+    date: '2026-08-04',
+    highlight: 'Fixed a multiplayer move sometimes vanishing after you placed it',
+    changes: [
+      {
+        kind: 'fixed',
+        text: "In online matches, placing a dot could occasionally disappear right after you placed it, forcing you to place it again — caused by a network hiccup silently discarding the move. It now retries automatically, and if it still fails you'll see a clear message instead of the dot just vanishing.",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.12.3',
     date: '2026-08-01',
     highlight: 'Player cards actually line up now',

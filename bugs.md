@@ -214,6 +214,34 @@ Entries are dated and grouped by symptom domain. Most recent first within each s
 
 ## ☁️ Backend / sync
 
+### Multiplayer: placed dot silently reverts, forcing a re-place (FIXED — Alpha 0.4.12.4, 2026-08-04)
+
+**Status:** root cause identified by code inspection, confirmed by user report as a multiplayer-only symptom. Fixed same session — not yet reproduced live under controlled network throttling (would need a flaky-network repro on a real match to visually confirm), but the fix directly closes the code path identified below.
+
+**Symptom**
+- User report: "sometimes when I place a dot, it places and disappears again and I need to place it again." Happened several times across sessions.
+
+**Root cause**
+- `handleMpDotClick` / `handleMpClaimClick` (`src/App.tsx:1975-2054`) place the dot **optimistically** first (`setOptimisticMpState`), then `await sendMove(...)` (`src/cloud/onlineGame.ts:201-212`, which calls the `submit-move` Edge Function).
+- If that call throws for **any** reason — Edge Function cold-start/timeout, a transient connectivity blip, an auth JWT mid-refresh after the app was backgrounded, or a genuine server-side rejection (`submit-move/index.ts` returns 409/422/500 in several cases: `NOT_YOUR_TURN`, `GAME_NOT_ACTIVE`, `INVALID_MOVE`, `WRITE_FAILED`) — the `catch` block (`App.tsx:2007-2014`, `2046-2053`) unconditionally discards the optimistic state (`setOptimisticMpState(null)`) and re-enables input (`setMoveInFlight(false)`), snapping the board back to the last server-confirmed state.
+- The only feedback on this path is `console.warn('sendMove failed:', e)` — **nothing is shown to the player.** The dot just vanishes and the board unlocks, which reads exactly like "it placed and disappeared."
+- The sibling mechanism that looks like it should surface this (`onlineError` state + the "Server-side rejection of a move: revert optimistic state" effect at `App.tsx:1753-1759`) is fed by `watchError()` (`src/cloud/onlineGame.ts:193-199`), which is a **vestigial no-op left over from the Firebase→Supabase migration** — it calls `onChange(null)` once at mount and never again, so `onlineError` is permanently `null` and that effect is dead code. There is currently no live path that gives the player any explanation or automatic retry when a move fails to submit.
+- Ruled out: local (vs-AI / hot-seat) play has no equivalent revert path — `handleDotClick`/`handleClaimClick` (`App.tsx:2056-2099`) are synchronous, pure (`applyMove`/`applyClaim` in `game.ts`), and nothing else in `App.tsx` overwrites `state` afterward. If the symptom also occurs in local modes, this diagnosis does not explain it and needs a fresh investigation there.
+
+**Fix**
+- `sendMove` (`src/cloud/onlineGame.ts`) now retries the `submit-move` invoke up to 2 extra times (3 attempts total) with a short backoff (350ms × attempt) before throwing — absorbs Edge Function cold starts and brief connectivity blips, the most likely everyday trigger, without ever touching the optimistic board.
+- If all retries are exhausted, the existing revert still happens, but now also shows a visible toast (`t.game.moveFailed`, new i18n key across all 6 locales) for ~3.2s on the mpgame screen (`.move-failed-toast` in `styles.css`) instead of silently snapping back with only a `console.warn`.
+- Removed the dead `onlineError`/`watchError`/`OnlineError` plumbing (Firebase-era vestige, confirmed a permanent no-op) — it was misleading future readers into thinking server-rejections were already surfaced when they weren't.
+
+**Still open**
+- A genuine server-side rejection (409/422/500 from `submit-move`) still just reverts + shows the generic toast rather than a specific message — acceptable for now since those cases are rare (a real turn/state race) and retrying them 3× just adds ~1s before the same honest "didn't go through" outcome.
+
+**Forward-looking notes**
+- If reproducing on demand: throttle network in devtools (or airplane-mode toggle mid-move on a phone) right after tapping a dot in an active multiplayer match, and watch for the console.warn.
+- Cross-reference: `src/cloud/onlineGame.ts:191-192` comment already flags "there's no per-game error node to watch" — this entry supersedes that as a live bug rather than a design note.
+
+---
+
 ### Retention sweep could permanently delete a finished game before Elo finalization (found by Codex adversarial review, 2026-08-02)
 
 **Symptom**

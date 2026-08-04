@@ -79,13 +79,6 @@ function normalizeState(raw: Partial<GameState> & Record<string, unknown>): Game
   };
 }
 
-export interface OnlineError {
-  code: string;
-  message: string;
-  forUid: string;
-  ts: number;
-}
-
 // `games.winner` is stored as text ('1' | '2' | 'draw' | null). Map to the union.
 function parseWinner(w: unknown): Player | 'draw' | null {
   if (w === '1' || w === 1) return 1;
@@ -188,15 +181,8 @@ export function watchGame(
   };
 }
 
-// Supabase moves validation errors onto the submit-move promise rejection —
-// there's no per-game error node to watch.
-export function watchError(
-  _gameId: string,
-  onChange: (err: OnlineError | null) => void,
-): () => void {
-  onChange(null);
-  return () => {};
-}
+const SEND_MOVE_RETRIES = 2; // extra attempts after the first, so 3 total
+const SEND_MOVE_RETRY_DELAY_MS = 350;
 
 export async function sendMove(
   gameId: string,
@@ -206,9 +192,25 @@ export async function sendMove(
 ): Promise<void> {
   // clientSentAtMs is the send time in SERVER time (caller adds its measured
   // skew); the server uses it for lag compensation (credit network transit).
-  await loggedWrite(`sendMove[${gameId} kind=${action.kind}] (supabase)`, () =>
-    invokeFn('submit-move', { gameId, action, clientSentAt: clientSentAtMs }),
-  );
+  //
+  // Edge Function cold starts and brief mobile connectivity blips are common
+  // enough that a bare failure here used to silently revert an
+  // already-placed dot with no explanation (bugs.md: "Multiplayer: placed
+  // dot silently reverts"). Retry a couple of times with a short backoff
+  // before giving up — the caller only reverts the optimistic move once this
+  // throws for good.
+  for (let attempt = 0; attempt <= SEND_MOVE_RETRIES; attempt++) {
+    try {
+      await loggedWrite(
+        `sendMove[${gameId} kind=${action.kind}] (supabase) attempt ${attempt + 1}`,
+        () => invokeFn('submit-move', { gameId, action, clientSentAt: clientSentAtMs }),
+      );
+      return;
+    } catch (e) {
+      if (attempt === SEND_MOVE_RETRIES) throw e;
+      await new Promise((r) => setTimeout(r, SEND_MOVE_RETRY_DELAY_MS * (attempt + 1)));
+    }
+  }
 }
 
 export async function markReady(

@@ -186,6 +186,7 @@ export const en = {
     thinking: 'Thinking',
     bot: 'BOT',
     aiOpponent: 'AI opponent',
+    moveFailed: "Move didn't go through — try again",
   },
 
   // Rules popover (How to play).

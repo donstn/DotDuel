@@ -169,6 +169,7 @@ export const pl: Messages = {
     thinking: 'Myśli',
     bot: 'BOT',
     aiOpponent: 'Przeciwnik AI',
+    moveFailed: 'Ruch nie został wysłany — spróbuj ponownie',
   },
 
   rules: {

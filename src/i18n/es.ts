@@ -157,6 +157,7 @@ export const es: Messages = {
     thinking: 'Pensando',
     bot: 'BOT',
     aiOpponent: 'Oponente IA',
+    moveFailed: 'La jugada no se envió — inténtalo de nuevo',
   },
 
   rules: {

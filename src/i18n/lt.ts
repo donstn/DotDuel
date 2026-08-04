@@ -167,6 +167,7 @@ export const lt: Messages = {
     thinking: 'Galvoja',
     bot: 'BOTAS',
     aiOpponent: 'DI varžovas',
+    moveFailed: 'Ėjimas neišsiuntė — bandykite dar kartą',
   },
 
   rules: {

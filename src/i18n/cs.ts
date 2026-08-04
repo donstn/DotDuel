@@ -167,6 +167,7 @@ export const cs: Messages = {
     thinking: 'Přemýšlí',
     bot: 'BOT',
     aiOpponent: 'Soupeř AI',
+    moveFailed: 'Tah se neodeslal — zkus to znovu',
   },
 
   rules: {

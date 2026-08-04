@@ -65,11 +65,9 @@ import {
   sendResign,
   subscribeConnectionDiag,
   watchConnection,
-  watchError,
   watchGame,
   type ConnectionStatus,
   type GameClock,
-  type OnlineError,
   type OnlineGame,
 } from './cloud/onlineGame';
 import { measureServerSkewMs } from './cloud/serverTime';
@@ -265,7 +263,10 @@ export default function App() {
   const [queueTimeControl, setQueueTimeControl] = useState<TimeControl | null>(null);
   const [onlineGameId, setOnlineGameId] = useState<string | null>(null);
   const [onlineGame, setOnlineGame] = useState<OnlineGame | null>(null);
-  const [onlineError, setOnlineError] = useState<OnlineError | null>(null);
+  // One-shot toast for when sendMove exhausts its retries and the optimistic
+  // move has to be reverted — see bugs.md "Multiplayer: placed dot silently
+  // reverts". `seq` re-triggers the toast's auto-dismiss timer on repeat failures.
+  const [moveFailedToast, setMoveFailedToast] = useState<{ seq: number } | null>(null);
   const [moveInFlight, setMoveInFlight] = useState(false);
   const [optimisticMpState, setOptimisticMpState] = useState<{
     baseTurn: number;
@@ -1293,7 +1294,7 @@ export default function App() {
     setPairing(null);
     setOnlineGameId(null);
     setOnlineGame(null);
-    setOnlineError(null);
+    setMoveFailedToast(null);
     setScreen('menu');
   }, [pairing, onlineGame, user, screen]);
 
@@ -1312,7 +1313,7 @@ export default function App() {
     setPairing(null);
     setOnlineGameId(null);
     setOnlineGame(null);
-    setOnlineError(null);
+    setMoveFailedToast(null);
     setOptimisticMpState(null);
     setQueueTimeControl(null);
     setMpMatchRecord(null);
@@ -1460,7 +1461,7 @@ export default function App() {
     setPairing(null);
     setOnlineGameId(null);
     setOnlineGame(null);
-    setOnlineError(null);
+    setMoveFailedToast(null);
     setMoveInFlight(false);
     setOptimisticMpState(null);
     setQueueTimeControl(null);
@@ -1655,7 +1656,7 @@ export default function App() {
     setPairing(null);
     setOnlineGameId(null);
     setOnlineGame(null);
-    setOnlineError(null);
+    setMoveFailedToast(null);
     setMoveInFlight(false);
     setOptimisticMpState(null);
     setQueueTimeControl(null);
@@ -1689,12 +1690,7 @@ export default function App() {
   // Subscribe to the RTDB game node whenever we have a matchId.
   useEffect(() => {
     if (!onlineGameId) return;
-    const unsubGame = watchGame(onlineGameId, setOnlineGame);
-    const unsubErr = watchError(onlineGameId, setOnlineError);
-    return () => {
-      unsubGame();
-      unsubErr();
-    };
+    return watchGame(onlineGameId, setOnlineGame);
   }, [onlineGameId]);
 
   // Subscribe to the Firestore match doc so we can read the Elo deltas
@@ -1750,13 +1746,12 @@ export default function App() {
     }
   }, [onlineGame?.state.turn, optimisticMpState]);
 
-  // Server-side rejection of a move: revert optimistic state and unlock board.
+  // Auto-dismiss the move-failed toast (see sendMove's catch above).
   useEffect(() => {
-    if (!onlineError) return;
-    setOptimisticMpState(null);
-    setOptimisticClock(null);
-    setMoveInFlight(false);
-  }, [onlineError?.ts]);
+    if (!moveFailedToast) return;
+    const timer = window.setTimeout(() => setMoveFailedToast(null), 3200);
+    return () => window.clearTimeout(timer);
+  }, [moveFailedToast?.seq]);
 
   // Measure the client↔server clock offset once per match so the clock badges
   // extrapolate against the server's turnStartedAt accurately.
@@ -2011,6 +2006,7 @@ export default function App() {
       setMoveInFlight(false);
       setOptimisticMpState(null);
       setOptimisticClock(null);
+      setMoveFailedToast({ seq: Date.now() });
     }
   };
 
@@ -2050,6 +2046,7 @@ export default function App() {
       setMoveInFlight(false);
       setOptimisticMpState(null);
       setOptimisticClock(null);
+      setMoveFailedToast({ seq: Date.now() });
     }
   };
 
@@ -2227,6 +2224,11 @@ export default function App() {
           queue={achToasts}
           onDismiss={() => setAchToasts((q) => q.slice(1))}
         />
+        {moveFailedToast && (
+          <div className="move-failed-toast" role="status" aria-live="assertive">
+            {t.game.moveFailed}
+          </div>
+        )}
         <div className="game-topbar">
           <button className="btn-back" onClick={onMpBackPressed} aria-label={t.game.leaveMatch}>
             ‹

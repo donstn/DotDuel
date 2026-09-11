@@ -629,6 +629,34 @@ body {
   background-attachment: fixed;
 }
 
+/* Forest & Pearl only: painted scenery behind the vignette. Two crops (the
+   app has no way to test real device orientation at build time) picked by
+   viewport aspect ratio, not by device type. Layered UNDER the existing
+   radial-gradient vignette so the vignette's darkening toward the edges
+   still applies on top of the art, keeping foreground UI legible — and the
+   film-grain overlay (body::before, z-index 1) still draws over everything,
+   unifying art + vignette into one image exactly as it already did for the
+   plain gradient. */
+html:not([data-theme]) body,
+html[data-theme="forest-pearl"] body {
+  background:
+    radial-gradient(ellipse at 50% 38%, transparent 0%, var(--bg-edge) 92%),
+    url('/art/forest-pearl/background-landscape.png') center / cover no-repeat,
+    #000;
+  background-attachment: fixed;
+}
+
+@media (max-aspect-ratio: 4/5) {
+  html:not([data-theme]) body,
+  html[data-theme="forest-pearl"] body {
+    background:
+      radial-gradient(ellipse at 50% 38%, transparent 0%, var(--bg-edge) 92%),
+      url('/art/forest-pearl/background-portrait.png') center / cover no-repeat,
+      #000;
+    background-attachment: fixed;
+  }
+}
+
 /* Subtle film-grain overlay across the whole app for organic depth */
 body::before {
   content: "";

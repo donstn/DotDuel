@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { getBoard } from '../geometry';
 import { useT } from '../i18n';
 import type { GameState, Line, Player } from '../types';
+import type { ThemeId } from '../theme';
 
 interface ScoreEvent {
   dotId: number;
@@ -28,6 +29,7 @@ interface Props {
   colorSwap?: boolean;
   showHints?: boolean;
   scoreEvent?: ScoreEvent | null;
+  theme?: ThemeId;
 }
 
 function colorIndex(player: Player, swap: boolean): 1 | 2 {
@@ -191,8 +193,10 @@ export function Board({
   colorSwap = false,
   showHints = false,
   scoreEvent = null,
+  theme,
 }: Props) {
   const t = useT();
+  const useForestArt = theme === 'forest-pearl';
   const board = getBoard(state.shape);
   const vb = board.viewBox;
   const dotRadius = state.shape === 'triangle' ? 0.32 : 0.34;
@@ -538,7 +542,18 @@ export function Board({
                   pointerEvents: cd && !canClaim ? 'none' : 'auto',
                 }}
               />
-              {showHighlight && (
+              {useForestArt && ownerColor && (
+                <image
+                  href={`/art/forest-pearl/dot-p${ownerColor}.png`}
+                  x={d.x - dotRadius}
+                  y={d.y - dotRadius}
+                  width={dotRadius * 2}
+                  height={dotRadius * 2}
+                  style={{ pointerEvents: 'none' }}
+                  aria-hidden="true"
+                />
+              )}
+              {showHighlight && !useForestArt && (
                 <ellipse
                   cx={d.x - hlDx}
                   cy={d.y - hlDy}

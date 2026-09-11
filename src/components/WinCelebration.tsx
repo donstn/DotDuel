@@ -69,8 +69,10 @@ export function WinCelebration({ level }: { level: number }) {
     const lvl = Math.max(1, Math.min(5, Math.round(level)));
     const SHOW_MS = [2200, 2700, 3300, 4100, 5200][lvl - 1];
 
-    const isForestPearl = document.documentElement.dataset.theme === 'forest-pearl'
-      || document.documentElement.dataset.theme === undefined;
+    // App.tsx's theme effect always sets data-theme to a concrete ThemeId
+    // (default 'forest-pearl' included) well before a game can finish and
+    // this component mounts, so an `undefined` fallback here is dead code.
+    const isForestPearl = document.documentElement.dataset.theme === 'forest-pearl';
     const spritePaths = [
       '/art/forest-pearl/particle-spark.png',
       '/art/forest-pearl/particle-leaf.png',
@@ -178,7 +180,7 @@ export function WinCelebration({ level }: { level: number }) {
         ctx.translate(c.x, c.y); ctx.rotate(c.rot);
         ctx.globalAlpha = 0.92;
         const sq = 0.35 + Math.abs(Math.sin(t * c.sway + c.phase)) * 0.65;
-        if (isForestPearl && c.sprite) {
+        if (isForestPearl && c.sprite?.complete && c.sprite.naturalWidth > 0) {
           const w = c.w * sq * 2.2;
           const h = c.h * 2.2;
           ctx.drawImage(c.sprite, -w / 2, -h / 2, w, h);

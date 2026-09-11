@@ -2421,7 +2421,7 @@ export default function App() {
           version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
-        {howToOpen && <HowToPlayPopover onClose={() => setHowToOpen(false)} />}
+        {howToOpen && <HowToPlayPopover onClose={() => setHowToOpen(false)} theme={theme} />}
         {privacyOpen && (
           <PrivacyPopover
             onClose={() => setPrivacyOpen(false)}
@@ -2518,6 +2518,7 @@ export default function App() {
           settings={settings}
           gameName={effectiveGameName}
           user={user}
+          theme={theme}
           onStart={startGame}
           onSettingsUpdate={updateSettings}
           onOpenRankings={(view) => {
@@ -2560,7 +2561,7 @@ export default function App() {
           version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
-        {howToOpen && <HowToPlayPopover onClose={() => setHowToOpen(false)} />}
+        {howToOpen && <HowToPlayPopover onClose={() => setHowToOpen(false)} theme={theme} />}
         {privacyOpen && (
           <PrivacyPopover
             onClose={() => setPrivacyOpen(false)}
@@ -2988,7 +2989,7 @@ export default function App() {
         version={APP_VERSION}
       />
       {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
-      {howToOpen && <HowToPlayPopover onClose={() => setHowToOpen(false)} />}
+      {howToOpen && <HowToPlayPopover onClose={() => setHowToOpen(false)} theme={theme} />}
       {privacyOpen && (
         <PrivacyPopover
           onClose={() => setPrivacyOpen(false)}

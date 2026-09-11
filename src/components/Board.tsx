@@ -390,23 +390,25 @@ export function Board({
             <stop offset="0%" stopColor="var(--board-felt-1)" />
             <stop offset="100%" stopColor="var(--board-felt-2)" />
           </radialGradient>
-          <pattern
-            id="board-felt-image"
-            patternUnits="userSpaceOnUse"
-            x={vbExp.x}
-            y={vbExp.y}
-            width={vbExp.w}
-            height={vbExp.h}
-          >
-            <image
-              href="/art/forest-pearl/felt-base.png"
-              x="0"
-              y="0"
+          {useForestArt && (
+            <pattern
+              id="board-felt-image"
+              patternUnits="userSpaceOnUse"
+              x={vbExp.x}
+              y={vbExp.y}
               width={vbExp.w}
               height={vbExp.h}
-              preserveAspectRatio="xMidYMid slice"
-            />
-          </pattern>
+            >
+              <image
+                href="/art/forest-pearl/felt-base.png"
+                x="0"
+                y="0"
+                width={vbExp.w}
+                height={vbExp.h}
+                preserveAspectRatio="xMidYMid slice"
+              />
+            </pattern>
+          )}
           {/* Bezel rim: top-lit gradient down the expanded viewBox so the top
               edge catches light and the bottom falls into shade. */}
           <linearGradient
@@ -566,6 +568,7 @@ export function Board({
                   y={d.y - dotRadius}
                   width={dotRadius * 2}
                   height={dotRadius * 2}
+                  className={isLast ? 'dot-art-last' : undefined}
                   style={{ pointerEvents: 'none' }}
                   aria-hidden="true"
                 />
@@ -649,22 +652,54 @@ export function Board({
             const len = Math.hypot(x2 - x1, y2 - y1);
             const angleDeg = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
             const lineImgH = strokeWidth * 3.4;
-            const isSpark = line.length === 1;
-            const imgW = isSpark ? dotRadius * 2.4 : len;
-            const imgH = isSpark ? dotRadius * 2.4 : lineImgH;
+            // Art only exists for lengths 1-9 (every line on every current
+            // board shape falls in that range); clamp defensively so a
+            // future shape with a longer line can't 404 into an invisible
+            // completed line instead of just reusing the longest strand.
+            //
+            // Corners (length 1) originally used a dedicated round "spark"
+            // asset (line-1-p*.png) sized and glowed to stand out — but a
+            // round glow doesn't read as "struck through" the way every
+            // other completed line does, which broke the visual language
+            // players rely on to tell claimed corners apart from unclaimed
+            // ones. Fixed by dropping the special case entirely: a corner
+            // now renders exactly like any other completed line — the same
+            // elongated strand art (line-2's, the shortest real strand we
+            // have; line-1's round asset is unused here now), stretched
+            // across the corner's own short real span (`len`, already
+            // ~dotRadius*3.3 from the overshoot-based endpoints below) —
+            // so every claimed line, corners included, looks like the same
+            // kind of mark.
+            const clampedLen = Math.min(Math.max(line.length, 1), 9);
+            const artLen = clampedLen === 1 ? 2 : clampedLen;
+            // The art was generated as a TALL strand (content runs along
+            // the image's own height, not its width — confirmed by opening
+            // the actual files: line-9-p1.png is 151x661, a portrait
+            // strip). Rotating by angleDeg and mapping len onto the box
+            // WIDTH (the old code) put the strand's long axis perpendicular
+            // to the real line, squashing it into an unrecognizable smear —
+            // that's what read as "wavy/not straight". Rotating by
+            // (angleDeg - 90) instead puts the group's local +Y axis (which
+            // now carries `height`, i.e. the image's own long axis) along
+            // the true line direction, so `height=len` stretches the
+            // strand's actual long axis to the real endpoint-to-endpoint
+            // span.
+            const imgW = lineImgH;
+            const imgH = len;
+            const groupRotate = angleDeg - 90;
             return (
               <g
                 key={c.lineId}
-                transform={`translate(${midX} ${midY}) rotate(${angleDeg})`}
+                transform={`translate(${midX} ${midY}) rotate(${groupRotate})`}
                 style={{ pointerEvents: 'none' }}
               >
                 <image
-                  href={`/art/forest-pearl/line-${line.length}-p${cIdx}.png`}
+                  href={`/art/forest-pearl/line-${artLen}-p${cIdx}.png`}
                   x={-imgW / 2}
                   y={-imgH / 2}
                   width={imgW}
                   height={imgH}
-                  preserveAspectRatio={isSpark ? 'xMidYMid meet' : 'none'}
+                  preserveAspectRatio="none"
                   aria-hidden="true"
                 />
               </g>

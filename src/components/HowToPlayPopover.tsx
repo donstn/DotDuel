@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Board } from './Board';
 import { getScenes, type Scene } from './howto/sceneBuilders';
 import type { Player } from '../types';
+import type { ThemeId } from '../theme';
 import { useT } from '../i18n';
 
 function usePrefersReducedMotion(): boolean {
@@ -76,7 +77,13 @@ function ScoreBoard({
   );
 }
 
-export function HowToPlayPopover({ onClose }: { onClose: () => void }) {
+export function HowToPlayPopover({
+  onClose,
+  theme,
+}: {
+  onClose: () => void;
+  theme?: ThemeId;
+}) {
   const t = useT();
   const reduced = usePrefersReducedMotion();
   const scenes = getScenes();
@@ -178,6 +185,7 @@ export function HowToPlayPopover({ onClose }: { onClose: () => void }) {
                 disabled
                 lastDot={frame.lastDot}
                 scoreEvent={paused || reduced ? null : frame.score}
+                theme={theme}
               />
             </button>
             <button

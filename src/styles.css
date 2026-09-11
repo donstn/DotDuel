@@ -636,8 +636,12 @@ body {
    still applies on top of the art, keeping foreground UI legible — and the
    film-grain overlay (body::before, z-index 1) still draws over everything,
    unifying art + vignette into one image exactly as it already did for the
-   plain gradient. */
-html:not([data-theme]) body,
+   plain gradient. Only `[data-theme="forest-pearl"]`, no `:not([data-theme])`
+   fallback — App.tsx's theme effect always calls setAttribute with a
+   concrete ThemeId (default 'forest-pearl' included), so the attribute is
+   never actually absent post-mount; a `:not([data-theme])` branch here would
+   only cost every OTHER theme's users an unnecessary multi-MB art fetch
+   during the brief pre-hydration window. */
 html[data-theme="forest-pearl"] body {
   background:
     radial-gradient(ellipse at 50% 38%, transparent 0%, var(--bg-edge) 92%),
@@ -647,7 +651,6 @@ html[data-theme="forest-pearl"] body {
 }
 
 @media (max-aspect-ratio: 4/5) {
-  html:not([data-theme]) body,
   html[data-theme="forest-pearl"] body {
     background:
       radial-gradient(ellipse at 50% 38%, transparent 0%, var(--bg-edge) 92%),
@@ -655,6 +658,19 @@ html[data-theme="forest-pearl"] body {
       #000;
     background-attachment: fixed;
   }
+}
+
+/* Forest & Pearl only: the glass-surface tokens above were tuned for the
+   plain radial-gradient vignette every other theme still uses — a nearly
+   invisible white tint reads fine over a smooth dark gradient. Over the
+   painted forest scenery (a busy, high-detail photo) that same tint gives
+   buttons/cards/pills essentially zero contrast — they become unreadable.
+   Re-tint darker and more opaque specifically for this theme so text stays
+   legible against the busy art, without changing the look of any of the
+   other 7 themes (which never match these selectors). */
+html[data-theme="forest-pearl"] {
+  --glass-bg: rgba(6, 16, 11, 0.55);
+  --glass-bg-strong: rgba(6, 16, 11, 0.72);
 }
 
 /* Subtle film-grain overlay across the whole app for organic depth */
@@ -1846,24 +1862,22 @@ button {
   position: relative;
 }
 
-/* Forest & Pearl only: the panel-texture.png asset is a "9-slice" style
-   image — a plain, calm vertical middle with carved detail concentrated at
-   the top and bottom edges (see docs/superpowers/specs/2026-09-11-forest-
-   pearl-visual-reskin-design.md, section 7). border-image with `fill` is
-   the native CSS mechanism for exactly this: the top/bottom slices stay
-   crisp at their source resolution while the middle stretches to whatever
-   height a given panel actually needs, so one image works for every panel
-   regardless of how much content (stats, ratings, achievement badges) it's
-   showing. The slice values are a starting point — check them against the
-   live panel in the dev server and adjust if the carved band looks cropped
-   or the plain middle looks too short. */
-html:not([data-theme]) .side-panel,
-html[data-theme="forest-pearl"] .side-panel {
-  border-image: url('/art/forest-pearl/panel-texture.png') 340 0 340 0 fill;
-  border-image-width: 20px 0;
-  border-style: solid;
-  border-width: 20px 0;
-}
+/* Forest & Pearl side-panel texture: REVERTED (2026-09-11). The intended
+   design was a plain-middle "9-slice" strip (see docs/superpowers/specs/
+   2026-09-11-forest-pearl-visual-reskin-design.md, section 7), but the
+   asset Gemini actually generated (public/art/forest-pearl/panel-
+   texture.png) is a complete 4-sided framed panel — rounded-rect rails on
+   every edge, ~480px of carving depth, no genuinely stretchable plain
+   region. No border-image slice values can make a 9-slice `fill` work
+   cleanly against that shape: any left/right slice stretches the side
+   rails into smears, and the carving is too tall to compress into a
+   sensible border-width without turning into mush. Needs a re-generated
+   asset (explicitly "no side framing, seamless stretchable middle,
+   shallower carving depth") before this is worth re-attempting — see
+   PROMPT 10 of docs/superpowers/specs/2026-09-11-forest-pearl-gemini-
+   prompts.txt for the original ask. Panels fall back to the plain
+   `--glass-bg-strong` surface above, same as every other theme.
+*/
 
 .side-panel-left {
   border-radius: var(--radius);
@@ -2769,6 +2783,15 @@ h1, h2, h3,
 }
 
 .dot-last {
+  animation: pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Forest & Pearl's painted-orb <image> sits on top of (and hides) the
+   circle .dot-last normally animates — same pop, applied to the art
+   instead, so placement still has motion feedback under this theme. */
+.dot-art-last {
+  transform-box: fill-box;
+  transform-origin: center;
   animation: pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 

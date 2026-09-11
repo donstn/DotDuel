@@ -2264,6 +2264,7 @@ export default function App() {
             name={mpP1Name}
             score={mpState.scores[1]}
             avatar={mpP1Avatar}
+            theme={theme}
             stats={null}
             featured={myNum === 1 ? myFeatured : null}
             onFeaturedClick={() => setAchievementsOpen(true)}
@@ -2294,6 +2295,7 @@ export default function App() {
             name={mpP2Name}
             score={mpState.scores[2]}
             avatar={mpP2Avatar}
+            theme={theme}
             stats={null}
             featured={myNum === 2 ? myFeatured : null}
             onFeaturedClick={() => setAchievementsOpen(true)}
@@ -2874,6 +2876,7 @@ export default function App() {
           name={p1Name}
           score={state.scores[1]}
           avatar={p1Avatar}
+          theme={theme}
           colorSwap={colorSwap}
           stats={p1Stats}
           featured={myFeatured}
@@ -2898,6 +2901,7 @@ export default function App() {
           name={p2Name}
           score={state.scores[2]}
           avatar={p2Avatar}
+          theme={theme}
           colorSwap={colorSwap}
           stats={p2StatsRow}
         />

@@ -1929,6 +1929,12 @@ button {
   display: block;
 }
 
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 /* ---- Achievement badges (faceted medallion + two-tone glyph) ---- */
 .ach-badge {
   display: inline-grid;

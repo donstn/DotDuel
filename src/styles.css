@@ -1860,7 +1860,7 @@ button {
 html:not([data-theme]) .side-panel,
 html[data-theme="forest-pearl"] .side-panel {
   border-image: url('/art/forest-pearl/panel-texture.png') 340 0 340 0 fill;
-  border-image-width: auto;
+  border-image-width: 20px 0;
   border-style: solid;
   border-width: 20px 0;
 }

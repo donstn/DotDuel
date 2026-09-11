@@ -390,6 +390,23 @@ export function Board({
             <stop offset="0%" stopColor="var(--board-felt-1)" />
             <stop offset="100%" stopColor="var(--board-felt-2)" />
           </radialGradient>
+          <pattern
+            id="board-felt-image"
+            patternUnits="userSpaceOnUse"
+            x={vbExp.x}
+            y={vbExp.y}
+            width={vbExp.w}
+            height={vbExp.h}
+          >
+            <image
+              href="/art/forest-pearl/felt-base.png"
+              x="0"
+              y="0"
+              width={vbExp.w}
+              height={vbExp.h}
+              preserveAspectRatio="xMidYMid slice"
+            />
+          </pattern>
           {/* Bezel rim: top-lit gradient down the expanded viewBox so the top
               edge catches light and the bottom falls into shade. */}
           <linearGradient
@@ -424,14 +441,14 @@ export function Board({
         {/* 1. Drop shadow — floats the board above the vignette. */}
         <path
           d={feltPathOuter}
-          fill="url(#board-felt)"
+          fill={useForestArt ? 'url(#board-felt-image)' : 'url(#board-felt)'}
           pointerEvents="none"
           style={{ filter: 'var(--rim-drop)' }}
         />
         {/* 2. Felt fill + recessed inner shadow (shape-matched, no blend modes). */}
         <path
           d={feltPathOuter}
-          fill="url(#board-felt)"
+          fill={useForestArt ? 'url(#board-felt-image)' : 'url(#board-felt)'}
           pointerEvents="none"
           filter="url(#felt-recess)"
         />

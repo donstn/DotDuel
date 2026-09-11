@@ -632,6 +632,9 @@ export function Board({
             const len = Math.hypot(x2 - x1, y2 - y1);
             const angleDeg = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
             const lineImgH = strokeWidth * 3.4;
+            const isSpark = line.length === 1;
+            const imgW = isSpark ? dotRadius * 2.4 : len;
+            const imgH = isSpark ? dotRadius * 2.4 : lineImgH;
             return (
               <g
                 key={c.lineId}
@@ -640,11 +643,11 @@ export function Board({
               >
                 <image
                   href={`/art/forest-pearl/line-${line.length}-p${cIdx}.png`}
-                  x={-len / 2}
-                  y={-lineImgH / 2}
-                  width={len}
-                  height={lineImgH}
-                  preserveAspectRatio="none"
+                  x={-imgW / 2}
+                  y={-imgH / 2}
+                  width={imgW}
+                  height={imgH}
+                  preserveAspectRatio={isSpark ? 'xMidYMid meet' : 'none'}
                   aria-hidden="true"
                 />
               </g>

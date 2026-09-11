@@ -2283,6 +2283,7 @@ export default function App() {
             onClaimClick={handleMpClaimClick}
             disabled={mpDisabled}
             lastDot={lastDot}
+            theme={theme}
             showHints={false}
             scoreEvent={scoreEvent}
           />
@@ -2885,6 +2886,7 @@ export default function App() {
           disabled={disabled}
           lastDot={lastDot}
           colorSwap={colorSwap}
+          theme={theme}
           showHints={ringsVisible && !disabled}
           scoreEvent={scoreEvent}
         />

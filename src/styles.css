@@ -629,6 +629,50 @@ body {
   background-attachment: fixed;
 }
 
+/* Forest & Pearl only: painted scenery behind the vignette. Two crops (the
+   app has no way to test real device orientation at build time) picked by
+   viewport aspect ratio, not by device type. Layered UNDER the existing
+   radial-gradient vignette so the vignette's darkening toward the edges
+   still applies on top of the art, keeping foreground UI legible — and the
+   film-grain overlay (body::before, z-index 1) still draws over everything,
+   unifying art + vignette into one image exactly as it already did for the
+   plain gradient. Only `[data-theme="forest-pearl"]`, no `:not([data-theme])`
+   fallback — App.tsx's theme effect always calls setAttribute with a
+   concrete ThemeId (default 'forest-pearl' included), so the attribute is
+   never actually absent post-mount; a `:not([data-theme])` branch here would
+   only cost every OTHER theme's users an unnecessary multi-MB art fetch
+   during the brief pre-hydration window. */
+html[data-theme="forest-pearl"] body {
+  background:
+    radial-gradient(ellipse at 50% 38%, transparent 0%, var(--bg-edge) 92%),
+    url('/art/forest-pearl/background-landscape.png') center / cover no-repeat,
+    #000;
+  background-attachment: fixed;
+}
+
+@media (max-aspect-ratio: 4/5) {
+  html[data-theme="forest-pearl"] body {
+    background:
+      radial-gradient(ellipse at 50% 38%, transparent 0%, var(--bg-edge) 92%),
+      url('/art/forest-pearl/background-portrait.png') center / cover no-repeat,
+      #000;
+    background-attachment: fixed;
+  }
+}
+
+/* Forest & Pearl only: the glass-surface tokens above were tuned for the
+   plain radial-gradient vignette every other theme still uses — a nearly
+   invisible white tint reads fine over a smooth dark gradient. Over the
+   painted forest scenery (a busy, high-detail photo) that same tint gives
+   buttons/cards/pills essentially zero contrast — they become unreadable.
+   Re-tint darker and more opaque specifically for this theme so text stays
+   legible against the busy art, without changing the look of any of the
+   other 7 themes (which never match these selectors). */
+html[data-theme="forest-pearl"] {
+  --glass-bg: rgba(6, 16, 11, 0.55);
+  --glass-bg-strong: rgba(6, 16, 11, 0.72);
+}
+
 /* Subtle film-grain overlay across the whole app for organic depth */
 body::before {
   content: "";
@@ -774,6 +818,17 @@ button {
   max-width: 560px;
   font-size: clamp(0.85rem, 2.6vw, 1rem);
   line-height: 1.45;
+}
+
+/* Forest & Pearl only: naked text with no card/button background behind it
+   (this subtitle, the share link below) sits directly over the busy forest
+   photo — a background tint can't fix this since there's no element to tint,
+   and the photo's brightness varies too much for one fixed text color to
+   stay readable everywhere it might land. A soft dark text-shadow keeps
+   light text legible regardless of what's behind it at any given point. */
+html[data-theme="forest-pearl"] .subtitle,
+html[data-theme="forest-pearl"] .menu-share-link {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 1px 10px rgba(0, 0, 0, 0.6);
 }
 
 .version-badge {
@@ -1818,6 +1873,23 @@ button {
   position: relative;
 }
 
+/* Forest & Pearl side-panel texture: REVERTED (2026-09-11). The intended
+   design was a plain-middle "9-slice" strip (see docs/superpowers/specs/
+   2026-09-11-forest-pearl-visual-reskin-design.md, section 7), but the
+   asset Gemini actually generated (public/art/forest-pearl/panel-
+   texture.png) is a complete 4-sided framed panel — rounded-rect rails on
+   every edge, ~480px of carving depth, no genuinely stretchable plain
+   region. No border-image slice values can make a 9-slice `fill` work
+   cleanly against that shape: any left/right slice stretches the side
+   rails into smears, and the carving is too tall to compress into a
+   sensible border-width without turning into mush. Needs a re-generated
+   asset (explicitly "no side framing, seamless stretchable middle,
+   shallower carving depth") before this is worth re-attempting — see
+   PROMPT 10 of docs/superpowers/specs/2026-09-11-forest-pearl-gemini-
+   prompts.txt for the original ask. Panels fall back to the plain
+   `--glass-bg-strong` surface above, same as every other theme.
+*/
+
 .side-panel-left {
   border-radius: var(--radius);
   margin-left: 8px;
@@ -1872,6 +1944,7 @@ button {
   align-items: center;
   justify-content: center;
   position: relative;
+  overflow: hidden;
   box-shadow: 0 4px 18px rgba(0,0,0,0.4),
               inset 0 1px 0 rgba(255,255,255,0.12);
 }
@@ -1899,6 +1972,12 @@ button {
   height: 100%;
   border-radius: 50%;
   display: block;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 /* ---- Achievement badges (faceted medallion + two-tone glyph) ---- */
@@ -2477,6 +2556,12 @@ button {
   font-size: 0.75rem;
   min-width: 28px;
   text-transform: uppercase;
+  /* Never shrink below its content width — this is a short fixed label
+     ("BOT L1" / Lithuanian "BOTAS L1"), and letting it shrink is what let
+     its nowrap text spill over .stats-counts/.stats-pct (text-over-text
+     bug, see bugs.md "Layout / responsive"). .stats-counts absorbs the
+     squeeze instead, via its own overflow:hidden below. */
+  flex-shrink: 0;
 }
 
 .stats-counts {
@@ -2484,6 +2569,7 @@ button {
   gap: 3px;
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .stats-w {
@@ -2505,6 +2591,7 @@ button {
   color: var(--text);
   font-size: 0.75rem;
   letter-spacing: 0.01em;
+  flex-shrink: 0;
 }
 
 .stats-empty {
@@ -2599,6 +2686,13 @@ button {
   font-size: 0.75rem;
   color: var(--text-mute);
   letter-spacing: 0.01em;
+  /* Same guard as .stats-counts: this is the flexible element in the row
+     (Lithuanian "vid. 76.0" runs longer than English "avg 76.0"), so let it
+     shrink and truncate with an ellipsis instead of spilling raw nowrap text
+     past the panel edge. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 380px) {
@@ -2700,6 +2794,15 @@ h1, h2, h3,
 }
 
 .dot-last {
+  animation: pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Forest & Pearl's painted-orb <image> sits on top of (and hides) the
+   circle .dot-last normally animates — same pop, applied to the art
+   instead, so placement still has motion feedback under this theme. */
+.dot-art-last {
+  transform-box: fill-box;
+  transform-origin: center;
   animation: pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -4956,6 +5059,21 @@ h1, h2, h3,
   background: rgba(40, 150, 80, 0.28);
   color: #d8f6e3;
   border-color: rgba(123, 219, 149, 0.55);
+}
+
+/* Forest & Pearl only: this button sets its own background directly (not
+   via --glass-bg), so the earlier site-wide glass-contrast fix never
+   reached it — it was still a near-transparent green tint sitting on a
+   busy green forest photo, both text and button nearly invisible. Darker,
+   more opaque background plus a text-shadow on the (still fairly bright
+   --accent-colored) label. */
+html[data-theme="forest-pearl"] .menu-auth-btn-cta {
+  background: rgba(6, 24, 14, 0.72);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+html[data-theme="forest-pearl"] .menu-auth-btn-cta:hover {
+  background: rgba(10, 36, 20, 0.82);
 }
 
 .app-footer-version {

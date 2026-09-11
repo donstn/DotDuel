@@ -1,0 +1,163 @@
+FOREST & PEARL — GEMINI IMAGE PROMPTS
+======================================
+10 prompts total. Copy ONE prompt at a time (everything between the ---- lines)
+and paste it as its own message to Gemini. After each image comes back, save it,
+then move to the next prompt.
+
+Crop instructions (what to cut each result into) are noted after each prompt,
+but are NOT part of the prompt itself — don't paste those lines to Gemini.
+
+REVISED 2026-09-11 after first-pass review: prompts 1 and 4 were rewritten after
+real results came back with problems (dots ignored the magenta background; the
+felt texture was too busy for a game surface). The old two-batch avatar prompts
+(8 and 9) were also merged into ONE single prompt covering all six characters at
+once — putting the whole lineup in one generation guarantees they share the same
+body proportions and "leveling," which two separate generations couldn't
+reliably hold onto (that's exactly what broke last time: level 1 came out as a
+stubby mascot, levels 2-3 came out as full human-proportioned soldiers). This
+merge means the file now has 10 prompts instead of 11.
+
+Prompts 2, 3, 5, 6, 7, 9 (buttons), 10 (panel) were good on the first pass — no
+need to rerun those.
+
+SECOND REVISION (same day): the rerun of prompts 1 and 4 both came back correct
+— done, no further action needed on those two. The merged avatar prompt 8
+failed differently but still failed (background leaked into a real forest
+scene, the lineup got duplicated into two rows, and robots 2-5 still weren't
+the same body shape as robot 1). Prompt 8 is now a 6-message SEQUENTIAL chat
+script instead of a single prompt — see that section for how it works and why.
+
+
+PROMPT 1 of 11 — Dots
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+Render two glossy, glowing orb game pieces side by side, with a wide plain gap between them so they can be told apart and cropped individually, both the same size and both centered on the same horizontal line. Left orb: deep emerald green #0d4a23 glass/gem material at its core, warming to a bright mint #62cf90 specular highlight near the top, smooth perfect sphere, soft green light glowing outward from within. Right orb: pale cream-pearl #d3ecaa glass/gem material at its core, warming to a soft ivory #f0fbcf and pure white #ffffff specular highlight near the top, smooth perfect sphere, soft warm light glowing outward from within. The background behind both orbs is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward. Wide composition, roughly 2:1.
+----------------------------------------
+>> Save the result as dots-sheet.png. Crop into: dot-p1.png (left half), dot-p2.png (right half).
+
+
+PROMPT 2 of 11 — Strings of light, Player 1 color
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+Render nine glowing objects arranged in a single evenly-spaced horizontal row, ordered from smallest to largest, left to right, with a wide plain gap between each one so every item can be told apart and cropped individually: first, a small round radiant burst of light with soft rays and fine sparkle particles; then eight increasingly longer thin glowing strands of light, each stretching from a small spark at one end to a matching spark at the other end, growing steadily longer from item 2 through item 9, the ninth being roughly four times as long as the second. All items deep emerald green #0d4a23 at the core, fading outward to a warm mint-green #62cf90 glow at the edges, smooth and glossy like liquid light, with a soft outer glow and a few fine light particles drifting near each. Place every item on a single flat, solid, perfectly uniform background color of bright magenta #FF00FF, with no gradient, texture, or shading in the background itself — this exact color will be cropped/removed afterward, so it must not appear anywhere in the actual artwork. Very wide horizontal composition, roughly 12:1, since the items range from small to very long.
+----------------------------------------
+>> Save the result as lines-p1-sheet.png. Crop into 9 pieces, left to right: line-1-p1.png, line-2-p1.png, line-3-p1.png, line-4-p1.png, line-5-p1.png, line-6-p1.png, line-7-p1.png, line-8-p1.png, line-9-p1.png.
+
+
+PROMPT 3 of 11 — Strings of light, Player 2 color
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+Render nine glowing objects arranged in a single evenly-spaced horizontal row, ordered from smallest to largest, left to right, with a wide plain gap between each one so every item can be told apart and cropped individually: first, a small round radiant burst of light with soft rays and fine sparkle particles; then eight increasingly longer thin glowing strands of light, each stretching from a small spark at one end to a matching spark at the other end, growing steadily longer from item 2 through item 9, the ninth being roughly four times as long as the second. All items pale cream-pearl #d3ecaa at the core, fading outward to a soft ivory-white #ffffff glow at the edges, smooth and glossy like liquid light, with a soft outer glow and a few fine light particles drifting near each. Place every item on a single flat, solid, perfectly uniform background color of bright magenta #FF00FF, with no gradient, texture, or shading in the background itself — this exact color will be cropped/removed afterward, so it must not appear anywhere in the actual artwork. Very wide horizontal composition, roughly 12:1, since the items range from small to very long.
+----------------------------------------
+>> Save the result as lines-p2-sheet.png. Crop into 9 pieces, left to right: line-1-p2.png, line-2-p2.png, line-3-p2.png, line-4-p2.png, line-5-p2.png, line-6-p2.png, line-7-p2.png, line-8-p2.png, line-9-p2.png.
+
+
+PROMPT 4 of 11 — Board surface (felt)
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+A quiet, low-contrast overhead texture of a mossy forest floor, meant purely to be used as a background surface underneath game pieces — NOT a hero illustration or a piece of standalone art. Fine, small-scale moss texture with gentle, subtle color variation; only a few small, modestly-sized dew drops scattered sparingly, no large pearl clusters anywhere; no large fern fronds or other big foreground objects. Muted, slightly desaturated jade-green tones #16291e to #0a1812, soft and even lighting with no strong highlights or bright focal points. The overall effect should be calm and unobtrusive, similar to a plain felt or fabric texture with just a hint of organic detail, so that brightly colored game pieces placed on top of it later remain the clear center of attention. Even detail spread across the whole image with no single strong focal object and no repeating pattern, so any region of the image can be cropped and still look complete on its own. Fill the frame edge-to-edge, no empty margins. Large, high-detail square composition.
+----------------------------------------
+>> Save the result as felt-base.png. No cropping needed — used whole, reused for all 4 board shapes.
+
+
+PROMPT 5 of 11 — Background scenery, phone (portrait)
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+A breathtaking, softly glowing enchanted forest clearing at dusk: tall ancient trees wrapped in moss and hanging vines, fading into a soft jade-green mist, scattered fireflies and floating pearl-like motes of light drifting through the air, warm mint-green #7bdb95 magical glow filtering down through the canopy, painterly and atmospheric with a soft depth of field. Keep the center third of the image visually calm and uncluttered — a game board will sit on top of it there. No creatures, no people, no text, no logos. Vertical portrait composition, aspect ratio roughly 9:16, tall phone-screen shape.
+----------------------------------------
+>> Save the result as background-portrait.png. No cropping needed.
+
+
+PROMPT 6 of 11 — Background scenery, desktop (landscape)
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+A breathtaking, softly glowing enchanted forest clearing at dusk: tall ancient trees wrapped in moss and hanging vines, fading into a soft jade-green mist, scattered fireflies and floating pearl-like motes of light drifting through the air, warm mint-green #7bdb95 magical glow filtering down through the canopy, painterly and atmospheric with a soft depth of field. Keep the center third of the image visually calm and uncluttered — a game board will sit on top of it there. No creatures, no people, no text, no logos. Wide horizontal composition, aspect ratio roughly 16:9, desktop-screen shape.
+----------------------------------------
+>> Save the result as background-landscape.png. No cropping needed.
+
+
+PROMPT 7 of 11 — Victory celebration particles
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+Render four small, distinct magical particle icons arranged in a clean 2x2 grid, with generous empty gaps between each cell so every icon can be told apart and cropped individually: top-left, a single small glowing spark of light, bright mint-green #7bdb95 core fading to soft white, delicate sparkle rays radiating outward. Top-right, a single small stylized glossy leaf, deep emerald green with a soft golden-green glow along its edges, gently curved as if caught mid-flutter. Bottom-left, a single small glossy pearl-white bead of light, softly luminous with a delicate specular highlight. Bottom-right, a single small glowing firefly-like orb of light, warm mint-green glow with a soft trailing wisp of light behind it. Place every item on a single flat, solid, perfectly uniform background color of bright magenta #FF00FF, with no gradient, texture, or shading in the background itself — this exact color will be cropped/removed afterward, so it must not appear anywhere in the actual artwork. Square composition.
+----------------------------------------
+>> Save the result as particles-sheet.png. Crop into 4 quadrants: particle-spark.png (top-left), particle-leaf.png (top-right), particle-pearl.png (bottom-left), particle-firefly.png (bottom-right).
+
+
+PROMPT 8 of 10 — Avatars — SEQUENTIAL, 6 messages in ONE continuous chat
+----------------------------------------
+IMPORTANT — this one works differently from every other prompt in this file.
+
+Two one-shot attempts at generating all the robots together (as one sheet,
+and as two separate sheets) both failed the same way: robot 1 came out as a
+short, round toy shape, but the others kept coming back as tall, human-shaped
+armored soldiers, no matter how explicitly the text asked for a shared body
+shape. Text alone isn't reliably holding the shape steady across separate
+generations.
+
+The fix: generate them ONE AT A TIME, as 6 separate messages, but ALL INSIDE
+THE SAME CHAT CONVERSATION — do not start a new chat between them. Each
+message after the first explicitly tells Gemini to copy the exact body shape
+from the image it just made, which is a much stronger anchor than a text
+description alone. Send message 1, wait for the image, then send message 2
+in that same conversation (not a new one), and so on through message 6.
+
+Save each result as its own file right after it's generated — see the file-
+name noted after each message below.
+
+--- Message 1 of 6 ---
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements.
+
+Render a single robot character, standing, facing the camera, full body visible, centered in the frame: a small, round, adorable robot, glossy mint-green #62cf90 chassis, big friendly rounded eyes, a single small rounded antenna, a warm and welcoming expression, a short, round, stubby body shape like a cute collectible vinyl toy, roughly two heads tall, small stubby arms and legs. This is a plain studio product shot — absolutely no background scene, environment, forest, ground, or floor of any kind. The entire background must be a single flat, solid, perfectly uniform color of bright magenta #FF00FF, with no gradient or vignette, filling every part of the image except the robot itself. Square-ish portrait composition, roughly 4:5.
+>> Save as avatar-l1.png.
+
+--- Message 2 of 6 (send in the SAME chat, after message 1's image comes back) ---
+Using the exact same robot body shape, pose, stance, camera angle, and framing as the robot in the image you just generated — do not change the proportions, silhouette, or stance in any way, it must look like the same toy redesigned, not a different character — create a new version of this robot with: a glossy emerald-green #1c7a3d chassis, a few small sharper plating details added to its round body, a confident posture, bright glowing accent lights along its seams, alert rounded eyes. Keep the same plain studio product shot with no background scene, environment, forest, ground, or floor — the entire background must again be a single flat, solid, perfectly uniform color of bright magenta #FF00FF, no gradient, filling every part of the image except the robot.
+>> Save as avatar-l2.png.
+
+--- Message 3 of 6 (same chat) ---
+Using the exact same robot body shape, pose, stance, camera angle, and framing as before — still short, round, and stubby, not human-shaped — create a new version of this robot with: a glossy deep-green #0d4a23 chassis, slightly sharper plating details, a sharper glowing blue-green eye shape, a focused expression. Same plain studio shot, no background scene or environment — a single flat, solid, perfectly uniform bright magenta #FF00FF background, no gradient, filling everything except the robot.
+>> Save as avatar-l3.png.
+
+--- Message 4 of 6 (same chat) ---
+Using the exact same robot body shape, pose, stance, camera angle, and framing as before — still short, round, and stubby, not human-shaped, not a tall armored soldier — create a new version of this robot with: a near-black glossy chassis, deep forest-green #0d4a23 accent plating with a few sharp-edged details, glowing amber-gold eyes, an intense stance. Same plain studio shot, no background scene or environment — a single flat, solid, perfectly uniform bright magenta #FF00FF background, no gradient, filling everything except the robot.
+>> Save as avatar-l4.png.
+
+--- Message 5 of 6 (same chat) ---
+Using the exact same robot body shape, pose, stance, camera angle, and framing as before — still short, round, and stubby, not human-shaped, not a tall armored soldier, the most menacing of the five so far — create a new version of this robot with: a near-black glossy chassis, small horn-like points on top of its round head, glowing red eyes, faint wisps of dark green energy curling off its frame, a dominant and intimidating presence, still glossy and toylike, not rough or gritty. Same plain studio shot, no background scene or environment — a single flat, solid, perfectly uniform bright magenta #FF00FF background, no gradient, filling everything except the robot.
+>> Save as avatar-l5.png.
+
+--- Message 6 of 6 (same chat) ---
+Using the same camera angle, framing, and overall total height as the robots in this conversation, generate a different sixth character, not a robot this time: a friendly, gender-neutral humanoid figure made of soft glowing pearl-white light, a simple and elegant silhouette with gentle luminous detail rather than a literal face, warm and inviting presence. Same plain studio shot, no background scene or environment — a single flat, solid, perfectly uniform bright magenta #FF00FF background, no gradient, filling everything except the figure.
+>> Save as avatar-human.png.
+
+----------------------------------------
+No cropping needed for this one — each of the 6 messages already produces one finished, individual file.
+
+
+PROMPT 9 of 10 — Buttons (normal + pressed)
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+Render two glossy, rounded rectangular button frames side by side, with a wide plain gap between them. Both made of a polished emerald-green wood-and-glass hybrid material with a soft glowing green rim light, ornate but restrained detailing at the corners, a plain flat empty center (this is where a text label will be placed by the app afterward), symmetrical left-to-right so the middle can be stretched to fit labels of different lengths. Left button: normal resting state, full brightness glow. Right button: appearing slightly recessed and pressed inward, with a dimmer, softer glow, as if it has just been pressed down. Place every item on a single flat, solid, perfectly uniform background color of bright magenta #FF00FF, with no gradient, texture, or shading in the background itself — this exact color will be cropped/removed afterward, so it must not appear anywhere in the actual artwork. Wide composition, roughly 2:1.
+----------------------------------------
+>> Save the result as buttons-sheet.png. Crop into 2 pieces: button-normal.png (left), button-pressed.png (right).
+
+
+PROMPT 10 of 10 — Panel texture
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+A vertical panel background texture: polished dark wood grain overlaid with a subtle carved leaf-and-vine motif, deep jade-green tones #16291e to #0a1812, soft ambient light falling from the top of the frame. Keep the vertical middle of the image plain and calm (this section will be stretched to fit different panel heights) with the more detailed carving concentrated near the top and bottom edges. Tall vertical rectangle composition.
+----------------------------------------
+>> Save the result as panel-texture.png. No cropping needed.
+
+
+END OF PROMPTS

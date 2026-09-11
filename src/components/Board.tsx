@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { getBoard } from '../geometry';
 import { useT } from '../i18n';
 import type { GameState, Line, Player } from '../types';
+import type { ThemeId } from '../theme';
 
 interface ScoreEvent {
   dotId: number;
@@ -28,12 +29,35 @@ interface Props {
   colorSwap?: boolean;
   showHints?: boolean;
   scoreEvent?: ScoreEvent | null;
+  theme?: ThemeId;
 }
 
 function colorIndex(player: Player, swap: boolean): 1 | 2 {
   if (!swap) return player;
   return player === 1 ? 2 : 1;
 }
+
+// Forest & Pearl line art (line-{2-9}-p{1,2}.png): each was generated
+// separately, so how much of each image's own width its glowing "core"
+// actually fills isn't consistent — measured directly from the files
+// (solid-alpha pixel width / total image width): P1 ranges ~0.30 (length 2)
+// down to ~0.18 (length 9); P2 ranges ~0.29 down to ~0.86 the other way.
+// Board.tsx stretches each image's FULL width to one constant target box
+// (lineImgH) regardless of that ratio, so on screen P2 reads visibly
+// thicker/more solid than P1 at most lengths, worse at longer ones.
+// Simply resizing the source PNGs can't fix this: scaling an image's
+// width uniformly scales its core by the identical factor, so the
+// core-to-width ratio — and therefore the rendered thickness — is
+// invariant under that operation. The actual fix has to live here: scale
+// the per-instance target width by the inverse of each asset's own ratio
+// (relative to the sample median), so every length/color renders at a
+// consistent core thickness regardless of how each source image happened
+// to come out. Length 1 has no entry — corners reuse length 2's art (see
+// below) and never index this table.
+const LINE_THICKNESS_MULT: Record<1 | 2, Record<number, number>> = {
+  1: { 2: 0.808, 3: 0.874, 4: 0.954, 5: 1.027, 6: 1.1, 7: 1.178, 8: 1.265, 9: 1.348 },
+  2: { 2: 0.824, 3: 1.04, 4: 1.065, 5: 1.022, 6: 0.978, 7: 0.979, 8: 0.898, 9: 0.859 },
+};
 
 function kindDirection(
   board: ReturnType<typeof getBoard>,
@@ -191,8 +215,10 @@ export function Board({
   colorSwap = false,
   showHints = false,
   scoreEvent = null,
+  theme,
 }: Props) {
   const t = useT();
+  const useForestArt = theme === 'forest-pearl';
   const board = getBoard(state.shape);
   const vb = board.viewBox;
   const dotRadius = state.shape === 'triangle' ? 0.32 : 0.34;
@@ -386,6 +412,25 @@ export function Board({
             <stop offset="0%" stopColor="var(--board-felt-1)" />
             <stop offset="100%" stopColor="var(--board-felt-2)" />
           </radialGradient>
+          {useForestArt && (
+            <pattern
+              id="board-felt-image"
+              patternUnits="userSpaceOnUse"
+              x={vbExp.x}
+              y={vbExp.y}
+              width={vbExp.w}
+              height={vbExp.h}
+            >
+              <image
+                href="/art/forest-pearl/felt-base.png"
+                x="0"
+                y="0"
+                width={vbExp.w}
+                height={vbExp.h}
+                preserveAspectRatio="xMidYMid slice"
+              />
+            </pattern>
+          )}
           {/* Bezel rim: top-lit gradient down the expanded viewBox so the top
               edge catches light and the bottom falls into shade. */}
           <linearGradient
@@ -420,14 +465,14 @@ export function Board({
         {/* 1. Drop shadow — floats the board above the vignette. */}
         <path
           d={feltPathOuter}
-          fill="url(#board-felt)"
+          fill={useForestArt ? 'url(#board-felt-image)' : 'url(#board-felt)'}
           pointerEvents="none"
           style={{ filter: 'var(--rim-drop)' }}
         />
         {/* 2. Felt fill + recessed inner shadow (shape-matched, no blend modes). */}
         <path
           d={feltPathOuter}
-          fill="url(#board-felt)"
+          fill={useForestArt ? 'url(#board-felt-image)' : 'url(#board-felt)'}
           pointerEvents="none"
           filter="url(#felt-recess)"
         />
@@ -538,7 +583,19 @@ export function Board({
                   pointerEvents: cd && !canClaim ? 'none' : 'auto',
                 }}
               />
-              {showHighlight && (
+              {useForestArt && ownerColor && (
+                <image
+                  href={`/art/forest-pearl/dot-p${ownerColor}.png`}
+                  x={d.x - dotRadius}
+                  y={d.y - dotRadius}
+                  width={dotRadius * 2}
+                  height={dotRadius * 2}
+                  className={isLast ? 'dot-art-last' : undefined}
+                  style={{ pointerEvents: 'none' }}
+                  aria-hidden="true"
+                />
+              )}
+              {showHighlight && !useForestArt && (
                 <ellipse
                   cx={d.x - hlDx}
                   cy={d.y - hlDy}
@@ -611,6 +668,65 @@ export function Board({
           const outer = strokeWidth * 0.575;
           const innerHighlight = strokeWidth * 0.22;
           const cIdx = colorIndex(c.player, colorSwap);
+          if (useForestArt) {
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+            const len = Math.hypot(x2 - x1, y2 - y1);
+            const angleDeg = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+            const lineImgH = strokeWidth * 3.4;
+            // Art only exists for lengths 1-9 (every line on every current
+            // board shape falls in that range); clamp defensively so a
+            // future shape with a longer line can't 404 into an invisible
+            // completed line instead of just reusing the longest strand.
+            //
+            // Corners (length 1) originally used a dedicated round "spark"
+            // asset (line-1-p*.png) sized and glowed to stand out — but a
+            // round glow doesn't read as "struck through" the way every
+            // other completed line does, which broke the visual language
+            // players rely on to tell claimed corners apart from unclaimed
+            // ones. Fixed by dropping the special case entirely: a corner
+            // now renders exactly like any other completed line — the same
+            // elongated strand art (line-2's, the shortest real strand we
+            // have; line-1's round asset is unused here now), stretched
+            // across the corner's own short real span (`len`, already
+            // ~dotRadius*3.3 from the overshoot-based endpoints below) —
+            // so every claimed line, corners included, looks like the same
+            // kind of mark.
+            const clampedLen = Math.min(Math.max(line.length, 1), 9);
+            const artLen = clampedLen === 1 ? 2 : clampedLen;
+            // The art was generated as a TALL strand (content runs along
+            // the image's own height, not its width — confirmed by opening
+            // the actual files: line-9-p1.png is 151x661, a portrait
+            // strip). Rotating by angleDeg and mapping len onto the box
+            // WIDTH (the old code) put the strand's long axis perpendicular
+            // to the real line, squashing it into an unrecognizable smear —
+            // that's what read as "wavy/not straight". Rotating by
+            // (angleDeg - 90) instead puts the group's local +Y axis (which
+            // now carries `height`, i.e. the image's own long axis) along
+            // the true line direction, so `height=len` stretches the
+            // strand's actual long axis to the real endpoint-to-endpoint
+            // span.
+            const imgW = lineImgH * LINE_THICKNESS_MULT[cIdx][artLen];
+            const imgH = len;
+            const groupRotate = angleDeg - 90;
+            return (
+              <g
+                key={c.lineId}
+                transform={`translate(${midX} ${midY}) rotate(${groupRotate})`}
+                style={{ pointerEvents: 'none' }}
+              >
+                <image
+                  href={`/art/forest-pearl/line-${artLen}-p${cIdx}.png`}
+                  x={-imgW / 2}
+                  y={-imgH / 2}
+                  width={imgW}
+                  height={imgH}
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                />
+              </g>
+            );
+          }
           return (
             <g
               key={c.lineId}

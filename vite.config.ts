@@ -42,5 +42,10 @@ export default defineConfig(() => ({
   server: {
     host: true,
     port: 5173,
+    // Dev-server only (never affects `vite build`/production): allows the
+    // random subdomains scripts/remote-preview.sh's tunnel assigns each run
+    // through Vite's Host-header guard (anti DNS-rebinding), which otherwise
+    // rejects any request whose Host it doesn't recognize.
+    allowedHosts: ['.loca.lt', '.trycloudflare.com'],
   },
 }));

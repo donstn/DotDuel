@@ -4,6 +4,7 @@ import { availableDifficulties, isUnlocked } from '../storage';
 import type { Settings } from '../storage';
 import { PLAYABLE_SHAPE_META } from '../types';
 import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
+import type { ThemeId } from '../theme';
 import { LANGS, useLang, useT } from '../i18n';
 import { FriendsButton } from './FriendsButton';
 import { TellAFriendButton } from './TellAFriendButton';
@@ -71,6 +72,7 @@ interface Props {
   // at its true root (nothing left to pop → the back press should exit/leave).
   backSignal?: number;
   onDepthChange?: (canGoBack: boolean) => void;
+  theme?: ThemeId;
 }
 
 /** Top-level grouping of the home menu (0.4.7 redesign). */
@@ -126,6 +128,7 @@ export function Menu({
   onOpenPuzzleLeaderboard,
   backSignal,
   onDepthChange,
+  theme,
 }: Props) {
   const [mode, setMode] = useState<GameMode | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
@@ -567,7 +570,7 @@ export function Menu({
               >
                 <CardInner
                   iconClass="is-avatar"
-                  icon={<AIAvatar level={d} />}
+                  icon={<AIAvatar level={d} theme={theme} />}
                   title={t.difficulty[d]}
                   sub={unlocked ? t.menu.level(d) : t.common.locked}
                 />

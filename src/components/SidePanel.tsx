@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Difficulty, Player } from '../types';
+import type { ThemeId } from '../theme';
 import { AchievementBadge } from '../achievements/AchievementBadge';
 import { useT } from '../i18n';
 import {
@@ -25,6 +26,7 @@ interface SidePanelProps {
   /** Optional live element (e.g. a clock) rendered in the rating slot. */
   ratingSlot?: ReactNode;
   avatar: 'human' | { kind: 'ai'; level: Difficulty } | { kind: 'guest'; label: string };
+  theme?: ThemeId;
   colorSwap?: boolean;
   /** Per-name stats. Pass `null` for AI panel (no stats tracked). */
   stats?: PlayerRow | null;
@@ -51,6 +53,7 @@ export function SidePanel({
   rating,
   ratingSlot,
   avatar,
+  theme,
   colorSwap = false,
   stats,
   belowAvatar,
@@ -84,11 +87,11 @@ export function SidePanel({
     <aside className={cls}>
       <div className="avatar-frame">
         {avatar === 'human' ? (
-          <HumanAvatar player={color} />
+          <HumanAvatar player={color} theme={theme} />
         ) : avatar.kind === 'guest' ? (
           <GuestAvatar label={avatar.label} player={color} />
         ) : (
-          <AIAvatar level={avatar.level} />
+          <AIAvatar level={avatar.level} theme={theme} />
         )}
       </div>
       {belowAvatar && <div className="player-below-avatar">{belowAvatar}</div>}
@@ -226,7 +229,12 @@ function StatsLine({
   );
 }
 
-function HumanAvatar({ player }: { player: Player }) {
+function HumanAvatar({ player, theme }: { player: Player; theme?: ThemeId }) {
+  if (theme === 'forest-pearl') {
+    return (
+      <img src="/art/forest-pearl/avatar-human.png" className="avatar-img" alt="" aria-hidden="true" />
+    );
+  }
   const fg = player === 1 ? 'var(--avatar-p1-fg)' : 'var(--avatar-p2-fg)';
   const bgGrad = player === 1 ? 'avbg-p1' : 'avbg-p2';
   return (
@@ -298,9 +306,18 @@ function GuestAvatar({ label, player }: { label: string; player: Player }) {
   );
 }
 
-export function AIAvatar({ level }: { level: Difficulty }) {
+export function AIAvatar({ level, theme }: { level: Difficulty; theme?: ThemeId }) {
   const t = useT();
   const label = t.sidePanel.aiLabel(t.difficulty[level]);
+  if (theme === 'forest-pearl') {
+    return (
+      <img
+        src={`/art/forest-pearl/avatar-l${level}.png`}
+        className="avatar-img"
+        alt={label}
+      />
+    );
+  }
   switch (level) {
     case 1:
       return <RobotL1 label={label} />;

@@ -1846,6 +1846,25 @@ button {
   position: relative;
 }
 
+/* Forest & Pearl only: the panel-texture.png asset is a "9-slice" style
+   image — a plain, calm vertical middle with carved detail concentrated at
+   the top and bottom edges (see docs/superpowers/specs/2026-09-11-forest-
+   pearl-visual-reskin-design.md, section 7). border-image with `fill` is
+   the native CSS mechanism for exactly this: the top/bottom slices stay
+   crisp at their source resolution while the middle stretches to whatever
+   height a given panel actually needs, so one image works for every panel
+   regardless of how much content (stats, ratings, achievement badges) it's
+   showing. The slice values are a starting point — check them against the
+   live panel in the dev server and adjust if the carved band looks cropped
+   or the plain middle looks too short. */
+html:not([data-theme]) .side-panel,
+html[data-theme="forest-pearl"] .side-panel {
+  border-image: url('/art/forest-pearl/panel-texture.png') 340 0 340 0 fill;
+  border-image-width: auto;
+  border-style: solid;
+  border-width: 20px 0;
+}
+
 .side-panel-left {
   border-radius: var(--radius);
   margin-left: 8px;

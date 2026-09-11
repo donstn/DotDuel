@@ -242,6 +242,9 @@ export const cs: Messages = {
     appearanceH: 'Vzhled',
     colourTheme: 'Barevné téma',
     changeTheme: 'Změnit',
+    soundH: 'Zvuk',
+    soundEffects: 'Zvukové efekty',
+    backgroundMusic: 'Hudba na pozadí',
     done: 'Hotovo',
   },
 

@@ -242,6 +242,9 @@ export const lt: Messages = {
     appearanceH: 'Išvaizda',
     colourTheme: 'Spalvų tema',
     changeTheme: 'Keisti',
+    soundH: 'Garsas',
+    soundEffects: 'Garso efektai',
+    backgroundMusic: 'Fono muzika',
     done: 'Atlikta',
   },
 

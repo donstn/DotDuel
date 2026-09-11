@@ -232,6 +232,9 @@ export const es: Messages = {
     appearanceH: 'Apariencia',
     colourTheme: 'Tema de color',
     changeTheme: 'Cambiar',
+    soundH: 'Sonido',
+    soundEffects: 'Efectos de sonido',
+    backgroundMusic: 'Música de fondo',
     done: 'Hecho',
   },
 

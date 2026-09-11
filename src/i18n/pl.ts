@@ -244,6 +244,9 @@ export const pl: Messages = {
     appearanceH: 'Wygląd',
     colourTheme: 'Motyw kolorystyczny',
     changeTheme: 'Zmień',
+    soundH: 'Dźwięk',
+    soundEffects: 'Efekty dźwiękowe',
+    backgroundMusic: 'Muzyka w tle',
     done: 'Gotowe',
   },
 

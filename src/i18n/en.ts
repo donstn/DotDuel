@@ -262,6 +262,9 @@ export const en = {
     appearanceH: 'Appearance',
     colourTheme: 'Colour theme',
     changeTheme: 'Change',
+    soundH: 'Sound',
+    soundEffects: 'Sound effects',
+    backgroundMusic: 'Background music',
     done: 'Done',
   },
 

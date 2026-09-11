@@ -233,6 +233,9 @@ export const pt: Messages = {
     appearanceH: 'Aparência',
     colourTheme: 'Tema de cores',
     changeTheme: 'Mudar',
+    soundH: 'Som',
+    soundEffects: 'Efeitos sonoros',
+    backgroundMusic: 'Música de fundo',
     done: 'Concluído',
   },
 

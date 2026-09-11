@@ -153,6 +153,30 @@ export function SettingsPopover({
             </div>
           </section>
 
+          <section className="settings-section">
+            <h3>{t.settings.soundH}</h3>
+            <label className="settings-toggle">
+              <input
+                type="checkbox"
+                checked={local.sfxEnabled}
+                onChange={(e) =>
+                  setLocal((s) => ({ ...s, sfxEnabled: e.target.checked }))
+                }
+              />
+              <span>{t.settings.soundEffects}</span>
+            </label>
+            <label className="settings-toggle">
+              <input
+                type="checkbox"
+                checked={local.musicEnabled}
+                onChange={(e) =>
+                  setLocal((s) => ({ ...s, musicEnabled: e.target.checked }))
+                }
+              />
+              <span>{t.settings.backgroundMusic}</span>
+            </label>
+          </section>
+
           {onChangePrivacy && (
             <section className="settings-section">
               <h3>{t.settings.privacyH}</h3>

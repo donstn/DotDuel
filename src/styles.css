@@ -820,6 +820,17 @@ button {
   line-height: 1.45;
 }
 
+/* Forest & Pearl only: naked text with no card/button background behind it
+   (this subtitle, the share link below) sits directly over the busy forest
+   photo — a background tint can't fix this since there's no element to tint,
+   and the photo's brightness varies too much for one fixed text color to
+   stay readable everywhere it might land. A soft dark text-shadow keeps
+   light text legible regardless of what's behind it at any given point. */
+html[data-theme="forest-pearl"] .subtitle,
+html[data-theme="forest-pearl"] .menu-share-link {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 1px 10px rgba(0, 0, 0, 0.6);
+}
+
 .version-badge {
   margin: 4px 0 0 0;
   padding: 5px 12px;
@@ -5048,6 +5059,21 @@ h1, h2, h3,
   background: rgba(40, 150, 80, 0.28);
   color: #d8f6e3;
   border-color: rgba(123, 219, 149, 0.55);
+}
+
+/* Forest & Pearl only: this button sets its own background directly (not
+   via --glass-bg), so the earlier site-wide glass-contrast fix never
+   reached it — it was still a near-transparent green tint sitting on a
+   busy green forest photo, both text and button nearly invisible. Darker,
+   more opaque background plus a text-shadow on the (still fairly bright
+   --accent-colored) label. */
+html[data-theme="forest-pearl"] .menu-auth-btn-cta {
+  background: rgba(6, 24, 14, 0.72);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+html[data-theme="forest-pearl"] .menu-auth-btn-cta:hover {
+  background: rgba(10, 36, 20, 0.82);
 }
 
 .app-footer-version {

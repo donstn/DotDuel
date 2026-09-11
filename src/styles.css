@@ -2505,6 +2505,12 @@ button {
   font-size: 0.75rem;
   min-width: 28px;
   text-transform: uppercase;
+  /* Never shrink below its content width — this is a short fixed label
+     ("BOT L1" / Lithuanian "BOTAS L1"), and letting it shrink is what let
+     its nowrap text spill over .stats-counts/.stats-pct (text-over-text
+     bug, see bugs.md "Layout / responsive"). .stats-counts absorbs the
+     squeeze instead, via its own overflow:hidden below. */
+  flex-shrink: 0;
 }
 
 .stats-counts {
@@ -2512,6 +2518,7 @@ button {
   gap: 3px;
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .stats-w {
@@ -2533,6 +2540,7 @@ button {
   color: var(--text);
   font-size: 0.75rem;
   letter-spacing: 0.01em;
+  flex-shrink: 0;
 }
 
 .stats-empty {
@@ -2627,6 +2635,13 @@ button {
   font-size: 0.75rem;
   color: var(--text-mute);
   letter-spacing: 0.01em;
+  /* Same guard as .stats-counts: this is the flexible element in the row
+     (Lithuanian "vid. 76.0" runs longer than English "avg 76.0"), so let it
+     shrink and truncate with an ellipsis instead of spilling raw nowrap text
+     past the panel edge. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 380px) {

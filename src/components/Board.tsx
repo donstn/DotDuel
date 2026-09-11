@@ -626,6 +626,30 @@ export function Board({
           const outer = strokeWidth * 0.575;
           const innerHighlight = strokeWidth * 0.22;
           const cIdx = colorIndex(c.player, colorSwap);
+          if (useForestArt) {
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+            const len = Math.hypot(x2 - x1, y2 - y1);
+            const angleDeg = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+            const lineImgH = strokeWidth * 3.4;
+            return (
+              <g
+                key={c.lineId}
+                transform={`translate(${midX} ${midY}) rotate(${angleDeg})`}
+                style={{ pointerEvents: 'none' }}
+              >
+                <image
+                  href={`/art/forest-pearl/line-${line.length}-p${cIdx}.png`}
+                  x={-len / 2}
+                  y={-lineImgH / 2}
+                  width={len}
+                  height={lineImgH}
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                />
+              </g>
+            );
+          }
           return (
             <g
               key={c.lineId}

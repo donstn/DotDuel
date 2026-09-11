@@ -47,6 +47,7 @@ interface Shell {
 interface Confetto {
   x: number; y: number; z: number; w: number; h: number; color: string;
   vy: number; sway: number; phase: number; rot: number; vrot: number;
+  sprite?: HTMLImageElement;
 }
 
 export function WinCelebration({ level }: { level: number }) {
@@ -67,6 +68,21 @@ export function WinCelebration({ level }: { level: number }) {
     const startedAt = performance.now();
     const lvl = Math.max(1, Math.min(5, Math.round(level)));
     const SHOW_MS = [2200, 2700, 3300, 4100, 5200][lvl - 1];
+
+    const isForestPearl = document.documentElement.dataset.theme === 'forest-pearl'
+      || document.documentElement.dataset.theme === undefined;
+    const spritePaths = [
+      '/art/forest-pearl/particle-spark.png',
+      '/art/forest-pearl/particle-leaf.png',
+      '/art/forest-pearl/particle-pearl.png',
+      '/art/forest-pearl/particle-firefly.png',
+    ];
+    const sprites = isForestPearl ? spritePaths.map((src) => {
+      const img = new Image();
+      img.src = src;
+      return img;
+    }) : [];
+    const pickSprite = () => sprites[(Math.random() * sprites.length) | 0];
 
     const resize = () => {
       DPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -111,6 +127,7 @@ export function WinCelebration({ level }: { level: number }) {
           w: rnd(5, 10) * z * DPR, h: rnd(8, 16) * z * DPR, color: pick(set),
           vy: rnd(1.5, 3.2) * z * DPR, sway: rnd(0.6, 1.6),
           phase: rnd(0, Math.PI * 2), rot: rnd(0, Math.PI * 2), vrot: rnd(-0.12, 0.12),
+          sprite: isForestPearl ? pickSprite() : undefined,
         });
       }
     };
@@ -159,9 +176,16 @@ export function WinCelebration({ level }: { level: number }) {
         c.y += c.vy; c.x += Math.sin(t * c.sway + c.phase) * 1.3 * c.z * DPR; c.rot += c.vrot;
         ctx.save();
         ctx.translate(c.x, c.y); ctx.rotate(c.rot);
-        ctx.globalAlpha = 0.92; ctx.fillStyle = c.color;
+        ctx.globalAlpha = 0.92;
         const sq = 0.35 + Math.abs(Math.sin(t * c.sway + c.phase)) * 0.65;
-        ctx.fillRect((-c.w / 2) * sq, -c.h / 2, c.w * sq, c.h);
+        if (isForestPearl && c.sprite) {
+          const w = c.w * sq * 2.2;
+          const h = c.h * 2.2;
+          ctx.drawImage(c.sprite, -w / 2, -h / 2, w, h);
+        } else {
+          ctx.fillStyle = c.color;
+          ctx.fillRect((-c.w / 2) * sq, -c.h / 2, c.w * sq, c.h);
+        }
         ctx.restore();
         if (c.y > H + 30) confetti.splice(i, 1);
       }

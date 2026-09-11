@@ -31,7 +31,7 @@ export default defineConfig(() => ({
       // the service worker here.
       manifest: false,
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2,json,txt}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2,json,txt,mp3}'],
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       },

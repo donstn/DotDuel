@@ -37,6 +37,28 @@ function colorIndex(player: Player, swap: boolean): 1 | 2 {
   return player === 1 ? 2 : 1;
 }
 
+// Forest & Pearl line art (line-{2-9}-p{1,2}.png): each was generated
+// separately, so how much of each image's own width its glowing "core"
+// actually fills isn't consistent — measured directly from the files
+// (solid-alpha pixel width / total image width): P1 ranges ~0.30 (length 2)
+// down to ~0.18 (length 9); P2 ranges ~0.29 down to ~0.86 the other way.
+// Board.tsx stretches each image's FULL width to one constant target box
+// (lineImgH) regardless of that ratio, so on screen P2 reads visibly
+// thicker/more solid than P1 at most lengths, worse at longer ones.
+// Simply resizing the source PNGs can't fix this: scaling an image's
+// width uniformly scales its core by the identical factor, so the
+// core-to-width ratio — and therefore the rendered thickness — is
+// invariant under that operation. The actual fix has to live here: scale
+// the per-instance target width by the inverse of each asset's own ratio
+// (relative to the sample median), so every length/color renders at a
+// consistent core thickness regardless of how each source image happened
+// to come out. Length 1 has no entry — corners reuse length 2's art (see
+// below) and never index this table.
+const LINE_THICKNESS_MULT: Record<1 | 2, Record<number, number>> = {
+  1: { 2: 0.808, 3: 0.874, 4: 0.954, 5: 1.027, 6: 1.1, 7: 1.178, 8: 1.265, 9: 1.348 },
+  2: { 2: 0.824, 3: 1.04, 4: 1.065, 5: 1.022, 6: 0.978, 7: 0.979, 8: 0.898, 9: 0.859 },
+};
+
 function kindDirection(
   board: ReturnType<typeof getBoard>,
   kind: Line['kind']
@@ -684,7 +706,7 @@ export function Board({
             // the true line direction, so `height=len` stretches the
             // strand's actual long axis to the real endpoint-to-endpoint
             // span.
-            const imgW = lineImgH;
+            const imgW = lineImgH * LINE_THICKNESS_MULT[cIdx][artLen];
             const imgH = len;
             const groupRotate = angleDeg - 90;
             return (

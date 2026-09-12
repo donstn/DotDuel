@@ -253,6 +253,7 @@ export const lt: Messages = {
     title: 'Tema',
     tagline: 'Pasirinkite paletę. Išsaugoma šiame įrenginyje.',
     sunFriendly: 'Tinka saulėje',
+    comingSoon: 'Netrukus',
     done: 'Atlikta',
     taglines: {
       'forest-pearl': 'Originalioji. Smaragdas ant žalsvo fono.',

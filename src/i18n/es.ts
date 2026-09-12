@@ -243,6 +243,7 @@ export const es: Messages = {
     title: 'Tema',
     tagline: 'Elige una paleta. Se guarda en este dispositivo.',
     sunFriendly: 'Apto para el sol',
+    comingSoon: 'Próximamente',
     done: 'Hecho',
     taglines: {
       'forest-pearl': 'El original. Esmeralda sobre viñeta jade.',

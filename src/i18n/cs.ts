@@ -253,6 +253,7 @@ export const cs: Messages = {
     title: 'Téma',
     tagline: 'Vyber paletu. Uloženo na tomto zařízení.',
     sunFriendly: 'Vhodné na slunce',
+    comingSoon: 'Již brzy',
     done: 'Hotovo',
     taglines: {
       'forest-pearl': 'Originál. Smaragd na nefritové vinětě.',

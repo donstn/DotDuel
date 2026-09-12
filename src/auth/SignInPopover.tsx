@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { isNativeApp } from '../nativeAds';
-import { supabase } from '../supabase';
 import { useT, type Messages } from '../i18n';
 import {
   signInWithGoogleNative,
@@ -17,6 +16,10 @@ interface Props {
 
 // Map Supabase auth error messages to friendly copy (Supabase returns prose,
 // not stable codes, so match on substrings). `s` = the localized signIn strings.
+// Email/password-specific cases (invalid creds, already registered, weak
+// password, etc.) are unreachable while email sign-in is hidden below, but
+// left in place rather than pruned — cheap to keep, and this function goes
+// back to being fully exercised the moment email sign-in returns.
 function friendlyError(message: string, s: Messages['signIn']): string {
   const m = message.toLowerCase();
   if (m.includes('invalid login credentials')) return s.errInvalidCreds;
@@ -31,13 +34,8 @@ function friendlyError(message: string, s: Messages['signIn']): string {
 
 export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props) {
   const t = useT();
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -54,7 +52,6 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
   async function run(fn: () => Promise<unknown>, { closeOnSuccess = true } = {}) {
     setBusy(true);
     setError(null);
-    setInfo(null);
     try {
       await fn();
       if (closeOnSuccess) onClose();
@@ -74,36 +71,6 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
       ? run(() => signInWithGoogleNative())
       : run(() => signInWithGoogleSupabase(), { closeOnSuccess: false });
 
-  const onEmailSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mode === 'signin') {
-      run(async () => {
-        const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-        if (err) throw err;
-      });
-    } else {
-      if (password !== confirmPassword) {
-        setError(t.signIn.errPasswordsMatch);
-        setInfo(null);
-        return;
-      }
-      run(
-        async () => {
-          const { error: err } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              emailRedirectTo: window.location.origin + window.location.pathname,
-            },
-          });
-          if (err) throw err;
-          setInfo(t.signIn.accountCreated(email));
-        },
-        { closeOnSuccess: false },
-      );
-    }
-  };
-
   return (
     <div
       className="rules-overlay"
@@ -120,13 +87,7 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
         )}
 
         <header className="rules-header">
-          <h2>
-            {mode === 'signin'
-              ? gate
-                ? t.signIn.titleGate
-                : t.signIn.titleSignIn
-              : t.signIn.titleSignUp}
-          </h2>
+          <h2>{gate ? t.signIn.titleGate : t.signIn.titleSignIn}</h2>
         </header>
 
         <div className="auth-body">
@@ -140,86 +101,7 @@ export function SignInPopover({ onClose, gate = false, onPlayAnonymous }: Props)
             <span>{t.signIn.google}</span>
           </button>
 
-          <div className="auth-divider"><span>{t.signIn.orEmail}</span></div>
-
-          <form className="auth-form" onSubmit={onEmailSubmit}>
-            <input
-              type="email"
-              className="settings-input"
-              placeholder={t.signIn.emailPlaceholder}
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={busy}
-            />
-            <input
-              type="password"
-              className="settings-input"
-              placeholder={t.signIn.passwordPlaceholder}
-              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={busy}
-            />
-            {mode === 'signup' && (
-              <input
-                type="password"
-                className="settings-input"
-                placeholder={t.signIn.confirmPlaceholder}
-                autoComplete="new-password"
-                required
-                minLength={6}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={busy}
-              />
-            )}
-            <button type="submit" className="rules-got-it auth-submit" disabled={busy}>
-              {busy ? '…' : mode === 'signin' ? t.signIn.submitSignIn : t.signIn.submitSignUp}
-            </button>
-          </form>
-
           {error && <div className="auth-error" role="alert">{error}</div>}
-          {info && <div className="auth-info">{info}</div>}
-
-          <div className="auth-toggle">
-            {mode === 'signin' ? (
-              <span>
-                {t.signIn.newHere}{' '}
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setMode('signup');
-                    setConfirmPassword('');
-                    setError(null);
-                    setInfo(null);
-                  }}
-                >
-                  {t.signIn.createAccount}
-                </a>
-              </span>
-            ) : (
-              <span>
-                {t.signIn.haveOne}{' '}
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setMode('signin');
-                    setConfirmPassword('');
-                    setError(null);
-                    setInfo(null);
-                  }}
-                >
-                  {t.signIn.signInLink}
-                </a>
-              </span>
-            )}
-          </div>
 
           {gate && onPlayAnonymous && (
             <button

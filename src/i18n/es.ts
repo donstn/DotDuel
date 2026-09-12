@@ -45,8 +45,7 @@ export const es: Messages = {
   },
 
   menu: {
-    tagline:
-      'Por turnos, coloca puntos; al completar una línea ganas puntos según su longitud. Colorea todo el tablero y gana quien tenga más puntos.',
+    tagline: 'Consigue más puntos que tu rival para ganar',
     welcomeLead: 'Te damos la bienvenida,',
 
     changeTheme: 'Cambiar el tema de color',

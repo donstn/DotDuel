@@ -59,8 +59,7 @@ export const en = {
   // Home menu and its sub-screens.
   menu: {
     // One-line rules blurb under the title (shown to signed-out visitors).
-    tagline:
-      'Take turns placing dots, finish a line to score points for its length. Win by scoring most points while coloring the whole board.',
+    tagline: 'Score more points than opponent to win',
     // Signed-in greeting prefix; the bold {name} and the tagline follow in the UI.
     welcomeLead: 'Welcome,',
 

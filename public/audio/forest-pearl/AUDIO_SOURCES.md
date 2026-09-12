@@ -11,7 +11,10 @@ zero-cost/no-royalty rule.
 - License: CC0 1.0 (Creative Commons Zero)
 - Retrieved: 2026-09-11
 - Transform: trimmed to 30s (60s-90s of the original), downmixed to mono,
-  re-encoded at 64kbps, 1.5s fade in/out added at the loop seam.
+  re-encoded at 64kbps. No fade baked into the file — the loop seam is
+  handled by a crossfade scheduler in audio.ts instead, so playback never
+  dips in volume (a per-clip fade caused an audible dip on every loop, since
+  `AudioBufferSourceNode.loop` just repeats the exact buffer verbatim).
 
 ## ambience-stream.mp3
 - Source: "Relaxing river stream running water seamless loop" by steaq

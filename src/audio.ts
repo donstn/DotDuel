@@ -26,11 +26,23 @@ type AmbianceKey = keyof typeof AMBIANCE_FILES;
 const ambianceBuffers: Partial<Record<AmbianceKey, AudioBuffer>> = {};
 let ambianceBuffersRequested = false;
 let ambianceBus: GainNode | null = null;
-let windSource: AudioBufferSourceNode | null = null;
-let streamSource: AudioBufferSourceNode | null = null;
 let birdTimer: number | null = null;
 let ambiancePlaying = false;
 let ambiancePausedForBackground = false;
+
+// A crossfade-looped layer: instead of AudioBufferSourceNode.loop (which
+// repeats the exact same buffer edges every cycle — audible as a dip if the
+// clip fades near its edges, or a click if it doesn't), this schedules
+// overlapping instances of the buffer that crossfade into each other, so
+// the loop seam is always masked by two layers blending rather than one
+// layer's volume dropping out and back in.
+interface LoopLayer {
+  layerGain: GainNode;
+  timer: number | null;
+  sources: AudioBufferSourceNode[];
+}
+let windLayer: LoopLayer | null = null;
+let streamLayer: LoopLayer | null = null;
 
 // Browsers refuse to start audio before a real user gesture. Call this once,
 // synchronously, from the first pointerdown/click/keydown the app sees.
@@ -187,32 +199,83 @@ function playBirdCall(): void {
   src.start();
 }
 
+// Crossfade window: each instance ramps in over this long at its start and
+// ramps out over this long before it ends, overlapping with the next
+// instance's ramp-in so the combined volume never dips — one rises exactly
+// as the other falls. Capped at half the buffer's own length so two
+// instances never both target the same moment from opposite directions.
+const AMBIANCE_CROSSFADE_SEC = 2.5;
+
+function startLoopLayer(
+  audioCtx: AudioContext,
+  buffer: AudioBuffer,
+  targetGain: number,
+  bus: GainNode,
+): LoopLayer {
+  const layerGain = audioCtx.createGain();
+  layerGain.gain.value = targetGain;
+  layerGain.connect(bus);
+  const layer: LoopLayer = { layerGain, timer: null, sources: [] };
+
+  const dur = buffer.duration;
+  const cf = Math.min(AMBIANCE_CROSSFADE_SEC, dur / 2);
+
+  const playOnce = (startAt: number) => {
+    const src = audioCtx.createBufferSource();
+    src.buffer = buffer;
+    const instGain = audioCtx.createGain();
+    instGain.gain.setValueAtTime(0, startAt);
+    instGain.gain.linearRampToValueAtTime(1, startAt + cf);
+    instGain.gain.setValueAtTime(1, startAt + dur - cf);
+    instGain.gain.linearRampToValueAtTime(0, startAt + dur);
+    src.connect(instGain);
+    instGain.connect(layerGain);
+    src.start(startAt);
+    src.stop(startAt + dur + 0.05);
+    layer.sources.push(src);
+    src.onended = () => {
+      layer.sources = layer.sources.filter((s) => s !== src);
+    };
+
+    // The next instance starts exactly where this one begins its fade-out,
+    // so the two overlap for the full crossfade window. Schedule it
+    // ~1s before that moment (not right away) so a layer that gets
+    // stopped mid-cycle doesn't leave a far-future orphan queued.
+    const nextStart = startAt + dur - cf;
+    const msUntilSchedule = Math.max(0, (nextStart - audioCtx.currentTime - 1) * 1000);
+    layer.timer = window.setTimeout(() => playOnce(nextStart), msUntilSchedule);
+  };
+
+  playOnce(audioCtx.currentTime + 0.05);
+  return layer;
+}
+
+function stopLoopLayer(layer: LoopLayer | null): void {
+  if (!layer) return;
+  if (layer.timer !== null) window.clearTimeout(layer.timer);
+  for (const src of layer.sources) {
+    try {
+      src.stop();
+    } catch {
+      // Already stopped/ended — fine.
+    }
+  }
+  layer.layerGain.disconnect();
+}
+
 function startAmbianceInternal(): void {
   if (!ctx || ambiancePlaying) return;
   if (!ambianceBuffers.wind && !ambianceBuffers.stream) return;
-  ambianceBus = ctx.createGain();
+  const audioCtx = ctx;
+  ambianceBus = audioCtx.createGain();
   ambianceBus.gain.value = 0.5;
-  ambianceBus.connect(ctx.destination);
+  ambianceBus.connect(audioCtx.destination);
 
   if (ambianceBuffers.wind) {
-    windSource = ctx.createBufferSource();
-    windSource.buffer = ambianceBuffers.wind;
-    windSource.loop = true;
-    const windGain = ctx.createGain();
-    windGain.gain.value = 0.7;
-    windSource.connect(windGain);
-    windGain.connect(ambianceBus);
-    windSource.start();
+    windLayer = startLoopLayer(audioCtx, ambianceBuffers.wind, 0.7, ambianceBus);
   }
   if (ambianceBuffers.stream) {
-    streamSource = ctx.createBufferSource();
-    streamSource.buffer = ambianceBuffers.stream;
-    streamSource.loop = true;
-    const streamGain = ctx.createGain();
-    streamGain.gain.value = 0.5;
-    streamSource.connect(streamGain);
-    streamGain.connect(ambianceBus);
-    streamSource.start();
+    streamLayer = startLoopLayer(audioCtx, ambianceBuffers.stream, 0.5, ambianceBus);
   }
   ambiancePlaying = true;
   scheduleNextBird();
@@ -220,10 +283,10 @@ function startAmbianceInternal(): void {
 
 function stopAmbianceInternal(): void {
   if (!ambiancePlaying) return;
-  windSource?.stop();
-  streamSource?.stop();
-  windSource = null;
-  streamSource = null;
+  stopLoopLayer(windLayer);
+  stopLoopLayer(streamLayer);
+  windLayer = null;
+  streamLayer = null;
   ambianceBus?.disconnect();
   ambianceBus = null;
   if (birdTimer !== null) {

@@ -40,19 +40,30 @@ A small, simple, icon-sized emblem representing a winner's podium carved from mo
 >> Save the result as menu-icon-rankings.png.
 
 
-PROMPT 3 of 3 — "DotDuel" header wordmark
+PROMPT 3 of 3 — "DotDuel" header wordmark — SUPERSEDED, see v2 below
 ----------------------------------------
-Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces), applied here to a carved wooden sign rather than a game piece. Rich, warm, weathered wood material — bark-edged plank or rounded forest signpost — with soft rim lighting and a gentle mint-green #7bdb95 magical glow emanating from within the carved grooves of the lettering, as if lit from behind by fireflies. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
-
-A single wooden sign or plank bearing the word "DotDuel" carved or burned into its surface in bold, chunky, rounded, highly legible sans-serif lettering — the letterforms must be exactly the seven characters D-o-t-D-u-e-l, correctly spelled, clearly readable, no extra decorative flourishes obscuring the letters, no additional words, no subtitle text, no numbers. The carved grooves of the letters glow softly with warm mint-green #7bdb95 light against the darker wood, as if lit from within. Small hints of moss and a tiny vine curling along one edge of the plank, subtle and not overlapping the lettering itself. Wide horizontal composition, roughly 4:1, sign centered with generous empty margin above and below so it can be cropped tightly. The background behind the sign is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency.
+(Original single-plaque version. Not used — the user generated their own
+version of this and picked a different, ornate jeweled style. Kept only
+for history/reference, do not run this one.)
 ----------------------------------------
->> Save the result as header-wordmark.png.
 
-NOTE on this one specifically: AI image generation is genuinely unreliable at
-rendering exact legible text — this prompt may need 2-3 attempts before the
-letters come out correctly spelled and readable. Check the result carefully
-before moving on: if any letter is malformed, duplicated, or missing, rerun
-the same prompt (regenerate) rather than accepting a near-miss — a logo with
-a typo is worse than no logo. If after 3 honest attempts it still won't
-render "DotDuel" correctly, tell me and we'll either simplify the prompt
-further or keep the current gradient-text title (not a blocker either way).
+
+PROMPT 3v2 — "DotDuel" header wordmark, wide banner (bigger, matches the chosen art)
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces), applied here to an ornate carved wooden sign rather than a game piece. Rich, warm, dark emerald-green-stained wood material, carved with intricate twisting vine and leaf relief around the border, inset with polished round gemstone cabochons — alternating deep emerald green and lustrous pearl-white — at the corners and along the top edge, each gem with a soft specular highlight. A gentle mint-green #7bdb95 magical glow emanates from within the carved grooves of the lettering and along the vine carvings, as if lit from behind by fireflies. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+A single wide decorative wooden banner/plaque bearing the word "DotDuel" carved into its surface, the letters themselves formed from inlaid lustrous pearls (pearl-white #f0fbcf to #ffffff) set into the dark wood, exactly like a jeweled sign — bold, chunky, rounded, highly legible letterforms, exactly the seven characters D-o-t-D-u-e-l, correctly spelled, clearly readable, no extra words, no subtitle text, no numbers. This must be a substantially WIDE and BIG banner, not a small compact badge: the wooden plaque extends well beyond the width of the lettering on both sides, with the carved vine-and-gem border continuing generously along the extended left and right portions of the banner (additional gem cabochons spaced along the length, more vine and leaf carving filling the extra width) so the banner reads as one long, substantial architectural sign spanning a wide space — not a small sign stretched thin. The lettering itself should be large and bold, filling a generous portion of the banner's height. Very wide horizontal composition, aspect ratio roughly 6:1, banner centered with a small margin above and below only (the banner should fill most of the frame's width), so it can be cropped tightly and used full-width at the top of a webpage. The background behind the banner is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency.
+----------------------------------------
+>> Save the result as header-wordmark-wide.png.
+
+NOTE: AI image generation is genuinely unreliable at rendering exact
+legible text — this prompt may need 2-3 attempts before the letters come
+out correctly spelled and readable. Check the result carefully before
+moving on: if any letter is malformed, duplicated, or missing, rerun the
+same prompt (regenerate) rather than accepting a near-miss — a logo with a
+typo is worse than no logo. Also double-check the banner actually reads as
+WIDE (vine/gem border extending well past the lettering on both sides) and
+not just the same compact sign upscaled — if it comes back looking like a
+small badge again, ask Gemini to "make the plaque itself much wider, with
+more vine and gem decoration filling the extra width on both sides" as a
+follow-up in the same chat rather than starting over.

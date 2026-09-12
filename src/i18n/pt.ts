@@ -244,6 +244,7 @@ export const pt: Messages = {
     title: 'Tema',
     tagline: 'Escolha uma paleta. Salvo neste dispositivo.',
     sunFriendly: 'Bom sob o sol',
+    comingSoon: 'Em breve',
     done: 'Concluído',
     taglines: {
       'forest-pearl': 'O original. Esmeralda sobre vinheta jade.',

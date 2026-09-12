@@ -1,11 +1,11 @@
 // Single module owning all game audio — mirrors telemetry.ts/ads.ts (one
 // concern, small function-call API) rather than spreading AudioContext
-// handling across components. Ambiance playback lives in a second block
-// appended by a later task; this file starts with just the context
-// lifecycle and the seven short synthesized cues.
+// handling across components. Two halves: synthesized SFX cues (below),
+// and forest-ambiance playback (further down).
 
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
+import type { ThemeId } from './theme';
 
 export type SfxName = 'place' | 'lineComplete' | 'claim' | 'win' | 'loss' | 'draw' | 'click';
 
@@ -13,7 +13,7 @@ let ctx: AudioContext | null = null;
 let primed = false;
 let sfxEnabled = true;
 let musicEnabled = true;
-let activeTheme: string | null = null;
+let activeTheme: ThemeId | null = null;
 
 const AMBIANCE_FILES = {
   wind: '/audio/forest-pearl/ambience-wind.mp3',
@@ -44,7 +44,7 @@ export function primeAudio(): void {
     ctx = null;
     return;
   }
-  void loadAmbianceBuffers();
+  syncAmbiance();
 }
 
 export function setSfxEnabled(on: boolean): void {
@@ -56,7 +56,7 @@ export function setMusicEnabled(on: boolean): void {
   syncAmbiance();
 }
 
-export function setAmbianceTheme(theme: string): void {
+export function setAmbianceTheme(theme: ThemeId): void {
   activeTheme = theme;
   syncAmbiance();
 }
@@ -89,9 +89,8 @@ function tone(
   osc.stop(startAt + duration + 0.05);
 }
 
-// Exact frequencies/durations/gains below are a first pass tuned by ear
-// against the design spec's per-sound intent table — refine in Step 3 by
-// actually listening, not by re-deriving these from first principles.
+// Exact frequencies/durations/gains below are a first pass — not yet
+// verified by ear; tune by listening in-browser before shipping.
 export function playSfx(name: SfxName, opts?: { player?: 1 | 2; lineLength?: number }): void {
   if (!primed || !sfxEnabled || !ctx) return;
   const t0 = ctx.currentTime;
@@ -235,10 +234,15 @@ function stopAmbianceInternal(): void {
 }
 
 function syncAmbiance(): void {
+  if (ctx && ctx.state === 'suspended') void ctx.resume();
   const shouldPlay =
     primed && musicEnabled && activeTheme === 'forest-pearl' && !ambiancePausedForBackground;
-  if (shouldPlay) startAmbianceInternal();
-  else stopAmbianceInternal();
+  if (shouldPlay) {
+    void loadAmbianceBuffers();
+    startAmbianceInternal();
+  } else {
+    stopAmbianceInternal();
+  }
 }
 
 // Pause ambiance while the app is backgrounded on Android; resume it (if
@@ -247,6 +251,7 @@ function syncAmbiance(): void {
 if (Capacitor.isNativePlatform()) {
   void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
     ambiancePausedForBackground = !isActive;
+    if (isActive && ctx && ctx.state === 'suspended') void ctx.resume();
     syncAmbiance();
   });
 }

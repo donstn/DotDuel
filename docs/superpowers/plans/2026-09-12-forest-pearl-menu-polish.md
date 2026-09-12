@@ -25,12 +25,13 @@
 7. **Wordmark, round 3** — user's own regenerated banner (wide, ~6:1, matching the ornate jeweled style, made from the "wide banner" prompt below) swapped in for the original compact badge. Sized by *width* (`min(calc(100vw - 32px), 480px)`, was 720px on the first pass — too wide, read as out of place against the ~560px-ish text column beneath it) rather than height, so it scales as one wide banner instead of a tall badge. Needed a 36px top margin once it went wide enough to reach the same corner band as the absolutely-positioned language/theme buttons — `.menu`'s own padding-top wasn't enough clearance. Verified clear of those buttons at both 320px and desktop width.
 8. **"Botai" submenu icon painted** — one level below the main menu (Vienas žaidėjas → Botai), the bot-squad line-art icon was still showing even though the main menu's own single-player icon was already switched to `avatar-l1.png`. Same fix applied here — was the specific bug the user's screenshot called out ("bots in initial changed, but for single player choosing bots again — its still not changed").
 
-### Blocked on user-generated art (full inventory, confirmed via `grep` across `Menu.tsx` — every icon call site)
+9. **Multiplayer + rankings main-menu icons, done.** `menu-icon-multiplayer.png` (two facing orbs, a light streak, sparks) and `menu-icon-rankings.png` (mossy 3-step podium + glowing star) generated, despilled, and wired into `Menu.tsx`'s main-menu shelves — same `theme === 'forest-pearl' ? <img/> : <OriginalIcon/>` pattern, `iconClass="is-avatar"`. Despill note: a raw-RGB preview tool made an already-correctly-transparent PNG (verified alpha=0 at every background pixel via direct inspection) look like it still had a pink fringe — chased that as a real bug for a while before confirming via a real browser render that the actual asset was fine all along. Worth remembering for any future despill work: judge chroma-key results in an actual browser, not a raw-pixel preview that may not respect alpha.
+10. **Wordmark, round 4.** Swapped in yet another regenerated banner from the same wide-banner prompt — more symmetric arch shape, richer scrollwork. Same despill/crop treatment. Aspect ratio came out ~3.3:1 this time (prompt asked for 6:1; Gemini doesn't reliably honor exact ratio requests) — fine in practice since the CSS caps by width, not by the asset's own ratio, so a less-wide asset just renders a bit taller for the same on-screen width.
 
-A follow-up review after the above found **8 more** unpainted icon spots beyond the 2 already queued (multiplayer, rankings) — every remaining shelf icon one level deeper in the menu, plus the 4 board-shape icons. User chose to generate all of them in one batch rather than stop at the 2 already queued.
+### Still blocked on user-generated art
 
-9. **Multiplayer shelf icon** — needs `menu-icon-multiplayer.png` (Prompt 1 of 6).
-10. **Rankings shelf icon** — needs `menu-icon-rankings.png` (Prompt 2 of 6).
+A follow-up review found **8 more** unpainted icon spots beyond the 2 above — every remaining shelf icon one level deeper in the menu, plus the 4 board-shape icons. User chose to generate all of them in one batch.
+
 11. **Daily puzzle icon** (Vienas žaidėjas → Dienos galvosūkis, + locked/sign-in states) — needs `menu-icon-daily.png` (Prompt 4 of 6).
 12. **Hot-seat icon** (Keli žaidėjai → Vietinis žaidimas) — needs `menu-icon-hotseat.png` (Prompt 4 of 6).
 13. **Online ranked icon** (Keli žaidėjai → online variants, 4 call sites same icon) — needs `menu-icon-online.png` (Prompt 4 of 6).

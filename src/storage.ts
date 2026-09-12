@@ -119,6 +119,8 @@ export interface Settings {
   showClaimableLines: boolean;
   showClaimableLinesL4: boolean;
   lastPlayedAt: number;
+  sfxEnabled: boolean;
+  musicEnabled: boolean;
 }
 
 function defaultSettings(): Settings {
@@ -132,6 +134,8 @@ function defaultSettings(): Settings {
     showClaimableLines: true,
     showClaimableLinesL4: false,
     lastPlayedAt: 0,
+    sfxEnabled: true,
+    musicEnabled: true,
   };
 }
 

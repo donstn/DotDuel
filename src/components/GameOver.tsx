@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Difficulty, GameMode, GameState, Player, ShapeId } from '../types';
 import type { ShareResultData } from '../share/resultShareText';
 import { GameResultShareButton } from './GameResultShareButton';
 import { WinCelebration } from './WinCelebration';
 import { useT, type Messages } from '../i18n';
+import { playSfx } from '../audio';
 
 interface UnlockResult {
   shape: ShapeId | null;
@@ -240,6 +241,21 @@ export function GameOver({
     : mode === 'ai'
       ? difficulty ?? 1
       : 3;
+
+  // Once per mount — GameOver mounts exactly once when a game finishes, same
+  // assumption WinCelebration above already relies on. No sound for an
+  // aborted match (no clear win/loss to voice).
+  useEffect(() => {
+    if (finishedReason === 'aborted') return;
+    if (state.winner === 'draw' || state.winner === null) {
+      playSfx('draw');
+    } else if (localWin) {
+      playSfx('win');
+    } else {
+      playSfx('loss');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   let title = t.gameOver.drawTitle;
   let subtitle: string | null = null;

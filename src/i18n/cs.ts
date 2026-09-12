@@ -54,8 +54,7 @@ export const cs: Messages = {
   },
 
   menu: {
-    tagline:
-      'Střídavě pokládejte tečky; dokončením linie získáte body rovné její délce. Vybarvěte celou desku — vyhrává ten, kdo nasbírá více bodů.',
+    tagline: 'Získejte více bodů než soupeř a vyhrajte',
     welcomeLead: 'Vítej,',
 
     changeTheme: 'Změnit barevné téma',
@@ -242,6 +241,9 @@ export const cs: Messages = {
     appearanceH: 'Vzhled',
     colourTheme: 'Barevné téma',
     changeTheme: 'Změnit',
+    soundH: 'Zvuk',
+    soundEffects: 'Zvukové efekty',
+    backgroundMusic: 'Hudba na pozadí',
     done: 'Hotovo',
   },
 

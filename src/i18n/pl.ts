@@ -56,8 +56,7 @@ export const pl: Messages = {
   },
 
   menu: {
-    tagline:
-      'Na zmianę stawiaj kropki; po ukończeniu linii zdobywasz punkty równe jej długości. Pokoloruj całą planszę — wygrywa ten, kto ma więcej punktów.',
+    tagline: 'Zdobądź więcej punktów niż przeciwnik, aby wygrać',
     welcomeLead: 'Witaj,',
 
     changeTheme: 'Zmień motyw kolorystyczny',
@@ -244,6 +243,9 @@ export const pl: Messages = {
     appearanceH: 'Wygląd',
     colourTheme: 'Motyw kolorystyczny',
     changeTheme: 'Zmień',
+    soundH: 'Dźwięk',
+    soundEffects: 'Efekty dźwiękowe',
+    backgroundMusic: 'Muzyka w tle',
     done: 'Gotowe',
   },
 

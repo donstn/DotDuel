@@ -150,3 +150,4 @@ Live and ranked on www.dotduel.com. Arc since 0.3.0.0: **ads** (AdSense web + Ad
 7. After push to `main`: `gh run list --limit 1` green, prod loads.
 8. After multiplayer changes: two-browser sanity (pair, ready, game, GameOver, Elo both sides, session lock releases).
 9. After Android-touching changes: `npx cap sync android` + emulator boot (AVD `dotduel_api35`, WHPX accel).
+10. After audio changes: place a dot as each player, complete a line, claim a pending line, finish a game each way (win/loss/draw), toggle both new Settings sound switches and confirm they're respected, and switch away from Forest & Pearl to confirm the ambiance stops.

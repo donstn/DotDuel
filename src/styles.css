@@ -799,6 +799,29 @@ button {
   color: var(--p2-glow);
 }
 
+/* Forest & Pearl: a single painted wordmark (carved-wood banner with its own
+   gem/pearl border) replaces both the gradient text and the flanking pearl
+   dots — the sign's own corner jewels already do the "pearls" job the flat
+   dots used to. Sized by WIDTH (not height, unlike the old compact badge) so
+   it spans most of the screen the way a real banner should — the asset's
+   own ~6:1 aspect ratio keeps its height proportionate automatically.
+   `calc(100vw - 32px)` accounts for .menu's 16px side padding directly,
+   since .title is a shrink-to-fit flex box with no width of its own for a
+   plain max-width:100% to resolve against. */
+.title-wordmark {
+  display: block;
+  width: min(calc(100vw - 32px), 480px);
+  max-width: 100%;
+  height: auto;
+  /* .menu-topleft/.menu-topright (language + theme buttons) are absolutely
+     positioned in the same top corner band this banner's full-width edges
+     now reach into — .menu's own padding-top isn't enough clearance once
+     the wordmark is this wide. Push it down below that button row instead
+     of narrowing the banner to dodge them. */
+  margin-top: 36px;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
+}
+
 .title-text {
   background: linear-gradient(
     180deg,
@@ -820,14 +843,53 @@ button {
   line-height: 1.45;
 }
 
-/* Forest & Pearl only: naked text with no card/button background behind it
-   (this subtitle, the share link below) sits directly over the busy forest
-   photo — a background tint can't fix this since there's no element to tint,
-   and the photo's brightness varies too much for one fixed text color to
-   stay readable everywhere it might land. A soft dark text-shadow keeps
-   light text legible regardless of what's behind it at any given point. */
-html[data-theme="forest-pearl"] .subtitle,
+/* Forest & Pearl only: the tagline sits inside a painted vine-frame plaque
+   (its own opaque dark-green interior, not the photo background), so the
+   old "guarantee contrast against whatever photo pixel is behind it"
+   problem doesn't apply here — the frame IS the backdrop. Light text reads
+   directly against the frame's dark interior, no outline needed. */
+.subtitle-framed {
+  position: relative;
+  /* width: 100% (not 100vw-based) so this sizes off .menu's own content
+     box — which already correctly excludes .menu's vertical scrollbar —
+     the same way .menu-shelves does. 100vw includes the scrollbar's
+     width, which made this ~8px too wide and forced .menu into a
+     horizontal scroll on narrow screens. */
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 1024 / 338;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.subtitle-frame-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.subtitle-in-frame {
+  position: relative;
+  z-index: 1;
+  color: var(--p2-glow);
+  margin: 0;
+}
+/* Specificity bump (attribute selector, not just .subtitle-in-frame's own
+   class) so this beats the later small-screen ".subtitle { max-width:
+   480px }" override below — that rule also matches this element, since it
+   carries both the "subtitle" and "subtitle-in-frame" classes, and would
+   otherwise win at narrow widths purely by appearing later in the file. */
+html[data-theme="forest-pearl"] .subtitle-in-frame {
+  max-width: 78%;
+}
+
+/* The share link keeps its pill treatment (unlike the subtitle above) —
+   it now sits below the shelves, over the darker lower part of the photo,
+   where a solid backing scrim reads better than switching its text color. */
 html[data-theme="forest-pearl"] .menu-share-link {
+  background: var(--glass-bg-strong);
+  border-radius: 999px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 1px 10px rgba(0, 0, 0, 0.6);
 }
 
@@ -934,10 +996,12 @@ html[data-theme="forest-pearl"] .menu-share-link {
   border: none;
 }
 
-.menu-shelf-ic.is-avatar svg {
+.menu-shelf-ic.is-avatar svg,
+.menu-shelf-ic.is-avatar img {
   width: 48px;
   height: 48px;
   border-radius: 12px;
+  object-fit: contain;
 }
 
 /* Fixed-width content block, centred inside the card. Because every card uses

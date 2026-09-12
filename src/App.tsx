@@ -123,6 +123,7 @@ import {
   saveConsent,
   type Consent,
 } from './consent';
+import { primeAudio, playSfx, setSfxEnabled, setMusicEnabled, setAmbianceTheme } from './audio';
 import { pickAIAction } from './ai';
 import { applyAction, applyClaim, applyMove, createGame } from './game';
 import { getBoard } from './geometry';
@@ -364,6 +365,34 @@ export default function App() {
     setSettings(next);
     saveSettings(next);
   };
+
+  // Keep audio.ts's enabled-flags in sync with Settings, from whichever path
+  // changed them (updateSettings above, or the direct setSettings/saveSettings
+  // call in onToggleRings further down — neither of which touch these two
+  // fields, but this effect is correct regardless of which path fired).
+  useEffect(() => {
+    setSfxEnabled(settings.sfxEnabled);
+    setMusicEnabled(settings.musicEnabled);
+  }, [settings.sfxEnabled, settings.musicEnabled]);
+
+  // Prime the shared AudioContext on the first real user gesture (browsers
+  // refuse autoplay before one). The capturing click listener also plays the
+  // generic UI-click cue for any <button> press, app-wide, without touching
+  // every individual component.
+  useEffect(() => {
+    const onFirstGesture = () => primeAudio();
+    const onClickCapture = (e: MouseEvent) => {
+      primeAudio();
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('button')) playSfx('click');
+    };
+    window.addEventListener('pointerdown', onFirstGesture, { once: true });
+    window.addEventListener('click', onClickCapture, true);
+    return () => {
+      window.removeEventListener('pointerdown', onFirstGesture);
+      window.removeEventListener('click', onClickCapture, true);
+    };
+  }, []);
 
   const startGame = (
     mode: GameMode,
@@ -952,6 +981,7 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme);
     saveTheme(theme);
     fireAch(recordTheme(theme, achEnv()));
+    setAmbianceTheme(theme);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme]);
 
@@ -1984,6 +2014,10 @@ export default function App() {
     // the state-diff effect below.
     try {
       const result = applyMove(baseState, dotId);
+      playSfx('place', { player: myNum });
+      if (result.scoredLine) {
+        playSfx('lineComplete', { player: myNum, lineLength: result.pointsGained });
+      }
       setOptimisticMpState({ baseTurn: baseState.turn, state: result.state });
       setOptimisticClock(buildOptimisticClock(myNum, sentAt));
       if (result.pointsGained > 0 || result.newlyPending.length > 0) {
@@ -2022,6 +2056,7 @@ export default function App() {
     const sentAt = Date.now() + serverSkewMs;
     try {
       const result = applyClaim(baseState, lineId);
+      playSfx('claim', { player: myNum, lineLength: result.pointsGained });
       setOptimisticMpState({ baseTurn: baseState.turn, state: result.state });
       setOptimisticClock(buildOptimisticClock(myNum, sentAt));
       const line = getBoard(onlineGame.shape).lines.find((l) => l.id === lineId);
@@ -2057,6 +2092,10 @@ export default function App() {
     if (state.colored[dotId]) return;
     const movingPlayer = state.current;
     const result = applyMove(state, dotId);
+    playSfx('place', { player: movingPlayer });
+    if (result.scoredLine) {
+      playSfx('lineComplete', { player: movingPlayer, lineLength: result.pointsGained });
+    }
     if (result.pointsGained > 0 || result.newlyPending.length > 0) {
       setScoreEvent({
         dotId,
@@ -2081,6 +2120,7 @@ export default function App() {
     if (!state.pending.includes(lineId)) return;
     const movingPlayer = state.current;
     const result = applyClaim(state, lineId);
+    playSfx('claim', { player: movingPlayer, lineLength: result.pointsGained });
     claimsInGame.current += 1;
     const line = getBoard(config.shape).lines.find((l) => l.id === lineId);
     if (line && result.pointsGained > 0) {

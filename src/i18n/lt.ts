@@ -56,8 +56,7 @@ export const lt: Messages = {
   },
 
   menu: {
-    tagline:
-      'Paeiliui dėliokite taškus; užbaigę liniją gausite taškų pagal jos ilgį. Nuspalvinę visą lentą, laimi tas, kuris surinko daugiausia taškų.',
+    tagline: 'Surinkite daugiau taškų nei varžovas ir laimėkite',
     welcomeLead: 'Sveiki,',
 
     changeTheme: 'Keisti spalvų temą',
@@ -242,6 +241,9 @@ export const lt: Messages = {
     appearanceH: 'Išvaizda',
     colourTheme: 'Spalvų tema',
     changeTheme: 'Keisti',
+    soundH: 'Garsas',
+    soundEffects: 'Garso efektai',
+    backgroundMusic: 'Fono muzika',
     done: 'Atlikta',
   },
 

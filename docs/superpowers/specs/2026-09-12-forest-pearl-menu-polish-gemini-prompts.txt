@@ -1,0 +1,124 @@
+FOREST & PEARL — MENU POLISH — GEMINI IMAGE PROMPTS
+====================================================
+3 prompts total. Copy ONE prompt at a time (everything between the ---- lines)
+and paste it as its own message to Gemini (gemini.google.com new chat, or
+aistudio.google.com — NOT a plain-text chat surface, must be an image-capable
+one). After each image comes back, save it, then move to the next prompt.
+
+Crop instructions (what to cut each result into) are noted after each prompt,
+but are NOT part of the prompt itself — don't paste those lines to Gemini.
+
+Context: this extends the existing Forest & Pearl painted-art reskin (see
+2026-09-11-forest-pearl-gemini-prompts.txt for the original 10) with 3 more
+assets that were still using generic line-art/plain-text placeholders: the
+multiplayer and rankings menu-shelf icons, and the "DotDuel" header wordmark.
+The single-player shelf icon does NOT need new art — it now reuses the
+existing avatar-l1.png (the cute mint robot) directly, already wired in.
+
+Same palette as the original set, repeated in every prompt below for
+consistency: deep emerald forest green #0d4a23 / mint #62cf90 for Player 1;
+pale cream-pearl #d3ecaa / ivory #f0fbcf / white #ffffff for Player 2; bright
+mint-green #7bdb95 for magical accents; deep jade-black #15291e / near-black
+#02090b for shadow depth.
+
+
+PROMPT 1 of 3 — Multiplayer shelf icon
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+A small, simple, icon-sized emblem representing a friendly duel between two players: two glowing orb-like game pieces facing each other, one deep emerald green #0d4a23 warming to mint #62cf90, the other pale cream-pearl #d3ecaa warming to ivory-white #f0fbcf, each orb trailing a short curved streak of light like a small comet tail as if they just moved toward each other, with a few tiny spark particles floating between them where the streaks almost meet. Simple, bold, readable silhouette that stays clear at a small size — this is a small app icon, not a detailed illustration, so keep the shapes chunky and uncluttered with no fine detail that would disappear when shrunk. Centered composition, square format, with generous empty margin around the emblem so it can be cropped tightly. The background behind the emblem is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency.
+----------------------------------------
+>> Save the result as menu-icon-multiplayer.png.
+
+
+PROMPT 2 of 3 — Rankings shelf icon
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+A small, simple, icon-sized emblem representing a winner's podium carved from mossy forest wood: three stepped wooden podium blocks (center one tallest), each with a soft mint-green #7bdb95 glow along its top edge like captured light, a single small glowing pearl-white #f0fbcf star or spark hovering just above the tallest center block. Simple, bold, readable silhouette that stays clear at a small size — this is a small app icon, not a detailed illustration, so keep the shapes chunky and uncluttered with no fine detail that would disappear when shrunk. Centered composition, square format, with generous empty margin around the emblem so it can be cropped tightly. The background behind the emblem is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency.
+----------------------------------------
+>> Save the result as menu-icon-rankings.png.
+
+
+PROMPT 3 of 3 — "DotDuel" header wordmark — SUPERSEDED, see v2 below
+----------------------------------------
+(Original single-plaque version. Not used — the user generated their own
+version of this and picked a different, ornate jeweled style. Kept only
+for history/reference, do not run this one.)
+----------------------------------------
+
+
+PROMPT 3v2 — "DotDuel" header wordmark, wide banner (bigger, matches the chosen art)
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces), applied here to an ornate carved wooden sign rather than a game piece. Rich, warm, dark emerald-green-stained wood material, carved with intricate twisting vine and leaf relief around the border, inset with polished round gemstone cabochons — alternating deep emerald green and lustrous pearl-white — at the corners and along the top edge, each gem with a soft specular highlight. A gentle mint-green #7bdb95 magical glow emanates from within the carved grooves of the lettering and along the vine carvings, as if lit from behind by fireflies. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+A single wide decorative wooden banner/plaque bearing the word "DotDuel" carved into its surface, the letters themselves formed from inlaid lustrous pearls (pearl-white #f0fbcf to #ffffff) set into the dark wood, exactly like a jeweled sign — bold, chunky, rounded, highly legible letterforms, exactly the seven characters D-o-t-D-u-e-l, correctly spelled, clearly readable, no extra words, no subtitle text, no numbers. This must be a substantially WIDE and BIG banner, not a small compact badge: the wooden plaque extends well beyond the width of the lettering on both sides, with the carved vine-and-gem border continuing generously along the extended left and right portions of the banner (additional gem cabochons spaced along the length, more vine and leaf carving filling the extra width) so the banner reads as one long, substantial architectural sign spanning a wide space — not a small sign stretched thin. The lettering itself should be large and bold, filling a generous portion of the banner's height. Very wide horizontal composition, aspect ratio roughly 6:1, banner centered with a small margin above and below only (the banner should fill most of the frame's width), so it can be cropped tightly and used full-width at the top of a webpage. The background behind the banner is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency.
+----------------------------------------
+>> Save the result as header-wordmark-wide.png.
+
+NOTE: AI image generation is genuinely unreliable at rendering exact
+legible text — this prompt may need 2-3 attempts before the letters come
+out correctly spelled and readable. Check the result carefully before
+moving on: if any letter is malformed, duplicated, or missing, rerun the
+same prompt (regenerate) rather than accepting a near-miss — a logo with a
+typo is worse than no logo. Also double-check the banner actually reads as
+WIDE (vine/gem border extending well past the lettering on both sides) and
+not just the same compact sign upscaled — if it comes back looking like a
+small badge again, ask Gemini to "make the plaque itself much wider, with
+more vine and gem decoration filling the extra width on both sides" as a
+follow-up in the same chat rather than starting over.
+
+
+================================================================
+ROUND 2 (2026-09-12) — every remaining line-art icon in the menu
+================================================================
+Added after a full review found these still unpainted: the two main-menu
+shelf icons above (multiplayer, rankings) plus 8 more used one level
+deeper in the menu (mode-select icons, the rankings sub-screen's 4 icons,
+and the 4 board-shape icons in the difficulty picker). 3 more prompts,
+grouped by where they're used — each renders several small icons on one
+sheet, same trick as the original dots/lines prompts, so cropping is one
+pass per sheet instead of one Gemini round-trip per icon.
+
+Same palette block as every prompt above, repeated once more for a
+copy-paste-only workflow:
+deep emerald forest green #0d4a23 / mint #62cf90 for Player 1; pale
+cream-pearl #d3ecaa / ivory #f0fbcf / white #ffffff for Player 2; bright
+mint-green #7bdb95 for magical accents; deep jade-black #15291e /
+near-black #02090b for shadow depth.
+
+
+PROMPT 4 of 6 — Mode-select icons: Daily puzzle, Hot-seat, Online ranked
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+Render three small, simple, icon-sized emblems side by side in a single row, with a wide plain gap between each one so every item can be told apart and cropped individually, each one bold and readable at a small size with no fine detail that would disappear when shrunk:
+First (left): a small glowing wooden hourglass or sundial shape wrapped with a single curling vine, its center marked with a soft pearl-white #f0fbcf glowing dot like a captured firefly, representing a daily returning event.
+Second (middle): two small glossy orb game pieces — one deep emerald green #0d4a23 warming to mint #62cf90, one pale cream-pearl #d3ecaa warming to ivory #f0fbcf — sitting side by side on a single small wooden plank or leaf, as if passed between two players sharing one device.
+Third (right): a small glowing globe or orb made of intertwined vines forming a sphere shape, with a tiny mint-green #7bdb95 glowing star or spark hovering just above it, representing a wider connected world.
+Centered composition for each icon, generous empty margin between and around all three. The background behind all three icons is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency. Wide composition, roughly 3:1.
+----------------------------------------
+>> Save the result as mode-icons-sheet.png. Crop into 3 pieces, left to right: menu-icon-daily.png, menu-icon-hotseat.png, menu-icon-online.png.
+
+
+PROMPT 5 of 6 — Rankings sub-screen icons: Puzzle rankings, Local rankings, Rated rankings, Achievements
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+Render four small, simple, icon-sized emblems in a single row, with a wide plain gap between each one so every item can be told apart and cropped individually, each one bold and readable at a small size with no fine detail that would disappear when shrunk:
+First: a small carved wooden jigsaw-puzzle-piece shape with a soft mint-green #7bdb95 glow along its edges, representing a daily-puzzle leaderboard.
+Second: a small cozy wooden forest cottage or treehouse silhouette with a single glowing pearl-white #f0fbcf dot in its doorway like a window light, representing this player's own device/local records.
+Third: a small glossy trophy cup shape, deep emerald green #0d4a23 body warming to mint #62cf90 highlights, with a tiny sparkle above it, representing global ranked standing.
+Fourth: a small round medal or rosette shape with two short ribbon tails hanging below it, a glowing mint-green #7bdb95 star at its center, representing unlocked achievements.
+Centered composition for each icon, generous empty margin between and around all four. The background behind all four icons is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency. Wide composition, roughly 4:1.
+----------------------------------------
+>> Save the result as rankings-icons-sheet.png. Crop into 4 pieces, left to right: menu-icon-puzzle-rankings.png, menu-icon-local-rankings.png, menu-icon-rated-rankings.png, menu-icon-achievements.png.
+
+
+PROMPT 6 of 6 — Board-shape icons: Triangle, Square, Rectangle, Rhombus
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+Render four small icon-sized clusters of glossy glowing orbs in a single row, with a wide plain gap between each cluster so every one can be told apart and cropped individually. Each orb in every cluster is the same small glossy bead, alternating deep emerald green #0d4a23 (warming to mint #62cf90 highlight) and pale cream-pearl #d3ecaa (warming to ivory #f0fbcf highlight) in no particular pattern — these represent miniature versions of the game's own glowing game pieces arranged into simple dot-grid shapes, not decorative objects. First cluster: six orbs arranged in a triangular formation, three orbs in a top row, two in a middle row, one at the bottom point. Second cluster: nine orbs arranged in an evenly spaced 3-by-3 square grid. Third cluster: twelve orbs arranged in a 3-wide by 4-tall rectangular grid, taller than it is wide. Fourth cluster: nine orbs arranged in a diamond/rhombus formation — one at the very top, two below it, three across the widest middle row, two below that, one at the very bottom point. Centered composition for each cluster, generous empty margin between and around all four, every orb clearly separated from its neighbors with visible gaps (not touching or overlapping), small and simple enough to read clearly at icon size. The background behind all four clusters is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency. Wide composition, roughly 4:1.
+----------------------------------------
+>> Save the result as shape-icons-sheet.png. Crop into 4 pieces, left to right: menu-icon-shape-triangle.png, menu-icon-shape-square.png, menu-icon-shape-rectangle.png, menu-icon-shape-rhombus.png.

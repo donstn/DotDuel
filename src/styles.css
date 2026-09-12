@@ -799,6 +799,17 @@ button {
   color: var(--p2-glow);
 }
 
+/* Forest & Pearl: the header's two "pearls" use the game's own painted
+   dot art (the same emerald marble / iridescent pearl seen on the board)
+   instead of flat-colored text glyphs, so the header echoes the actual
+   dot rendering rather than a generic bullet point. */
+.title-dot-art {
+  width: 0.62em;
+  height: 0.62em;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+}
+
 .title-text {
   background: linear-gradient(
     180deg,
@@ -820,14 +831,23 @@ button {
   line-height: 1.45;
 }
 
-/* Forest & Pearl only: naked text with no card/button background behind it
-   (this subtitle, the share link below) sits directly over the busy forest
-   photo — a background tint can't fix this since there's no element to tint,
-   and the photo's brightness varies too much for one fixed text color to
-   stay readable everywhere it might land. A soft dark text-shadow keeps
-   light text legible regardless of what's behind it at any given point. */
-html[data-theme="forest-pearl"] .subtitle,
+/* Forest & Pearl only: this subtitle and the share link below sit directly
+   over the busy forest photo, which has a bright glowing-mist patch right
+   behind this text — a dark text-shadow alone can't guarantee contrast
+   there, since a dark shadow does nothing against a bright patch of photo.
+   A solid backing scrim (the theme's own --glass-bg-strong token, already
+   tuned dark/opaque enough for this art) guarantees contrast regardless of
+   what's behind it, with the text-shadow kept as a second line of defense
+   at the scrim's own soft edges. */
+html[data-theme="forest-pearl"] .subtitle {
+  background: var(--glass-bg-strong);
+  border-radius: 14px;
+  padding: 8px 18px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 1px 10px rgba(0, 0, 0, 0.6);
+}
 html[data-theme="forest-pearl"] .menu-share-link {
+  background: var(--glass-bg-strong);
+  border-radius: 999px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 1px 10px rgba(0, 0, 0, 0.6);
 }
 
@@ -934,10 +954,12 @@ html[data-theme="forest-pearl"] .menu-share-link {
   border: none;
 }
 
-.menu-shelf-ic.is-avatar svg {
+.menu-shelf-ic.is-avatar svg,
+.menu-shelf-ic.is-avatar img {
   width: 48px;
   height: 48px;
   border-radius: 12px;
+  object-fit: contain;
 }
 
 /* Fixed-width content block, centred inside the card. Because every card uses

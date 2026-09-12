@@ -1,0 +1,58 @@
+FOREST & PEARL — MENU POLISH — GEMINI IMAGE PROMPTS
+====================================================
+3 prompts total. Copy ONE prompt at a time (everything between the ---- lines)
+and paste it as its own message to Gemini (gemini.google.com new chat, or
+aistudio.google.com — NOT a plain-text chat surface, must be an image-capable
+one). After each image comes back, save it, then move to the next prompt.
+
+Crop instructions (what to cut each result into) are noted after each prompt,
+but are NOT part of the prompt itself — don't paste those lines to Gemini.
+
+Context: this extends the existing Forest & Pearl painted-art reskin (see
+2026-09-11-forest-pearl-gemini-prompts.txt for the original 10) with 3 more
+assets that were still using generic line-art/plain-text placeholders: the
+multiplayer and rankings menu-shelf icons, and the "DotDuel" header wordmark.
+The single-player shelf icon does NOT need new art — it now reuses the
+existing avatar-l1.png (the cute mint robot) directly, already wired in.
+
+Same palette as the original set, repeated in every prompt below for
+consistency: deep emerald forest green #0d4a23 / mint #62cf90 for Player 1;
+pale cream-pearl #d3ecaa / ivory #f0fbcf / white #ffffff for Player 2; bright
+mint-green #7bdb95 for magical accents; deep jade-black #15291e / near-black
+#02090b for shadow depth.
+
+
+PROMPT 1 of 3 — Multiplayer shelf icon
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+A small, simple, icon-sized emblem representing a friendly duel between two players: two glowing orb-like game pieces facing each other, one deep emerald green #0d4a23 warming to mint #62cf90, the other pale cream-pearl #d3ecaa warming to ivory-white #f0fbcf, each orb trailing a short curved streak of light like a small comet tail as if they just moved toward each other, with a few tiny spark particles floating between them where the streaks almost meet. Simple, bold, readable silhouette that stays clear at a small size — this is a small app icon, not a detailed illustration, so keep the shapes chunky and uncluttered with no fine detail that would disappear when shrunk. Centered composition, square format, with generous empty margin around the emblem so it can be cropped tightly. The background behind the emblem is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency.
+----------------------------------------
+>> Save the result as menu-icon-multiplayer.png.
+
+
+PROMPT 2 of 3 — Rankings shelf icon
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+A small, simple, icon-sized emblem representing a winner's podium carved from mossy forest wood: three stepped wooden podium blocks (center one tallest), each with a soft mint-green #7bdb95 glow along its top edge like captured light, a single small glowing pearl-white #f0fbcf star or spark hovering just above the tallest center block. Simple, bold, readable silhouette that stays clear at a small size — this is a small app icon, not a detailed illustration, so keep the shapes chunky and uncluttered with no fine detail that would disappear when shrunk. Centered composition, square format, with generous empty margin around the emblem so it can be cropped tightly. The background behind the emblem is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency.
+----------------------------------------
+>> Save the result as menu-icon-rankings.png.
+
+
+PROMPT 3 of 3 — "DotDuel" header wordmark
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces), applied here to a carved wooden sign rather than a game piece. Rich, warm, weathered wood material — bark-edged plank or rounded forest signpost — with soft rim lighting and a gentle mint-green #7bdb95 magical glow emanating from within the carved grooves of the lettering, as if lit from behind by fireflies. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+A single wooden sign or plank bearing the word "DotDuel" carved or burned into its surface in bold, chunky, rounded, highly legible sans-serif lettering — the letterforms must be exactly the seven characters D-o-t-D-u-e-l, correctly spelled, clearly readable, no extra decorative flourishes obscuring the letters, no additional words, no subtitle text, no numbers. The carved grooves of the letters glow softly with warm mint-green #7bdb95 light against the darker wood, as if lit from within. Small hints of moss and a tiny vine curling along one edge of the plank, subtle and not overlapping the lettering itself. Wide horizontal composition, roughly 4:1, sign centered with generous empty margin above and below so it can be cropped tightly. The background behind the sign is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency.
+----------------------------------------
+>> Save the result as header-wordmark.png.
+
+NOTE on this one specifically: AI image generation is genuinely unreliable at
+rendering exact legible text — this prompt may need 2-3 attempts before the
+letters come out correctly spelled and readable. Check the result carefully
+before moving on: if any letter is malformed, duplicated, or missing, rerun
+the same prompt (regenerate) rather than accepting a near-miss — a logo with
+a typo is worse than no logo. If after 3 honest attempts it still won't
+render "DotDuel" correctly, tell me and we'll either simplify the prompt
+further or keep the current gradient-text title (not a blocker either way).

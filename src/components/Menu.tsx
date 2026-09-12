@@ -308,9 +308,17 @@ export function Menu({
           </button>
         </div>
         <h1 className="title">
-          <span className="title-dot title-dot-1">●</span>
+          {theme === 'forest-pearl' ? (
+            <img src="/art/forest-pearl/dot-p1.png" alt="" aria-hidden="true" className="title-dot title-dot-art" />
+          ) : (
+            <span className="title-dot title-dot-1">●</span>
+          )}
           <span className="title-text">DotDuel</span>
-          <span className="title-dot title-dot-2">●</span>
+          {theme === 'forest-pearl' ? (
+            <img src="/art/forest-pearl/dot-p2.png" alt="" aria-hidden="true" className="title-dot title-dot-art" />
+          ) : (
+            <span className="title-dot title-dot-2">●</span>
+          )}
         </h1>
         <p className="subtitle">
           {user && welcomeName ? (
@@ -363,7 +371,14 @@ export function Menu({
         <div className="menu-shelves">
           <button className="menu-shelf" onClick={() => setCategory('single')}>
             <CardInner
-              icon={<BotSquadIcon />}
+              icon={
+                theme === 'forest-pearl' ? (
+                  <img src="/art/forest-pearl/avatar-l1.png" alt="" aria-hidden="true" />
+                ) : (
+                  <BotSquadIcon />
+                )
+              }
+              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
               title={t.menu.singlePlayer}
               sub={t.menu.singlePlayerSub}
             />

@@ -274,6 +274,7 @@ export const en = {
     title: 'Theme',
     tagline: 'Pick a palette. Saved to this device.',
     sunFriendly: 'Sun-friendly',
+    comingSoon: 'Coming soon',
     done: 'Done',
     taglines: {
       'forest-pearl': 'The original. Emerald on jade vignette.',

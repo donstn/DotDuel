@@ -48,10 +48,12 @@ export function ThemePopover({ current, onSelect, onClose }: Props) {
               <button
                 key={th.id}
                 type="button"
-                className={`theme-swatch${selected ? ' theme-swatch-selected' : ''}`}
-                onClick={() => onSelect(th.id)}
+                className={`theme-swatch${selected ? ' theme-swatch-selected' : ''}${th.locked ? ' theme-swatch-locked' : ''}`}
+                onClick={() => !th.locked && onSelect(th.id)}
+                disabled={th.locked}
                 aria-pressed={selected}
-                title={tagline}
+                aria-disabled={th.locked}
+                title={th.locked ? tr.theme.comingSoon : tagline}
               >
                 <div
                   className="theme-swatch-preview"
@@ -71,8 +73,14 @@ export function ThemePopover({ current, onSelect, onClose }: Props) {
                   <strong>{th.label}</strong>
                   <span>{tagline}</span>
                 </div>
-                {th.isLight && (
-                  <span className="theme-swatch-tag">{tr.theme.sunFriendly}</span>
+                {th.locked ? (
+                  <span className="theme-swatch-tag theme-swatch-tag-locked">
+                    {tr.theme.comingSoon}
+                  </span>
+                ) : (
+                  th.isLight && (
+                    <span className="theme-swatch-tag">{tr.theme.sunFriendly}</span>
+                  )
                 )}
               </button>
             );

@@ -255,6 +255,7 @@ export const pl: Messages = {
     title: 'Motyw',
     tagline: 'Wybierz paletę. Zapisywane na tym urządzeniu.',
     sunFriendly: 'Dobre w słońcu',
+    comingSoon: 'Wkrótce',
     done: 'Gotowe',
     taglines: {
       'forest-pearl': 'Oryginał. Szmaragd na nefrytowej winiecie.',

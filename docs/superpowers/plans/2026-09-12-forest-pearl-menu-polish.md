@@ -32,7 +32,7 @@
 
 A follow-up review found 8 more unpainted icon spots beyond the 2 in round 4 — every remaining shelf icon one level deeper in the menu, plus the 4 board-shape icons. User generated all 3 sheets (Prompts 4-6) in one round; all 11 icons total (2 main-menu + this batch) are now wired in and verified live.
 
-11. **Daily puzzle icon** (Vienas žaidėjas → Dienos galvosūkis, + locked/sign-in states) — `menu-icon-daily.png`, a glowing wooden hourglass. Done.
+11. **Daily puzzle icon** (Vienas žaidėjas → Dienos galvosūkis, + locked/sign-in states) — originally `menu-icon-daily.png` (a glowing wooden hourglass), then user feedback: pairing an hourglass with a puzzle piece for "Dienos galvosūkis"/"Galvosūkių reitingai" (the same feature — mode-select and its rankings) read as two unrelated icons for one subject. Switched to reuse `menu-icon-puzzle-rankings.png` for both; deleted the now-unused hourglass asset. Done.
 12. **Hot-seat icon** (Keli žaidėjai → Vietinis žaidimas) — `menu-icon-hotseat.png`, two orbs on a wooden plank. Done.
 13. **Online ranked icon** (Keli žaidėjai → online variants, 4 call sites, one shared icon variable) — `menu-icon-online.png`, a woven vine sphere. Done.
 14. **Puzzle rankings icon** — `menu-icon-puzzle-rankings.png`, a glowing puzzle piece. Done.

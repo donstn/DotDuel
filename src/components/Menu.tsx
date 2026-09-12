@@ -162,7 +162,12 @@ export function Menu({
 
   const dailyIcon =
     theme === 'forest-pearl' ? (
-      <img src="/art/forest-pearl/menu-icon-daily.png" alt="" aria-hidden="true" />
+      // Reuse the puzzle-rankings art here too — the daily puzzle mode and
+      // its rankings are the same feature ("Dienos galvosūkis" / "Galvosūkių
+      // reitingai" both share the "galvosūkis/puzzle" word), so pairing an
+      // hourglass with a puzzle piece read as two unrelated icons for what's
+      // actually one subject.
+      <img src="/art/forest-pearl/menu-icon-puzzle-rankings.png" alt="" aria-hidden="true" />
     ) : (
       <DailyIcon />
     );

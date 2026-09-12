@@ -843,16 +843,39 @@ button {
   line-height: 1.45;
 }
 
-/* Forest & Pearl only: dark, in-theme forest-green text instead of a card
-   behind light text. The background photo crops differently at different
-   viewport widths (`background-size: cover` + `center`), so this text can
-   land over anything from a bright mist patch to dark tree canopy — a soft
-   glow alone isn't reliably opaque enough at the dark end. A near-solid
-   light outline (stroke + stacked shadow layers) guarantees contrast
-   regardless of what's behind it, the same principle as video captions. */
-html[data-theme="forest-pearl"] .subtitle {
-  color: var(--p1);
-  max-width: 440px;
+/* Forest & Pearl only: the tagline sits inside a painted vine-frame plaque
+   (its own opaque dark-green interior, not the photo background), so the
+   old "guarantee contrast against whatever photo pixel is behind it"
+   problem doesn't apply here — the frame IS the backdrop. Light text reads
+   directly against the frame's dark interior, no outline needed. */
+.subtitle-framed {
+  position: relative;
+  width: min(calc(100vw - 32px), 440px);
+  aspect-ratio: 1002 / 328;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.subtitle-frame-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.subtitle-in-frame {
+  position: relative;
+  z-index: 1;
+  color: var(--p2-glow);
+  margin: 0;
+}
+/* Specificity bump (attribute selector, not just .subtitle-in-frame's own
+   class) so this beats the later small-screen ".subtitle { max-width:
+   480px }" override below — that rule also matches this element, since it
+   carries both the "subtitle" and "subtitle-in-frame" classes, and would
+   otherwise win at narrow widths purely by appearing later in the file. */
+html[data-theme="forest-pearl"] .subtitle-in-frame {
+  max-width: 78%;
 }
 
 /* The share link keeps its pill treatment (unlike the subtitle above) —

@@ -350,16 +350,37 @@ export function Menu({
             </>
           )}
         </h1>
-        <p className="subtitle">
-          {user && welcomeName ? (
-            <>
-              {t.menu.welcomeLead}{' '}
-              <strong className="menu-welcome-name">{welcomeName}</strong> — {t.menu.tagline}
-            </>
-          ) : (
-            <>{t.menu.tagline}</>
-          )}
-        </p>
+        {theme === 'forest-pearl' ? (
+          <div className="subtitle-framed">
+            <img
+              src="/art/forest-pearl/tagline-frame.png"
+              alt=""
+              aria-hidden="true"
+              className="subtitle-frame-art"
+            />
+            <p className="subtitle subtitle-in-frame">
+              {user && welcomeName ? (
+                <>
+                  {t.menu.welcomeLead}{' '}
+                  <strong className="menu-welcome-name">{welcomeName}</strong> — {t.menu.tagline}
+                </>
+              ) : (
+                <>{t.menu.tagline}</>
+              )}
+            </p>
+          </div>
+        ) : (
+          <p className="subtitle">
+            {user && welcomeName ? (
+              <>
+                {t.menu.welcomeLead}{' '}
+                <strong className="menu-welcome-name">{welcomeName}</strong> — {t.menu.tagline}
+              </>
+            ) : (
+              <>{t.menu.tagline}</>
+            )}
+          </p>
+        )}
         <div className="menu-auth-row">
           {user ? (
             <>

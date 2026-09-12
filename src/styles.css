@@ -852,11 +852,7 @@ button {
    regardless of what's behind it, the same principle as video captions. */
 html[data-theme="forest-pearl"] .subtitle {
   color: var(--p1);
-  -webkit-text-stroke: 3px rgba(255, 255, 255, 0.85);
-  paint-order: stroke fill;
-  text-shadow:
-    0 0 4px rgba(255, 255, 255, 0.9),
-    0 0 10px rgba(255, 255, 255, 0.6);
+  max-width: 440px;
 }
 
 /* The share link keeps its pill treatment (unlike the subtitle above) —

@@ -14,6 +14,12 @@ let primed = false;
 let sfxEnabled = true;
 let musicEnabled = true;
 let activeTheme: ThemeId | null = null;
+// All SFX route through this instead of straight to ctx.destination. The
+// original short single-oscillator cues never needed it, but win/loss are
+// now multi-voice compositions (chords of detuned-oscillator "brass" notes,
+// stacked-partial "organ" notes) — several of those summing simultaneously
+// can genuinely clip without a limiter riding the peaks down.
+let sfxLimiter: DynamicsCompressorNode | null = null;
 
 const AMBIANCE_FILES = {
   wind: '/audio/forest-pearl/ambience-wind.mp3',
@@ -56,6 +62,13 @@ export function primeAudio(): void {
     ctx = null;
     return;
   }
+  sfxLimiter = ctx.createDynamicsCompressor();
+  sfxLimiter.threshold.value = -12;
+  sfxLimiter.knee.value = 20;
+  sfxLimiter.ratio.value = 6;
+  sfxLimiter.attack.value = 0.02;
+  sfxLimiter.release.value = 0.2;
+  sfxLimiter.connect(ctx.destination);
   syncAmbiance();
 }
 
@@ -101,12 +114,79 @@ function tone(
   osc.stop(startAt + duration + 0.05);
 }
 
+// A single brass note for the win fanfare: several slightly detuned
+// sawtooth oscillators (a real trumpet is harmonically rich, and a small
+// ensemble detune reads as "section of brass" rather than one thin synth
+// tone) through a lowpass filter that snaps open on attack and closes
+// again toward the release, mimicking a brass instrument's bright,
+// punchy onset. `peak` is deliberately conservative — see sfxLimiter
+// above and the win/loss cases below for why.
+function brassNote(freq: number, startAt: number, dur: number, peak: number, destination: AudioNode): void {
+  if (!ctx) return;
+  const audioCtx = ctx;
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.Q.value = 0.7;
+  filter.frequency.setValueAtTime(freq * 2, startAt);
+  filter.frequency.exponentialRampToValueAtTime(freq * 6, startAt + 0.04);
+  filter.frequency.setValueAtTime(freq * 6, startAt + Math.max(0.05, dur * 0.6));
+  filter.frequency.exponentialRampToValueAtTime(freq * 2.5, startAt + dur);
+  gain.gain.setValueAtTime(0, startAt);
+  gain.gain.linearRampToValueAtTime(peak, startAt + 0.02);
+  gain.gain.setValueAtTime(peak, startAt + Math.max(0.02, dur - 0.12));
+  gain.gain.exponentialRampToValueAtTime(0.0008, startAt + dur + 0.15);
+  filter.connect(gain);
+  gain.connect(destination);
+  [1, 1.006, 0.994].forEach((detune) => {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq * detune, startAt);
+    osc.connect(filter);
+    osc.start(startAt);
+    osc.stop(startAt + dur + 0.25);
+  });
+}
+
+// A single organ note for the loss dirge: drawbar-style additive synthesis
+// (a real organ's voice is a fundamental plus a stack of quieter harmonic
+// partials — octave, twelfth, double-octave — not a pure sine), with a
+// slow attack/release for a sustained, dignified pad rather than a comedic
+// "wah-wah" slide.
+function organNote(freq: number, startAt: number, dur: number, peak: number, destination: AudioNode): void {
+  if (!ctx) return;
+  const audioCtx = ctx;
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0, startAt);
+  gain.gain.linearRampToValueAtTime(peak, startAt + 0.45);
+  gain.gain.setValueAtTime(peak, startAt + Math.max(0.45, dur - 0.6));
+  gain.gain.exponentialRampToValueAtTime(0.0008, startAt + dur + 0.8);
+  gain.connect(destination);
+  const partials: [number, number][] = [
+    [1, 1],
+    [2, 0.5],
+    [3, 0.28],
+    [4, 0.14],
+  ];
+  partials.forEach(([mult, amp]) => {
+    const osc = audioCtx.createOscillator();
+    const partialGain = audioCtx.createGain();
+    partialGain.gain.value = amp;
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq * mult, startAt);
+    osc.connect(partialGain);
+    partialGain.connect(gain);
+    osc.start(startAt);
+    osc.stop(startAt + dur + 0.9);
+  });
+}
+
 // Exact frequencies/durations/gains below are a first pass — not yet
 // verified by ear; tune by listening in-browser before shipping.
 export function playSfx(name: SfxName, opts?: { player?: 1 | 2; lineLength?: number }): void {
   if (!primed || !sfxEnabled || !ctx) return;
   const t0 = ctx.currentTime;
-  const dest = ctx.destination;
+  const dest = sfxLimiter ?? ctx.destination;
   const player = opts?.player ?? 1;
   const lineLength = opts?.lineLength ?? 1;
 
@@ -134,15 +214,64 @@ export function playSfx(name: SfxName, opts?: { player?: 1 | 2; lineLength?: num
       break;
     }
     case 'win': {
-      const root = 261.63;
-      [0, 4, 7, 12].forEach((semi) => {
-        const f = root * Math.pow(2, semi / 12);
-        tone(f, f, 1.4, 'sine', 0.14, t0, dest);
-      });
+      // ~18s ceremonial trumpet fanfare: a rising call, a soft echo, the
+      // same call transposed up a step, three punches, a sustained
+      // "tutti" chord, a reprise of the whole thing, and a final grand
+      // chord to close. Per-note peaks are kept low deliberately — each
+      // note is 3 unison-detuned oscillators, and up to 5 notes stack at
+      // once in the chords, so the real combined level is much higher
+      // than a single `peak` value suggests (the sfxLimiter above is the
+      // second line of defense, not the only one).
+      const C5 = 523.25;
+      const D5 = 587.33;
+      const E5 = 659.25;
+      const G5 = 783.99;
+      const B4 = 493.88;
+      const G4 = 392.0;
+      const C6 = 1046.5;
+      const E6 = 1318.51;
+      // Phrase 1: rising call.
+      [C5, E5, G5, C6].forEach((f, i) => brassNote(f, t0 + i * 0.2, 0.22, 0.06, dest));
+      // Echo, softer, descending.
+      [G5, E5, C5].forEach((f, i) => brassNote(f, t0 + 1.1 + i * 0.25, 0.3, 0.04, dest));
+      // Phrase 2: the same call, transposed up to G.
+      [G4, B4, D5, G5].forEach((f, i) => brassNote(f, t0 + 2.5 + i * 0.2, 0.22, 0.06, dest));
+      // Three rhythmic punches.
+      [
+        [3.5, 0.2],
+        [3.75, 0.2],
+        [4.1, 0.35],
+      ].forEach(([at, d]) => brassNote(G5, t0 + at, d, 0.065, dest));
+      // Sustained tutti chord.
+      [C5, E5, G5, C6].forEach((f) => brassNote(f, t0 + 4.9, 4.6, 0.05, dest));
+      // Reprise of the opening call, brighter.
+      [C5, E5, G5, C6].forEach((f, i) => brassNote(f, t0 + 9.7 + i * 0.2, 0.24, 0.065, dest));
+      [
+        [10.6, 0.2],
+        [10.85, 0.2],
+        [11.15, 0.35],
+      ].forEach(([at, d]) => brassNote(C6, t0 + at, d, 0.07, dest));
+      // Final grand chord — the ~18s mark lands inside this note's tail.
+      [C5, E5, G5, C6, E6].forEach((f) => brassNote(f, t0 + 12.0, 6.0, 0.05, dest));
       break;
     }
     case 'loss': {
-      tone(300, 180, 0.9, 'sine', 0.18, t0, dest);
+      // ~19s dignified organ passage: a slow i-VII-VI-v descending-bass
+      // progression in A natural minor (a classical "lament bass" shape —
+      // the same device behind centuries of solemn, respectful music, not
+      // a comedic trombone slide). Each chord's release rings into the
+      // next chord's attack for a smooth, legato feel.
+      const chords: [number, number, number][] = [
+        [220.0, 261.63, 329.63], // A3 C4 E4 — i (Am)
+        [196.0, 246.94, 293.66], // G3 B3 D4 — VII (G)
+        [174.61, 220.0, 261.63], // F3 A3 C4 — VI (F)
+        [164.81, 196.0, 246.94], // E3 G3 B3 — v (Em)
+      ];
+      const starts = [0.0, 4.3, 8.6, 12.9];
+      const durs = [4.5, 4.5, 4.5, 5.5];
+      chords.forEach((chord, i) => {
+        chord.forEach((f) => organNote(f, t0 + starts[i], durs[i], 0.09, dest));
+      });
       break;
     }
     case 'draw': {

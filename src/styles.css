@@ -857,7 +857,7 @@ button {
      horizontal scroll on narrow screens. */
   width: 100%;
   max-width: 440px;
-  aspect-ratio: 1002 / 328;
+  aspect-ratio: 1024 / 338;
   display: flex;
   align-items: center;
   justify-content: center;

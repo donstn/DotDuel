@@ -4,6 +4,9 @@
 // appended by a later task; this file starts with just the context
 // lifecycle and the seven short synthesized cues.
 
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
+
 export type SfxName = 'place' | 'lineComplete' | 'claim' | 'win' | 'loss' | 'draw' | 'click';
 
 let ctx: AudioContext | null = null;
@@ -11,11 +14,23 @@ let primed = false;
 let sfxEnabled = true;
 let musicEnabled = true;
 let activeTheme: string | null = null;
-// Read by Task 4's ambiance logic (appended later in this file); referenced
-// here so the module type-checks standalone (noUnusedLocals) before that
-// code lands.
-void musicEnabled;
-void activeTheme;
+
+const AMBIANCE_FILES = {
+  wind: '/audio/forest-pearl/ambience-wind.mp3',
+  stream: '/audio/forest-pearl/ambience-stream.mp3',
+  birds: '/audio/forest-pearl/ambience-birds.mp3',
+} as const;
+
+type AmbianceKey = keyof typeof AMBIANCE_FILES;
+
+const ambianceBuffers: Partial<Record<AmbianceKey, AudioBuffer>> = {};
+let ambianceBuffersRequested = false;
+let ambianceBus: GainNode | null = null;
+let windSource: AudioBufferSourceNode | null = null;
+let streamSource: AudioBufferSourceNode | null = null;
+let birdTimer: number | null = null;
+let ambiancePlaying = false;
+let ambiancePausedForBackground = false;
 
 // Browsers refuse to start audio before a real user gesture. Call this once,
 // synchronously, from the first pointerdown/click/keydown the app sees.
@@ -27,7 +42,9 @@ export function primeAudio(): void {
     void ctx.resume();
   } catch {
     ctx = null;
+    return;
   }
+  void loadAmbianceBuffers();
 }
 
 export function setSfxEnabled(on: boolean): void {
@@ -36,10 +53,12 @@ export function setSfxEnabled(on: boolean): void {
 
 export function setMusicEnabled(on: boolean): void {
   musicEnabled = on;
+  syncAmbiance();
 }
 
 export function setAmbianceTheme(theme: string): void {
   activeTheme = theme;
+  syncAmbiance();
 }
 
 // One short tone: linear attack, exponential decay, optional pitch glide.
@@ -127,4 +146,107 @@ export function playSfx(name: SfxName, opts?: { player?: 1 | 2; lineLength?: num
       break;
     }
   }
+}
+
+async function loadAmbianceBuffers(): Promise<void> {
+  if (!ctx || ambianceBuffersRequested) return;
+  ambianceBuffersRequested = true;
+  const entries = Object.entries(AMBIANCE_FILES) as [AmbianceKey, string][];
+  await Promise.all(
+    entries.map(async ([key, url]) => {
+      try {
+        const res = await fetch(url);
+        const arr = await res.arrayBuffer();
+        if (!ctx) return;
+        ambianceBuffers[key] = await ctx.decodeAudioData(arr);
+      } catch {
+        // Missing/failed fetch: that layer just stays silent, others still play.
+      }
+    }),
+  );
+  syncAmbiance();
+}
+
+function scheduleNextBird(): void {
+  if (birdTimer !== null) window.clearTimeout(birdTimer);
+  const delayMs = 40000 + Math.random() * 60000;
+  birdTimer = window.setTimeout(() => {
+    playBirdCall();
+    scheduleNextBird();
+  }, delayMs);
+}
+
+function playBirdCall(): void {
+  const buf = ambianceBuffers.birds;
+  if (!ctx || !ambianceBus || !buf) return;
+  const src = ctx.createBufferSource();
+  const gain = ctx.createGain();
+  src.buffer = buf;
+  gain.gain.value = 0.5;
+  src.connect(gain);
+  gain.connect(ambianceBus);
+  src.start();
+}
+
+function startAmbianceInternal(): void {
+  if (!ctx || ambiancePlaying) return;
+  if (!ambianceBuffers.wind && !ambianceBuffers.stream) return;
+  ambianceBus = ctx.createGain();
+  ambianceBus.gain.value = 0.5;
+  ambianceBus.connect(ctx.destination);
+
+  if (ambianceBuffers.wind) {
+    windSource = ctx.createBufferSource();
+    windSource.buffer = ambianceBuffers.wind;
+    windSource.loop = true;
+    const windGain = ctx.createGain();
+    windGain.gain.value = 0.7;
+    windSource.connect(windGain);
+    windGain.connect(ambianceBus);
+    windSource.start();
+  }
+  if (ambianceBuffers.stream) {
+    streamSource = ctx.createBufferSource();
+    streamSource.buffer = ambianceBuffers.stream;
+    streamSource.loop = true;
+    const streamGain = ctx.createGain();
+    streamGain.gain.value = 0.5;
+    streamSource.connect(streamGain);
+    streamGain.connect(ambianceBus);
+    streamSource.start();
+  }
+  ambiancePlaying = true;
+  scheduleNextBird();
+}
+
+function stopAmbianceInternal(): void {
+  if (!ambiancePlaying) return;
+  windSource?.stop();
+  streamSource?.stop();
+  windSource = null;
+  streamSource = null;
+  ambianceBus?.disconnect();
+  ambianceBus = null;
+  if (birdTimer !== null) {
+    window.clearTimeout(birdTimer);
+    birdTimer = null;
+  }
+  ambiancePlaying = false;
+}
+
+function syncAmbiance(): void {
+  const shouldPlay =
+    primed && musicEnabled && activeTheme === 'forest-pearl' && !ambiancePausedForBackground;
+  if (shouldPlay) startAmbianceInternal();
+  else stopAmbianceInternal();
+}
+
+// Pause ambiance while the app is backgrounded on Android; resume it (if
+// still wanted) on foreground. @capacitor/app is already an installed
+// dependency (package.json), unused until now — no new cost.
+if (Capacitor.isNativePlatform()) {
+  void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+    ambiancePausedForBackground = !isActive;
+    syncAmbiance();
+  });
 }

@@ -378,14 +378,28 @@ export function Menu({
           </button>
           <button className="menu-shelf" onClick={() => setCategory('multi')}>
             <CardInner
-              icon={<DuelIcon />}
+              icon={
+                theme === 'forest-pearl' ? (
+                  <img src="/art/forest-pearl/menu-icon-multiplayer.png" alt="" aria-hidden="true" />
+                ) : (
+                  <DuelIcon />
+                )
+              }
+              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
               title={t.menu.multiplayer}
               sub={t.menu.multiplayerSub}
             />
           </button>
           <button className="menu-shelf" onClick={() => setCategory('rankings')}>
             <CardInner
-              icon={<PodiumIcon />}
+              icon={
+                theme === 'forest-pearl' ? (
+                  <img src="/art/forest-pearl/menu-icon-rankings.png" alt="" aria-hidden="true" />
+                ) : (
+                  <PodiumIcon />
+                )
+              }
+              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
               title={t.menu.rankings}
               sub={t.menu.rankingsSub}
             />

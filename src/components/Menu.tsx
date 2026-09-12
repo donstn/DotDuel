@@ -309,15 +309,13 @@ export function Menu({
         </div>
         <h1 className="title">
           {theme === 'forest-pearl' ? (
-            <img src="/art/forest-pearl/dot-p1.png" alt="" aria-hidden="true" className="title-dot title-dot-art" />
+            <img src="/art/forest-pearl/header-wordmark.png" alt="DotDuel" className="title-wordmark" />
           ) : (
-            <span className="title-dot title-dot-1">●</span>
-          )}
-          <span className="title-text">DotDuel</span>
-          {theme === 'forest-pearl' ? (
-            <img src="/art/forest-pearl/dot-p2.png" alt="" aria-hidden="true" className="title-dot title-dot-art" />
-          ) : (
-            <span className="title-dot title-dot-2">●</span>
+            <>
+              <span className="title-dot title-dot-1">●</span>
+              <span className="title-text">DotDuel</span>
+              <span className="title-dot title-dot-2">●</span>
+            </>
           )}
         </h1>
         <p className="subtitle">
@@ -363,11 +361,6 @@ export function Menu({
             </button>
           )}
         </div>
-        {!user && (
-          <div className="menu-share-row">
-            <TellAFriendButton variant="share" className="menu-share-link" />
-          </div>
-        )}
         <div className="menu-shelves">
           <button className="menu-shelf" onClick={() => setCategory('single')}>
             <CardInner
@@ -398,6 +391,11 @@ export function Menu({
             />
           </button>
         </div>
+        {!user && (
+          <div className="menu-share-row">
+            <TellAFriendButton variant="share" className="menu-share-link" />
+          </div>
+        )}
       </div>
     );
   }

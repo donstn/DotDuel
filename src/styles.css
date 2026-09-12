@@ -799,15 +799,16 @@ button {
   color: var(--p2-glow);
 }
 
-/* Forest & Pearl: the header's two "pearls" use the game's own painted
-   dot art (the same emerald marble / iridescent pearl seen on the board)
-   instead of flat-colored text glyphs, so the header echoes the actual
-   dot rendering rather than a generic bullet point. */
-.title-dot-art {
-  width: 0.62em;
-  height: 0.62em;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+/* Forest & Pearl: a single painted wordmark (carved-wood sign with its own
+   gem/pearl border) replaces both the gradient text and the flanking pearl
+   dots — the sign's own corner jewels already do the "pearls" job the flat
+   dots used to. */
+.title-wordmark {
+  display: block;
+  height: clamp(3rem, 9.5vw, 4.6rem);
+  width: auto;
+  max-width: 100%;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
 }
 
 .title-text {
@@ -831,20 +832,25 @@ button {
   line-height: 1.45;
 }
 
-/* Forest & Pearl only: this subtitle and the share link below sit directly
-   over the busy forest photo, which has a bright glowing-mist patch right
-   behind this text — a dark text-shadow alone can't guarantee contrast
-   there, since a dark shadow does nothing against a bright patch of photo.
-   A solid backing scrim (the theme's own --glass-bg-strong token, already
-   tuned dark/opaque enough for this art) guarantees contrast regardless of
-   what's behind it, with the text-shadow kept as a second line of defense
-   at the scrim's own soft edges. */
+/* Forest & Pearl only: dark, in-theme forest-green text instead of a card
+   behind light text. The background photo crops differently at different
+   viewport widths (`background-size: cover` + `center`), so this text can
+   land over anything from a bright mist patch to dark tree canopy — a soft
+   glow alone isn't reliably opaque enough at the dark end. A near-solid
+   light outline (stroke + stacked shadow layers) guarantees contrast
+   regardless of what's behind it, the same principle as video captions. */
 html[data-theme="forest-pearl"] .subtitle {
-  background: var(--glass-bg-strong);
-  border-radius: 14px;
-  padding: 8px 18px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 1px 10px rgba(0, 0, 0, 0.6);
+  color: var(--p1);
+  -webkit-text-stroke: 3px rgba(255, 255, 255, 0.85);
+  paint-order: stroke fill;
+  text-shadow:
+    0 0 4px rgba(255, 255, 255, 0.9),
+    0 0 10px rgba(255, 255, 255, 0.6);
 }
+
+/* The share link keeps its pill treatment (unlike the subtitle above) —
+   it now sits below the shelves, over the darker lower part of the photo,
+   where a solid backing scrim reads better than switching its text color. */
 html[data-theme="forest-pearl"] .menu-share-link {
   background: var(--glass-bg-strong);
   border-radius: 999px;

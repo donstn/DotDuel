@@ -799,15 +799,26 @@ button {
   color: var(--p2-glow);
 }
 
-/* Forest & Pearl: a single painted wordmark (carved-wood sign with its own
+/* Forest & Pearl: a single painted wordmark (carved-wood banner with its own
    gem/pearl border) replaces both the gradient text and the flanking pearl
    dots — the sign's own corner jewels already do the "pearls" job the flat
-   dots used to. */
+   dots used to. Sized by WIDTH (not height, unlike the old compact badge) so
+   it spans most of the screen the way a real banner should — the asset's
+   own ~6:1 aspect ratio keeps its height proportionate automatically.
+   `calc(100vw - 32px)` accounts for .menu's 16px side padding directly,
+   since .title is a shrink-to-fit flex box with no width of its own for a
+   plain max-width:100% to resolve against. */
 .title-wordmark {
   display: block;
-  height: clamp(3rem, 9.5vw, 4.6rem);
-  width: auto;
+  width: min(calc(100vw - 32px), 720px);
   max-width: 100%;
+  height: auto;
+  /* .menu-topleft/.menu-topright (language + theme buttons) are absolutely
+     positioned in the same top corner band this banner's full-width edges
+     now reach into — .menu's own padding-top isn't enough clearance once
+     the wordmark is this wide. Push it down below that button row instead
+     of narrowing the banner to dodge them. */
+  margin-top: 36px;
   filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
 }
 

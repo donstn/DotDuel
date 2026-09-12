@@ -67,3 +67,58 @@ not just the same compact sign upscaled — if it comes back looking like a
 small badge again, ask Gemini to "make the plaque itself much wider, with
 more vine and gem decoration filling the extra width on both sides" as a
 follow-up in the same chat rather than starting over.
+
+
+================================================================
+ROUND 2 (2026-09-12) — every remaining line-art icon in the menu
+================================================================
+Added after a full review found these still unpainted: the two main-menu
+shelf icons above (multiplayer, rankings) plus 8 more used one level
+deeper in the menu (mode-select icons, the rankings sub-screen's 4 icons,
+and the 4 board-shape icons in the difficulty picker). 3 more prompts,
+grouped by where they're used — each renders several small icons on one
+sheet, same trick as the original dots/lines prompts, so cropping is one
+pass per sheet instead of one Gemini round-trip per icon.
+
+Same palette block as every prompt above, repeated once more for a
+copy-paste-only workflow:
+deep emerald forest green #0d4a23 / mint #62cf90 for Player 1; pale
+cream-pearl #d3ecaa / ivory #f0fbcf / white #ffffff for Player 2; bright
+mint-green #7bdb95 for magical accents; deep jade-black #15291e /
+near-black #02090b for shadow depth.
+
+
+PROMPT 4 of 6 — Mode-select icons: Daily puzzle, Hot-seat, Online ranked
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+Render three small, simple, icon-sized emblems side by side in a single row, with a wide plain gap between each one so every item can be told apart and cropped individually, each one bold and readable at a small size with no fine detail that would disappear when shrunk:
+First (left): a small glowing wooden hourglass or sundial shape wrapped with a single curling vine, its center marked with a soft pearl-white #f0fbcf glowing dot like a captured firefly, representing a daily returning event.
+Second (middle): two small glossy orb game pieces — one deep emerald green #0d4a23 warming to mint #62cf90, one pale cream-pearl #d3ecaa warming to ivory #f0fbcf — sitting side by side on a single small wooden plank or leaf, as if passed between two players sharing one device.
+Third (right): a small glowing globe or orb made of intertwined vines forming a sphere shape, with a tiny mint-green #7bdb95 glowing star or spark hovering just above it, representing a wider connected world.
+Centered composition for each icon, generous empty margin between and around all three. The background behind all three icons is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency. Wide composition, roughly 3:1.
+----------------------------------------
+>> Save the result as mode-icons-sheet.png. Crop into 3 pieces, left to right: menu-icon-daily.png, menu-icon-hotseat.png, menu-icon-online.png.
+
+
+PROMPT 5 of 6 — Rankings sub-screen icons: Puzzle rankings, Local rankings, Rated rankings, Achievements
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+Render four small, simple, icon-sized emblems in a single row, with a wide plain gap between each one so every item can be told apart and cropped individually, each one bold and readable at a small size with no fine detail that would disappear when shrunk:
+First: a small carved wooden jigsaw-puzzle-piece shape with a soft mint-green #7bdb95 glow along its edges, representing a daily-puzzle leaderboard.
+Second: a small cozy wooden forest cottage or treehouse silhouette with a single glowing pearl-white #f0fbcf dot in its doorway like a window light, representing this player's own device/local records.
+Third: a small glossy trophy cup shape, deep emerald green #0d4a23 body warming to mint #62cf90 highlights, with a tiny sparkle above it, representing global ranked standing.
+Fourth: a small round medal or rosette shape with two short ribbon tails hanging below it, a glowing mint-green #7bdb95 star at its center, representing unlocked achievements.
+Centered composition for each icon, generous empty margin between and around all four. The background behind all four icons is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency. Wide composition, roughly 4:1.
+----------------------------------------
+>> Save the result as rankings-icons-sheet.png. Crop into 4 pieces, left to right: menu-icon-puzzle-rankings.png, menu-icon-local-rankings.png, menu-icon-rated-rankings.png, menu-icon-achievements.png.
+
+
+PROMPT 6 of 6 — Board-shape icons: Triangle, Square, Rectangle, Rhombus
+----------------------------------------
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Board Kings, Clash Royale, Candy Crush pieces). Smooth glassy / porcelain / liquid-light materials, rich specular highlights, soft rim lighting, subtle ambient occlusion, dramatic but soft studio-quality lighting, slightly stylized and rounded rather than photorealistic, clean and polished, no gritty or rough textures, no text, no numbers, no letters, no watermark, no logo, no signature anywhere in the image. Color palette: deep emerald forest green #0d4a23 and warm glowing sage #1c7a3d, brightening to mint #62cf90, for Player 1 elements. Pale cream-pearl #d3ecaa and soft ivory glow #f0fbcf, brightening to pure white #ffffff, for Player 2 elements. Bright mint-green #7bdb95 for magical light/accent effects. Deep jade-black #15291e fading to near-black #02090b for background depth and shadow. Mood: an enchanted, glowing forest clearing at dusk — moss, pearls, fireflies, soft magical luminescence.
+
+Render four small icon-sized clusters of glossy glowing orbs in a single row, with a wide plain gap between each cluster so every one can be told apart and cropped individually. Each orb in every cluster is the same small glossy bead, alternating deep emerald green #0d4a23 (warming to mint #62cf90 highlight) and pale cream-pearl #d3ecaa (warming to ivory #f0fbcf highlight) in no particular pattern — these represent miniature versions of the game's own glowing game pieces arranged into simple dot-grid shapes, not decorative objects. First cluster: six orbs arranged in a triangular formation, three orbs in a top row, two in a middle row, one at the bottom point. Second cluster: nine orbs arranged in an evenly spaced 3-by-3 square grid. Third cluster: twelve orbs arranged in a 3-wide by 4-tall rectangular grid, taller than it is wide. Fourth cluster: nine orbs arranged in a diamond/rhombus formation — one at the very top, two below it, three across the widest middle row, two below that, one at the very bottom point. Centered composition for each cluster, generous empty margin between and around all four, every orb clearly separated from its neighbors with visible gaps (not touching or overlapping), small and simple enough to read clearly at icon size. The background behind all four clusters is extremely important: it MUST be a bright, saturated, completely flat, solid magenta/pink color, hex #FF00FF, filling the entire rest of the image with no gradient, no vignette, no soft fade to white, and no studio-gray — do not use white, light gray, or any neutral background under any circumstances, only pure flat magenta, because this exact color will be cropped out afterward and replaced with transparency. Wide composition, roughly 4:1.
+----------------------------------------
+>> Save the result as shape-icons-sheet.png. Crop into 4 pieces, left to right: menu-icon-shape-triangle.png, menu-icon-shape-square.png, menu-icon-shape-rectangle.png, menu-icon-shape-rhombus.png.

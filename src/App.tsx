@@ -2014,6 +2014,10 @@ export default function App() {
     // the state-diff effect below.
     try {
       const result = applyMove(baseState, dotId);
+      playSfx('place', { player: myNum });
+      if (result.scoredLine) {
+        playSfx('lineComplete', { player: myNum, lineLength: result.pointsGained });
+      }
       setOptimisticMpState({ baseTurn: baseState.turn, state: result.state });
       setOptimisticClock(buildOptimisticClock(myNum, sentAt));
       if (result.pointsGained > 0 || result.newlyPending.length > 0) {
@@ -2052,6 +2056,7 @@ export default function App() {
     const sentAt = Date.now() + serverSkewMs;
     try {
       const result = applyClaim(baseState, lineId);
+      playSfx('claim', { player: myNum, lineLength: result.pointsGained });
       setOptimisticMpState({ baseTurn: baseState.turn, state: result.state });
       setOptimisticClock(buildOptimisticClock(myNum, sentAt));
       const line = getBoard(onlineGame.shape).lines.find((l) => l.id === lineId);
@@ -2087,6 +2092,10 @@ export default function App() {
     if (state.colored[dotId]) return;
     const movingPlayer = state.current;
     const result = applyMove(state, dotId);
+    playSfx('place', { player: movingPlayer });
+    if (result.scoredLine) {
+      playSfx('lineComplete', { player: movingPlayer, lineLength: result.pointsGained });
+    }
     if (result.pointsGained > 0 || result.newlyPending.length > 0) {
       setScoreEvent({
         dotId,
@@ -2111,6 +2120,7 @@ export default function App() {
     if (!state.pending.includes(lineId)) return;
     const movingPlayer = state.current;
     const result = applyClaim(state, lineId);
+    playSfx('claim', { player: movingPlayer, lineLength: result.pointsGained });
     claimsInGame.current += 1;
     const line = getBoard(config.shape).lines.find((l) => l.id === lineId);
     if (line && result.pointsGained > 0) {

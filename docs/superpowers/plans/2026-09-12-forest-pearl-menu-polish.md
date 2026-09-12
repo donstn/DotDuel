@@ -28,18 +28,22 @@
 9. **Multiplayer + rankings main-menu icons, done.** `menu-icon-multiplayer.png` (two facing orbs, a light streak, sparks) and `menu-icon-rankings.png` (mossy 3-step podium + glowing star) generated, despilled, and wired into `Menu.tsx`'s main-menu shelves — same `theme === 'forest-pearl' ? <img/> : <OriginalIcon/>` pattern, `iconClass="is-avatar"`. Despill note: a raw-RGB preview tool made an already-correctly-transparent PNG (verified alpha=0 at every background pixel via direct inspection) look like it still had a pink fringe — chased that as a real bug for a while before confirming via a real browser render that the actual asset was fine all along. Worth remembering for any future despill work: judge chroma-key results in an actual browser, not a raw-pixel preview that may not respect alpha.
 10. **Wordmark, round 4.** Swapped in yet another regenerated banner from the same wide-banner prompt — more symmetric arch shape, richer scrollwork. Same despill/crop treatment. Aspect ratio came out ~3.3:1 this time (prompt asked for 6:1; Gemini doesn't reliably honor exact ratio requests) — fine in practice since the CSS caps by width, not by the asset's own ratio, so a less-wide asset just renders a bit taller for the same on-screen width.
 
-### Still blocked on user-generated art
+### Round 5 — the remaining 8 icons, all done
 
-A follow-up review found **8 more** unpainted icon spots beyond the 2 above — every remaining shelf icon one level deeper in the menu, plus the 4 board-shape icons. User chose to generate all of them in one batch.
+A follow-up review found 8 more unpainted icon spots beyond the 2 in round 4 — every remaining shelf icon one level deeper in the menu, plus the 4 board-shape icons. User generated all 3 sheets (Prompts 4-6) in one round; all 11 icons total (2 main-menu + this batch) are now wired in and verified live.
 
-11. **Daily puzzle icon** (Vienas žaidėjas → Dienos galvosūkis, + locked/sign-in states) — needs `menu-icon-daily.png` (Prompt 4 of 6).
-12. **Hot-seat icon** (Keli žaidėjai → Vietinis žaidimas) — needs `menu-icon-hotseat.png` (Prompt 4 of 6).
-13. **Online ranked icon** (Keli žaidėjai → online variants, 4 call sites same icon) — needs `menu-icon-online.png` (Prompt 4 of 6).
-14. **Puzzle rankings icon** (Reitingai → Galvosūkių rezultatai) — needs `menu-icon-puzzle-rankings.png` (Prompt 5 of 6).
-15. **Local rankings icon** (Reitingai → Vietiniai rezultatai) — needs `menu-icon-local-rankings.png` (Prompt 5 of 6).
-16. **Rated rankings icon** (Reitingai → Reitingų sąrašas) — needs `menu-icon-rated-rankings.png` (Prompt 5 of 6).
-17. **Achievements icon** (Reitingai → Pasiekimai) — needs `menu-icon-achievements.png` (Prompt 5 of 6).
-18. **4 board-shape icons** (Triangle/Square/Rectangle/Rhombus, difficulty picker) — needs `menu-icon-shape-{triangle,square,rectangle,rhombus}.png` (Prompt 6 of 6) — designed as dot-cluster icons reusing the game's own glossy-orb visual language rather than new objects, matching each board's real dot layout (3-2-1, 3×3, 3×4, diamond 1-2-3-2-1).
+11. **Daily puzzle icon** (Vienas žaidėjas → Dienos galvosūkis, + locked/sign-in states) — `menu-icon-daily.png`, a glowing wooden hourglass. Done.
+12. **Hot-seat icon** (Keli žaidėjai → Vietinis žaidimas) — `menu-icon-hotseat.png`, two orbs on a wooden plank. Done.
+13. **Online ranked icon** (Keli žaidėjai → online variants, 4 call sites, one shared icon variable) — `menu-icon-online.png`, a woven vine sphere. Done.
+14. **Puzzle rankings icon** — `menu-icon-puzzle-rankings.png`, a glowing puzzle piece. Done.
+15. **Local rankings icon** — `menu-icon-local-rankings.png`, a cottage with a window light. Done.
+16. **Rated rankings icon** — `menu-icon-rated-rankings.png`, a trophy cup. Done.
+17. **Achievements icon** — `menu-icon-achievements.png`, a rosette medal. Done.
+18. **4 board-shape icons** (Triangle/Square/Rectangle/Rhombus, both the hot-seat and vs-AI shape pickers — 2 call sites, one `SHAPE_ICON_ART` map) — dot-cluster icons reusing the game's own glossy-orb art rather than new objects. Triangle came back apex-up from Gemini; flipped vertically during cropping to match the game's actual apex-down triangle board (`TriangleShapeIcon`'s own layout: 3-2-1, wide top narrowing to a point). Done.
+
+**Cropping notes for future batches:** connected-component labeling (group touching foreground pixels into one blob) worked cleanly for sheets where each icon is one solid shape, but failed for the shape-cluster sheet — each cluster's individual orbs have visible gaps between them by design (per the prompt's own "clearly separated... not touching" instruction), so every orb got detected as its own component instead of one per cluster. Fixed with a column-projection split instead (group by contiguous horizontal runs of *any* foreground activity, merging small anti-aliasing gaps) — the right tool whenever a "sheet" contains multi-part icons rather than solid single-blob ones.
+
+Every menu-shelf icon in the app is now painted for Forest & Pearl. Other 7 themes are unaffected (still render the original line-art icons via the same `theme === 'forest-pearl' ? <img/> : <OriginalIcon/>` pattern used throughout).
 
 (Prompt 3 of 3 from round 1, the original wordmark prompt, remains moot — superseded by the user's own generated art. Left in the file for reference/history.)
 

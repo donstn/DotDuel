@@ -35,6 +35,13 @@ const SHAPE_ICON: Record<ShapeId, (p: { className?: string }) => JSX.Element> = 
   rhombus: RhombusShapeIcon,
 };
 
+const SHAPE_ICON_ART: Record<ShapeId, string> = {
+  triangle: '/art/forest-pearl/menu-icon-shape-triangle.png',
+  square: '/art/forest-pearl/menu-icon-shape-square.png',
+  rectangle: '/art/forest-pearl/menu-icon-shape-rectangle.png',
+  rhombus: '/art/forest-pearl/menu-icon-shape-rhombus.png',
+};
+
 interface Props {
   progress: Progress;
   settings: Settings;
@@ -153,6 +160,20 @@ export function Menu({
     else if (category !== null) setCategory(null);
   }, [backSignal, aiDifficulty, shape, mode, category]);
 
+  const dailyIcon =
+    theme === 'forest-pearl' ? (
+      <img src="/art/forest-pearl/menu-icon-daily.png" alt="" aria-hidden="true" />
+    ) : (
+      <DailyIcon />
+    );
+  const onlineIcon =
+    theme === 'forest-pearl' ? (
+      <img src="/art/forest-pearl/menu-icon-online.png" alt="" aria-hidden="true" />
+    ) : (
+      <GlobeIcon />
+    );
+  const iconClass = theme === 'forest-pearl' ? 'is-avatar' : '';
+
   // ---- Daily-puzzle shelf card (3-state, sign-in gated) ----
   const dailyCard = () => {
     if (user && onStartDailyPuzzle) {
@@ -163,7 +184,8 @@ export function Menu({
         return (
           <button className="menu-shelf disabled" disabled title={t.menu.dailyDoneTitle}>
             <CardInner
-              icon={<DailyIcon />}
+              icon={dailyIcon}
+              iconClass={iconClass}
               title={t.menu.dailyPuzzle}
               sub={t.menu.dailyDoneSub(best ?? 0)}
             />
@@ -176,14 +198,15 @@ export function Menu({
           : t.menu.dailyFreshSub(MAX_ATTEMPTS_PER_DAY);
       return (
         <button className="menu-shelf" onClick={onStartDailyPuzzle}>
-          <CardInner icon={<DailyIcon />} title={t.menu.dailyPuzzle} sub={sub} />
+          <CardInner icon={dailyIcon} iconClass={iconClass} title={t.menu.dailyPuzzle} sub={sub} />
         </button>
       );
     }
     return (
       <button className="menu-shelf disabled" disabled title={t.menu.dailySignInTitle}>
         <CardInner
-          icon={<DailyIcon />}
+          icon={dailyIcon}
+          iconClass={iconClass}
           title={t.menu.dailyPuzzle}
           sub={t.common.signInToPlay}
         />
@@ -197,7 +220,8 @@ export function Menu({
       return (
         <button className="menu-shelf disabled" disabled title={t.menu.onlineSignInTitle}>
           <CardInner
-            icon={<GlobeIcon />}
+            icon={onlineIcon}
+            iconClass={iconClass}
             title={t.menu.onlineRanked}
             sub={t.common.signInToPlay}
           />
@@ -212,7 +236,8 @@ export function Menu({
           title={t.menu.onlineUnreachableTitle}
         >
           <CardInner
-            icon={<GlobeIcon />}
+            icon={onlineIcon}
+            iconClass={iconClass}
             title={t.menu.onlineRanked}
             sub={t.menu.onlineUnreachable}
           />
@@ -223,7 +248,8 @@ export function Menu({
       return (
         <button className="menu-shelf disabled" disabled title={t.menu.onlineLockedTitle}>
           <CardInner
-            icon={<GlobeIcon />}
+            icon={onlineIcon}
+            iconClass={iconClass}
             title={t.menu.onlineRanked}
             sub={t.menu.onlineLocked}
           />
@@ -233,7 +259,8 @@ export function Menu({
     return (
       <button className="menu-shelf" onClick={onOpenMultiplayer}>
         <CardInner
-          icon={<GlobeIcon />}
+          icon={onlineIcon}
+          iconClass={iconClass}
           title={t.menu.onlineRanked}
           sub={t.menu.onlineFindMatch}
         />
@@ -453,7 +480,18 @@ export function Menu({
         <h2>{t.menu.multiplayer}</h2>
         <div className="menu-shelves">
           <button className="menu-shelf" onClick={() => setMode('hotseat')}>
-            <CardInner icon={<DeviceIcon />} title={t.menu.hotseat} sub={t.menu.hotseatSub} />
+            <CardInner
+              icon={
+                theme === 'forest-pearl' ? (
+                  <img src="/art/forest-pearl/menu-icon-hotseat.png" alt="" aria-hidden="true" />
+                ) : (
+                  <DeviceIcon />
+                )
+              }
+              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+              title={t.menu.hotseat}
+              sub={t.menu.hotseatSub}
+            />
           </button>
           {onlineCard()}
         </div>
@@ -477,28 +515,56 @@ export function Menu({
             title={user ? '' : t.common.signInToView}
           >
             <CardInner
-              icon={<PuzzleIcon />}
+              icon={
+                theme === 'forest-pearl' ? (
+                  <img src="/art/forest-pearl/menu-icon-puzzle-rankings.png" alt="" aria-hidden="true" />
+                ) : (
+                  <PuzzleIcon />
+                )
+              }
+              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
               title={t.menu.puzzleRankings}
               sub={user ? t.menu.puzzleRankingsSub : t.common.signInToView}
             />
           </button>
           <button className="menu-shelf" onClick={() => onOpenRankings('local')}>
             <CardInner
-              icon={<HouseIcon />}
+              icon={
+                theme === 'forest-pearl' ? (
+                  <img src="/art/forest-pearl/menu-icon-local-rankings.png" alt="" aria-hidden="true" />
+                ) : (
+                  <HouseIcon />
+                )
+              }
+              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
               title={t.menu.localRankings}
               sub={t.menu.localRankingsSub}
             />
           </button>
           <button className="menu-shelf" onClick={() => onOpenRankings('global')}>
             <CardInner
-              icon={<TrophyIcon />}
+              icon={
+                theme === 'forest-pearl' ? (
+                  <img src="/art/forest-pearl/menu-icon-rated-rankings.png" alt="" aria-hidden="true" />
+                ) : (
+                  <TrophyIcon />
+                )
+              }
+              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
               title={t.menu.ratedRankings}
               sub={t.menu.ratedRankingsSub}
             />
           </button>
           <button className="menu-shelf" onClick={onOpenAchievements}>
             <CardInner
-              icon={<AchievementsIcon />}
+              icon={
+                theme === 'forest-pearl' ? (
+                  <img src="/art/forest-pearl/menu-icon-achievements.png" alt="" aria-hidden="true" />
+                ) : (
+                  <AchievementsIcon />
+                )
+              }
+              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
               title={t.menu.achievements}
               sub={t.menu.achievementsSub}
             />
@@ -519,7 +585,14 @@ export function Menu({
             return (
               <button key={s.id} className="menu-shelf" onClick={() => setShape(s.id)}>
                 <CardInner
-                  icon={<ShapeIcon />}
+                  icon={
+                    theme === 'forest-pearl' ? (
+                      <img src={SHAPE_ICON_ART[s.id]} alt="" aria-hidden="true" />
+                    ) : (
+                      <ShapeIcon />
+                    )
+                  }
+                  iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
                   title={t.shapes[s.id]}
                   sub={t.menu.dots(s.dots)}
                 />
@@ -570,7 +643,14 @@ export function Menu({
                 title={unlockedAny ? '' : t.menu.shapeLockedTitle}
               >
                 <CardInner
-                  icon={<ShapeIcon />}
+                  icon={
+                    theme === 'forest-pearl' ? (
+                      <img src={SHAPE_ICON_ART[s.id]} alt="" aria-hidden="true" />
+                    ) : (
+                      <ShapeIcon />
+                    )
+                  }
+                  iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
                   title={t.shapes[s.id]}
                   sub={unlockedAny ? t.menu.dots(s.dots) : t.common.locked}
                 />

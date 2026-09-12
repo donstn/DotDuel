@@ -410,7 +410,18 @@ export function Menu({
         <h2>{t.menu.singlePlayer}</h2>
         <div className="menu-shelves">
           <button className="menu-shelf" onClick={() => setMode('ai')}>
-            <CardInner icon={<BotSquadIcon />} title={t.menu.bots} sub={t.menu.botsSub} />
+            <CardInner
+              icon={
+                theme === 'forest-pearl' ? (
+                  <img src="/art/forest-pearl/avatar-l1.png" alt="" aria-hidden="true" />
+                ) : (
+                  <BotSquadIcon />
+                )
+              }
+              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+              title={t.menu.bots}
+              sub={t.menu.botsSub}
+            />
           </button>
           {dailyCard()}
         </div>

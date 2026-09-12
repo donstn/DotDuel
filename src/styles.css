@@ -810,7 +810,7 @@ button {
    plain max-width:100% to resolve against. */
 .title-wordmark {
   display: block;
-  width: min(calc(100vw - 32px), 720px);
+  width: min(calc(100vw - 32px), 480px);
   max-width: 100%;
   height: auto;
   /* .menu-topleft/.menu-topright (language + theme buttons) are absolutely

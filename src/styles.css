@@ -5819,14 +5819,150 @@ html[data-theme="forest-pearl"] .menu-auth-btn-cta:hover {
 .puzzle-lb-tabs {
   margin: 0 0 12px;
 }
-/* Recent-winners view: a wider first column for the date label. */
-.puzzle-lb-winners .puzzle-lb-row {
-  grid-template-columns: 58px 1fr auto;
+/* Daily results calendar: month grid + the selected day's full list. */
+.pcal-nav,
+.pcal-grid {
+  padding: 0 8px;
 }
-.puzzle-lb-date {
-  color: var(--text-dim);
+.pcal-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.pcal-month {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pcal-nav-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: inherit;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.pcal-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.pcal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+.pcal-weekday {
+  text-align: center;
+  font-size: 0.7rem;
   font-weight: 600;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  padding-bottom: 2px;
+}
+.pcal-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 40px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-mute);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  overflow: hidden;
+}
+.pcal-day:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+.pcal-played {
+  background: rgba(123, 219, 149, 0.08);
+  color: inherit;
+}
+.pcal-mine {
+  border-color: rgba(123, 219, 149, 0.35);
+}
+.pcal-today {
+  border-color: var(--accent);
+}
+.pcal-selected {
+  background: rgba(123, 219, 149, 0.22);
+  border-color: var(--accent);
+}
+.pcal-num {
+  font-size: 0.68rem;
+  line-height: 1.1;
+  color: var(--text-dim);
+}
+.pcal-score {
   font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.2;
+  min-height: 1.2em;
+  color: var(--accent);
+}
+.pcal-retry {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.pcal-day-detail {
+  margin-top: 12px;
+}
+.pcal-day-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 12px;
+}
+.pcal-day-title {
+  min-width: 0;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pcal-live {
+  margin-left: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+.pcal-day-count {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.pcal-day-detail .puzzle-lb-empty {
+  padding: 0 12px;
+}
+/* Keep the tagline clear of the absolutely-positioned close button. */
+.puzzle-lb-card .rules-tagline {
+  padding-right: 32px;
+}
+.pcal-day-info {
+  margin: 2px 12px 6px;
+  font-size: 0.8rem;
+  color: var(--text-mute);
 }
 .puzzle-lb-empty {
   color: var(--text-mute);

@@ -338,7 +338,8 @@ export const en = {
       'your friend list, pending requests, online status, and game invites. If you joined through another player’s invite link or QR code, we record which player invited you (their random invite code — so future referral rewards can be honoured).',
     collectDailyLead: 'Daily puzzle results:',
     collectDaily:
-      'for each daily puzzle you finish — your display name, best score, number of attempts and finish time. Shown publicly in the daily results calendar.', 'Device-only data:',
+      'for each daily puzzle you finish — your display name, best score, number of attempts and finish time. Shown publicly in the daily results calendar.',
+    collectDeviceLead: 'Device-only data:',
     collectDevice:
       "your single-player progress, vs-AI/hot-seat stats, theme preference, and tutorial-seen flag. Stored in your browser's localStorage and never transmitted to us.",
     collectAnalyticsLead: 'Analytics (only if you accept):',
@@ -371,7 +372,8 @@ export const en = {
     keepAnalyticsLead: 'Analytics:',
     keepAnalytics: "per Google's defaults (currently 14 months for event data).",
     keepDailyLead: 'Daily puzzle results:',
-    keepDaily: 'up to 24 months after the puzzle date, then permanently deleted.', 'Device-only data:',
+    keepDaily: 'up to 24 months after the puzzle date, then permanently deleted.',
+    keepDeviceLead: 'Device-only data:',
     keepDevice: 'stays until you clear your browser data.',
     rightsH: 'Your rights',
     rightsP: 'Under GDPR you have the right to:',

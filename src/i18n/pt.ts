@@ -714,7 +714,8 @@ export const pt: Messages = {
       'sua lista de amigos, pedidos pendentes, status online e convites para partidas. Se você entrou pelo link de convite ou QR code de outro jogador, registramos qual jogador convidou você (o código de convite aleatório dele, para que futuras recompensas por indicação possam ser concedidas).',
     collectDailyLead: 'Resultados do desafio diário:',
     collectDaily:
-      'para cada desafio diário que você conclui: seu nome de exibição, melhor pontuação, número de tentativas e horário de conclusão. Exibidos publicamente no calendário de resultados diários.', 'Dados apenas do dispositivo:',
+      'para cada desafio diário que você conclui: seu nome de exibição, melhor pontuação, número de tentativas e horário de conclusão. Exibidos publicamente no calendário de resultados diários.',
+    collectDeviceLead: 'Dados apenas do dispositivo:',
     collectDevice:
       'seu progresso de um jogador, as estatísticas contra IA / de partida local, a preferência de tema e o indicador de “tutorial visto”. Armazenados no localStorage do seu navegador e nunca transmitidos para nós.',
     collectAnalyticsLead: 'Análises (somente se você aceitar):',
@@ -747,7 +748,8 @@ export const pt: Messages = {
     keepAnalyticsLead: 'Análises:',
     keepAnalytics: 'conforme os padrões do Google (atualmente 14 meses para dados de eventos).',
     keepDailyLead: 'Resultados do desafio diário:',
-    keepDaily: 'até 24 meses após a data do desafio; depois são excluídos permanentemente.', 'Dados apenas do dispositivo:',
+    keepDaily: 'até 24 meses após a data do desafio; depois são excluídos permanentemente.',
+    keepDeviceLead: 'Dados apenas do dispositivo:',
     keepDevice: 'permanecem até você limpar os dados do navegador.',
     rightsH: 'Seus direitos',
     rightsP: 'Sob o GDPR, você tem o direito de:',

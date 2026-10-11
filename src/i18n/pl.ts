@@ -725,7 +725,8 @@ export const pl: Messages = {
       'Twoja lista znajomych, oczekujące prośby, status online i zaproszenia do gry. Jeśli dołączyłeś przez link z zaproszeniem lub kod QR innego gracza, zapisujemy, który gracz Cię zaprosił (jego losowy kod zaproszenia — aby w przyszłości można było uznać nagrody za polecenia).',
     collectDailyLead: 'Wyniki codziennej łamigłówki:',
     collectDaily:
-      'dla każdej ukończonej codziennej łamigłówki — Twoja nazwa wyświetlana, najlepszy wynik, liczba prób i czas ukończenia. Widoczne publicznie w kalendarzu wyników dnia.', 'Dane tylko na urządzeniu:',
+      'dla każdej ukończonej codziennej łamigłówki — Twoja nazwa wyświetlana, najlepszy wynik, liczba prób i czas ukończenia. Widoczne publicznie w kalendarzu wyników dnia.',
+    collectDeviceLead: 'Dane tylko na urządzeniu:',
     collectDevice:
       'Twój postęp w trybie jednoosobowym, statystyki przeciw botom / w grze lokalnej, preferencja motywu i znacznik „samouczek obejrzany”. Przechowywane w localStorage Twojej przeglądarki i nigdy nam nieprzesyłane.',
     collectAnalyticsLead: 'Analityka (tylko jeśli wyrazisz zgodę):',
@@ -758,7 +759,8 @@ export const pl: Messages = {
     keepAnalyticsLead: 'Analityka:',
     keepAnalytics: 'zgodnie z domyślnymi ustawieniami Google (obecnie 14 miesięcy dla danych o zdarzeniach).',
     keepDailyLead: 'Wyniki codziennej łamigłówki:',
-    keepDaily: 'do 24 miesięcy od daty łamigłówki, potem trwale usuwane.', 'Dane tylko na urządzeniu:',
+    keepDaily: 'do 24 miesięcy od daty łamigłówki, potem trwale usuwane.',
+    keepDeviceLead: 'Dane tylko na urządzeniu:',
     keepDevice: 'pozostają do czasu wyczyszczenia danych przeglądarki.',
     rightsH: 'Twoje prawa',
     rightsP: 'Zgodnie z RODO masz prawo do:',

@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.13.0',
+    date: '2026-10-11',
+    highlight: 'Daily results calendar',
+    changes: [
+      {
+        kind: 'added',
+        text: 'The daily-puzzle leaderboard is now a calendar. See each day’s winner at a glance, and tap any day to see everyone who played it, from top to bottom.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.12.4',
     date: '2026-08-04',
     highlight: 'Fixed a multiplayer move sometimes vanishing after you placed it',

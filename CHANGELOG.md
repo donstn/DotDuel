@@ -3,6 +3,20 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.13.0] - 2026-10-11
+
+### Added
+
+- **Daily results calendar** — the daily-puzzle leaderboard is now a month
+  calendar (`PuzzleLeaderboardPopover.tsx`). Each day shows the winning score;
+  tapping a day lists every player who finished it, best first (ties: who
+  finished first), with the day's board and bot level. Reads
+  `daily_leaderboard` / `daily_puzzle_defs` directly (already public-read
+  under RLS), one month at a time.
+- **Privacy policy** — daily puzzle results are now disclosed (what is stored,
+  shown publicly, kept 24 months). Enforced by `daily_results_retention_sweep`
+  (`supabase/migrations/20261011000000_daily_results_retention.sql`).
+
 ## [0.4.12.1] - 2026-08-01
 
 ### Fixed

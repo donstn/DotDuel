@@ -711,7 +711,9 @@ export const es: Messages = {
     collectFriendsLead: 'Amigos e invitaciones:',
     collectFriends:
       'tu lista de amigos, solicitudes pendientes, estado de conexión e invitaciones a partidas. Si te uniste mediante el enlace de invitación o el código QR de otro jugador, registramos qué jugador te invitó (su código de invitación aleatorio, para poder reconocer futuras recompensas por recomendación).',
-    collectDeviceLead: 'Datos solo del dispositivo:',
+    collectDailyLead: 'Resultados del puzle diario:',
+    collectDaily:
+      'por cada puzle diario que terminas: tu nombre visible, tu mejor puntuación, el número de intentos y la hora de finalización. Se muestran públicamente en el calendario de resultados diarios.', 'Datos solo del dispositivo:',
     collectDevice:
       'tu progreso de un jugador, las estadísticas contra IA / de partida local, la preferencia de tema y la marca de «tutorial visto». Se almacenan en el localStorage de tu navegador y nunca se nos transmiten.',
     collectAnalyticsLead: 'Analítica (solo si aceptas):',
@@ -743,7 +745,8 @@ export const es: Messages = {
     keepLive: 'se elimina en unas 24 horas tras el fin de la partida.',
     keepAnalyticsLead: 'Analítica:',
     keepAnalytics: 'según los valores predeterminados de Google (actualmente 14 meses para los datos de eventos).',
-    keepDeviceLead: 'Datos solo del dispositivo:',
+    keepDailyLead: 'Resultados del puzle diario:',
+    keepDaily: 'hasta 24 meses después de la fecha del puzle; después se eliminan definitivamente.', 'Datos solo del dispositivo:',
     keepDevice: 'permanecen hasta que borres los datos de tu navegador.',
     rightsH: 'Tus derechos',
     rightsP: 'Según el RGPD, tienes derecho a:',

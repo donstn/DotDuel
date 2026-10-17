@@ -84,6 +84,7 @@ import {
   type MatchRecord,
 } from './cloud/matchHistory';
 import { ClockBadge } from './components/ClockBadge';
+import { ScoreStrip } from './components/ScoreStrip';
 import { MatchFoundScreen } from './components/MatchFoundScreen';
 import { MatchmakingWaiting } from './components/MatchmakingWaiting';
 import { MultiplayerLobby } from './components/MultiplayerLobby';
@@ -2304,6 +2305,38 @@ export default function App() {
           </button>
         </div>
         <div className="game-body">
+          <ScoreStrip
+            current={mpState.finished ? null : mpState.current}
+            theme={theme}
+            p1={{
+              name: mpP1Name,
+              score: mpState.scores[1],
+              avatar: mpP1Avatar,
+              clock: p1Clock,
+              rating: (
+                <>
+                  {mpP1Elo}
+                  {opponentSlot === 1 && pairing.opponentIsBot && (
+                    <span className="bot-tag" aria-label={t.game.aiOpponent}>{t.game.bot}</span>
+                  )}
+                </>
+              ),
+            }}
+            p2={{
+              name: mpP2Name,
+              score: mpState.scores[2],
+              avatar: mpP2Avatar,
+              clock: p2Clock,
+              rating: (
+                <>
+                  {mpP2Elo}
+                  {opponentSlot === 2 && pairing.opponentIsBot && (
+                    <span className="bot-tag" aria-label={t.game.aiOpponent}>{t.game.bot}</span>
+                  )}
+                </>
+              ),
+            }}
+          />
           <SidePanel
             side="left"
             player={1}
@@ -2917,6 +2950,13 @@ export default function App() {
         </button>
       </div>
       <div className="game-body">
+        <ScoreStrip
+          current={state.finished ? null : state.current}
+          theme={theme}
+          colorSwap={colorSwap}
+          p1={{ name: p1Name, score: state.scores[1], avatar: p1Avatar }}
+          p2={{ name: p2Name, score: state.scores[2], avatar: p2Avatar, thinking }}
+        />
         <SidePanel
           side="left"
           player={1}

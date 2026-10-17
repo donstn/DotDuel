@@ -32,6 +32,10 @@ export const lt: Messages = {
     d: 'L',
     l: 'Pr',
     you: 'Jūs',
+    ok: 'Gerai',
+    done: 'Atlikta',
+    advertisement: 'Reklama',
+    rotateToPortrait: 'Pasukite telefoną vertikaliai, kad galėtumėte žaisti DotDuel',
   },
 
   lang: {
@@ -118,7 +122,7 @@ export const lt: Messages = {
     player1First: 'Žaidėjas 1 — žaidžia pirmas',
     player2: 'Žaidėjas 2',
     signedInAs: (name: string) => `Prisijungta kaip ${name}. Keiskite profilyje.`,
-    swapColours: 'Sukeisti spalvas (1 žaidėjas ↔ 2 žaidėjas)',
+    swapColours: 'Sukeisti spalvas (Žaidėjas\u00a01 ↔ Žaidėjas\u00a02)',
     startGame: 'Pradėti žaidimą',
     player1Placeholder: 'Žaidėjas 1',
     player2Placeholder: 'Žaidėjas 2',
@@ -167,12 +171,24 @@ export const lt: Messages = {
     bot: 'BOTAS',
     aiOpponent: 'DI varžovas',
     moveFailed: 'Ėjimas neišsiuntė — bandykite dar kartą',
+    hotseatLeaveTitle: 'Palikti šį žaidimą?',
+    hotseatLeaveBody: 'Vykstantis žaidimas bus prarastas.',
+    hotseatLeaveConfirm: 'Palikti',
+    dailyLoading: 'Įkeliamas dienos galvosūkis…',
+    dailyLoadFailed: 'Nepavyko įkelti dienos galvosūkio. Patikrinkite ryšį ir bandykite dar kartą.',
+    dotEmptyPlace: (r: number, p: number) => `Eilutė ${r}, vieta ${p}, tuščia. Padėkite tašką.`,
+    dotEmpty: (r: number, p: number) => `Eilutė ${r}, vieta ${p}, tuščia.`,
+    dotOwned: (r: number, p: number, pl: number) => `Eilutė ${r}, vieta ${p}, žaidėjas ${pl}.`,
+    dotClaim: (r: number, p: number, pl: number, pts: number) =>
+      `Eilutė ${r}, vieta ${p}, žaidėjas ${pl}. Paimti liniją (${pts} tšk.).`,
+    scoreAria: (n1: string, s1: number, n2: string, s2: number) =>
+      `Rezultatas: ${n1} ${s1}, ${n2} ${s2}`,
   },
 
   rules: {
     aria: 'Kaip žaisti DotDuel',
     close: 'Uždaryti taisykles',
-    title: 'Kaip žaisti DotDuel',
+    title: 'Taisyklės',
     tagline: 'Žaiskite paeiliui. Užbaikite linijas. Surinkite daugiausia taškų.',
     goalH: 'Tikslas',
     goalP: 'Surinkite daugiau taškų nei varžovas.',
@@ -222,7 +238,7 @@ export const lt: Messages = {
     yourNameHint: 'Naudojamas žaidžiant su botu IR kaip 1 žaidėjo vardas vietiniame žaidime.',
     hotseatOpponent: 'Vietinio žaidimo varžovas',
     player2Name: '2 žaidėjo vardas',
-    swapColours: 'Sukeisti spalvas (1 žaidėjas ↔ 2 žaidėjas)',
+    swapColours: 'Sukeisti spalvas (Žaidėjas\u00a01 ↔ Žaidėjas\u00a02)',
     privacyH: 'Privatumas',
     whoCanChallenge: 'Kas gali mane iškviesti žaidimui?',
     everyone: 'Visi',
@@ -963,6 +979,10 @@ export const lt: Messages = {
     sentH: 'Išsiųsti',
     waitingForThem: 'laukiama atsakymo',
     cancel: 'Atšaukti',
+    blockedH: 'Užblokuoti',
+    unblock: 'Atblokuoti',
+    unblockConfirm: (name: string) =>
+      `Atblokuoti ${name}? Šis žaidėjas vėl galės siųsti jums draugystės ir žaidimo kvietimus.`,
   },
 
   invite: {
@@ -1276,7 +1296,7 @@ export const lt: Messages = {
   sidePanel: {
     featuredTitle: (title: string) => `${title} — bakstelėkite pasiekimams`,
     noGames: 'dar nėra žaidimų',
-    botLabel: (level: string) => `Botas · ${level}`,
+    botLabel: (level: string) => `Botas (${level})`,
     botShort: (level: number) => `Botas L${level}`,
     hotseat: 'Vietinis žaidimas',
     hotseatShort: 'VŽ',

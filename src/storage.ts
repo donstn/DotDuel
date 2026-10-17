@@ -107,6 +107,21 @@ export function resetProgress(): Progress {
 // saved player name + tutorialSeen). Stats (v4) and progress (v3) live in
 // separate keys and are untouched.
 
+// Default player names are STORED in English: per-name stats are keyed by
+// normKey(name), so translating at write time would split a player's stats
+// across languages. Translate only for display.
+export const DEFAULT_P1_NAME = 'Player 1';
+export const DEFAULT_P2_NAME = 'Player 2';
+
+export function displayPlayerName(
+  name: string,
+  t: { menu: { player1Placeholder: string; player2Placeholder: string } },
+): string {
+  if (name === DEFAULT_P1_NAME) return t.menu.player1Placeholder;
+  if (name === DEFAULT_P2_NAME) return t.menu.player2Placeholder;
+  return name;
+}
+
 const SETTINGS_KEY = 'dotduel:settings:v2';
 
 export interface Settings {
@@ -125,8 +140,8 @@ export interface Settings {
 
 function defaultSettings(): Settings {
   return {
-    playerName: 'Player 1',
-    opponentName: 'Player 2',
+    playerName: DEFAULT_P1_NAME,
+    opponentName: DEFAULT_P2_NAME,
     hotseatColorSwap: false,
     tutorialSeen: false,
     gamesPlayed: 0,

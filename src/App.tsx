@@ -86,6 +86,7 @@ import {
 import { ClockBadge } from './components/ClockBadge';
 import { ScoreStrip } from './components/ScoreStrip';
 import { applyThemeArt } from './themeArt';
+import { PHONE_GAME_LAYOUT, useMediaQuery } from './useMediaQuery';
 import { MatchFoundScreen } from './components/MatchFoundScreen';
 import { MatchmakingWaiting } from './components/MatchmakingWaiting';
 import { MultiplayerLobby } from './components/MultiplayerLobby';
@@ -144,6 +145,9 @@ import {
   saveProgress,
   saveSettings,
   type Settings,
+  DEFAULT_P1_NAME,
+  DEFAULT_P2_NAME,
+  displayPlayerName,
 } from './storage';
 import type { Difficulty, GameAction, GameMode, GameState, Progress, ShapeId } from './types';
 import { APP_VERSION } from './version';
@@ -230,8 +234,16 @@ function renderMpUnreachable({ onLeave, t }: { onLeave: () => void; t: Messages 
 // signed in). Flip back to `true` once AdSense approves the site.
 const LOGIN_GATE_ENABLED = false;
 
+// Achievement pop-ups are paused (2026-10-17): they covered the GameOver
+// title and played back-to-back for ~30s after a first win. Unlocks still
+// record + sync and show in the Achievements screen; flip to re-enable.
+const SHOW_ACHIEVEMENT_TOASTS = false;
+
 export default function App() {
   const t = useT();
+  // Phone layout renders only the score strip; wider screens only the side
+  // panels (a hidden twin would keep its clocks ticking).
+  const phoneLayout = useMediaQuery(PHONE_GAME_LAYOUT);
   const [screen, setScreen] = useState<Screen>('menu');
   const [progress, setProgress] = useState<Progress>(() => loadProgress());
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
@@ -290,6 +302,9 @@ export default function App() {
   const [activeGameSession, setActiveGameSession] =
     useState<GameSession | null>(null);
   const [resignConfirmOpen, setResignConfirmOpen] = useState(false);
+  const [hotseatLeaveOpen, setHotseatLeaveOpen] = useState(false);
+  // Offline games have no server finish reason; remember a resign for GameOver.
+  const [offlineResigned, setOfflineResigned] = useState(false);
   const [theme, setThemeState] = useState<ThemeId>(loadTheme);
   const [themeOpen, setThemeOpen] = useState(false);
   const [consent, setConsentState] = useState<Consent | null>(loadConsent);
@@ -403,6 +418,7 @@ export default function App() {
     difficulty?: Difficulty,
     opening?: GameAction[],
   ) => {
+    setOfflineResigned(false);
     if (aiTimer.current !== null) {
       clearTimeout(aiTimer.current);
       aiTimer.current = null;
@@ -485,7 +501,7 @@ export default function App() {
         startGame('daily', def.shape, def.aiLevel, def.opening);
       } catch (e) {
         console.warn('startDailyPuzzle failed:', e);
-        setDailyError("Couldn't load today's puzzle. Check your connection and try again.");
+        setDailyError(t.game.dailyLoadFailed);
       } finally {
         setDailyLoading(false);
       }
@@ -975,9 +991,16 @@ export default function App() {
   // Queue freshly-unlocked achievement toasts + mirror them to the cloud.
   const fireAch = (fresh: string[]) => {
     if (!fresh.length) return;
-    setAchToasts((q) => [...q, ...fresh]);
+    if (SHOW_ACHIEVEMENT_TOASTS) setAchToasts((q) => [...q, ...fresh]);
     void pushUnlocks(fresh);
   };
+
+  // The landscape "rotate to portrait" prompt is CSS-generated (#root is hidden
+  // then), so hand it the translated text as a CSS string.
+  useEffect(() => {
+    const css = '"' + t.common.rotateToPortrait.replace(/["\\]/g, '\\$&') + '"';
+    document.documentElement.style.setProperty('--rotate-msg', css);
+  }, [t]);
 
   // Before paint, so plaque buttons never flash their CSS fallback.
   useLayoutEffect(() => applyThemeArt(theme), [theme]);
@@ -1354,6 +1377,7 @@ export default function App() {
     setQueueTimeControl(null);
     setMpMatchRecord(null);
     setResignConfirmOpen(false);
+    setHotseatLeaveOpen(false);
     setMoveInFlight(false);
     if (
       screen === 'mpgame' ||
@@ -1502,6 +1526,7 @@ export default function App() {
     setOptimisticMpState(null);
     setQueueTimeControl(null);
     setResignConfirmOpen(false);
+    setHotseatLeaveOpen(false);
     setScreen('menu');
   };
 
@@ -1517,6 +1542,7 @@ export default function App() {
 
   const onConfirmResign = async () => {
     setResignConfirmOpen(false);
+    setHotseatLeaveOpen(false);
     // vs-AI resign: flip state to finished with AI as winner. The existing
     // state.finished effect will record the loss for the human.
     if (
@@ -1525,6 +1551,7 @@ export default function App() {
       state &&
       !state.finished
     ) {
+      setOfflineResigned(true);
       setState({ ...state, finished: true, winner: 2 });
       return;
     }
@@ -1535,6 +1562,15 @@ export default function App() {
     } catch (e) {
       console.warn('sendResign failed:', e);
     }
+  };
+
+  // Hot-seat back mid-game: confirm first (the game isn't saved anywhere).
+  const onHotseatBackPressed = () => {
+    if (!state || state.finished || state.turn === 0) {
+      backToMenu();
+      return;
+    }
+    setHotseatLeaveOpen(true);
   };
 
   const onAiBackPressed = () => {
@@ -1553,7 +1589,8 @@ export default function App() {
   // screen/menu level); returns false only once there's truly nothing left
   // to back through, so the caller can exit the app / let the browser leave.
   const performInAppBack = (): boolean => {
-    if (document.querySelector('[role="dialog"]')) {
+    // Open dialog or popup menu (footer language list): close it first.
+    if (document.querySelector('[role="dialog"], [role="menu"]')) {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       return true;
     }
@@ -1575,7 +1612,7 @@ export default function App() {
     }
     if (screen === 'game') {
       if (config?.mode === 'ai' || config?.mode === 'daily') onAiBackPressed();
-      else backToMenu();
+      else onHotseatBackPressed();
       return true;
     }
     // screen === 'menu': pop one level of the menu's own drill-down if it has one.
@@ -1594,13 +1631,15 @@ export default function App() {
   // while one was open. Give them the same behaviour (back = cancel, never
   // confirm, matching the "don't weaken ranked/daily protection" rule).
   useEffect(() => {
-    if (!resignConfirmOpen) return;
+    if (!resignConfirmOpen && !hotseatLeaveOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setResignConfirmOpen(false);
+      if (e.key !== 'Escape') return;
+      setResignConfirmOpen(false);
+      setHotseatLeaveOpen(false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [resignConfirmOpen]);
+  }, [resignConfirmOpen, hotseatLeaveOpen]);
 
   // Web back button/gesture: with no history entries of our own, pressing
   // back jumps straight past the app to whatever page was previously in
@@ -1614,7 +1653,7 @@ export default function App() {
   // covers this instead.
   const anyPopoverOpen =
     rulesOpen || howToOpen || settingsOpen || rankingsOpen || achievementsOpen ||
-    signInOpen || profileOpen || renameOpen || resignConfirmOpen || themeOpen ||
+    signInOpen || profileOpen || renameOpen || resignConfirmOpen || hotseatLeaveOpen || themeOpen ||
     privacyOpen || changelogOpen || friendsOpen || puzzleLbOpen || !!sendInviteFor;
   const hasInAppBackTarget = screen !== 'menu' || menuCanGoBack || anyPopoverOpen;
   const wasAtAppRootRef = useRef(true);
@@ -1697,6 +1736,7 @@ export default function App() {
     setOptimisticMpState(null);
     setQueueTimeControl(null);
     setResignConfirmOpen(false);
+    setHotseatLeaveOpen(false);
     setScreen('lobby');
   };
 
@@ -1719,6 +1759,7 @@ export default function App() {
     setMoveInFlight(false);
     setMpMatchRecord(null);
     setResignConfirmOpen(false);
+    setHotseatLeaveOpen(false);
     setLastDot(null);
     prevMpColoredKeysRef.current = null;
   }, [onlineGameId]);
@@ -1901,8 +1942,15 @@ export default function App() {
     const loaded = markBoardLoaded(onlineGameId, pairing.player);
     if (pairing.opponentIsBot && onlineGame.state.current !== pairing.player) {
       const gameId = onlineGameId;
+      // Backup only — the server opens for the bot itself; one retry covers a
+      // cold-start blip (duplicates are dropped server-side).
       void loaded
-        .then(() => requestBotStart(gameId))
+        .catch((e) => console.warn('markBoardLoaded failed:', e))
+        .then(() =>
+          requestBotStart(gameId).catch(() =>
+            new Promise((r) => window.setTimeout(r, 1500)).then(() => requestBotStart(gameId)),
+          ),
+        )
         .catch((e) => console.warn('requestBotStart failed:', e));
     }
     gameStartedAtRef.current = Date.now();
@@ -2309,59 +2357,64 @@ export default function App() {
           </button>
         </div>
         <div className="game-body">
-          <ScoreStrip
-            current={mpState.finished ? null : mpState.current}
-            theme={theme}
-            p1={{
-              name: mpP1Name,
-              score: mpState.scores[1],
-              avatar: mpP1Avatar,
-              clock: p1Clock,
-              rating: (
-                <>
+          {phoneLayout && (
+            <ScoreStrip
+              onFeaturedClick={() => setAchievementsOpen(true)}
+              current={mpState.finished ? null : mpState.current}
+              theme={theme}
+              p1={{
+                name: mpP1Name,
+                score: mpState.scores[1],
+                avatar: mpP1Avatar,
+                clock: p1Clock,
+                rating: (
+                  <>
+                    {mpP1Elo}
+                    {opponentSlot === 1 && pairing.opponentIsBot && (
+                      <span className="bot-tag" aria-label={t.game.aiOpponent}>{t.game.bot}</span>
+                    )}
+                  </>
+                ),
+              }}
+              p2={{
+                name: mpP2Name,
+                score: mpState.scores[2],
+                avatar: mpP2Avatar,
+                clock: p2Clock,
+                rating: (
+                  <>
+                    {mpP2Elo}
+                    {opponentSlot === 2 && pairing.opponentIsBot && (
+                      <span className="bot-tag" aria-label={t.game.aiOpponent}>{t.game.bot}</span>
+                    )}
+                  </>
+                ),
+              }}
+            />
+          )}
+          {!phoneLayout && (
+            <SidePanel
+              side="left"
+              player={1}
+              active={!mpState.finished && mpState.current === 1}
+              name={mpP1Name}
+              score={mpState.scores[1]}
+              avatar={mpP1Avatar}
+              theme={theme}
+              stats={null}
+              featured={myNum === 1 ? myFeatured : null}
+              onFeaturedClick={() => setAchievementsOpen(true)}
+              ratingSlot={p1Clock}
+              belowAvatar={
+                <span className="player-elo">
                   {mpP1Elo}
                   {opponentSlot === 1 && pairing.opponentIsBot && (
                     <span className="bot-tag" aria-label={t.game.aiOpponent}>{t.game.bot}</span>
                   )}
-                </>
-              ),
-            }}
-            p2={{
-              name: mpP2Name,
-              score: mpState.scores[2],
-              avatar: mpP2Avatar,
-              clock: p2Clock,
-              rating: (
-                <>
-                  {mpP2Elo}
-                  {opponentSlot === 2 && pairing.opponentIsBot && (
-                    <span className="bot-tag" aria-label={t.game.aiOpponent}>{t.game.bot}</span>
-                  )}
-                </>
-              ),
-            }}
-          />
-          <SidePanel
-            side="left"
-            player={1}
-            active={!mpState.finished && mpState.current === 1}
-            name={mpP1Name}
-            score={mpState.scores[1]}
-            avatar={mpP1Avatar}
-            theme={theme}
-            stats={null}
-            featured={myNum === 1 ? myFeatured : null}
-            onFeaturedClick={() => setAchievementsOpen(true)}
-            ratingSlot={p1Clock}
-            belowAvatar={
-              <span className="player-elo">
-                {mpP1Elo}
-                {opponentSlot === 1 && pairing.opponentIsBot && (
-                  <span className="bot-tag" aria-label={t.game.aiOpponent}>{t.game.bot}</span>
-                )}
-              </span>
-            }
-          />
+                </span>
+              }
+            />
+          )}
           <Board
             state={mpState}
             onDotClick={handleMpDotClick}
@@ -2372,27 +2425,29 @@ export default function App() {
             showHints={false}
             scoreEvent={scoreEvent}
           />
-          <SidePanel
-            side="right"
-            player={2}
-            active={!mpState.finished && mpState.current === 2}
-            name={mpP2Name}
-            score={mpState.scores[2]}
-            avatar={mpP2Avatar}
-            theme={theme}
-            stats={null}
-            featured={myNum === 2 ? myFeatured : null}
-            onFeaturedClick={() => setAchievementsOpen(true)}
-            ratingSlot={p2Clock}
-            belowAvatar={
-              <span className="player-elo">
-                {mpP2Elo}
-                {opponentSlot === 2 && pairing.opponentIsBot && (
-                  <span className="bot-tag" aria-label={t.game.aiOpponent}>{t.game.bot}</span>
-                )}
-              </span>
-            }
-          />
+          {!phoneLayout && (
+            <SidePanel
+              side="right"
+              player={2}
+              active={!mpState.finished && mpState.current === 2}
+              name={mpP2Name}
+              score={mpState.scores[2]}
+              avatar={mpP2Avatar}
+              theme={theme}
+              stats={null}
+              featured={myNum === 2 ? myFeatured : null}
+              onFeaturedClick={() => setAchievementsOpen(true)}
+              ratingSlot={p2Clock}
+              belowAvatar={
+                <span className="player-elo">
+                  {mpP2Elo}
+                  {opponentSlot === 2 && pairing.opponentIsBot && (
+                    <span className="bot-tag" aria-label={t.game.aiOpponent}>{t.game.bot}</span>
+                  )}
+                </span>
+              }
+            />
+          )}
         </div>
         {myNum && !mpState.finished && (
           <div className="ingame-actions">
@@ -2736,7 +2791,7 @@ export default function App() {
           <div className="daily-loading-overlay" role="status" aria-live="polite">
             <div className="daily-loading-card">
               <span className="daily-loading-spinner" aria-hidden="true" />
-              <span>Loading today&rsquo;s puzzle…</span>
+              <span>{t.game.dailyLoading}</span>
             </div>
           </div>
         )}
@@ -2745,7 +2800,7 @@ export default function App() {
             <div className="rules-card daily-error-card" onClick={(e) => e.stopPropagation()}>
               <p>{dailyError}</p>
               <button className="rules-got-it" onClick={() => setDailyError(null)}>
-                OK
+                {t.common.ok}
               </button>
             </div>
           </div>
@@ -2870,19 +2925,22 @@ export default function App() {
   const p1Name =
     user && cloudProfile?.displayName
       ? cloudProfile.displayName
-      : settings.playerName || 'Player 1';
+      : settings.playerName || DEFAULT_P1_NAME;
   const p2Name =
     config.mode === 'ai' || config.mode === 'daily'
       ? aiOpponentDisplayName(config.difficulty ?? 1, t)
-      : settings.opponentName || 'Player 2';
+      : settings.opponentName || DEFAULT_P2_NAME;
+  // Raw names key the stats; labels are what the player sees.
+  const p1Label = displayPlayerName(p1Name, t);
+  const p2Label = displayPlayerName(p2Name, t);
 
   const p1Avatar: 'human' | { kind: 'guest'; label: string } = hotseat
-    ? { kind: 'guest', label: p1Name.slice(0, 1).toUpperCase() }
+    ? { kind: 'guest', label: p1Label.slice(0, 1).toUpperCase() }
     : 'human';
   const p2Avatar: { kind: 'ai'; level: Difficulty } | { kind: 'guest'; label: string } =
     (config.mode === 'ai' || config.mode === 'daily') && config.difficulty
       ? { kind: 'ai', level: config.difficulty }
-      : { kind: 'guest', label: p2Name.slice(0, 1).toUpperCase() };
+      : { kind: 'guest', label: p2Label.slice(0, 1).toUpperCase() };
 
   const showOver = state.finished;
   const disabled =
@@ -2895,7 +2953,8 @@ export default function App() {
   const p2StatsRow = config.mode === 'hotseat' ? getPlayerRow(p2Name) : null;
 
   const aiResignAvailable = (config.mode === 'ai' || config.mode === 'daily') && !state.finished;
-  const backHandler = config.mode === 'ai' || config.mode === 'daily' ? onAiBackPressed : backToMenu;
+  const backHandler =
+    config.mode === 'ai' || config.mode === 'daily' ? onAiBackPressed : onHotseatBackPressed;
 
   return (
     <div className="game-screen">
@@ -2955,26 +3014,31 @@ export default function App() {
         </button>
       </div>
       <div className="game-body">
-        <ScoreStrip
-          current={state.finished ? null : state.current}
-          theme={theme}
-          colorSwap={colorSwap}
-          p1={{ name: p1Name, score: state.scores[1], avatar: p1Avatar }}
-          p2={{ name: p2Name, score: state.scores[2], avatar: p2Avatar, thinking }}
-        />
-        <SidePanel
-          side="left"
-          player={1}
-          active={!state.finished && state.current === 1}
-          name={p1Name}
-          score={state.scores[1]}
-          avatar={p1Avatar}
-          theme={theme}
-          colorSwap={colorSwap}
-          stats={p1Stats}
-          featured={myFeatured}
-          onFeaturedClick={() => setAchievementsOpen(true)}
-        />
+        {phoneLayout && (
+          <ScoreStrip
+            onFeaturedClick={() => setAchievementsOpen(true)}
+            current={state.finished ? null : state.current}
+            theme={theme}
+            colorSwap={colorSwap}
+            p1={{ name: p1Label, score: state.scores[1], avatar: p1Avatar, featured: myFeatured }}
+            p2={{ name: p2Label, score: state.scores[2], avatar: p2Avatar, thinking }}
+          />
+        )}
+        {!phoneLayout && (
+          <SidePanel
+            side="left"
+            player={1}
+            active={!state.finished && state.current === 1}
+            name={p1Label}
+            score={state.scores[1]}
+            avatar={p1Avatar}
+            theme={theme}
+            colorSwap={colorSwap}
+            stats={p1Stats}
+            featured={myFeatured}
+            onFeaturedClick={() => setAchievementsOpen(true)}
+          />
+        )}
         <Board
           state={state}
           onDotClick={handleDotClick}
@@ -2986,24 +3050,26 @@ export default function App() {
           showHints={ringsVisible && !disabled}
           scoreEvent={scoreEvent}
         />
-        <SidePanel
-          side="right"
-          player={2}
-          active={!state.finished && state.current === 2}
-          thinking={thinking}
-          name={p2Name}
-          score={state.scores[2]}
-          avatar={p2Avatar}
-          theme={theme}
-          colorSwap={colorSwap}
-          stats={p2StatsRow}
-        />
+        {!phoneLayout && (
+          <SidePanel
+            side="right"
+            player={2}
+            active={!state.finished && state.current === 2}
+            thinking={thinking}
+            name={p2Label}
+            score={state.scores[2]}
+            avatar={p2Avatar}
+            theme={theme}
+            colorSwap={colorSwap}
+            stats={p2StatsRow}
+          />
+        )}
       </div>
       {aiResignAvailable && (
         <div className="ingame-actions">
           <button
             className="btn-resign-inline"
-            onClick={onConfirmResign}
+            onClick={() => setResignConfirmOpen(true)}
             title={t.game.resignTitle}
           >
             {t.game.resign}
@@ -3017,8 +3083,9 @@ export default function App() {
           mode={config.mode}
           shape={config.shape}
           difficulty={config.difficulty}
-          p1Name={p1Name}
-          p2Name={p2Name}
+          finishedReason={offlineResigned ? 'resign' : undefined}
+          p1Name={p1Label}
+          p2Name={p2Label}
           unlock={unlockInfo}
           onPlayAgain={playAgain}
           onMenu={backToMenu}
@@ -3035,6 +3102,31 @@ export default function App() {
           myUid={sbUser?.uid ?? null}
           onClose={() => setPuzzleLbOpen(false)}
         />
+      )}
+      {hotseatLeaveOpen && config.mode === 'hotseat' && !state.finished && (
+        <div
+          className="confirm-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setHotseatLeaveOpen(false)}
+        >
+          <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
+            <h3>{t.game.hotseatLeaveTitle}</h3>
+            <p>{t.game.hotseatLeaveBody}</p>
+            <div className="confirm-actions">
+              <button onClick={() => setHotseatLeaveOpen(false)}>{t.common.cancel}</button>
+              <button
+                className="danger"
+                onClick={() => {
+                  setHotseatLeaveOpen(false);
+                  backToMenu();
+                }}
+              >
+                {t.game.hotseatLeaveConfirm}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       {resignConfirmOpen && (config.mode === 'ai' || config.mode === 'daily') && !state.finished && (
         <div

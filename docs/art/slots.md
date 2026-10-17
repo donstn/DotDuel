@@ -48,3 +48,21 @@ OBJECT: a small pill button. A single fully rounded pill, exactly 3:1 proportion
 - Decorated middle: "Keep the ends exactly as they are, but make the middle plain and uniform, identical from left to right."
 - Objects fused: "Exactly N separate objects with magenta between them."
 - Wrong proportions: "Make it much wider and lower, exactly 6 to 1." (Painted proportions matter less than plain middles — only the middle stretches.)
+
+## primaryButton — stretch (process with `:stretch`)
+
+```
+OBJECT: a PRIMARY action button, the most important button in the game. A wide, low, horizontal plate with gently rounded ends, exactly 6:1 proportions. Same construction as the menu button but clearly more important: inlaid with the theme's bright accent material, glowing softly from within, with a bright rim. DECORATED ENDS only in the left 12% and right 12% (small ornament + one large accent piece, mirrored). PLAIN MIDDLE (central 76%) completely plain and uniform, so dark text on it is easy to read. LONG EDGES: one thin, straight, simple rim, identical along the whole length.
+```
+
+## cardFrame — nine-slice (process with `:nine`)
+
+```
+OBJECT: an empty CARD FRAME, a tall rectangular panel with softly rounded corners, about 3:4. It will be stretched in BOTH directions (nine-slice): decoration ONLY inside each of the four corners, within the outer 15% of width and height, mirrored; between the corners all four edges are one thin, simple, straight raised rim, perfectly uniform; the centre is completely plain, very dark base material with only a faint uniform texture. No text, symbols, ornaments or glow inside.
+```
+
+## titleBanner — stretch (process with `:stretch`)
+
+```
+OBJECT: a TITLE BANNER for screen headings, a slim horizontal carved ribbon or plaque, exactly 5:1. DECORATED ENDS only in the left 15% and right 15% (small leaves + one tiny accent, mirrored). PLAIN MIDDLE completely plain, uniform base material, so light text on it is easy to read. Straight, simple long edges.
+```

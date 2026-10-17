@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LANGS, useLang, useT } from '../i18n';
 
 interface Props {
@@ -27,6 +27,14 @@ export function AppFooter({
   const t = useT();
   const { lang, setLang } = useLang();
   const [langOpen, setLangOpen] = useState(false);
+  useEffect(() => {
+    if (!langOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLangOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [langOpen]);
   return (
     <footer className="app-footer">
       {langOpen && <div className="menu-lang-backdrop" onClick={() => setLangOpen(false)} />}

@@ -82,7 +82,10 @@ export function SidePanel({
     if (prevScoreRef.current === score) return;
     const increased = score > prevScoreRef.current;
     prevScoreRef.current = score;
-    if (!increased) return;
+    if (!increased) {
+      setScoreBump(false);
+      return;
+    }
     setScoreBump(true);
     const t = window.setTimeout(() => setScoreBump(false), 400);
     return () => window.clearTimeout(t);

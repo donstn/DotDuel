@@ -268,6 +268,10 @@ export function GameOver({
   } else if (state.winner === 2) {
     title = winText(p2Name, t);
   }
+  // Offline (vs-AI / daily) resign: only the human can resign there.
+  if (mode !== 'multiplayer' && finishedReason === 'resign') {
+    subtitle = t.gameOver.youResigned;
+  }
 
   let titleClass = '';
   if (humanWon && beatImpossible && isFinalShape) {
@@ -279,9 +283,11 @@ export function GameOver({
   }
 
   // Share-a-result (strategic plan Phase 3): available on every mode and
-  // outcome except aborted matches and daily attempts still being saved.
+  // outcome except aborted / resigned games and daily attempts still being saved.
   const shareData: ShareResultData | null =
-    finishedReason !== 'aborted' && (mode !== 'daily' || !!dailyResult)
+    finishedReason !== 'aborted' &&
+    finishedReason !== 'resign' &&
+    (mode !== 'daily' || !!dailyResult)
       ? {
           mode,
           shape,

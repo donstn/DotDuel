@@ -98,7 +98,8 @@ export function SendInviteDialog({ friend, friendStatus, hasActivePairing, onClo
       await sendInvite({ toUids: [friend.uid], shape, timeControl, fromRanked });
       setPhase('waiting');
     } catch (e) {
-      setError((e as { message?: string } | undefined)?.message ?? t.invite.inviteFailed);
+      console.warn('sendInvite failed:', e);
+      setError(t.invite.inviteFailed);
       setPhase('form');
     }
   };

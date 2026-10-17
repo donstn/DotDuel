@@ -21,6 +21,10 @@ export const es: Messages = {
     d: 'E',
     l: 'D',
     you: 'Tú',
+    ok: 'OK',
+    done: 'Hecho',
+    advertisement: 'Publicidad',
+    rotateToPortrait: 'Gira el teléfono en vertical para jugar a DotDuel',
   },
 
   lang: {
@@ -157,12 +161,24 @@ export const es: Messages = {
     bot: 'BOT',
     aiOpponent: 'Oponente IA',
     moveFailed: 'La jugada no se envió — inténtalo de nuevo',
+    hotseatLeaveTitle: '¿Salir de esta partida?',
+    hotseatLeaveBody: 'Se perderá la partida en curso.',
+    hotseatLeaveConfirm: 'Salir',
+    dailyLoading: 'Cargando el puzle diario…',
+    dailyLoadFailed: 'No se pudo cargar el puzle diario. Revisa tu conexión e inténtalo de nuevo.',
+    dotEmptyPlace: (r: number, p: number) => `Fila ${r}, posición ${p}, vacía. Coloca tu punto.`,
+    dotEmpty: (r: number, p: number) => `Fila ${r}, posición ${p}, vacía.`,
+    dotOwned: (r: number, p: number, pl: number) => `Fila ${r}, posición ${p}, jugador ${pl}.`,
+    dotClaim: (r: number, p: number, pl: number, pts: number) =>
+      `Fila ${r}, posición ${p}, jugador ${pl}. Reclamar línea de ${pts} punto${pts === 1 ? '' : 's'}.`,
+    scoreAria: (n1: string, s1: number, n2: string, s2: number) =>
+      `Marcador: ${n1} ${s1}, ${n2} ${s2}`,
   },
 
   rules: {
     aria: 'Cómo jugar a DotDuel',
     close: 'Cerrar reglas',
-    title: 'Cómo jugar a DotDuel',
+    title: 'Reglas',
     tagline: 'Juega por turnos. Completa líneas. Consigue más puntos.',
     goalH: 'Objetivo',
     goalP: 'Consigue más puntos que tu oponente.',
@@ -953,6 +969,10 @@ export const es: Messages = {
     sentH: 'Enviadas',
     waitingForThem: 'esperando su respuesta',
     cancel: 'Cancelar',
+    blockedH: 'Bloqueados',
+    unblock: 'Desbloquear',
+    unblockConfirm: (name: string) =>
+      `¿Desbloquear a ${name}? Podrá volver a enviarte solicitudes de amistad e invitaciones.`,
   },
 
   invite: {
@@ -1265,7 +1285,7 @@ export const es: Messages = {
   sidePanel: {
     featuredTitle: (title: string) => `${title} — toca para ver los logros`,
     noGames: 'aún no hay partidas',
-    botLabel: (level: string) => `Bot · ${level}`,
+    botLabel: (level: string) => `Bot (${level})`,
     botShort: (level: number) => `Bot N${level}`,
     hotseat: 'Partida local',
     hotseatShort: 'PL',

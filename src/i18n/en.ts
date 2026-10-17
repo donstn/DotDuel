@@ -30,6 +30,10 @@ export const en = {
     l: 'L',
     // Fallback display name for a signed-in player without a chosen game name.
     you: 'You',
+    ok: 'OK',
+    done: 'Done',
+    advertisement: 'Advertisement',
+    rotateToPortrait: 'Please rotate your phone to portrait to play DotDuel',
   },
 
   // Language picker (top-right, next to the theme button).
@@ -59,7 +63,7 @@ export const en = {
   // Home menu and its sub-screens.
   menu: {
     // One-line rules blurb under the title (shown to signed-out visitors).
-    tagline: 'Score more points than opponent to win',
+    tagline: 'Score more points than your opponent to win',
     // Signed-in greeting prefix; the bold {name} and the tagline follow in the UI.
     welcomeLead: 'Welcome,',
 
@@ -186,13 +190,25 @@ export const en = {
     bot: 'BOT',
     aiOpponent: 'AI opponent',
     moveFailed: "Move didn't go through — try again",
+    hotseatLeaveTitle: 'Leave this game?',
+    hotseatLeaveBody: 'The game in progress will be lost.',
+    hotseatLeaveConfirm: 'Leave',
+    dailyLoading: 'Loading today’s puzzle…',
+    dailyLoadFailed: 'Couldn\'t load today\'s puzzle. Check your connection and try again.',
+    dotEmptyPlace: (r: number, p: number) => `Row ${r}, position ${p}, empty. Place your dot.`,
+    dotEmpty: (r: number, p: number) => `Row ${r}, position ${p}, empty.`,
+    dotOwned: (r: number, p: number, pl: number) => `Row ${r}, position ${p}, Player ${pl}.`,
+    dotClaim: (r: number, p: number, pl: number, pts: number) =>
+      `Row ${r}, position ${p}, Player ${pl}. Claim line worth ${pts} point${pts === 1 ? '' : 's'}.`,
+    scoreAria: (n1: string, s1: number, n2: string, s2: number) =>
+      `Score: ${n1} ${s1}, ${n2} ${s2}`,
   },
 
   // Rules popover (How to play).
   rules: {
     aria: 'How to play DotDuel',
     close: 'Close rules',
-    title: 'How to play DotDuel',
+    title: 'Rules',
     tagline: 'Take turns. Complete lines. Get the most points.',
     goalH: 'Goal',
     goalP: 'Score more points than your opponent.',
@@ -583,6 +599,10 @@ export const en = {
     sentH: 'Sent',
     waitingForThem: 'waiting for them',
     cancel: 'Cancel',
+    blockedH: 'Blocked',
+    unblock: 'Unblock',
+    unblockConfirm: (name: string) =>
+      `Unblock ${name}? They'll be able to send you friend requests and game invites again.`,
   },
 
   // Send-invite dialog + incoming-invite toast.
@@ -910,7 +930,7 @@ export const en = {
   sidePanel: {
     featuredTitle: (title: string) => `${title} — tap for achievements`,
     noGames: 'no games yet',
-    botLabel: (level: string) => `Bot · ${level}`,
+    botLabel: (level: string) => `Bot (${level})`,
     botShort: (level: number) => `Bot L${level}`,
     hotseat: 'Hot-seat',
     hotseatShort: 'HS',

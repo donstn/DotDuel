@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { useT } from '../i18n';
 import {
   ADSENSE_CLIENT,
   ADSENSE_SLOT,
@@ -46,6 +47,7 @@ interface Props {
  * Remounting the component (e.g. keyed by screen) yields a fresh ad.
  */
 export function AdBanner({ slot = ADSENSE_SLOT, placement = 'menu' }: Props) {
+  const t = useT();
   const initializedRef = useRef(false);
   // In the native app, AdSense is forbidden — a native AdMob banner is shown
   // instead (see src/nativeAds.ts). Treating native as "not allowed" makes this
@@ -82,7 +84,7 @@ export function AdBanner({ slot = ADSENSE_SLOT, placement = 'menu' }: Props) {
   if (!allowed) {
     if (!ADS_PREVIEW_PLACEHOLDER) return null;
     return (
-      <div className={`${cls} ad-slot--preview`} aria-label="Advertisement (preview)">
+      <div className={`${cls} ad-slot--preview`} role="complementary" aria-label={t.common.advertisement}>
         <span className="ad-slot-preview-id">AD&nbsp;#{adNum || '—'}</span>
         <span className="ad-slot-preview-text">{placement} placeholder</span>
       </div>
@@ -90,7 +92,7 @@ export function AdBanner({ slot = ADSENSE_SLOT, placement = 'menu' }: Props) {
   }
 
   return (
-    <div className={cls} aria-label="Advertisement">
+    <div className={cls} role="complementary" aria-label={t.common.advertisement}>
       <ins
         className="adsbygoogle"
         style={{ display: 'block', width: '100%' }}

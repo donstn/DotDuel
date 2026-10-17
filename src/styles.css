@@ -4785,16 +4785,20 @@ h1, h2, h3,
     line-height: 1.15;
     letter-spacing: 0.01em;
     color: var(--text);
-    /* Break between words; a word too long for the line hyphenates (lang is
-       set on <html>) rather than splitting mid-letter. */
+    /* Two lines, breaking between words (names with an over-long word use
+       .ss-name-one instead — see ScoreStrip.tsx). */
     overflow-wrap: break-word;
-    hyphens: auto;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
+  .ss-name.ss-name-one {
+    display: block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
   .ss-rating {
     display: flex;
     align-items: center;

@@ -107,7 +107,9 @@ function StripSide({
         )}
       </div>
       <div className="ss-who">
-        <div className="ss-name" title={p.name}>{p.name}</div>
+        <div className={`ss-name${hasLongWord(p.name) ? ' ss-name-one' : ''}`} title={p.name}>
+          {p.name}
+        </div>
         {(p.rating || p.featured) && (
           <div className="ss-rating">
             {p.rating}
@@ -126,6 +128,13 @@ function StripSide({
       </div>
     </div>
   );
+}
+
+// A word longer than the strip's text column can't wrap cleanly (no
+// hyphenation for most of our languages) — such names go on one line with "…".
+const LONG_WORD = 10;
+function hasLongWord(name: string): boolean {
+  return name.split(/[\s-]+/).some((w) => w.length > LONG_WORD);
 }
 
 function StripScore({ value, color, align }: { value: number; color: 1 | 2; align: 'start' | 'end' }) {

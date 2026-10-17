@@ -1589,7 +1589,8 @@ export default function App() {
   // screen/menu level); returns false only once there's truly nothing left
   // to back through, so the caller can exit the app / let the browser leave.
   const performInAppBack = (): boolean => {
-    if (document.querySelector('[role="dialog"]')) {
+    // Open dialog or popup menu (footer language list): close it first.
+    if (document.querySelector('[role="dialog"], [role="menu"]')) {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       return true;
     }

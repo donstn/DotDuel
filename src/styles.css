@@ -831,18 +831,17 @@ button {
   line-height: 1.45;
 }
 
-/* Forest & Pearl: one painted sign (DotDuel crest + empty wooden panel) with
-   the greeting set into the panel. The panel's clear interior, measured on
-   header-combined.webp (987×456), is x 9–91% / y 60–91.5%; the crest's
-   centre drop sits just above 60%. Font scales with the sign's own width
-   (cqw) so the text keeps the same fit at every size. */
+/* Painted header sign (crest + empty panel) with the greeting set into the
+   panel. Aspect and the panel's text-safe box come from the theme's art
+   contract (src/themeArt.ts → --sign-* vars). Font scales with the sign's own
+   width (cqw) so the text keeps the same fit at every size. */
 .header-sign {
   position: relative;
   width: min(100%, 470px);
-  aspect-ratio: 987 / 456;
+  aspect-ratio: var(--sign-aspect);
   /* Clears the absolutely positioned language + theme buttons, whose corner
      band the sign's full-width edges reach into. */
-  margin-top: 36px;
+  margin-top: 30px;
   container-type: inline-size;
   filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
 }
@@ -858,10 +857,10 @@ button {
 }
 .header-sign-text {
   position: absolute;
-  left: 9%;
-  right: 9%;
-  top: 60%;
-  bottom: 8.5%;
+  left: var(--sign-text-l);
+  right: var(--sign-text-r);
+  top: var(--sign-text-t);
+  bottom: var(--sign-text-b);
   margin: 0;
   display: flex;
   align-items: center;
@@ -5344,6 +5343,149 @@ html[data-theme="forest-pearl"] .menu-auth-btn-cta {
 
 html[data-theme="forest-pearl"] .menu-auth-btn-cta:hover {
   background: rgba(10, 36, 20, 0.82);
+}
+
+/* ---- Painted plaque buttons (themes whose art contract has menuButton /
+   pillButton; see src/themeArt.ts). Three-slice border-image: the painted end
+   caps keep their proportions (cap width = height × --*-cap-*), only the plain
+   middle stretches. Height is fixed so caps never distort vertically. Text sits
+   between the caps; pressed / locked states are CSS, not extra art. */
+html[data-art~="menu-button"] .menu {
+  row-gap: 12px;
+}
+html[data-art~="menu-button"] .menu-shelves {
+  gap: 8px;
+}
+html[data-art~="menu-button"] .menu-shelf {
+  --plaque-h: 58px;
+  --cap-l: calc(var(--plaque-h) * var(--menu-btn-cap-l));
+  --cap-r: calc(var(--plaque-h) * var(--menu-btn-cap-r));
+  height: var(--plaque-h);
+  padding: 0 calc(var(--cap-r) * 0.9) 0 calc(var(--cap-l) * 0.9);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  border-image-source: var(--menu-btn-img);
+  border-image-slice: var(--menu-btn-slice);
+  border-image-width: 0 var(--cap-r) 0 var(--cap-l);
+  border-image-repeat: stretch;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+}
+html[data-art~="menu-button"] .menu-shelf::before {
+  display: none;
+}
+html[data-art~="menu-button"] .menu-shelf:hover:not(.disabled):not(:disabled) {
+  background: none;
+  box-shadow: none;
+  transform: translateY(-1px);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) brightness(1.12);
+}
+html[data-art~="menu-button"] .menu-shelf:active:not(.disabled):not(:disabled) {
+  transform: translateY(1px);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)) brightness(0.95);
+}
+html[data-art~="menu-button"] .menu-shelf.disabled,
+html[data-art~="menu-button"] .menu-shelf:disabled {
+  opacity: 0.6;
+  filter: grayscale(0.7) brightness(0.8);
+}
+html[data-art~="menu-button"] .menu-shelf-inner {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  gap: 10px;
+}
+html[data-art~="menu-button"] .menu-shelf-ic.is-avatar img,
+html[data-art~="menu-button"] .menu-shelf-ic.is-avatar svg {
+  width: 40px;
+  height: 40px;
+}
+html[data-art~="menu-button"] .menu-shelf-body {
+  flex: 0 1 auto;
+  align-items: center;
+  text-align: center;
+  gap: 1px;
+}
+/* Has an icon (shape / bot pickers): text aligns left beside it. */
+html[data-art~="menu-button"] .menu-shelf-ic + .menu-shelf-body {
+  align-items: flex-start;
+  text-align: left;
+}
+html[data-art~="menu-button"] .menu-shelf-body strong,
+html[data-art~="menu-button"] .menu-shelf-sub {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-art~="menu-button"] .menu-shelf-body strong {
+  font-size: 1.06rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--p2-glow);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9), 0 0 10px rgba(var(--p1-rgb-bright), 0.35);
+}
+html[data-art~="menu-button"] .menu-shelf-sub {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+}
+
+html[data-art~="pill-button"] .menu-auth-row {
+  gap: 6px 4px;
+  margin-bottom: 14px;
+}
+html[data-art~="pill-button"] .menu-auth-btn,
+html[data-art~="pill-button"] .menu-auth-btn-cta,
+html[data-art~="pill-button"] .menu-auth-btn:hover,
+html[data-art~="pill-button"] .menu-auth-btn-cta:hover {
+  --pill-h: 36px;
+  --cap-l: calc(var(--pill-h) * var(--pill-btn-cap-l));
+  --cap-r: calc(var(--pill-h) * var(--pill-btn-cap-r));
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: var(--pill-h);
+  padding: 0 calc(var(--cap-r) * 0.85) 0 calc(var(--cap-l) * 0.85);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  border-image-source: var(--pill-btn-img);
+  border-image-slice: var(--pill-btn-slice);
+  border-image-width: 0 var(--cap-r) 0 var(--cap-l);
+  border-image-repeat: stretch;
+  color: var(--p2-glow);
+  font-weight: 600;
+  white-space: nowrap;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+html[data-art~="pill-button"] .menu-auth-btn:hover {
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45)) brightness(1.12);
+}
+html[data-art~="pill-button"] .menu-auth-btn-cta {
+  color: var(--accent);
+}
+
+/* Short phones (iPhone SE class): the ad band + footer eat ~130px, so shrink
+   the sign and plaques enough that the whole home menu still fits. */
+@media (max-height: 640px) {
+  html[data-art~="menu-button"] .menu { row-gap: 8px; }
+  html[data-art~="menu-button"] .menu-shelf { --plaque-h: 46px; }
+  html[data-art~="menu-button"] .menu-shelf-body strong { font-size: 0.98rem; }
+  html[data-art~="menu-button"] .menu-shelf-ic.is-avatar img,
+  html[data-art~="menu-button"] .menu-shelf-ic.is-avatar svg {
+    width: 32px;
+    height: 32px;
+  }
+  html[data-art~="pill-button"] .menu-auth-btn,
+  html[data-art~="pill-button"] .menu-auth-btn-cta,
+  html[data-art~="pill-button"] .menu-auth-btn:hover,
+  html[data-art~="pill-button"] .menu-auth-btn-cta:hover { --pill-h: 31px; }
+  .header-sign { width: min(100%, 250px); }
 }
 
 .app-footer-version {

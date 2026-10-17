@@ -30,6 +30,29 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.14.0',
+    date: '2026-10-17',
+    highlight: 'A fresh look for the menu',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'The home menu has a new carved-wood look: one sign with your greeting, wooden buttons, and everything fits on one screen.',
+      },
+      {
+        kind: 'changed',
+        text: 'Language and theme pickers moved to the bottom bar.',
+      },
+      {
+        kind: 'changed',
+        text: 'On phones, the score is now one bar above the board, with both full names, ratings and a big score in the middle.',
+      },
+      {
+        kind: 'fixed',
+        text: 'In ranked games against bots, who moves first is now a coin flip, so you no longer always start.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.13.0',
     date: '2026-10-11',
     highlight: 'Daily results calendar',

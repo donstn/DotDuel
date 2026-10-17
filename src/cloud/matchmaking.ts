@@ -71,8 +71,9 @@ export async function joinQueue(
 
 // Ask the server to spawn a bot match for the caller now (they've waited long
 // enough). Idempotent server-side: no-ops if already paired. request-bot-match
-// picks the rating-closest bot, makes the human P1, writes the pairing — the
-// client routes in via watchPairing exactly like a human match.
+// picks the rating-closest bot, coin-flips who moves first (the server plays
+// the bot's opening move when it's P1), writes the pairing — the client
+// routes in via watchPairing exactly like a human match.
 export async function requestBotMatch(): Promise<'human' | 'bot' | 'skip'> {
   const { data, error } = await supabase.functions.invoke('request-bot-match');
   if (error) {

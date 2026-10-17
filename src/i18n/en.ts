@@ -36,11 +36,9 @@ export const en = {
     rotateToPortrait: 'Please rotate your phone to portrait to play DotDuel',
   },
 
-  // Language picker (top-right, next to the theme button).
+  // Language picker (footer, menu screens).
   lang: {
     label: 'Language',
-    english: 'English',
-    lithuanian: 'Lietuvių',
   },
 
   // Board shapes — used in the shape picker, setup screens and player tags.
@@ -73,7 +71,6 @@ export const en = {
     profile: 'Profile',
     signOut: 'Sign out',
     signIn: 'Sign in',
-    shareDotDuel: 'Share DotDuel',
 
     // Top-level category shelves.
     singlePlayer: 'Single player',
@@ -491,22 +488,8 @@ export const en = {
     close: 'Close',
     titleGate: 'Sign in to play',
     titleSignIn: 'Sign in',
-    titleSignUp: 'Create account',
     google: 'Continue with Google',
-    orEmail: 'or with email',
-    emailPlaceholder: 'you@example.com',
-    passwordPlaceholder: 'Password (min 6 chars)',
-    confirmPlaceholder: 'Confirm password',
-    submitSignIn: 'Sign in',
-    submitSignUp: 'Create account',
-    newHere: 'New here?',
-    createAccount: 'Create an account',
-    haveOne: 'Already have one?',
-    signInLink: 'Sign in',
     tryAnon: 'Want to try anonymous without signing in?',
-    accountCreated: (email: string) =>
-      `Account created. If email confirmation is on, check ${email} (and spam) to verify.`,
-    errPasswordsMatch: "Passwords don't match.",
     errInvalidCreds: 'Email or password is incorrect.',
     errAlreadyRegistered: 'That email is already registered. Sign in instead.',
     errWeakPassword: 'Password must be at least 6 characters.',

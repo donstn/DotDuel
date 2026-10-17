@@ -93,7 +93,11 @@ function CardInner({
 }) {
   return (
     <span className="menu-shelf-inner">
-      {icon && <span className={`menu-shelf-ic ${iconClass}`}>{icon}</span>}
+      {icon && (
+        <span className={`menu-shelf-ic ${iconClass}`} aria-hidden="true">
+          {icon}
+        </span>
+      )}
       <span className="menu-shelf-body">
         <strong>{title}</strong>
         {sub && <span className="menu-shelf-sub">{sub}</span>}

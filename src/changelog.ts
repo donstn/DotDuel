@@ -30,6 +30,45 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.15.0',
+    date: '2026-10-17',
+    highlight: 'Polish before testing',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Buttons, pop-ups and screen titles have the same carved-wood look as the menu.',
+      },
+      {
+        kind: 'fixed',
+        text: 'The results screen scrolls on small phones, so Share is always reachable.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Resigning asks first, and so does leaving a two-player game midway.',
+      },
+      {
+        kind: 'fixed',
+        text: 'In ranked games where the bot moves first, older app versions no longer abort the match.',
+      },
+      {
+        kind: 'added',
+        text: 'You can unblock players again in Friends → All.',
+      },
+      {
+        kind: 'changed',
+        text: 'More of the game is translated, including default player names.',
+      },
+      {
+        kind: 'changed',
+        text: 'The app downloads far less; the artwork is about 8× smaller.',
+      },
+      {
+        kind: 'changed',
+        text: 'Achievement pop-ups are paused for now; achievements still unlock.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.14.0',
     date: '2026-10-17',
     highlight: 'A fresh look for the menu',

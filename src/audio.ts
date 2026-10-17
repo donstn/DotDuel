@@ -1,11 +1,12 @@
 // Single module owning all game audio — mirrors telemetry.ts/ads.ts (one
 // concern, small function-call API) rather than spreading AudioContext
 // handling across components. Two halves: synthesized SFX cues (below),
-// and forest-ambiance playback (further down).
+// and the theme's ambience loops (further down; files from themeArt).
 
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import type { ThemeId } from './theme';
+import { themeArt } from './themeArt';
 
 export type SfxName = 'place' | 'lineComplete' | 'claim' | 'win' | 'loss' | 'draw' | 'click';
 
@@ -19,16 +20,12 @@ let activeTheme: ThemeId | null = null;
 // notes, and a limiter keeps that combination from ever clipping.
 let sfxLimiter: DynamicsCompressorNode | null = null;
 
-const AMBIANCE_FILES = {
-  wind: '/audio/forest-pearl/ambience-wind.mp3',
-  stream: '/audio/forest-pearl/ambience-stream.mp3',
-  birds: '/audio/forest-pearl/ambience-birds.mp3',
-} as const;
+// Ambience loop files come from the active theme's art contract
+// (themeArt().ambience); themes without one stay silent.
+type AmbianceKey = 'wind' | 'stream' | 'birds';
 
-type AmbianceKey = keyof typeof AMBIANCE_FILES;
-
-const ambianceBuffers: Partial<Record<AmbianceKey, AudioBuffer>> = {};
-let ambianceBuffersRequested = false;
+let ambianceBuffers: Partial<Record<AmbianceKey, AudioBuffer>> = {};
+let ambianceLoadedFor: ThemeId | null = null;
 
 // Real CC0 field-recording clips for the win/loss outcome cues (a short
 // spring-stream burst, a short autumn rain-and-wind gust) — these play
@@ -228,16 +225,21 @@ export function playSfx(name: SfxName, opts?: { player?: 1 | 2; lineLength?: num
 }
 
 async function loadAmbianceBuffers(): Promise<void> {
-  if (!ctx || ambianceBuffersRequested) return;
-  ambianceBuffersRequested = true;
-  const entries = Object.entries(AMBIANCE_FILES) as [AmbianceKey, string][];
+  const files = activeTheme ? themeArt(activeTheme).ambience : undefined;
+  if (!ctx || !files || ambianceLoadedFor === activeTheme) return;
+  ambianceLoadedFor = activeTheme;
+  // Fill a local map: a load still in flight from a previous theme writes to
+  // its own map, never into this theme's buffers.
+  const buffers: Partial<Record<AmbianceKey, AudioBuffer>> = {};
+  ambianceBuffers = buffers;
+  const entries = Object.entries(files) as [AmbianceKey, string][];
   await Promise.all(
     entries.map(async ([key, url]) => {
       try {
         const res = await fetch(url);
         const arr = await res.arrayBuffer();
         if (!ctx) return;
-        ambianceBuffers[key] = await ctx.decodeAudioData(arr);
+        buffers[key] = await ctx.decodeAudioData(arr);
       } catch {
         // Missing/failed fetch: that layer just stays silent, others still play.
       }
@@ -367,7 +369,11 @@ function stopAmbianceInternal(): void {
 function syncAmbiance(): void {
   if (ctx && ctx.state === 'suspended') void ctx.resume();
   const shouldPlay =
-    primed && musicEnabled && activeTheme === 'forest-pearl' && !ambiancePausedForBackground;
+    primed &&
+    musicEnabled &&
+    !!activeTheme &&
+    !!themeArt(activeTheme).ambience &&
+    !ambiancePausedForBackground;
   if (shouldPlay) {
     void loadAmbianceBuffers();
     startAmbianceInternal();

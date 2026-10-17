@@ -40,8 +40,6 @@ export const lt: Messages = {
 
   lang: {
     label: 'Kalba',
-    english: 'English',
-    lithuanian: 'Lietuvių',
   },
 
   shapes: {
@@ -68,7 +66,6 @@ export const lt: Messages = {
     profile: 'Profilis',
     signOut: 'Atsijungti',
     signIn: 'Prisijungti',
-    shareDotDuel: 'Dalintis „DotDuel“',
 
     singlePlayer: 'Vienas žaidėjas',
     singlePlayerSub: 'Botai ir dienos galvosūkis.',
@@ -296,6 +293,40 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.15.0': {
+        highlight: 'Paskutiniai šlifavimai prieš testavimą',
+        changes: [
+          'Mygtukai, iškylantieji langai ir ekranų pavadinimai dabar tokio pat raižyto medžio stiliaus kaip meniu.',
+          'Rezultatų ekranas mažuose telefonuose slenka, todėl mygtukas „Dalintis“ visada pasiekiamas.',
+          'Prieš pasiduodant klausiama patvirtinimo, taip pat ir paliekant dviejų žaidėjų žaidimą jo viduryje.',
+          'Reitingo žaidimuose, kai botas eina pirmas, senesnės programėlės versijos nebenutraukia mačo.',
+          'Skiltyje Draugai → Visi vėl galite atblokuoti žaidėjus.',
+          'Išversta daugiau žaidimo teksto, įskaitant numatytuosius žaidėjų vardus.',
+          'Programėlė atsisiunčia daug mažiau – iliustracijos dabar apie 8 kartus mažesnės.',
+          'Pasiekimų pranešimai kol kas išjungti; pasiekimai vis tiek atrakinami.',
+        ],
+      },
+      'Alpha 0.4.14.0': {
+        highlight: 'Atnaujinta meniu išvaizda',
+        changes: [
+          'Pradinis meniu atrodo naujai – raižyto medžio stiliumi: viena iškaba su jūsų pasisveikinimu, mediniai mygtukai, ir viskas telpa viename ekrane.',
+          'Kalbos ir temos pasirinkimas perkeltas į apatinę juostą.',
+          'Telefonuose rezultatas dabar rodomas vienoje juostoje virš lentos: abu pilni vardai, reitingai ir didelis rezultatas viduryje.',
+          'Reitingo žaidimuose su botais, kas eina pirmas, dabar lemia burtai, todėl nebepradedate visada jūs.',
+        ],
+      },
+      'Alpha 0.4.13.0': {
+        highlight: 'Dienos rezultatų kalendorius',
+        changes: [
+          'Dienos galvosūkio lyderių lentelė dabar yra kalendorius. Iš karto matykite kiekvienos dienos nugalėtoją, o bakstelėję dieną – visus tą dieną žaidusius, nuo geriausio iki prasčiausio.',
+        ],
+      },
+      'Alpha 0.4.12.4': {
+        highlight: 'Pataisyta: tinkle padėtas taškas kartais dingdavo',
+        changes: [
+          'Internetiniuose mačuose padėtas taškas kartais dingdavo iškart po padėjimo ir tekdavo jį dėti iš naujo – dėl tinklo trikdžio ėjimas būdavo tyliai prarandamas. Dabar jis automatiškai siunčiamas pakartotinai, o jei vis tiek nepavyksta, pamatysite aiškų pranešimą, užuot taškui tiesiog dingus.',
+        ],
+      },
       'Alpha 0.4.12.3': {
         highlight: 'Žaidėjų kortelės dabar tikrai sutampa',
         changes: [
@@ -875,22 +906,8 @@ export const lt: Messages = {
     close: 'Uždaryti',
     titleGate: 'Prisijunkite, kad žaistumėte',
     titleSignIn: 'Prisijungti',
-    titleSignUp: 'Sukurti paskyrą',
     google: 'Tęsti su Google',
-    orEmail: 'arba su el. paštu',
-    emailPlaceholder: 'jus@pavyzdys.lt',
-    passwordPlaceholder: 'Slaptažodis (min. 6 simboliai)',
-    confirmPlaceholder: 'Pakartokite slaptažodį',
-    submitSignIn: 'Prisijungti',
-    submitSignUp: 'Sukurti paskyrą',
-    newHere: 'Pirmą kartą čia?',
-    createAccount: 'Sukurti paskyrą',
-    haveOne: 'Jau turite paskyrą?',
-    signInLink: 'Prisijungti',
     tryAnon: 'Norite išbandyti anonimiškai neprisijungę?',
-    accountCreated: (email: string) =>
-      `Paskyra sukurta. Jei įjungtas el. pašto patvirtinimas, patikrinkite ${email} (ir šlamšto aplanką).`,
-    errPasswordsMatch: 'Slaptažodžiai nesutampa.',
     errInvalidCreds: 'Neteisingas el. paštas arba slaptažodis.',
     errAlreadyRegistered: 'Šis el. paštas jau užregistruotas. Geriau prisijunkite.',
     errWeakPassword: 'Slaptažodį turi sudaryti bent 6 simboliai.',

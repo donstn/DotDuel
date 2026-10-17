@@ -40,8 +40,6 @@ export const pl: Messages = {
 
   lang: {
     label: 'Język',
-    english: 'English',
-    lithuanian: 'Lietuvių',
   },
 
   shapes: {
@@ -68,7 +66,6 @@ export const pl: Messages = {
     profile: 'Profil',
     signOut: 'Wyloguj się',
     signIn: 'Zaloguj się',
-    shareDotDuel: 'Udostępnij DotDuel',
 
     singlePlayer: 'Jeden gracz',
     singlePlayerSub: 'Boty i codzienna łamigłówka.',
@@ -298,6 +295,40 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.15.0': {
+        highlight: 'Szlify przed testami',
+        changes: [
+          'Przyciski, okienka i tytuły ekranów mają teraz ten sam wygląd rzeźbionego drewna co menu.',
+          'Ekran wyników przewija się na małych telefonach, więc przycisk „Udostępnij” jest zawsze dostępny.',
+          'Poddanie się wymaga potwierdzenia, podobnie jak opuszczenie gry dwuosobowej w trakcie.',
+          'W grach rankingowych, w których bot zaczyna, starsze wersje aplikacji nie przerywają już meczu.',
+          'W Znajomi → Wszyscy znów możesz odblokować graczy.',
+          'Przetłumaczono więcej elementów gry, w tym domyślne imiona graczy.',
+          'Aplikacja pobiera dużo mniej: grafiki są około 8 razy mniejsze.',
+          'Powiadomienia o osiągnięciach są na razie wstrzymane; osiągnięcia nadal się odblokowują.',
+        ],
+      },
+      'Alpha 0.4.14.0': {
+        highlight: 'Odświeżony wygląd menu',
+        changes: [
+          'Menu główne ma nowy wygląd rzeźbionego drewna: jeden szyld z powitaniem, drewniane przyciski, a wszystko mieści się na jednym ekranie.',
+          'Wybór języka i motywu przeniesiono na dolny pasek.',
+          'Na telefonach wynik to teraz jeden pasek nad planszą, z pełnymi imionami, rankingami i dużym wynikiem pośrodku.',
+          'W grach rankingowych z botami o tym, kto zaczyna, decyduje teraz rzut monetą, więc nie zaczynasz już zawsze ty.',
+        ],
+      },
+      'Alpha 0.4.13.0': {
+        highlight: 'Kalendarz wyników dziennych',
+        changes: [
+          'Ranking codziennej łamigłówki jest teraz kalendarzem. Zobacz zwycięzcę każdego dnia na pierwszy rzut oka i dotknij dowolnego dnia, aby zobaczyć wszystkich, którzy go zagrali, od najlepszego do najsłabszego.',
+        ],
+      },
+      'Alpha 0.4.12.4': {
+        highlight: 'Naprawiono: ruch online czasem znikał po wykonaniu',
+        changes: [
+          'W meczach online postawiona kropka czasem znikała zaraz po postawieniu i trzeba było stawiać ją ponownie — przez chwilowy błąd sieci ruch był po cichu odrzucany. Teraz jest automatycznie ponawiany, a jeśli to nie pomoże, zobaczysz jasny komunikat zamiast znikającej kropki.',
+        ],
+      },
       'Alpha 0.4.12.3': {
         highlight: 'Karty graczy w końcu się zgadzają',
         changes: [
@@ -877,22 +908,8 @@ export const pl: Messages = {
     close: 'Zamknij',
     titleGate: 'Zaloguj się, aby zagrać',
     titleSignIn: 'Zaloguj się',
-    titleSignUp: 'Utwórz konto',
     google: 'Kontynuuj z Google',
-    orEmail: 'lub przez e-mail',
-    emailPlaceholder: 'ty@example.com',
-    passwordPlaceholder: 'Hasło (min. 6 znaków)',
-    confirmPlaceholder: 'Potwierdź hasło',
-    submitSignIn: 'Zaloguj się',
-    submitSignUp: 'Utwórz konto',
-    newHere: 'Pierwszy raz tutaj?',
-    createAccount: 'Utwórz konto',
-    haveOne: 'Masz już konto?',
-    signInLink: 'Zaloguj się',
     tryAnon: 'Chcesz spróbować anonimowo, bez logowania?',
-    accountCreated: (email: string) =>
-      `Konto utworzone. Jeśli potwierdzanie e-mailem jest włączone, sprawdź ${email} (i spam), aby zweryfikować.`,
-    errPasswordsMatch: 'Hasła nie są zgodne.',
     errInvalidCreds: 'Nieprawidłowy e-mail lub hasło.',
     errAlreadyRegistered: 'Ten e-mail jest już zarejestrowany. Zaloguj się zamiast tego.',
     errWeakPassword: 'Hasło musi mieć co najmniej 6 znaków.',

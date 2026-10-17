@@ -3,6 +3,26 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.15.0] - 2026-10-17
+
+### Changed
+
+- **Painted surfaces** — primary buttons, card frame (popovers, dialogs,
+  game-over, language list) and title banners from a new Gemini sheet, via
+  `src/themeArt.ts`; all Forest & Pearl art now goes through the art contract.
+- **Art PNG → WebP** — 6.9 MB → 0.8 MB; offline precache 9.95 → 2.94 MB.
+- **Achievement toasts paused** (`SHOW_ACHIEVEMENT_TOASTS`); unlocks still record.
+
+### Fixed
+
+- **Bot opener server-side** — `request-bot-match` plays the bot's opening move
+  when it's P1 (old clients were auto-aborting); bot writes guarded by status +
+  turn (a resign during the think delay could be overwritten).
+- **QA pass** — game-over / theme-picker scrolling, stranded score floaters,
+  resign + hot-seat leave confirms, translations (default names, rotate prompt,
+  daily puzzle, board aria), unblock UI, avatar colour rings, rankings table at
+  320px, footer tap targets / separators, focus styles.
+
 ## [0.4.14.0] - 2026-10-17
 
 ### Changed
@@ -40,6 +60,32 @@ All notable changes to DotDuel will be documented in this file. Format follows
   shown publicly, kept 24 months). Enforced by `daily_results_retention_sweep`
   (`supabase/migrations/20261011000000_daily_results_retention.sql`).
 
+## [0.4.12.4] - 2026-08-04
+
+### Fixed
+
+- **Multiplayer move vanishing** — a network hiccup could silently discard a
+  placed dot. `sendMove` now retries; if it still fails the player sees a
+  clear message instead of the dot disappearing.
+
+## [0.4.12.3] - 2026-08-01
+
+### Fixed
+
+- **Phone player cards line up** — avatar, name and score sit in the same
+  grid slots on both cards. (Superseded by the 0.4.14.0 phone score strip.)
+
+## [0.4.12.2] - 2026-08-01
+
+### Fixed
+
+- **More strings translated** — AI opponent name, victory-card image/text and
+  connection-status screens.
+
+### Added
+
+- **Changelog translations** — every past entry in lt/es/pt/pl/cs.
+
 ## [0.4.12.1] - 2026-08-01
 
 ### Fixed
@@ -54,6 +100,16 @@ All notable changes to DotDuel will be documented in this file. Format follows
   below it. Fixed by giving `.player-score` a reserved `min-width: 3ch` (max
   realistic score is 3 digits) plus `font-variant-numeric: tabular-nums`, so
   the card's content width never depends on the score value.
+
+## [0.4.12.0] - 2026-07-26
+
+### Fixed
+
+- **Polish pass (internal-testing bugs)** — language picker moved top-left so
+  it no longer overlaps the logo; phone player cards mirror each other;
+  hot-seat colour swatches follow the theme; Android back button/gesture
+  steps back through menus instead of exiting (ranked games and daily
+  attempts still confirm first).
 
 ## [0.4.11.0] - 2026-06-17
 

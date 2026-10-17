@@ -612,6 +612,7 @@ body,
      content doesn't overflow below the visible viewport. Falls back
      to 100% for ancient browsers. */
   height: 100%;
+  height: 100svh;
   height: 100dvh;
   margin: 0;
   padding: 0;
@@ -626,37 +627,25 @@ body {
   background:
     radial-gradient(ellipse at 50% 38%, var(--bg-center) 0%, var(--bg-edge) 78%),
     #000;
-  background-attachment: fixed;
 }
 
-/* Forest & Pearl only: painted scenery behind the vignette. Two crops (the
-   app has no way to test real device orientation at build time) picked by
-   viewport aspect ratio, not by device type. Layered UNDER the existing
-   radial-gradient vignette so the vignette's darkening toward the edges
-   still applies on top of the art, keeping foreground UI legible — and the
-   film-grain overlay (body::before, z-index 1) still draws over everything,
-   unifying art + vignette into one image exactly as it already did for the
-   plain gradient. Only `[data-theme="forest-pearl"]`, no `:not([data-theme])`
-   fallback — App.tsx's theme effect always calls setAttribute with a
-   concrete ThemeId (default 'forest-pearl' included), so the attribute is
-   never actually absent post-mount; a `:not([data-theme])` branch here would
-   only cost every OTHER theme's users an unnecessary multi-MB art fetch
-   during the brief pre-hydration window. */
-html[data-theme="forest-pearl"] body {
+/* Painted scenery behind the vignette (themeArt background slot → vars).
+   Two crops picked by viewport aspect ratio. Layered UNDER the radial
+   vignette so edges stay dark and the UI legible; the film-grain overlay
+   (body::before) still draws over both. */
+html[data-art~="background"] body {
   background:
     radial-gradient(ellipse at 50% 38%, transparent 0%, var(--bg-edge) 92%),
-    url('/art/forest-pearl/background-landscape.png') center / cover no-repeat,
+    var(--bg-art-landscape) center / cover no-repeat,
     #000;
-  background-attachment: fixed;
 }
 
 @media (max-aspect-ratio: 4/5) {
-  html[data-theme="forest-pearl"] body {
+  html[data-art~="background"] body {
     background:
       radial-gradient(ellipse at 50% 38%, transparent 0%, var(--bg-edge) 92%),
-      url('/art/forest-pearl/background-portrait.png') center / cover no-repeat,
+      var(--bg-art-portrait) center / cover no-repeat,
       #000;
-    background-attachment: fixed;
   }
 }
 
@@ -798,17 +787,6 @@ button {
   color: var(--p2-glow);
 }
 
-/* Forest & Pearl: a single painted wordmark (carved-wood banner with its own
-   gem/pearl border) replaces both the gradient text and the flanking pearl
-   dots — the sign's own corner jewels already do the "pearls" job the flat
-   dots used to. Sized by WIDTH (not height, unlike the old compact badge) so
-   it spans most of the screen the way a real banner should — the asset's
-   own ~6:1 aspect ratio keeps its height proportionate automatically.
-   `calc(100vw - 32px)` accounts for .menu's 16px side padding directly,
-   since .title is a shrink-to-fit flex box with no width of its own for a
-   plain max-width:100% to resolve against. */
-
-
 .title-text {
   background: linear-gradient(
     180deg,
@@ -876,38 +854,13 @@ button {
   overflow-wrap: anywhere;
 }
 
-
 /* The share link keeps its pill treatment (unlike the subtitle above) —
    it now sits below the shelves, over the darker lower part of the photo,
    where a solid backing scrim reads better than switching its text color. */
-html[data-theme="forest-pearl"] .menu-share-link {
+html[data-art~="menu-button"] .menu-share-link {
   background: var(--glass-bg-strong);
   border-radius: 999px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 1px 10px rgba(0, 0, 0, 0.6);
-}
-
-.version-badge {
-  margin: 4px 0 0 0;
-  padding: 5px 12px;
-  border: 1px solid var(--glass-border-strong);
-  border-radius: 999px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(10px) saturate(1.4);
-  -webkit-backdrop-filter: blur(10px) saturate(1.4);
-  color: var(--accent);
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
-  font-weight: 600;
-}
-
-.menu-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  max-width: 560px;
-  min-height: 280px;
 }
 
 /* ---- Home shelves (0.4.7 menu redesign): full-width stacked category cards
@@ -1029,12 +982,6 @@ html[data-theme="forest-pearl"] .menu-share-link {
   font-size: 0.82rem;
   color: var(--text-dim);
   line-height: 1.25;
-}
-
-/* Chevron dropped in the centered-card layout (0.4.8.1) — kept out of the DOM
-   flow so the icon + title + subtitle stack centers cleanly. */
-.menu-shelf-chev {
-  display: none;
 }
 
 .menu h2 {
@@ -1172,11 +1119,6 @@ html[data-theme="forest-pearl"] .menu-share-link {
   color: var(--text-dim);
   font-size: 0.9rem;
   text-align: center;
-}
-
-.hint-name {
-  color: var(--accent);
-  font-weight: 500;
 }
 
 /* ---------------- Hot-seat setup screen ---------------- */
@@ -1428,6 +1370,7 @@ html[data-theme="forest-pearl"] .menu-share-link {
 }
 
 .btn-resign-inline {
+  flex-shrink: 0;
   padding: 5px 12px;
   border-radius: 10px;
   background: rgba(180, 50, 50, 0.16);
@@ -1560,8 +1503,20 @@ html[data-theme="forest-pearl"] .menu-share-link {
   font-size: 0.75rem;
   color: #ffd680;
   letter-spacing: 0.02em;
-  animation: pendingPulse 1.8s ease-in-out infinite;
   cursor: help;
+  position: relative;
+}
+/* Glow pulse on its own layer, animating opacity only (composited) — a
+   box-shadow animation repainted the topbar every frame all game long. */
+.pending-indicator::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: 0 0 10px 1px rgba(255, 214, 128, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  animation: pendingPulse 1.8s ease-in-out infinite;
 }
 
 .pending-icon {
@@ -1580,10 +1535,10 @@ html[data-theme="forest-pearl"] .menu-share-link {
 
 @keyframes pendingPulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 214, 128, 0);
+    opacity: 0;
   }
   50% {
-    box-shadow: 0 0 10px 1px rgba(255, 214, 128, 0.35);
+    opacity: 1;
   }
 }
 
@@ -1592,8 +1547,7 @@ html[data-theme="forest-pearl"] .menu-share-link {
    stack. animation-name flip via .pending-flash class triggers the keyframe
    exactly once per pending-count increase. */
 .pending-indicator.pending-flash {
-  animation: pendingPulse 1.8s ease-in-out infinite,
-             pendingFlash 600ms ease-out;
+  animation: pendingFlash 600ms ease-out;
 }
 
 @keyframes pendingFlash {
@@ -1708,55 +1662,13 @@ html[data-theme="forest-pearl"] .menu-share-link {
   }
 }
 
-/* Phase 1b — in-board speech-bubble hint.
-   Rendered as SVG inside Board.tsx so it scales with the board's
-   viewBox auto-scaler and points at the dot that triggered the hint.
-   Auto-dismisses on next human move; tap-anywhere also dismisses. */
-.hint-bubble {
-  animation: hintBubbleFadeIn 220ms ease-out;
-  transform-origin: center;
-}
-
-.hint-bubble-bg {
-  fill: rgba(10, 22, 16, 0.94);
-  stroke: rgba(123, 219, 149, 0.55);
-  stroke-width: 0.03;
-  filter: drop-shadow(0 0.08px 0.16px rgba(0, 0, 0, 0.45));
-}
-
-.hint-bubble-tail {
-  fill: rgba(10, 22, 16, 0.94);
-  stroke: rgba(123, 219, 149, 0.55);
-  stroke-width: 0.03;
-  stroke-linejoin: round;
-}
-
-.hint-bubble-text {
-  fill: var(--text);
-  paint-order: stroke;
-  stroke: rgba(0, 0, 0, 0.6);
-  stroke-width: 0.04;
-  stroke-linejoin: round;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-weight: 500;
-  user-select: none;
-}
-
-@keyframes hintBubbleFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 /* Phase 1b — "See unclaimed lines" labeled toggle pill.
    Lives inside .topbar-center, below the pending indicator, only when
    vs-AI L1-L4 (gated by showRingsToggle). iOS-style switch on the right;
    tap anywhere on the pill toggles state. Discoverable + explicit
    compared to the original 18px eye icon. */
 .btn-claim-toggle {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1931,22 +1843,9 @@ html[data-theme="forest-pearl"] .menu-share-link {
   position: relative;
 }
 
-/* Forest & Pearl side-panel texture: REVERTED (2026-09-11). The intended
-   design was a plain-middle "9-slice" strip (see docs/superpowers/specs/
-   2026-09-11-forest-pearl-visual-reskin-design.md, section 7), but the
-   asset Gemini actually generated (public/art/forest-pearl/panel-
-   texture.png) is a complete 4-sided framed panel — rounded-rect rails on
-   every edge, ~480px of carving depth, no genuinely stretchable plain
-   region. No border-image slice values can make a 9-slice `fill` work
-   cleanly against that shape: any left/right slice stretches the side
-   rails into smears, and the carving is too tall to compress into a
-   sensible border-width without turning into mush. Needs a re-generated
-   asset (explicitly "no side framing, seamless stretchable middle,
-   shallower carving depth") before this is worth re-attempting — see
-   PROMPT 10 of docs/superpowers/specs/2026-09-11-forest-pearl-gemini-
-   prompts.txt for the original ask. Panels fall back to the plain
-   `--glass-bg-strong` surface above, same as every other theme.
-*/
+/* A painted side-panel texture was tried and reverted (2026-09-11): the
+   asset was framed on all four sides and couldn't stretch. Stretchable art
+   now follows docs/art/README.md ("Rules learned the hard way"). */
 
 .side-panel-left {
   border-radius: var(--radius);
@@ -2671,15 +2570,6 @@ html[data-theme="forest-pearl"] .menu-share-link {
   opacity: 0.7;
 }
 
-@media (max-width: 380px) {
-  .stats-line {
-    font-size: 0.75rem;
-  }
-  .stats-pct {
-    font-size: 0.75rem;
-  }
-}
-
 .player-score {
   font-size: clamp(1.7rem, 5.4vw, 2.35rem);
   font-weight: 800;
@@ -2765,18 +2655,6 @@ html[data-theme="forest-pearl"] .menu-share-link {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-@media (max-width: 380px) {
-  .pt-row {
-    font-size: 0.75rem;
-  }
-  .pt-value {
-    font-size: 0.75rem;
-  }
-  .pt-avg {
-    font-size: 0.75rem;
-  }
 }
 
 .thinking-dots {
@@ -3364,71 +3242,6 @@ h1, h2, h3,
   border-color: rgba(217, 117, 101, 0.6);
 }
 
-/* ---------------- Tutorial popover ---------------- */
-
-.tutorial-card {
-  max-width: 500px;
-}
-
-.tutorial-body {
-  padding: 8px 22px 4px;
-  overflow-y: auto;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font-size: 0.96rem;
-  line-height: 1.5;
-  color: var(--text);
-}
-
-.tutorial-body p {
-  margin: 0;
-}
-
-.tutorial-progress {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  padding: 4px 0 0;
-}
-
-.tutorial-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--glass-border);
-  transition: background 200ms, transform 200ms;
-}
-
-.tutorial-dot.active {
-  background: var(--accent);
-  transform: scale(1.4);
-}
-
-.tutorial-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.tutorial-footer-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.tutorial-back {
-  background: var(--glass-bg) !important;
-  color: var(--text-dim) !important;
-  border-color: var(--glass-border) !important;
-  box-shadow: none !important;
-}
-
-.tutorial-back:hover {
-  background: var(--glass-bg-strong) !important;
-  color: var(--text) !important;
-}
-
 /* ---------------- Game Over modal ---------------- */
 
 .game-over {
@@ -3532,16 +3345,6 @@ h1, h2, h3,
 .final-p2 strong {
   color: var(--p2-glow);
   text-shadow: 0 0 16px rgba(var(--p2-rgb-bright), 0.35);
-}
-
-.unlock-banner {
-  background: rgba(98, 207, 144, 0.12);
-  border: 1px solid rgba(98, 207, 144, 0.4);
-  color: var(--accent);
-  padding: 10px 14px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.95rem;
 }
 
 /* GameOver smart suggestion */
@@ -3745,71 +3548,6 @@ h1, h2, h3,
   color: var(--danger);
 }
 
-/* ---------------- GDPR consent banner ---------------- */
-
-/* Consent-banner space-reservation rules were removed: the banner is retired
-   (ConsentBanner renders null) and CSS :has() isn't supported on old WebViews
-   (< Chromium 105). If a banner returns, reserve space via a JS-toggled
-   body.has-consent-banner class instead of a :has() selector. */
-
-.consent-banner {
-  position: fixed;
-  left: 12px;
-  right: 12px;
-  bottom: max(12px, env(safe-area-inset-bottom));
-  z-index: 250;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  padding: 12px 16px;
-  border-radius: 14px;
-  background: rgba(20, 32, 26, 0.92);
-  backdrop-filter: blur(14px) saturate(1.4);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
-  border: 1px solid var(--glass-border-strong);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
-  color: var(--text);
-  font-size: 0.86rem;
-  max-width: 720px;
-  margin: 0 auto;
-}
-
-.consent-banner-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1 1 320px;
-  min-width: 0;
-}
-
-.consent-banner-text strong {
-  color: var(--accent);
-}
-
-.consent-banner-text span {
-  color: var(--text-dim);
-  line-height: 1.4;
-}
-
-.consent-banner-link {
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--accent);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-  font: inherit;
-}
-
-.consent-banner-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
 .consent-accept,
 .consent-decline {
   padding: 8px 16px;
@@ -3933,10 +3671,6 @@ h1, h2, h3,
   }
   .remaining-value { font-size: 1rem; }
   .remaining-label { font-size: 0.75rem; }
-  .side-panel {
-    padding: 6px;
-    gap: 4px;
-  }
   .board-wrap {
     padding: 6px;
   }
@@ -3947,12 +3681,6 @@ h1, h2, h3,
     padding: 5px 12px;
     font-size: 0.75rem;
     gap: 8px;
-  }
-}
-
-@media (max-width: 360px) {
-  .side-panel {
-    width: 78px;
   }
 }
 
@@ -4048,23 +3776,6 @@ h1, h2, h3,
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-mute);
-}
-
-/* ---------------- Rankings popover ---------------- */
-
-.menu-card-rank {
-  width: 100%;
-  margin-top: 4px;
-  padding: 14px 16px;
-}
-
-.menu-card-rank strong {
-  font-size: 1.05rem;
-}
-
-.menu-card-rank span {
-  color: var(--text-dim);
-  font-size: 0.82rem;
 }
 
 .rankings-card {
@@ -4443,11 +4154,6 @@ h1, h2, h3,
   -webkit-text-fill-color: transparent;
 }
 
-.rankings-confirm-name {
-  color: var(--text);
-  font-weight: 700;
-}
-
 .rankings-confirm-body {
   padding: 0 22px 8px;
   color: var(--text);
@@ -4529,24 +4235,15 @@ h1, h2, h3,
 @media (max-width: 720px), (orientation: landscape) and (max-height: 500px) {
   .game-body {
     display: grid;
-    /* minmax(0, 1fr) is the trick — '1fr' alone defaults to
-       minmax(auto, 1fr), so the column refuses to shrink below the
-       content's intrinsic min-width and the grid can overflow the
-       viewport horizontally (which is what was clipping the AI card).
-       minmax(0, 1fr) lets the column shrink to whatever fits. */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    /* Columns/areas are set in the score-strip block below ("strip" over
+       "board"). minmax(0, 1fr) there keeps the column from refusing to
+       shrink below its content's min-width (horizontal overflow). */
     grid-template-rows: auto 1fr;
-    grid-template-areas:
-      "p1 p2"
-      "board board";
     gap: 6px;
     padding: 6px;
     align-items: stretch;
     overflow: hidden;
   }
-
-  .side-panel-left { grid-area: p1; }
-  .side-panel-right { grid-area: p2; }
   .board-wrap {
     grid-area: board;
     /* Top-align the board so it sits up near the player cards instead of
@@ -4566,114 +4263,9 @@ h1, h2, h3,
     height: auto;
   }
 
-  /* Mobile card layout: a fixed-slot GRID, not a wrapping flex row.
-     avatar/belowAvatar always occupy column 1 (row 1 / row 2), name/rating
-     always column 2 (row 1 / row 2), score always column 3 spanning both
-     rows. This is IDENTICAL for both side-panel-left and side-panel-right —
-     no left/right "mirroring" — so avatar/name/score sit in the exact same
-     slot on both cards no matter what. A flex-wrap row here previously let
-     long names or 3-digit scores force a second line, and because the two
-     cards independently decided what to wrap, they landed in wildly
-     different-looking layouts (see bugs.md, "Board shifts/shrinks..." for
-     the related score-width incident). Grid areas don't reflow like that —
-     overflow in column 2 (name) just triggers its own ellipsis truncation,
-     everything else stays put. */
-  .side-panel,
-  .side-panel-left,
-  .side-panel-right {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: auto auto;
-    align-items: center;
-    column-gap: 7px;
-    row-gap: 2px;
-    width: auto;
-    min-width: 0;
-    padding: 7px 9px;
-    border-radius: var(--radius);
-    margin: 0;
-    border: 1px solid var(--glass-border);
-    overflow: hidden;
-    position: relative;
-  }
-
-  .avatar-frame {
-    /* Scale fluidly: tiny on small phones, larger on tablets. */
-    width: clamp(32px, 10vw, 50px);
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .player-below-avatar {
-    width: auto;
-    margin: 0;
-    grid-column: 1;
-    grid-row: 2;
-  }
-
-  .player-name-row {
-    grid-column: 2;
-    grid-row: 1;
-    min-width: 0;
-    justify-content: flex-start;
-  }
-
-  .player-name {
-    flex: 0 1 auto;
-    min-width: 0;
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 0;
-  }
-
   .btn-resign-inline {
     padding: 3px 9px;
     font-size: 0.75rem;
-  }
-
-  .player-rating {
-    grid-column: 2;
-    grid-row: 2;
-    min-width: 0;
-    font-size: 0.75rem;
-    padding: 0;
-    margin-top: 1px;
-    color: var(--text-dim);
-    text-align: left;
-  }
-
-  .player-score {
-    grid-column: 3;
-    grid-row: 1 / 3;
-    font-size: clamp(1.3rem, 6vw, 1.7rem);
-    margin: 0;
-    line-height: 1;
-    /* Reserve room for the largest realistic score (3 digits, shapes cap at
-       252 pts total) so the card's content width never depends on digit
-       count — otherwise a score crossing a digit boundary (e.g. 99 -> 106)
-       widens the column past its available space. */
-    min-width: 3ch;
-    font-variant-numeric: tabular-nums;
-    text-align: right;
-    padding: 0;
-  }
-
-  .player-stats,
-  .player-points-totals {
-    display: none;
-  }
-
-  .thinking-dots {
-    position: absolute;
-    right: 6px;
-    top: 6px;
-    margin: 0;
-    font-size: 0.85rem;
-    pointer-events: none;
   }
 }
 
@@ -4975,28 +4567,8 @@ h1, h2, h3,
     gap: 4px;
     padding: 4px 6px 6px;
   }
-  .side-panel,
-  .side-panel-left,
-  .side-panel-right {
-    padding: 4px 10px;
-    gap: 8px;
-  }
-  .avatar-frame {
-    width: clamp(28px, 8.5vh, 40px);
-  }
-  .player-name {
-    font-size: 0.75rem;
-  }
-  .player-score {
-    font-size: 1.4rem;
-  }
-
   .menu {
     padding: 6px 14px 6px;
-    gap: 8px;
-  }
-  .menu-section {
-    min-height: 0;
     gap: 8px;
   }
   .menu-grid {
@@ -5005,15 +4577,6 @@ h1, h2, h3,
   }
   .menu-card {
     padding: 10px 12px;
-  }
-  .menu-card-rank {
-    padding: 10px 12px;
-  }
-  .menu-card-rank strong {
-    font-size: 0.92rem;
-  }
-  .menu-card-rank span {
-    font-size: 0.75rem;
   }
   .menu-card strong {
     font-size: 0.92rem;
@@ -5028,10 +4591,6 @@ h1, h2, h3,
   .subtitle {
     font-size: 0.78rem;
     max-width: 480px;
-  }
-  .version-badge {
-    font-size: 0.75rem;
-    padding: 3px 10px;
   }
 }
 
@@ -5109,9 +4668,6 @@ h1, h2, h3,
   color: var(--accent);
   font-weight: 700;
 }
-
-
-
 
 /* ---------- Theme popover swatch grid ---------- */
 .theme-card {
@@ -5325,20 +4881,6 @@ h1, h2, h3,
   border-color: rgba(123, 219, 149, 0.55);
 }
 
-/* Forest & Pearl only: this button sets its own background directly (not
-   via --glass-bg), so the earlier site-wide glass-contrast fix never
-   reached it — it was still a near-transparent green tint sitting on a
-   busy green forest photo, both text and button nearly invisible. Darker,
-   more opaque background plus a text-shadow on the (still fairly bright
-   --accent-colored) label. */
-html[data-theme="forest-pearl"] .menu-auth-btn-cta {
-  background: rgba(6, 24, 14, 0.72);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-html[data-theme="forest-pearl"] .menu-auth-btn-cta:hover {
-  background: rgba(10, 36, 20, 0.82);
-}
 
 /* ---- Painted plaque buttons (themes whose art contract has menuButton /
    pillButton; see src/themeArt.ts). Three-slice border-image: the painted end
@@ -5508,6 +5050,9 @@ html[data-art~="pill-button"] .menu-auth-btn-cta:hover {
   color: var(--p2-glow);
   font-weight: 600;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
@@ -5596,6 +5141,19 @@ html[data-art~="title-banner"] .menu > h2 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* WebViews older than Chrome 105 have no container units: cqw would make the
+   plaque/pill sizes invalid (collapsed caps). Fixed, middle-of-range sizes. */
+@supports not (width: 1cqw) {
+  html[data-art~="menu-button"] .menu-shelf { --plaque-h: 52px; }
+  html[data-art~="menu-button"] .menu-shelf-body strong { font-size: 1rem; }
+  html[data-art~="menu-button"] .menu-shelf-sub { font-size: 0.7rem; }
+  html[data-art~="pill-button"] .menu-auth-btn,
+  html[data-art~="pill-button"] .menu-auth-btn-cta,
+  html[data-art~="pill-button"] .menu-auth-btn:hover,
+  html[data-art~="pill-button"] .menu-auth-btn-cta:hover { --pill-h: 34px; font-size: 0.8rem; }
+  .header-sign-text { font-size: 0.8rem; }
 }
 
 .app-footer-ctl {
@@ -5931,6 +5489,7 @@ html[data-art~="title-banner"] .menu > h2 {
   justify-content: center;
   background: rgba(2, 9, 11, 0.55);
   backdrop-filter: blur(4px) saturate(120%);
+  -webkit-backdrop-filter: blur(4px) saturate(120%);
 }
 
 .daily-loading-card {
@@ -6048,24 +5607,6 @@ html[data-art~="title-banner"] .menu > h2 {
   font-family: 'Segoe UI', system-ui, sans-serif;
 }
 
-.auth-divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--text-mute);
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.auth-divider::before,
-.auth-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--glass-border);
-}
-
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -6093,36 +5634,7 @@ html[data-art~="title-banner"] .menu > h2 {
   line-height: 1.35;
 }
 
-.auth-info {
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: rgba(123, 219, 149, 0.16);
-  border: 1px solid rgba(123, 219, 149, 0.38);
-  color: #d8f6e3;
-  font-size: 0.82rem;
-  line-height: 1.35;
-}
-
-.auth-toggle {
-  text-align: center;
-  font-size: 0.82rem;
-  color: var(--text-mute);
-}
-
-.auth-toggle a {
-  color: var(--accent);
-  text-decoration: none;
-}
-
-.auth-toggle a:hover {
-  text-decoration: underline;
-}
-
-/* Login gate: "New here?" enlarged ~2 steps; the anonymous escape link sits
-   below it at the toggle's normal (pre-enlargement) size. */
-.auth-card.is-gate .auth-toggle {
-  font-size: 1.08rem;
-}
+/* Login gate: the anonymous escape link under the Google sign-in button. */
 .auth-anon {
   display: block;
   margin: 12px auto 0;
@@ -6138,15 +5650,6 @@ html[data-art~="title-banner"] .menu > h2 {
 }
 .auth-anon:hover:not(:disabled) {
   color: var(--accent);
-}
-
-.app-footer-account {
-  color: var(--text-dim);
-  font-weight: 500;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* ---------------- Profile popover ---------------- */
@@ -6279,13 +5782,6 @@ html[data-art~="title-banner"] .menu > h2 {
 .puzzle-lb-margin {
   font-weight: 700;
   color: var(--accent);
-}
-.puzzle-lb-footnote {
-  margin-top: 14px;
-  text-align: center;
-}
-.puzzle-lb-tabs {
-  margin: 0 0 12px;
 }
 /* Daily results calendar: month grid + the selected day's full list. */
 .pcal-nav,

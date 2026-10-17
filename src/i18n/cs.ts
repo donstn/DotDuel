@@ -38,8 +38,6 @@ export const cs: Messages = {
 
   lang: {
     label: 'Jazyk',
-    english: 'English',
-    lithuanian: 'Lietuvių',
   },
 
   shapes: {
@@ -66,7 +64,6 @@ export const cs: Messages = {
     profile: 'Profil',
     signOut: 'Odhlásit se',
     signIn: 'Přihlásit se',
-    shareDotDuel: 'Sdílet DotDuel',
 
     singlePlayer: 'Jeden hráč',
     singlePlayerSub: 'Boti a denní hádanka.',
@@ -296,6 +293,40 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.15.0': {
+        highlight: 'Doladění před testováním',
+        changes: [
+          'Tlačítka, vyskakovací okna a nadpisy obrazovek mají teď stejný vzhled vyřezávaného dřeva jako menu.',
+          'Obrazovka výsledků se na malých telefonech posouvá, takže tlačítko „Sdílet“ je vždy po ruce.',
+          'Vzdání se vyžaduje potvrzení, stejně jako odchod z rozehrané hry dvou hráčů.',
+          'V hodnocených hrách, kde začíná bot, už starší verze aplikace zápas nepřeruší.',
+          'V části Přátelé → Všichni můžete znovu odblokovat hráče.',
+          'Přeloženo je víc částí hry, včetně výchozích jmen hráčů.',
+          'Aplikace stahuje mnohem méně: grafika je zhruba 8× menší.',
+          'Oznámení o úspěších jsou zatím pozastavena; úspěchy se dál odemykají.',
+        ],
+      },
+      'Alpha 0.4.14.0': {
+        highlight: 'Nový vzhled menu',
+        changes: [
+          'Hlavní menu má nový vzhled vyřezávaného dřeva: jeden štít s vaším pozdravem, dřevěná tlačítka a vše se vejde na jednu obrazovku.',
+          'Volba jazyka a motivu se přesunula do spodní lišty.',
+          'Na telefonech je skóre teď jeden pruh nad hrací plochou, s celými jmény, hodnocením a velkým skóre uprostřed.',
+          'V hodnocených hrách proti botům se o tom, kdo začíná, rozhoduje hodem mincí, takže už nezačínáte vždy vy.',
+        ],
+      },
+      'Alpha 0.4.13.0': {
+        highlight: 'Kalendář denních výsledků',
+        changes: [
+          'Žebříček denní hádanky je teď kalendář. Na první pohled uvidíte vítěze každého dne a klepnutím na den zobrazíte všechny, kdo ho hráli, od nejlepšího po nejhoršího.',
+        ],
+      },
+      'Alpha 0.4.12.4': {
+        highlight: 'Opraveno: tah online občas po zahrání zmizel',
+        changes: [
+          'V online zápasech mohla položená tečka hned po položení zmizet a bylo nutné ji položit znovu — výpadek sítě tah potichu zahodil. Teď se automaticky odešle znovu, a pokud ani to nepomůže, uvidíte jasnou zprávu místo mizející tečky.',
+        ],
+      },
       'Alpha 0.4.12.3': {
         highlight: 'Karty hráčů teď skutečně sedí',
         changes: [
@@ -875,22 +906,8 @@ export const cs: Messages = {
     close: 'Zavřít',
     titleGate: 'Přihlas se pro hru',
     titleSignIn: 'Přihlásit se',
-    titleSignUp: 'Vytvořit účet',
     google: 'Pokračovat přes Google',
-    orEmail: 'nebo e-mailem',
-    emailPlaceholder: 'ty@priklad.cz',
-    passwordPlaceholder: 'Heslo (min. 6 znaků)',
-    confirmPlaceholder: 'Potvrď heslo',
-    submitSignIn: 'Přihlásit se',
-    submitSignUp: 'Vytvořit účet',
-    newHere: 'Jsi tu nový?',
-    createAccount: 'Vytvoř si účet',
-    haveOne: 'Už nějaký máš?',
-    signInLink: 'Přihlásit se',
     tryAnon: 'Chceš to zkusit anonymně bez přihlášení?',
-    accountCreated: (email: string) =>
-      `Účet vytvořen. Pokud je zapnuto potvrzení e-mailem, zkontroluj ${email} (i spam) a ověř ho.`,
-    errPasswordsMatch: 'Hesla se neshodují.',
     errInvalidCreds: 'E-mail nebo heslo je nesprávné.',
     errAlreadyRegistered: 'Tento e-mail je již zaregistrován. Přihlas se místo toho.',
     errWeakPassword: 'Heslo musí mít alespoň 6 znaků.',

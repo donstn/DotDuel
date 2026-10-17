@@ -29,8 +29,6 @@ export const es: Messages = {
 
   lang: {
     label: 'Idioma',
-    english: 'English',
-    lithuanian: 'Lietuvių',
   },
 
   shapes: {
@@ -57,7 +55,6 @@ export const es: Messages = {
     profile: 'Perfil',
     signOut: 'Cerrar sesión',
     signIn: 'Iniciar sesión',
-    shareDotDuel: 'Compartir DotDuel',
 
     singlePlayer: 'Un jugador',
     singlePlayerSub: 'Bots y puzle diario.',
@@ -286,6 +283,40 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.15.0': {
+        highlight: 'Pulido antes de las pruebas',
+        changes: [
+          'Los botones, las ventanas emergentes y los títulos de pantalla tienen el mismo aspecto de madera tallada que el menú.',
+          'La pantalla de resultados se desplaza en teléfonos pequeños, así que «Compartir» siempre está a mano.',
+          'Rendirse pide confirmación, y también salir de una partida a dos jugadores a medias.',
+          'En partidas clasificatorias donde el bot mueve primero, las versiones antiguas de la app ya no cancelan la partida.',
+          'Ya puedes volver a desbloquear jugadores en Amigos → Todos.',
+          'Más partes del juego están traducidas, incluidos los nombres de jugador por defecto.',
+          'La app descarga mucho menos: las ilustraciones son unas 8 veces más ligeras.',
+          'Las notificaciones de logros están en pausa por ahora; los logros se siguen desbloqueando.',
+        ],
+      },
+      'Alpha 0.4.14.0': {
+        highlight: 'Un menú renovado',
+        changes: [
+          'El menú principal tiene un nuevo aspecto de madera tallada: un solo letrero con tu saludo, botones de madera y todo cabe en una pantalla.',
+          'Los selectores de idioma y tema se han movido a la barra inferior.',
+          'En el teléfono, el marcador es ahora una sola barra sobre el tablero, con los nombres completos, la puntuación Elo de ambos y un marcador grande en el centro.',
+          'En partidas clasificatorias contra bots, quién empieza se decide ahora a cara o cruz, así que ya no empiezas siempre tú.',
+        ],
+      },
+      'Alpha 0.4.13.0': {
+        highlight: 'Calendario de resultados diarios',
+        changes: [
+          'La clasificación del puzle diario es ahora un calendario. Ve de un vistazo al ganador de cada día y toca cualquier día para ver a todos los que lo jugaron, de mejor a peor.',
+        ],
+      },
+      'Alpha 0.4.12.4': {
+        highlight: 'Corregido: una jugada en línea a veces desaparecía tras colocarla',
+        changes: [
+          'En partidas en línea, un punto colocado podía desaparecer justo después y tenías que colocarlo de nuevo: un fallo de red descartaba la jugada sin avisar. Ahora se reintenta automáticamente y, si aun así falla, verás un mensaje claro en lugar de que el punto simplemente desaparezca.',
+        ],
+      },
       'Alpha 0.4.12.3': {
         highlight: 'Las tarjetas de jugador ahora sí coinciden',
         changes: [
@@ -865,22 +896,8 @@ export const es: Messages = {
     close: 'Cerrar',
     titleGate: 'Inicia sesión para jugar',
     titleSignIn: 'Iniciar sesión',
-    titleSignUp: 'Crear cuenta',
     google: 'Continuar con Google',
-    orEmail: 'o con correo electrónico',
-    emailPlaceholder: 'tu@ejemplo.com',
-    passwordPlaceholder: 'Contraseña (mín. 6 caracteres)',
-    confirmPlaceholder: 'Confirmar contraseña',
-    submitSignIn: 'Iniciar sesión',
-    submitSignUp: 'Crear cuenta',
-    newHere: '¿Eres nuevo?',
-    createAccount: 'Crear una cuenta',
-    haveOne: '¿Ya tienes una?',
-    signInLink: 'Iniciar sesión',
     tryAnon: '¿Quieres probar de forma anónima sin iniciar sesión?',
-    accountCreated: (email: string) =>
-      `Cuenta creada. Si la confirmación por correo está activada, revisa ${email} (y el spam) para verificarla.`,
-    errPasswordsMatch: 'Las contraseñas no coinciden.',
     errInvalidCreds: 'El correo o la contraseña son incorrectos.',
     errAlreadyRegistered: 'Ese correo ya está registrado. Inicia sesión en su lugar.',
     errWeakPassword: 'La contraseña debe tener al menos 6 caracteres.',

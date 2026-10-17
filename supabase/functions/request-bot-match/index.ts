@@ -1,10 +1,11 @@
 // Spawns a bot match on demand for a human waiting in the queue (the client's
 // ~15s "no human found" fallback). Port of Firebase spawnBotMatch: picks the
-// rating-closest active bot, creates the game with HUMAN = P1 / BOT = P2 (so the
-// human always moves first and the bot only ever moves in response — no
-// "bot moves first" trigger needed), pre-marks the bot ready + board-loaded so
+// rating-closest active bot, creates the game with a coin-flipped first mover
+// (same 50/50 as human matchmake), pre-marks the bot ready + board-loaded so
 // the clock starts as soon as the human's board loads, and writes the human's
-// pairing row (opponent_is_bot = true). MVP shape: triangle, matching matchmake.
+// pairing row (opponent_is_bot = true). When the bot is P1, the human client
+// sends submit-move { kind: 'botStart' } after its board loads to trigger the
+// bot's opening move. MVP shape: triangle, matching matchmake.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -99,6 +100,8 @@ Deno.serve(async (req) => {
     }
 
     const shape = me.shape ?? 'triangle';
+    const humanSlot: 1 | 2 = Math.random() < 0.5 ? 1 : 2;
+    const botSlot = humanSlot === 1 ? '2' : '1';
     const totalMs = TIME_CONTROL_MS[timeControl] ?? 180000;
 
     const initialState = {
@@ -124,17 +127,17 @@ Deno.serve(async (req) => {
     const { data: game, error: gErr } = await admin
       .from('games')
       .insert({
-        p1_uid: uid,
-        p2_uid: bot.uid,
+        p1_uid: humanSlot === 1 ? uid : bot.uid,
+        p2_uid: humanSlot === 1 ? bot.uid : uid,
         shape,
         time_control: timeControl,
         status: 'active',
         state: initialState,
         clock,
         // Bot is pre-readied AND pre-board-loaded: the clock starts as soon as
-        // the human's client acks board_loaded[1] = true (set_board_loaded).
-        ready: { '2': true },
-        board_loaded: { '2': true },
+        // the human's client acks its board_loaded slot (set_board_loaded).
+        ready: { [botSlot]: true },
+        board_loaded: { [botSlot]: true },
         rematch: {},
       })
       .select('id')
@@ -145,7 +148,7 @@ Deno.serve(async (req) => {
       uid,
       match_id: game.id,
       shape,
-      player: 1,
+      player: humanSlot,
       opponent_uid: bot.uid,
       opponent_display_name: bot.displayName,
       opponent_rating: bot.rating,

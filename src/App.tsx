@@ -60,6 +60,7 @@ import {
   markBoardLoaded,
   markReady,
   playerNumFor,
+  requestBotStart,
   requestRematch,
   sendMove,
   sendResign,
@@ -1892,7 +1893,13 @@ export default function App() {
       return;
     if (boardLoadedMarkedRef.current === onlineGameId) return;
     boardLoadedMarkedRef.current = onlineGameId;
-    void markBoardLoaded(onlineGameId, pairing.player);
+    const loaded = markBoardLoaded(onlineGameId, pairing.player);
+    if (pairing.opponentIsBot && onlineGame.state.current !== pairing.player) {
+      const gameId = onlineGameId;
+      void loaded
+        .then(() => requestBotStart(gameId))
+        .catch((e) => console.warn('requestBotStart failed:', e));
+    }
     gameStartedAtRef.current = Date.now();
     firstScoreFiredRef.current = false;
     gameFinishedFiredRef.current = false;

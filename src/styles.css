@@ -5281,12 +5281,35 @@ html[data-theme="forest-pearl"] .menu-auth-btn-cta:hover {
    between the caps; pressed / locked states are CSS, not extra art. */
 html[data-art~="menu-button"] .menu {
   row-gap: 12px;
+  /* Height cap for the shared column below: the home menu's height is about
+     1× the column width plus ~290px of fixed rows/gaps, and the menu gets the
+     viewport minus ad band + footer — so width ≤ viewport − 290px keeps it on
+     one screen. Floor of 220px: very short screens scroll instead. */
+  --menu-hcap: max(220px, calc(100vh - 290px));
+}
+@supports (height: 100dvh) {
+  html[data-art~="menu-button"] .menu {
+    --menu-hcap: max(220px, calc(100dvh - 290px));
+  }
+}
+html[data-art~="menu-button"] .menu-share-row {
+  margin-top: 0;
+}
+/* One fluid column shared by the header sign, the account pills and the menu
+   buttons, so they always line up and shrink together; everything inside
+   scales off it via container units (cqw). */
+html[data-art~="menu-button"] .header-sign,
+html[data-art~="menu-button"] .menu-auth-row,
+html[data-art~="menu-button"] .menu-shelves {
+  width: min(100%, 440px, var(--menu-hcap));
+  max-width: none;
+  container-type: inline-size;
 }
 html[data-art~="menu-button"] .menu-shelves {
   gap: 8px;
 }
 html[data-art~="menu-button"] .menu-shelf {
-  --plaque-h: 58px;
+  --plaque-h: clamp(38px, 15cqw, 62px);
   --cap-l: calc(var(--plaque-h) * var(--menu-btn-cap-l));
   --cap-r: calc(var(--plaque-h) * var(--menu-btn-cap-r));
   height: var(--plaque-h);
@@ -5324,10 +5347,14 @@ html[data-art~="menu-button"] .menu-shelf-inner {
   justify-content: center;
   gap: 10px;
 }
+html[data-art~="menu-button"] .menu-shelf-ic {
+  width: auto;
+  height: auto;
+}
 html[data-art~="menu-button"] .menu-shelf-ic.is-avatar img,
 html[data-art~="menu-button"] .menu-shelf-ic.is-avatar svg {
-  width: 40px;
-  height: 40px;
+  width: calc(var(--plaque-h) * 0.7);
+  height: calc(var(--plaque-h) * 0.7);
 }
 html[data-art~="menu-button"] .menu-shelf-body {
   flex: 0 1 auto;
@@ -5348,14 +5375,14 @@ html[data-art~="menu-button"] .menu-shelf-sub {
   text-overflow: ellipsis;
 }
 html[data-art~="menu-button"] .menu-shelf-body strong {
-  font-size: 1.06rem;
+  font-size: clamp(0.85rem, 4.4cqw, 1.12rem);
   font-weight: 700;
   letter-spacing: 0.03em;
   color: var(--p2-glow);
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9), 0 0 10px rgba(var(--p1-rgb-bright), 0.35);
 }
 html[data-art~="menu-button"] .menu-shelf-sub {
-  font-size: 0.72rem;
+  font-size: clamp(0.62rem, 2.9cqw, 0.76rem);
   color: var(--text-dim);
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
 }
@@ -5368,7 +5395,8 @@ html[data-art~="pill-button"] .menu-auth-btn,
 html[data-art~="pill-button"] .menu-auth-btn-cta,
 html[data-art~="pill-button"] .menu-auth-btn:hover,
 html[data-art~="pill-button"] .menu-auth-btn-cta:hover {
-  --pill-h: 36px;
+  --pill-h: clamp(27px, 9cqw, 38px);
+  font-size: clamp(0.7rem, 3.3cqw, 0.86rem);
   --cap-l: calc(var(--pill-h) * var(--pill-btn-cap-l));
   --cap-r: calc(var(--pill-h) * var(--pill-btn-cap-r));
   display: inline-flex;
@@ -5397,24 +5425,6 @@ html[data-art~="pill-button"] .menu-auth-btn:hover {
 }
 html[data-art~="pill-button"] .menu-auth-btn-cta {
   color: var(--accent);
-}
-
-/* Short screens (iPhone SE class, small Androids in a browser): the ad band + footer eat ~130px, so shrink
-   the sign and plaques enough that the whole home menu still fits. */
-@media (max-height: 680px) {
-  html[data-art~="menu-button"] .menu { row-gap: 8px; }
-  html[data-art~="menu-button"] .menu-shelf { --plaque-h: 46px; }
-  html[data-art~="menu-button"] .menu-shelf-body strong { font-size: 0.98rem; }
-  html[data-art~="menu-button"] .menu-shelf-ic.is-avatar img,
-  html[data-art~="menu-button"] .menu-shelf-ic.is-avatar svg {
-    width: 32px;
-    height: 32px;
-  }
-  html[data-art~="pill-button"] .menu-auth-btn,
-  html[data-art~="pill-button"] .menu-auth-btn-cta,
-  html[data-art~="pill-button"] .menu-auth-btn:hover,
-  html[data-art~="pill-button"] .menu-auth-btn-cta:hover { --pill-h: 31px; }
-  .header-sign { width: min(100%, 250px); }
 }
 
 .app-footer-ctl {

@@ -65,9 +65,9 @@ async function finish(
 }
 
 // If the player whose turn it now is happens to be a bot, return its think
-// delay (ms) and level; otherwise null. Bot moves are NEVER the first move
-// (request-bot-match makes the human P1), so this is only reached after a human
-// move, and a bot move always passes the turn back to the human — no chaining.
+// delay (ms) and level; otherwise null. Reached after a human move, or via the
+// 'botStart' action when the bot is P1 and must open. A bot move always passes
+// the turn back to the human — no chaining.
 async function botToMove(
   admin: Admin,
   game: Record<string, unknown>,
@@ -113,9 +113,9 @@ async function doBotMove(admin: Admin, gameId: string, level: number, delayMs: n
   const state = game.state as GameState;
   const slot = state.current;
 
-  // Safety: only ever apply a move on a BOT's turn. The MVP has the bot as P2,
-  // but if the turn somehow advanced during the think-delay (or this fires for a
-  // non-bot game), never move on a human's slot.
+  // Safety: only ever apply a move on a BOT's turn. If the turn somehow advanced
+  // during the think-delay (or this fires for a non-bot game), never move on a
+  // human's slot.
   const turnUid = slot === 1 ? game.p1_uid : game.p2_uid;
   const { data: botRow } = await admin
     .from('bots')
@@ -166,7 +166,15 @@ async function doBotMove(admin: Admin, gameId: string, level: number, delayMs: n
     updates.finished_reason = 'normal';
     updates.finished_at = new Date(now).toISOString();
   }
-  const { error: upErr } = await admin.from('games').update(updates).eq('id', gameId);
+  // Turn guard: a duplicate 'botStart' can schedule two doBotMoves off the same
+  // state — only the first write lands, the second matches no row.
+  const { error: upErr, data: written } = await admin
+    .from('games')
+    .update(updates)
+    .eq('id', gameId)
+    .eq('state->>turn', String(state.turn))
+    .select('id');
+  if (!upErr && (!written || written.length === 0)) return;
   if (upErr) {
     // Don't finalize against a state we failed to persist.
     console.error(`doBotMove update failed for game ${gameId}:`, upErr);
@@ -240,6 +248,17 @@ Deno.serve(async (req) => {
         now - clock.turnStartedAt >= ABORT_FIRST_MOVE_MS;
       if (!ok) return json({ error: 'ABORT_NOT_ALLOWED' }, 409);
       await finish(admin, gameId, state, null, 'aborted', now);
+      return json({ ok: true });
+    }
+
+    // Bot is P1: the human client asks for the bot's opening move once its board
+    // has loaded (the clock is running). Idempotent — doBotMove's turn guard
+    // drops duplicates.
+    if (action.kind === 'botStart') {
+      if (clock.turnStartedAt <= 0) return json({ error: 'CLOCK_NOT_STARTED' }, 409);
+      const bot = await botToMove(admin, game);
+      if (!bot) return json({ error: 'NOT_BOT_TURN' }, 409);
+      EdgeRuntime.waitUntil(doBotMove(admin, gameId, bot.level, bot.delayMs));
       return json({ ok: true });
     }
 

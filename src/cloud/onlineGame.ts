@@ -229,6 +229,12 @@ export async function markBoardLoaded(gameId: string, slot: 1 | 2): Promise<void
   );
 }
 
+// Bot games where the bot is P1: ask the server to play the bot's opening move.
+// Must run after markBoardLoaded resolves (that's what starts the clock).
+export async function requestBotStart(gameId: string): Promise<void> {
+  await invokeFn('submit-move', { gameId, action: { kind: 'botStart' } });
+}
+
 // Either participant can claim a timeout when the active player's clock hits 0.
 // The server verifies the clock state and only forfeits if the timeout is real.
 export async function claimTimeout(gameId: string, _uid: string): Promise<void> {

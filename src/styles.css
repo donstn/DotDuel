@@ -3993,7 +3993,11 @@ h1, h2, h3,
 @media (max-width: 420px) {
   .rankings-table:not(.h2h-table) {
     min-width: 0;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
+  }
+  .rankings-table:not(.h2h-table) thead th {
+    font-size: 0.66rem;
+    letter-spacing: 0.02em;
   }
   .rankings-table:not(.h2h-table) th,
   .rankings-table:not(.h2h-table) td {
@@ -5118,6 +5122,15 @@ html[data-art~="card-frame"] .confirm-card,
 html[data-art~="card-frame"] .menu-lang-pop {
   padding: 26px 28px;
 }
+/* Achievements scroll its badge rows edge to edge — inset them (and the
+   detail box) clear of the frame like every other popover body. */
+html[data-art~="card-frame"] .ach-scroll {
+  padding: 0 18px 8px 22px;
+}
+html[data-art~="card-frame"] .ach-detail {
+  margin-left: 22px;
+  margin-right: 22px;
+}
 html[data-art~="title-banner"] .menu > h2 {
   --banner-h: 52px;
   --cap-l: calc(var(--banner-h) * var(--title-banner-cap-l));
@@ -5141,6 +5154,175 @@ html[data-art~="title-banner"] .menu > h2 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Short screens: a slimmer title banner (setup screens have the most rows). */
+@media (max-height: 680px) {
+  html[data-art~="title-banner"] .menu > h2 {
+    --banner-h: 42px;
+    font-size: clamp(0.88rem, 4vw, 1.05rem);
+  }
+  html[data-art~="menu-button"] .menu {
+    row-gap: 8px;
+  }
+  html[data-art~="menu-button"] .hotseat-setup {
+    gap: 8px;
+  }
+}
+
+/* ---- Game-over card in painted themes: one column, shared edges ------
+   Scores, suggestion panel, actions and share all span the card's inner
+   width. Actions stack full-width (two plaques side by side leave no room
+   between their decorated ends on a phone). */
+html[data-art~="primary-button"] .game-over-card {
+  gap: 14px;
+}
+html[data-art~="primary-button"] .final-scores {
+  gap: 10px;
+}
+html[data-art~="primary-button"] .final-score,
+html[data-art~="primary-button"] .go-suggestion {
+  background: rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(var(--p2-rgb-bright), 0.14);
+  border-radius: 14px;
+}
+/* Both tiles stretch to the taller one; the label takes the free space
+   (centred) and the score sits at the bottom — so the two scores always
+   line up, however many lines a name wraps to. */
+html[data-art~="primary-button"] .final-score {
+  justify-content: space-between;
+}
+html[data-art~="primary-button"] .final-score span {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.6em;
+  line-height: 1.3;
+}
+html[data-art~="primary-button"] .game-over-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+html[data-art~="primary-button"] .game-over-buttons .primary,
+html[data-art~="primary-button"] .go-cta-primary {
+  --btn-h: 50px;
+  --cap-l: calc(var(--btn-h) * var(--primary-btn-cap-l));
+  --cap-r: calc(var(--btn-h) * var(--primary-btn-cap-r));
+  width: 100%;
+  height: var(--btn-h);
+  padding: 0 calc(var(--cap-r) * 0.9) 0 calc(var(--cap-l) * 0.9);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-image-source: var(--primary-btn-img);
+  border-image-slice: var(--primary-btn-slice);
+  border-image-width: 0 var(--cap-r) 0 var(--cap-l);
+  border-image-repeat: stretch;
+  color: var(--on-accent);
+  font-size: 1rem;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+}
+html[data-art~="menu-button"] .game-over-buttons button:not(.primary),
+html[data-art~="menu-button"] .go-cta:not(.go-cta-primary) {
+  --btn-h: 50px;
+  --cap-l: calc(var(--btn-h) * var(--menu-btn-cap-l));
+  --cap-r: calc(var(--btn-h) * var(--menu-btn-cap-r));
+  width: 100%;
+  height: var(--btn-h);
+  padding: 0 var(--cap-r) 0 var(--cap-l);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-image-source: var(--menu-btn-img);
+  border-image-slice: var(--menu-btn-slice);
+  border-image-width: 0 var(--cap-r) 0 var(--cap-l);
+  border-image-repeat: stretch;
+  color: var(--p2-glow);
+  font-size: 1rem;
+  font-weight: 700;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+}
+html[data-art~="primary-button"] .game-over-buttons .primary:hover:not(:disabled),
+html[data-art~="primary-button"] .go-cta-primary:hover:not(:disabled),
+html[data-art~="menu-button"] .game-over-buttons button:not(.primary):hover,
+html[data-art~="menu-button"] .go-cta:not(.go-cta-primary):hover:not(:disabled) {
+  background: none;
+  transform: translateY(-1px);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) brightness(1.06);
+}
+html[data-art~="primary-button"] .game-over-buttons .primary::before,
+html[data-art~="primary-button"] .game-over-buttons .primary::after,
+html[data-art~="primary-button"] .go-cta-primary::before,
+html[data-art~="primary-button"] .go-cta-primary::after {
+  display: none;
+}
+html[data-art~="primary-button"] .go-suggestion {
+  padding: 12px 10px;
+}
+html[data-art~="primary-button"] .go-suggestion .go-cta {
+  --btn-h: 46px;
+  font-size: 0.95rem;
+}
+/* Narrow phones: the frame + card padding eat the width — give the card more
+   of the screen. */
+@media (max-width: 380px) {
+  html[data-art~="card-frame"] .game-over {
+    padding: 12px 10px;
+  }
+  html[data-art~="card-frame"] .game-over-card {
+    padding: 24px 26px;
+  }
+}
+/* Share + add-friend: the wooden pill. */
+html[data-art~="pill-button"] .go-share-btn,
+html[data-art~="pill-button"] .go-add-friend-btn {
+  --pill-h: 40px;
+  --cap-l: calc(var(--pill-h) * var(--pill-btn-cap-l));
+  --cap-r: calc(var(--pill-h) * var(--pill-btn-cap-r));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--pill-h);
+  max-width: 100%;
+  padding: 0 calc(var(--cap-r) * 0.85) 0 calc(var(--cap-l) * 0.85);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-image-source: var(--pill-btn-img);
+  border-image-slice: var(--pill-btn-slice);
+  border-image-width: 0 var(--cap-r) 0 var(--cap-l);
+  border-image-repeat: stretch;
+  color: var(--p2-glow);
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+html[data-art~="pill-button"] .go-share-btn:hover:not(:disabled),
+html[data-art~="pill-button"] .go-add-friend-btn:hover:not(:disabled) {
+  background: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45)) brightness(1.12);
+}
+html[data-art~="pill-button"] .go-share-row {
+  margin-top: 0;
 }
 
 /* WebViews older than Chrome 105 have no container units: cqw would make the

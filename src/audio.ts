@@ -1,7 +1,7 @@
 // Single module owning all game audio — mirrors telemetry.ts/ads.ts (one
 // concern, small function-call API) rather than spreading AudioContext
 // handling across components. Two halves: synthesized SFX cues (below),
-// and forest-ambiance playback (further down).
+// and the theme's ambience loops (further down; files from themeArt).
 
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -228,7 +228,10 @@ async function loadAmbianceBuffers(): Promise<void> {
   const files = activeTheme ? themeArt(activeTheme).ambience : undefined;
   if (!ctx || !files || ambianceLoadedFor === activeTheme) return;
   ambianceLoadedFor = activeTheme;
-  ambianceBuffers = {};
+  // Fill a local map: a load still in flight from a previous theme writes to
+  // its own map, never into this theme's buffers.
+  const buffers: Partial<Record<AmbianceKey, AudioBuffer>> = {};
+  ambianceBuffers = buffers;
   const entries = Object.entries(files) as [AmbianceKey, string][];
   await Promise.all(
     entries.map(async ([key, url]) => {
@@ -236,7 +239,7 @@ async function loadAmbianceBuffers(): Promise<void> {
         const res = await fetch(url);
         const arr = await res.arrayBuffer();
         if (!ctx) return;
-        ambianceBuffers[key] = await ctx.decodeAudioData(arr);
+        buffers[key] = await ctx.decodeAudioData(arr);
       } catch {
         // Missing/failed fetch: that layer just stays silent, others still play.
       }

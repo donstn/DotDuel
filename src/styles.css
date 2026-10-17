@@ -1547,8 +1547,7 @@ html[data-art~="menu-button"] .menu-share-link {
    stack. animation-name flip via .pending-flash class triggers the keyframe
    exactly once per pending-count increase. */
 .pending-indicator.pending-flash {
-  animation: pendingPulse 1.8s ease-in-out infinite,
-             pendingFlash 600ms ease-out;
+  animation: pendingFlash 600ms ease-out;
 }
 
 @keyframes pendingFlash {
@@ -1660,20 +1659,6 @@ html[data-art~="menu-button"] .menu-share-link {
   100% {
     transform: scale(1);
     filter: brightness(1);
-  }
-}
-
-/* Phase 1b — in-board speech-bubble hint.
-   Rendered as SVG inside Board.tsx so it scales with the board's
-   viewBox auto-scaler and points at the dot that triggered the hint.
-   Auto-dismisses on next human move;
-
-@keyframes hintBubbleFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
   }
 }
 
@@ -3686,10 +3671,6 @@ h1, h2, h3,
   }
   .remaining-value { font-size: 1rem; }
   .remaining-label { font-size: 0.75rem; }
-  .side-panel {
-    padding: 6px;
-    gap: 4px;
-  }
   .board-wrap {
     padding: 6px;
   }
@@ -4254,16 +4235,10 @@ h1, h2, h3,
 @media (max-width: 720px), (orientation: landscape) and (max-height: 500px) {
   .game-body {
     display: grid;
-    /* minmax(0, 1fr) is the trick — '1fr' alone defaults to
-       minmax(auto, 1fr), so the column refuses to shrink below the
-       content's intrinsic min-width and the grid can overflow the
-       viewport horizontally (which is what was clipping the AI card).
-       minmax(0, 1fr) lets the column shrink to whatever fits. */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    /* Columns/areas are set in the score-strip block below ("strip" over
+       "board"). minmax(0, 1fr) there keeps the column from refusing to
+       shrink below its content's min-width (horizontal overflow). */
     grid-template-rows: auto 1fr;
-    grid-template-areas:
-      "p1 p2"
-      "board board";
     gap: 6px;
     padding: 6px;
     align-items: stretch;
@@ -4286,13 +4261,6 @@ h1, h2, h3,
      base rule still caps it for short landscape). */
   .board {
     height: auto;
-  }
-
-  .avatar-frame {
-    /* Scale fluidly: tiny on small phones, larger on tablets. */
-    width: clamp(32px, 10vw, 50px);
-    grid-column: 1;
-    grid-row: 1;
   }
 
   .btn-resign-inline {
@@ -4599,10 +4567,6 @@ h1, h2, h3,
     gap: 4px;
     padding: 4px 6px 6px;
   }
-  .avatar-frame {
-    width: clamp(28px, 8.5vh, 40px);
-  }
-
   .menu {
     padding: 6px 14px 6px;
     gap: 8px;
@@ -5185,9 +5149,10 @@ html[data-art~="title-banner"] .menu > h2 {
   html[data-art~="menu-button"] .menu-shelf { --plaque-h: 52px; }
   html[data-art~="menu-button"] .menu-shelf-body strong { font-size: 1rem; }
   html[data-art~="menu-button"] .menu-shelf-sub { font-size: 0.7rem; }
-  html[data-art~="menu-button"] .menu-shelf-inner:has(.menu-shelf-ic) { width: 180px; }
   html[data-art~="pill-button"] .menu-auth-btn,
-  html[data-art~="pill-button"] .menu-auth-btn-cta { --pill-h: 34px; font-size: 0.8rem; }
+  html[data-art~="pill-button"] .menu-auth-btn-cta,
+  html[data-art~="pill-button"] .menu-auth-btn:hover,
+  html[data-art~="pill-button"] .menu-auth-btn-cta:hover { --pill-h: 34px; font-size: 0.8rem; }
   .header-sign-text { font-size: 0.8rem; }
 }
 
@@ -5669,7 +5634,7 @@ html[data-art~="title-banner"] .menu > h2 {
   line-height: 1.35;
 }
 
-/* Login gate: "New here?" enlarged ~2 steps;
+/* Login gate: the anonymous escape link under the Google sign-in button. */
 .auth-anon {
   display: block;
   margin: 12px auto 0;

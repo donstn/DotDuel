@@ -101,6 +101,16 @@ All notable changes to DotDuel will be documented in this file. Format follows
   realistic score is 3 digits) plus `font-variant-numeric: tabular-nums`, so
   the card's content width never depends on the score value.
 
+## [0.4.12.0] - 2026-07-26
+
+### Fixed
+
+- **Polish pass (internal-testing bugs)** — language picker moved top-left so
+  it no longer overlaps the logo; phone player cards mirror each other;
+  hot-seat colour swatches follow the theme; Android back button/gesture
+  steps back through menus instead of exiting (ranked games and daily
+  attempts still confirm first).
+
 ## [0.4.11.0] - 2026-06-17
 
 ### Added

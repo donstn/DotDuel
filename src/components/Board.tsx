@@ -424,7 +424,7 @@ export function Board({
             <stop offset="0%" stopColor="var(--board-felt-1)" />
             <stop offset="100%" stopColor="var(--board-felt-2)" />
           </radialGradient>
-          {paintedBoard && (
+          {boardArt && (
             <pattern
               id="board-felt-image"
               patternUnits="userSpaceOnUse"
@@ -434,7 +434,7 @@ export function Board({
               height={vbExp.h}
             >
               <image
-                href={boardArt!.felt}
+                href={boardArt.felt}
                 x="0"
                 y="0"
                 width={vbExp.w}
@@ -595,9 +595,9 @@ export function Board({
                   pointerEvents: cd && !canClaim ? 'none' : 'auto',
                 }}
               />
-              {paintedBoard && ownerColor && (
+              {boardArt && ownerColor && (
                 <image
-                  href={boardArt!.dot(ownerColor)}
+                  href={boardArt.dot(ownerColor)}
                   x={d.x - dotRadius}
                   y={d.y - dotRadius}
                   width={dotRadius * 2}
@@ -680,7 +680,7 @@ export function Board({
           const outer = strokeWidth * 0.575;
           const innerHighlight = strokeWidth * 0.22;
           const cIdx = colorIndex(c.player, colorSwap);
-          if (paintedBoard) {
+          if (boardArt) {
             const midX = (x1 + x2) / 2;
             const midY = (y1 + y2) / 2;
             const len = Math.hypot(x2 - x1, y2 - y1);
@@ -728,7 +728,7 @@ export function Board({
                 style={{ pointerEvents: 'none' }}
               >
                 <image
-                  href={boardArt!.line(artLen, cIdx)}
+                  href={boardArt.line(artLen, cIdx)}
                   x={-imgW / 2}
                   y={-imgH / 2}
                   width={imgW}

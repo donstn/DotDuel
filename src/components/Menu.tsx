@@ -276,6 +276,15 @@ export function Menu({
   // ---- Level 0: home (three category shelves) ----
   if (!mode && !category) {
     const welcomeName = gameName ?? user?.email?.split('@')[0] ?? null;
+    const greeting =
+      user && welcomeName ? (
+        <>
+          {t.menu.welcomeLead}{' '}
+          <strong className="menu-welcome-name">{welcomeName}</strong> — {t.menu.tagline}
+        </>
+      ) : (
+        <>{t.menu.tagline}</>
+      );
     return (
       <div className="menu">
         {langOpen && (
@@ -339,47 +348,24 @@ export function Menu({
             </svg>
           </button>
         </div>
-        <h1 className="title">
-          {theme === 'forest-pearl' ? (
-            <img src="/art/forest-pearl/header-wordmark.png" alt="DotDuel" className="title-wordmark" />
-          ) : (
-            <>
-              <span className="title-dot title-dot-1">●</span>
-              <span className="title-text">DotDuel</span>
-              <span className="title-dot title-dot-2">●</span>
-            </>
-          )}
-        </h1>
         {theme === 'forest-pearl' ? (
-          <div className="subtitle-framed">
-            <img
-              src="/art/forest-pearl/tagline-frame.png"
-              alt=""
-              aria-hidden="true"
-              className="subtitle-frame-art"
-            />
-            <p className="subtitle subtitle-in-frame">
-              {user && welcomeName ? (
-                <>
-                  {t.menu.welcomeLead}{' '}
-                  <strong className="menu-welcome-name">{welcomeName}</strong> — {t.menu.tagline}
-                </>
-              ) : (
-                <>{t.menu.tagline}</>
-              )}
+          <div className="header-sign">
+            <h1 className="header-sign-title">
+              <img src="/art/forest-pearl/header-combined.webp" alt="DotDuel" className="header-sign-art" />
+            </h1>
+            <p className="header-sign-text">
+              <span>{greeting}</span>
             </p>
           </div>
         ) : (
-          <p className="subtitle">
-            {user && welcomeName ? (
-              <>
-                {t.menu.welcomeLead}{' '}
-                <strong className="menu-welcome-name">{welcomeName}</strong> — {t.menu.tagline}
-              </>
-            ) : (
-              <>{t.menu.tagline}</>
-            )}
-          </p>
+          <>
+            <h1 className="title">
+              <span className="title-dot title-dot-1">●</span>
+              <span className="title-text">DotDuel</span>
+              <span className="title-dot title-dot-2">●</span>
+            </h1>
+            <p className="subtitle">{greeting}</p>
+          </>
         )}
         <div className="menu-auth-row">
           {user ? (

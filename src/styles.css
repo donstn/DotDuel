@@ -808,19 +808,7 @@ button {
    `calc(100vw - 32px)` accounts for .menu's 16px side padding directly,
    since .title is a shrink-to-fit flex box with no width of its own for a
    plain max-width:100% to resolve against. */
-.title-wordmark {
-  display: block;
-  width: min(calc(100vw - 32px), 480px);
-  max-width: 100%;
-  height: auto;
-  /* .menu-topleft/.menu-topright (language + theme buttons) are absolutely
-     positioned in the same top corner band this banner's full-width edges
-     now reach into — .menu's own padding-top isn't enough clearance once
-     the wordmark is this wide. Push it down below that button row instead
-     of narrowing the banner to dodge them. */
-  margin-top: 36px;
-  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
-}
+
 
 .title-text {
   background: linear-gradient(
@@ -843,46 +831,55 @@ button {
   line-height: 1.45;
 }
 
-/* Forest & Pearl only: the tagline sits inside a painted vine-frame plaque
-   (its own opaque dark-green interior, not the photo background), so the
-   old "guarantee contrast against whatever photo pixel is behind it"
-   problem doesn't apply here — the frame IS the backdrop. Light text reads
-   directly against the frame's dark interior, no outline needed. */
-.subtitle-framed {
+/* Forest & Pearl: one painted sign (DotDuel crest + empty wooden panel) with
+   the greeting set into the panel. The panel's clear interior, measured on
+   header-combined.webp (987×456), is x 9–91% / y 60–91.5%; the crest's
+   centre drop sits just above 60%. Font scales with the sign's own width
+   (cqw) so the text keeps the same fit at every size. */
+.header-sign {
   position: relative;
-  /* width: 100% (not 100vw-based) so this sizes off .menu's own content
-     box — which already correctly excludes .menu's vertical scrollbar —
-     the same way .menu-shelves does. 100vw includes the scrollbar's
-     width, which made this ~8px too wide and forced .menu into a
-     horizontal scroll on narrow screens. */
+  width: min(100%, 470px);
+  aspect-ratio: 987 / 456;
+  /* Clears the absolutely positioned language + theme buttons, whose corner
+     band the sign's full-width edges reach into. */
+  margin-top: 36px;
+  container-type: inline-size;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
+}
+.header-sign-title {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+}
+.header-sign-art {
+  display: block;
   width: 100%;
-  max-width: 440px;
-  aspect-ratio: 1024 / 338;
+  height: 100%;
+}
+.header-sign-text {
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  top: 60%;
+  bottom: 8.5%;
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.subtitle-frame-art {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-}
-.subtitle-in-frame {
-  position: relative;
-  z-index: 1;
+  text-align: center;
   color: var(--p2-glow);
-  margin: 0;
+  font-size: clamp(0.7rem, 4cqw, 1.05rem);
+  line-height: 1.18;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
 }
-/* Specificity bump (attribute selector, not just .subtitle-in-frame's own
-   class) so this beats the later small-screen ".subtitle { max-width:
-   480px }" override below — that rule also matches this element, since it
-   carries both the "subtitle" and "subtitle-in-frame" classes, and would
-   otherwise win at narrow widths purely by appearing later in the file. */
-html[data-theme="forest-pearl"] .subtitle-in-frame {
-  max-width: 78%;
+.header-sign-text > span {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
+
 
 /* The share link keeps its pill treatment (unlike the subtitle above) —
    it now sits below the shelves, over the darker lower part of the photo,

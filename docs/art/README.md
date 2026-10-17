@@ -24,13 +24,18 @@ and the processing script, so adding or restyling a theme is mechanical.
 | `primaryButton` | stretch | `capLeft` / `capRight` px (Start game, Play again) |
 | `titleBanner` | stretch | `capLeft` / `capRight` px (sub-screen headings) |
 | `cardFrame` | nine-slice (`:nine`) | `capLeft/Right/Top/Bottom` px (popovers, dialogs, game-over card, language list) |
+| `board` | sprites | `felt`, `dot(color)`, `line(len 2–9, color)` |
+| `avatars` | sprites | `human`, `bot(level)` |
+| `particles`, `background`, `ambience` | files | win sprites; portrait + landscape photo; wind/stream/birds loops |
 | `shapeIcons` | icons | one image per board shape |
 
-Not yet migrated (still hardcoded `forest-pearl` paths in `SidePanel.tsx`,
-`Board.tsx`, `WinCelebration.tsx`, `audio.ts`, `styles.css`): avatars, dots,
-line strokes, board felt, backgrounds, celebration particles, ambience, and
-the `.menu-share-link` / `.menu-auth-btn-cta` theme gates in styles.css. Move each into `ThemeArt` when it is next
-touched, and derive `locked` in `src/theme.ts` from "has all required slots".
+All painted art now goes through `ThemeArt`: header sign, menu/pill/primary
+buttons, card frame, title banner, shape icons, board (felt, dots, lines),
+avatars, win-celebration particles, menu ambience and the background photo.
+The only theme-named CSS left is the palette token block
+(`html[data-theme="…"] { --p1: … }`), which is where palettes belong.
+Next step when a second theme gets art: derive `locked` in `src/theme.ts`
+from "has the required slots" instead of setting it by hand.
 
 ## Workflow for new art
 

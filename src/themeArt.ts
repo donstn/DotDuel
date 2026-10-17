@@ -1,5 +1,5 @@
 import type { ThemeId } from './theme';
-import type { ShapeId } from './types';
+import type { Difficulty, ShapeId } from './types';
 
 /**
  * Painted art per theme — the one contract that code, Gemini prompts and the
@@ -48,6 +48,19 @@ export interface ThemeArt {
   /** Popovers, confirm dialogs, game-over card, language list. */
   cardFrame?: NineArt;
   shapeIcons?: Record<ShapeId, string>;
+  /** Painted board: felt texture, dot sprites, line-stroke sprites (length 2–9). */
+  board?: {
+    felt: string;
+    dot: (color: 1 | 2) => string;
+    line: (len: number, color: 1 | 2) => string;
+  };
+  avatars?: { human: string; bot: (level: Difficulty) => string };
+  /** Win-celebration sprites. */
+  particles?: string[];
+  /** Full-screen scenery behind the vignette. */
+  background?: { portrait: string; landscape: string };
+  /** Menu ambience loops (played when music is on). */
+  ambience?: { wind: string; stream: string; birds: string };
 }
 
 const ART: Partial<Record<ThemeId, ThemeArt>> = {
@@ -97,6 +110,30 @@ const ART: Partial<Record<ThemeId, ThemeArt>> = {
       capRight: 29,
       capTop: 33,
       capBottom: 36,
+    },
+    board: {
+      felt: '/art/forest-pearl/felt-base.webp',
+      dot: (c) => `/art/forest-pearl/dot-p${c}.webp`,
+      line: (len, c) => `/art/forest-pearl/line-${len}-p${c}.webp`,
+    },
+    avatars: {
+      human: '/art/forest-pearl/avatar-human.webp',
+      bot: (level) => `/art/forest-pearl/avatar-l${level}.webp`,
+    },
+    particles: [
+      '/art/forest-pearl/particle-spark.webp',
+      '/art/forest-pearl/particle-leaf.webp',
+      '/art/forest-pearl/particle-pearl.webp',
+      '/art/forest-pearl/particle-firefly.webp',
+    ],
+    background: {
+      portrait: '/art/forest-pearl/background-portrait.webp',
+      landscape: '/art/forest-pearl/background-landscape.webp',
+    },
+    ambience: {
+      wind: '/audio/forest-pearl/ambience-wind.mp3',
+      stream: '/audio/forest-pearl/ambience-stream.mp3',
+      birds: '/audio/forest-pearl/ambience-birds.mp3',
     },
     shapeIcons: {
       triangle: '/art/forest-pearl/menu-icon-shape-triangle.webp',
@@ -153,6 +190,11 @@ function themeArtVars(art: ThemeArt): { vars: Record<string, string>; slots: str
       '--card-frame-width': `${px(f.capTop)} ${px(f.capRight)} ${px(f.capBottom)} ${px(f.capLeft)}`,
     });
     slots.push('card-frame');
+  }
+  if (art.background) {
+    vars['--bg-art-portrait'] = `url("${art.background.portrait}")`;
+    vars['--bg-art-landscape'] = `url("${art.background.landscape}")`;
+    slots.push('background');
   }
   if (art.headerSign) {
     const { width, height, text } = art.headerSign;

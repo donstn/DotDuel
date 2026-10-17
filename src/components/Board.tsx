@@ -3,6 +3,7 @@ import { getBoard } from '../geometry';
 import { useT } from '../i18n';
 import type { GameState, Line, Player } from '../types';
 import type { ThemeId } from '../theme';
+import { themeArt } from '../themeArt';
 
 interface ScoreEvent {
   dotId: number;
@@ -218,7 +219,8 @@ export function Board({
   theme,
 }: Props) {
   const t = useT();
-  const useForestArt = theme === 'forest-pearl';
+  const boardArt = themeArt(theme).board;
+  const paintedBoard = Boolean(boardArt);
   const board = getBoard(state.shape);
   const vb = board.viewBox;
   const dotRadius = state.shape === 'triangle' ? 0.32 : 0.34;
@@ -422,7 +424,7 @@ export function Board({
             <stop offset="0%" stopColor="var(--board-felt-1)" />
             <stop offset="100%" stopColor="var(--board-felt-2)" />
           </radialGradient>
-          {useForestArt && (
+          {paintedBoard && (
             <pattern
               id="board-felt-image"
               patternUnits="userSpaceOnUse"
@@ -432,7 +434,7 @@ export function Board({
               height={vbExp.h}
             >
               <image
-                href="/art/forest-pearl/felt-base.webp"
+                href={boardArt!.felt}
                 x="0"
                 y="0"
                 width={vbExp.w}
@@ -475,14 +477,14 @@ export function Board({
         {/* 1. Drop shadow — floats the board above the vignette. */}
         <path
           d={feltPathOuter}
-          fill={useForestArt ? 'url(#board-felt-image)' : 'url(#board-felt)'}
+          fill={paintedBoard ? 'url(#board-felt-image)' : 'url(#board-felt)'}
           pointerEvents="none"
           style={{ filter: 'var(--rim-drop)' }}
         />
         {/* 2. Felt fill + recessed inner shadow (shape-matched, no blend modes). */}
         <path
           d={feltPathOuter}
-          fill={useForestArt ? 'url(#board-felt-image)' : 'url(#board-felt)'}
+          fill={paintedBoard ? 'url(#board-felt-image)' : 'url(#board-felt)'}
           pointerEvents="none"
           filter="url(#felt-recess)"
         />
@@ -593,9 +595,9 @@ export function Board({
                   pointerEvents: cd && !canClaim ? 'none' : 'auto',
                 }}
               />
-              {useForestArt && ownerColor && (
+              {paintedBoard && ownerColor && (
                 <image
-                  href={`/art/forest-pearl/dot-p${ownerColor}.webp`}
+                  href={boardArt!.dot(ownerColor)}
                   x={d.x - dotRadius}
                   y={d.y - dotRadius}
                   width={dotRadius * 2}
@@ -605,7 +607,7 @@ export function Board({
                   aria-hidden="true"
                 />
               )}
-              {showHighlight && !useForestArt && (
+              {showHighlight && !paintedBoard && (
                 <ellipse
                   cx={d.x - hlDx}
                   cy={d.y - hlDy}
@@ -678,7 +680,7 @@ export function Board({
           const outer = strokeWidth * 0.575;
           const innerHighlight = strokeWidth * 0.22;
           const cIdx = colorIndex(c.player, colorSwap);
-          if (useForestArt) {
+          if (paintedBoard) {
             const midX = (x1 + x2) / 2;
             const midY = (y1 + y2) / 2;
             const len = Math.hypot(x2 - x1, y2 - y1);
@@ -726,7 +728,7 @@ export function Board({
                 style={{ pointerEvents: 'none' }}
               >
                 <image
-                  href={`/art/forest-pearl/line-${artLen}-p${cIdx}.webp`}
+                  href={boardArt!.line(artLen, cIdx)}
                   x={-imgW / 2}
                   y={-imgH / 2}
                   width={imgW}

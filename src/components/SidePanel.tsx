@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Difficulty, Player } from '../types';
 import type { ThemeId } from '../theme';
+import { themeArt } from '../themeArt';
 import { AchievementBadge } from '../achievements/AchievementBadge';
 import { useT } from '../i18n';
 import {
@@ -246,10 +247,9 @@ function StatsLine({
 }
 
 function HumanAvatar({ player, theme }: { player: Player; theme?: ThemeId }) {
-  if (theme === 'forest-pearl') {
-    return (
-      <img src="/art/forest-pearl/avatar-human.webp" className="avatar-img" alt="" aria-hidden="true" />
-    );
+  const avatars = themeArt(theme).avatars;
+  if (avatars) {
+    return <img src={avatars.human} className="avatar-img" alt="" aria-hidden="true" />;
   }
   const fg = player === 1 ? 'var(--avatar-p1-fg)' : 'var(--avatar-p2-fg)';
   const bgGrad = player === 1 ? 'avbg-p1' : 'avbg-p2';
@@ -325,14 +325,9 @@ function GuestAvatar({ label, player }: { label: string; player: Player }) {
 export function AIAvatar({ level, theme }: { level: Difficulty; theme?: ThemeId }) {
   const t = useT();
   const label = t.sidePanel.aiLabel(t.difficulty[level]);
-  if (theme === 'forest-pearl') {
-    return (
-      <img
-        src={`/art/forest-pearl/avatar-l${level}.webp`}
-        className="avatar-img"
-        alt={label}
-      />
-    );
+  const avatars = themeArt(theme).avatars;
+  if (avatars) {
+    return <img src={avatars.bot(level)} className="avatar-img" alt={label} />;
   }
   switch (level) {
     case 1:

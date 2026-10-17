@@ -629,33 +629,24 @@ body {
     #000;
 }
 
-/* Forest & Pearl only: painted scenery behind the vignette. Two crops (the
-   app has no way to test real device orientation at build time) picked by
-   viewport aspect ratio, not by device type. Layered UNDER the existing
-   radial-gradient vignette so the vignette's darkening toward the edges
-   still applies on top of the art, keeping foreground UI legible — and the
-   film-grain overlay (body::before, z-index 1) still draws over everything,
-   unifying art + vignette into one image exactly as it already did for the
-   plain gradient. Only `[data-theme="forest-pearl"]`, no `:not([data-theme])`
-   fallback — App.tsx's theme effect always calls setAttribute with a
-   concrete ThemeId (default 'forest-pearl' included), so the attribute is
-   never actually absent post-mount; a `:not([data-theme])` branch here would
-   only cost every OTHER theme's users an unnecessary multi-MB art fetch
-   during the brief pre-hydration window. */
-html[data-theme="forest-pearl"] body {
+/* Painted scenery behind the vignette (themeArt background slot → vars).
+   Two crops picked by viewport aspect ratio. Layered UNDER the radial
+   vignette so edges stay dark and the UI legible; the film-grain overlay
+   (body::before) still draws over both. */
+html[data-art~="background"] body {
   background:
     radial-gradient(ellipse at 50% 38%, transparent 0%, var(--bg-edge) 92%),
-    url('/art/forest-pearl/background-landscape.webp') center / cover no-repeat,
+    var(--bg-art-landscape) center / cover no-repeat,
     #000;
 }
 
 @media (max-aspect-ratio: 4/5) {
-  html[data-theme="forest-pearl"] body {
+  html[data-art~="background"] body {
     background:
       radial-gradient(ellipse at 50% 38%, transparent 0%, var(--bg-edge) 92%),
-      url('/art/forest-pearl/background-portrait.webp') center / cover no-repeat,
+      var(--bg-art-portrait) center / cover no-repeat,
       #000;
-    }
+  }
 }
 
 /* Forest & Pearl only: the glass-surface tokens above were tuned for the
@@ -866,7 +857,7 @@ button {
 /* The share link keeps its pill treatment (unlike the subtitle above) —
    it now sits below the shelves, over the darker lower part of the photo,
    where a solid backing scrim reads better than switching its text color. */
-html[data-theme="forest-pearl"] .menu-share-link {
+html[data-art~="menu-button"] .menu-share-link {
   background: var(--glass-bg-strong);
   border-radius: 999px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 1px 10px rgba(0, 0, 0, 0.6);
@@ -4926,20 +4917,6 @@ h1, h2, h3,
   border-color: rgba(123, 219, 149, 0.55);
 }
 
-/* Forest & Pearl only: this button sets its own background directly (not
-   via --glass-bg), so the earlier site-wide glass-contrast fix never
-   reached it — it was still a near-transparent green tint sitting on a
-   busy green forest photo, both text and button nearly invisible. Darker,
-   more opaque background plus a text-shadow on the (still fairly bright
-   --accent-colored) label. */
-html[data-theme="forest-pearl"] .menu-auth-btn-cta {
-  background: rgba(6, 24, 14, 0.72);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-html[data-theme="forest-pearl"] .menu-auth-btn-cta:hover {
-  background: rgba(10, 36, 20, 0.82);
-}
 
 /* ---- Painted plaque buttons (themes whose art contract has menuButton /
    pillButton; see src/themeArt.ts). Three-slice border-image: the painted end

@@ -21,11 +21,15 @@ and the processing script, so adding or restyling a theme is mechanical.
 | `headerSign` | panel | aspect; text-safe box as fractions (left/top/right/bottom) |
 | `menuButton` | stretch | `capLeft` / `capRight` px — only the middle stretches |
 | `pillButton` | stretch | `capLeft` / `capRight` px |
+| `primaryButton` | stretch | `capLeft` / `capRight` px (Start game, Play again) |
+| `titleBanner` | stretch | `capLeft` / `capRight` px (sub-screen headings) |
+| `cardFrame` | nine-slice (`:nine`) | `capLeft/Right/Top/Bottom` px (popovers, dialogs, game-over card, language list) |
 | `shapeIcons` | icons | one image per board shape |
 
 Not yet migrated (still hardcoded `forest-pearl` paths in `SidePanel.tsx`,
-`Board.tsx`, `WinCelebration.tsx`, `styles.css`): avatars, dots, line
-strokes, board felt, backgrounds. Move each into `ThemeArt` when it is next
+`Board.tsx`, `WinCelebration.tsx`, `audio.ts`, `styles.css`): avatars, dots,
+line strokes, board felt, backgrounds, celebration particles, ambience, and
+the `.menu-share-link` / `.menu-auth-btn-cta` theme gates in styles.css. Move each into `ThemeArt` when it is next
 touched, and derive `locked` in `src/theme.ts` from "has all required slots".
 
 ## Workflow for new art
@@ -39,7 +43,10 @@ touched, and derive `locked` in `src/theme.ts` from "has all required slots".
 3. Run, listing slots in reading order (top→bottom, left→right):
    `node scripts/process-art.mjs art-src/<theme>/buttons-sheet.jpg <theme> menu-button:stretch pill-button:stretch`
 4. Paste the printed width/height/caps into the theme's entry in
-   `src/themeArt.ts`. Panel text boxes are measured by eye for now — check
+   `src/themeArt.ts`. Caps measured on art with a soft glow or a curve
+   across the middle come out too wide (the script counts the gradient as
+   "not plain") — check with a cap-line preview and set them by eye at the
+   end of the ornament (done for primaryButton / titleBanner). Panel text boxes are measured by eye for now — check
    the greeting at 320px in Lithuanian after any header regeneration.
 5. Check at 320×568 and 412×703, Lithuanian, signed in and out: home menu
    must fit with no scroll.

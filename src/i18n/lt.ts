@@ -40,8 +40,6 @@ export const lt: Messages = {
 
   lang: {
     label: 'Kalba',
-    english: 'English',
-    lithuanian: 'Lietuvių',
   },
 
   shapes: {
@@ -68,7 +66,6 @@ export const lt: Messages = {
     profile: 'Profilis',
     signOut: 'Atsijungti',
     signIn: 'Prisijungti',
-    shareDotDuel: 'Dalintis „DotDuel“',
 
     singlePlayer: 'Vienas žaidėjas',
     singlePlayerSub: 'Botai ir dienos galvosūkis.',
@@ -875,22 +872,8 @@ export const lt: Messages = {
     close: 'Uždaryti',
     titleGate: 'Prisijunkite, kad žaistumėte',
     titleSignIn: 'Prisijungti',
-    titleSignUp: 'Sukurti paskyrą',
     google: 'Tęsti su Google',
-    orEmail: 'arba su el. paštu',
-    emailPlaceholder: 'jus@pavyzdys.lt',
-    passwordPlaceholder: 'Slaptažodis (min. 6 simboliai)',
-    confirmPlaceholder: 'Pakartokite slaptažodį',
-    submitSignIn: 'Prisijungti',
-    submitSignUp: 'Sukurti paskyrą',
-    newHere: 'Pirmą kartą čia?',
-    createAccount: 'Sukurti paskyrą',
-    haveOne: 'Jau turite paskyrą?',
-    signInLink: 'Prisijungti',
     tryAnon: 'Norite išbandyti anonimiškai neprisijungę?',
-    accountCreated: (email: string) =>
-      `Paskyra sukurta. Jei įjungtas el. pašto patvirtinimas, patikrinkite ${email} (ir šlamšto aplanką).`,
-    errPasswordsMatch: 'Slaptažodžiai nesutampa.',
     errInvalidCreds: 'Neteisingas el. paštas arba slaptažodis.',
     errAlreadyRegistered: 'Šis el. paštas jau užregistruotas. Geriau prisijunkite.',
     errWeakPassword: 'Slaptažodį turi sudaryti bent 6 simboliai.',

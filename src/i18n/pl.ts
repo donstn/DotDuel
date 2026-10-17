@@ -40,8 +40,6 @@ export const pl: Messages = {
 
   lang: {
     label: 'Język',
-    english: 'English',
-    lithuanian: 'Lietuvių',
   },
 
   shapes: {
@@ -68,7 +66,6 @@ export const pl: Messages = {
     profile: 'Profil',
     signOut: 'Wyloguj się',
     signIn: 'Zaloguj się',
-    shareDotDuel: 'Udostępnij DotDuel',
 
     singlePlayer: 'Jeden gracz',
     singlePlayerSub: 'Boty i codzienna łamigłówka.',
@@ -877,22 +874,8 @@ export const pl: Messages = {
     close: 'Zamknij',
     titleGate: 'Zaloguj się, aby zagrać',
     titleSignIn: 'Zaloguj się',
-    titleSignUp: 'Utwórz konto',
     google: 'Kontynuuj z Google',
-    orEmail: 'lub przez e-mail',
-    emailPlaceholder: 'ty@example.com',
-    passwordPlaceholder: 'Hasło (min. 6 znaków)',
-    confirmPlaceholder: 'Potwierdź hasło',
-    submitSignIn: 'Zaloguj się',
-    submitSignUp: 'Utwórz konto',
-    newHere: 'Pierwszy raz tutaj?',
-    createAccount: 'Utwórz konto',
-    haveOne: 'Masz już konto?',
-    signInLink: 'Zaloguj się',
     tryAnon: 'Chcesz spróbować anonimowo, bez logowania?',
-    accountCreated: (email: string) =>
-      `Konto utworzone. Jeśli potwierdzanie e-mailem jest włączone, sprawdź ${email} (i spam), aby zweryfikować.`,
-    errPasswordsMatch: 'Hasła nie są zgodne.',
     errInvalidCreds: 'Nieprawidłowy e-mail lub hasło.',
     errAlreadyRegistered: 'Ten e-mail jest już zarejestrowany. Zaloguj się zamiast tego.',
     errWeakPassword: 'Hasło musi mieć co najmniej 6 znaków.',

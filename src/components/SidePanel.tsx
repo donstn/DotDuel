@@ -248,7 +248,7 @@ function StatsLine({
 function HumanAvatar({ player, theme }: { player: Player; theme?: ThemeId }) {
   if (theme === 'forest-pearl') {
     return (
-      <img src="/art/forest-pearl/avatar-human.png" className="avatar-img" alt="" aria-hidden="true" />
+      <img src="/art/forest-pearl/avatar-human.webp" className="avatar-img" alt="" aria-hidden="true" />
     );
   }
   const fg = player === 1 ? 'var(--avatar-p1-fg)' : 'var(--avatar-p2-fg)';
@@ -328,7 +328,7 @@ export function AIAvatar({ level, theme }: { level: Difficulty; theme?: ThemeId 
   if (theme === 'forest-pearl') {
     return (
       <img
-        src={`/art/forest-pearl/avatar-l${level}.png`}
+        src={`/art/forest-pearl/avatar-l${level}.webp`}
         className="avatar-img"
         alt={label}
       />

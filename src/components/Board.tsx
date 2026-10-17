@@ -432,7 +432,7 @@ export function Board({
               height={vbExp.h}
             >
               <image
-                href="/art/forest-pearl/felt-base.png"
+                href="/art/forest-pearl/felt-base.webp"
                 x="0"
                 y="0"
                 width={vbExp.w}
@@ -595,7 +595,7 @@ export function Board({
               />
               {useForestArt && ownerColor && (
                 <image
-                  href={`/art/forest-pearl/dot-p${ownerColor}.png`}
+                  href={`/art/forest-pearl/dot-p${ownerColor}.webp`}
                   x={d.x - dotRadius}
                   y={d.y - dotRadius}
                   width={dotRadius * 2}
@@ -726,7 +726,7 @@ export function Board({
                 style={{ pointerEvents: 'none' }}
               >
                 <image
-                  href={`/art/forest-pearl/line-${artLen}-p${cIdx}.png`}
+                  href={`/art/forest-pearl/line-${artLen}-p${cIdx}.webp`}
                   x={-imgW / 2}
                   y={-imgH / 2}
                   width={imgW}

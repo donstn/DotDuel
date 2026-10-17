@@ -99,10 +99,10 @@ const ART: Partial<Record<ThemeId, ThemeArt>> = {
       capBottom: 36,
     },
     shapeIcons: {
-      triangle: '/art/forest-pearl/menu-icon-shape-triangle.png',
-      square: '/art/forest-pearl/menu-icon-shape-square.png',
-      rectangle: '/art/forest-pearl/menu-icon-shape-rectangle.png',
-      rhombus: '/art/forest-pearl/menu-icon-shape-rhombus.png',
+      triangle: '/art/forest-pearl/menu-icon-shape-triangle.webp',
+      square: '/art/forest-pearl/menu-icon-shape-square.webp',
+      rectangle: '/art/forest-pearl/menu-icon-shape-rectangle.webp',
+      rhombus: '/art/forest-pearl/menu-icon-shape-rhombus.webp',
     },
   },
 };

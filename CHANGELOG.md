@@ -40,6 +40,32 @@ All notable changes to DotDuel will be documented in this file. Format follows
   shown publicly, kept 24 months). Enforced by `daily_results_retention_sweep`
   (`supabase/migrations/20261011000000_daily_results_retention.sql`).
 
+## [0.4.12.4] - 2026-08-04
+
+### Fixed
+
+- **Multiplayer move vanishing** — a network hiccup could silently discard a
+  placed dot. `sendMove` now retries; if it still fails the player sees a
+  clear message instead of the dot disappearing.
+
+## [0.4.12.3] - 2026-08-01
+
+### Fixed
+
+- **Phone player cards line up** — avatar, name and score sit in the same
+  grid slots on both cards. (Superseded by the 0.4.14.0 phone score strip.)
+
+## [0.4.12.2] - 2026-08-01
+
+### Fixed
+
+- **More strings translated** — AI opponent name, victory-card image/text and
+  connection-status screens.
+
+### Added
+
+- **Changelog translations** — every past entry in lt/es/pt/pl/cs.
+
 ## [0.4.12.1] - 2026-08-01
 
 ### Fixed

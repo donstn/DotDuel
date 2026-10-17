@@ -29,8 +29,6 @@ export const pt: Messages = {
 
   lang: {
     label: 'Idioma',
-    english: 'English',
-    lithuanian: 'Lietuvių',
   },
 
   shapes: {
@@ -57,7 +55,6 @@ export const pt: Messages = {
     profile: 'Perfil',
     signOut: 'Sair',
     signIn: 'Entrar',
-    shareDotDuel: 'Compartilhar DotDuel',
 
     singlePlayer: 'Um jogador',
     singlePlayerSub: 'Bots e desafio diário.',
@@ -866,22 +863,8 @@ export const pt: Messages = {
     close: 'Fechar',
     titleGate: 'Entre para jogar',
     titleSignIn: 'Entrar',
-    titleSignUp: 'Criar conta',
     google: 'Continuar com o Google',
-    orEmail: 'ou com e-mail',
-    emailPlaceholder: 'voce@exemplo.com',
-    passwordPlaceholder: 'Senha (mín. 6 caracteres)',
-    confirmPlaceholder: 'Confirmar senha',
-    submitSignIn: 'Entrar',
-    submitSignUp: 'Criar conta',
-    newHere: 'É novo por aqui?',
-    createAccount: 'Crie uma conta',
-    haveOne: 'Já tem uma?',
-    signInLink: 'Entrar',
     tryAnon: 'Quer tentar anônimo sem entrar?',
-    accountCreated: (email: string) =>
-      `Conta criada. Se a confirmação por e-mail estiver ativa, verifique ${email} (e o spam) para confirmar.`,
-    errPasswordsMatch: 'As senhas não coincidem.',
     errInvalidCreds: 'E-mail ou senha incorretos.',
     errAlreadyRegistered: 'Esse e-mail já está cadastrado. Entre em vez de criar conta.',
     errWeakPassword: 'A senha deve ter pelo menos 6 caracteres.',

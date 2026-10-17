@@ -38,8 +38,6 @@ export const cs: Messages = {
 
   lang: {
     label: 'Jazyk',
-    english: 'English',
-    lithuanian: 'Lietuvių',
   },
 
   shapes: {
@@ -66,7 +64,6 @@ export const cs: Messages = {
     profile: 'Profil',
     signOut: 'Odhlásit se',
     signIn: 'Přihlásit se',
-    shareDotDuel: 'Sdílet DotDuel',
 
     singlePlayer: 'Jeden hráč',
     singlePlayerSub: 'Boti a denní hádanka.',
@@ -875,22 +872,8 @@ export const cs: Messages = {
     close: 'Zavřít',
     titleGate: 'Přihlas se pro hru',
     titleSignIn: 'Přihlásit se',
-    titleSignUp: 'Vytvořit účet',
     google: 'Pokračovat přes Google',
-    orEmail: 'nebo e-mailem',
-    emailPlaceholder: 'ty@priklad.cz',
-    passwordPlaceholder: 'Heslo (min. 6 znaků)',
-    confirmPlaceholder: 'Potvrď heslo',
-    submitSignIn: 'Přihlásit se',
-    submitSignUp: 'Vytvořit účet',
-    newHere: 'Jsi tu nový?',
-    createAccount: 'Vytvoř si účet',
-    haveOne: 'Už nějaký máš?',
-    signInLink: 'Přihlásit se',
     tryAnon: 'Chceš to zkusit anonymně bez přihlášení?',
-    accountCreated: (email: string) =>
-      `Účet vytvořen. Pokud je zapnuto potvrzení e-mailem, zkontroluj ${email} (i spam) a ověř ho.`,
-    errPasswordsMatch: 'Hesla se neshodují.',
     errInvalidCreds: 'E-mail nebo heslo je nesprávné.',
     errAlreadyRegistered: 'Tento e-mail je již zaregistrován. Přihlas se místo toho.',
     errWeakPassword: 'Heslo musí mít alespoň 6 znaků.',

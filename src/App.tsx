@@ -11,7 +11,6 @@ import {
 import { AppFooter } from './components/AppFooter';
 import { Board } from './components/Board';
 import { ChangelogPopover } from './components/ChangelogPopover';
-import { ConsentBanner } from './components/ConsentBanner';
 import { GameOver } from './components/GameOver';
 import { Menu } from './components/Menu';
 import { PrivacyPopover } from './components/PrivacyPopover';
@@ -1097,8 +1096,6 @@ export default function App() {
   // The offline UI is still active on production.
   const mpUnreachable = !IS_STAGING && connStatus === 'disconnected';
 
-  const acceptAnalytics = () => setConsentState('accepted');
-  const declineAnalytics = () => setConsentState('declined');
   // Used by PrivacyPopover when the user changes their mind.
   // Switching from accepted -> declined requires a reload because the
   // Analytics SDK can't be unloaded at runtime.
@@ -2578,13 +2575,6 @@ export default function App() {
             onClose={() => setThemeOpen(false)}
           />
         )}
-        {consent === null && !isNativeApp() && (
-          <ConsentBanner
-            onAccept={acceptAnalytics}
-            onDecline={declineAnalytics}
-            onOpenPrivacy={() => setPrivacyOpen(true)}
-          />
-        )}
       </div>
     );
   }
@@ -2717,13 +2707,6 @@ export default function App() {
             current={theme}
             onSelect={setTheme}
             onClose={() => setThemeOpen(false)}
-          />
-        )}
-        {consent === null && !isNativeApp() && (
-          <ConsentBanner
-            onAccept={acceptAnalytics}
-            onDecline={declineAnalytics}
-            onOpenPrivacy={() => setPrivacyOpen(true)}
           />
         )}
         {settingsOpen && (
@@ -3189,13 +3172,6 @@ export default function App() {
           current={theme}
           onSelect={setTheme}
           onClose={() => setThemeOpen(false)}
-        />
-      )}
-      {consent === null && !isNativeApp() && (
-        <ConsentBanner
-          onAccept={acceptAnalytics}
-          onDecline={declineAnalytics}
-          onOpenPrivacy={() => setPrivacyOpen(true)}
         />
       )}
       {settingsOpen && (

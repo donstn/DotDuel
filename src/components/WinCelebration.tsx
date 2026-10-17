@@ -74,10 +74,10 @@ export function WinCelebration({ level }: { level: number }) {
     // this component mounts, so an `undefined` fallback here is dead code.
     const isForestPearl = document.documentElement.dataset.theme === 'forest-pearl';
     const spritePaths = [
-      '/art/forest-pearl/particle-spark.png',
-      '/art/forest-pearl/particle-leaf.png',
-      '/art/forest-pearl/particle-pearl.png',
-      '/art/forest-pearl/particle-firefly.png',
+      '/art/forest-pearl/particle-spark.webp',
+      '/art/forest-pearl/particle-leaf.webp',
+      '/art/forest-pearl/particle-pearl.webp',
+      '/art/forest-pearl/particle-firefly.webp',
     ];
     const sprites = isForestPearl ? spritePaths.map((src) => {
       const img = new Image();

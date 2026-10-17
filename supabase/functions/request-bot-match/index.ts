@@ -3,10 +3,14 @@
 // rating-closest active bot, creates the game with a coin-flipped first mover
 // (same 50/50 as human matchmake), pre-marks the bot ready + board-loaded so
 // the clock starts as soon as the human's board loads, and writes the human's
-// pairing row (opponent_is_bot = true). When the bot is P1, the human client
-// sends submit-move { kind: 'botStart' } after its board loads to trigger the
-// bot's opening move. MVP shape: triangle, matching matchmake.
+// pairing row (opponent_is_bot = true). When the bot is P1, a background task
+// here plays its opening move once the human's board load starts the clock
+// (works for every client version); newer clients also send 'botStart'.
+// MVP shape: triangle, matching matchmake.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { openForBotWhenReady } from '../_shared/bot.ts';
+
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -155,6 +159,8 @@ Deno.serve(async (req) => {
       opponent_is_bot: true,
       opponent_bot_level: bot.level,
     });
+
+    if (humanSlot === 2) EdgeRuntime.waitUntil(openForBotWhenReady(admin, game.id));
 
     return json({ matched: 'bot', matchId: game.id });
   } catch (e) {

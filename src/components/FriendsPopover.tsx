@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import type { Friend, PendingRequest } from '../cloud/friends';
+import type { BlockedUser, Friend, PendingRequest } from '../cloud/friends';
 import {
   acceptFriendRequest,
   declineFriendRequest,
   removeFriend,
   blockUser,
+  listBlocked,
   sendFriendRequestByUsername,
+  unblockUser,
 } from '../cloud/friends';
 import type { FriendStatus } from '../cloud/presence';
 import { TellAFriendButton } from './TellAFriendButton';
@@ -43,6 +45,11 @@ export function FriendsPopover({
   const [addBusy, setAddBusy] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [addSuccess, setAddSuccess] = useState(false);
+  const [blocked, setBlocked] = useState<BlockedUser[]>([]);
+  const refreshBlocked = () => {
+    void listBlocked().then(setBlocked).catch((e) => console.warn('listBlocked failed', e));
+  };
+  useEffect(refreshBlocked, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -68,9 +75,8 @@ export function FriendsPopover({
       setAddSuccess(true);
       window.setTimeout(() => setAddSuccess(false), 2500);
     } catch (e) {
-      const msg =
-        (e as { message?: string } | undefined)?.message ?? t.friends.requestFailed;
-      setAddError(msg);
+      console.warn('sendFriendRequest failed:', e);
+      setAddError(t.friends.requestFailed);
     } finally {
       setAddBusy(false);
     }
@@ -91,8 +97,19 @@ export function FriendsPopover({
     }
     try {
       await blockUser(f.uid);
+      refreshBlocked();
     } catch (e) {
       console.warn('blockUser failed', e);
+    }
+  };
+
+  const onUnblock = async (b: BlockedUser) => {
+    if (!window.confirm(t.friends.unblockConfirm(b.displayName))) return;
+    try {
+      await unblockUser(b.uid);
+      refreshBlocked();
+    } catch (e) {
+      console.warn('unblockUser failed', e);
     }
   };
 
@@ -159,14 +176,35 @@ export function FriendsPopover({
             />
           )}
           {tab === 'all' && (
-            <FriendList
-              rows={friends}
-              statusMap={statusMap}
-              onInvite={onInvite}
-              onRemove={onRemove}
-              onBlock={onBlock}
-              emptyText={t.friends.emptyAll}
-            />
+            <>
+              <FriendList
+                rows={friends}
+                statusMap={statusMap}
+                onInvite={onInvite}
+                onRemove={onRemove}
+                onBlock={onBlock}
+                emptyText={t.friends.emptyAll}
+              />
+              {blocked.length > 0 && (
+                <section className="friends-blocked">
+                  <h3 className="friends-requests-heading">{t.friends.blockedH}</h3>
+                  <ul className="friends-list">
+                    {blocked.map((b) => (
+                      <li key={b.uid} className="friends-row">
+                        <div className="friends-row-main">
+                          <strong className="friends-row-name">{b.displayName}</strong>
+                        </div>
+                        <div className="friends-row-actions">
+                          <button type="button" className="friends-row-cancel" onClick={() => void onUnblock(b)}>
+                            {t.friends.unblock}
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </>
           )}
           {tab === 'requests' && (
             <RequestsList

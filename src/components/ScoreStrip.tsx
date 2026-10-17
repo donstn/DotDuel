@@ -3,6 +3,7 @@ import type { Player } from '../types';
 import type { ThemeId } from '../theme';
 import { useT } from '../i18n';
 import { PlayerAvatar, effectiveColor, type AvatarSpec } from './SidePanel';
+import { AchievementBadge } from '../achievements/AchievementBadge';
 
 export interface StripPlayer {
   name: string;
@@ -12,6 +13,8 @@ export interface StripPlayer {
   rating?: ReactNode;
   clock?: ReactNode;
   thinking?: boolean;
+  /** Featured achievement badge, shown on the rating line. */
+  featured?: { icon: string; tier?: number; title: string } | null;
 }
 
 interface ScoreStripProps {
@@ -21,19 +24,39 @@ interface ScoreStripProps {
   current: Player | null;
   theme?: ThemeId;
   colorSwap?: boolean;
+  onFeaturedClick?: () => void;
 }
 
 // Phone-only replacement for the two side panels: names on the outside, the
 // score pair in the middle so the gap reads at a glance.
-export function ScoreStrip({ p1, p2, current, theme, colorSwap = false }: ScoreStripProps) {
+export function ScoreStrip({
+  p1,
+  p2,
+  current,
+  theme,
+  colorSwap = false,
+  onFeaturedClick,
+}: ScoreStripProps) {
+  const t = useT();
   const c1 = effectiveColor(1, colorSwap);
   const c2 = effectiveColor(2, colorSwap);
   const hasClocks = Boolean(p1.clock || p2.clock);
   return (
     <div className="score-strip">
-      <StripSide side="left" p={p1} color={c1} active={current === 1} theme={theme} />
+      <StripSide
+        side="left"
+        p={p1}
+        color={c1}
+        active={current === 1}
+        theme={theme}
+        onFeaturedClick={onFeaturedClick}
+      />
       <div className="ss-center">
-        <div className="ss-score">
+        <div
+          className="ss-score"
+          role="img"
+          aria-label={t.game.scoreAria(p1.name, p1.score, p2.name, p2.score)}
+        >
           <StripScore value={p1.score} color={c1} align="end" />
           <span className="ss-sep" aria-hidden="true">:</span>
           <StripScore value={p2.score} color={c2} align="start" />
@@ -45,7 +68,14 @@ export function ScoreStrip({ p1, p2, current, theme, colorSwap = false }: ScoreS
           </div>
         )}
       </div>
-      <StripSide side="right" p={p2} color={c2} active={current === 2} theme={theme} />
+      <StripSide
+        side="right"
+        p={p2}
+        color={c2}
+        active={current === 2}
+        theme={theme}
+        onFeaturedClick={onFeaturedClick}
+      />
     </div>
   );
 }
@@ -56,12 +86,14 @@ function StripSide({
   color,
   active,
   theme,
+  onFeaturedClick,
 }: {
   side: 'left' | 'right';
   p: StripPlayer;
   color: 1 | 2;
   active: boolean;
   theme?: ThemeId;
+  onFeaturedClick?: () => void;
 }) {
   const tr = useT();
   return (
@@ -71,12 +103,26 @@ function StripSide({
           <PlayerAvatar avatar={p.avatar} color={color} theme={theme} />
         </div>
         {p.thinking && (
-          <span className="ss-thinking" aria-label={tr.game.thinking}>···</span>
+          <span className="ss-thinking" role="status" aria-label={tr.game.thinking}>···</span>
         )}
       </div>
       <div className="ss-who">
         <div className="ss-name" title={p.name}>{p.name}</div>
-        {p.rating && <div className="ss-rating">{p.rating}</div>}
+        {(p.rating || p.featured) && (
+          <div className="ss-rating">
+            {p.rating}
+            {p.featured && (
+              <AchievementBadge
+                icon={p.featured.icon}
+                tier={p.featured.tier}
+                earned
+                size={16}
+                title={tr.sidePanel.featuredTitle(p.featured.title)}
+                onClick={onFeaturedClick}
+              />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -89,7 +135,10 @@ function StripScore({ value, color, align }: { value: number; color: 1 | 2; alig
     if (prev.current === value) return;
     const increased = value > prev.current;
     prev.current = value;
-    if (!increased) return;
+    if (!increased) {
+      setBump(false);
+      return;
+    }
     setBump(true);
     const t = window.setTimeout(() => setBump(false), 400);
     return () => window.clearTimeout(t);

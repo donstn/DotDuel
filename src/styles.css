@@ -698,7 +698,6 @@ button {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: inherit;
 }
 
 /* Screen-reader-only: present in the accessibility tree (e.g. aria-live status
@@ -1172,6 +1171,7 @@ html[data-theme="forest-pearl"] .menu-share-link {
   margin: 0;
   color: var(--text-dim);
   font-size: 0.9rem;
+  text-align: center;
 }
 
 .hint-name {
@@ -1184,7 +1184,7 @@ html[data-theme="forest-pearl"] .menu-share-link {
 .hotseat-setup {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   width: 100%;
   max-width: 440px;
 }
@@ -2014,6 +2014,18 @@ html[data-theme="forest-pearl"] .menu-share-link {
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.16);
   pointer-events: none;
+}
+
+/* Avatar ring in the player's dot colour, so "which colour am I" reads from
+   the avatar too (the art itself doesn't match: cream human, green bots).
+   Follows hot-seat colour swap via the effective-colour p1/p2 classes. */
+.side-panel-p1 .avatar-frame::after,
+.ss-p1 .avatar-frame::after {
+  border: 2px solid var(--p1-bright);
+}
+.side-panel-p2 .avatar-frame::after,
+.ss-p2 .avatar-frame::after {
+  border: 2px solid var(--p2);
 }
 
 .side-panel.active .avatar-frame {
@@ -3003,6 +3015,10 @@ h1, h2, h3,
   }
 }
 
+.rules-card a:not([class]) {
+  color: var(--accent);
+}
+
 .rules-card::before {
   content: "";
   position: absolute;
@@ -3427,6 +3443,14 @@ h1, h2, h3,
   padding: 24px;
   z-index: 10;
   animation: fadeIn 280ms ease-out;
+  /* Tall cards (unlock panel + share) exceed short phones: scroll instead of
+     clipping. The card's auto margins centre it when it fits and pin it to
+     the top when it doesn't (align-items:center alone would cut off both ends). */
+  overflow-y: auto;
+}
+.game-over > .game-over-card {
+  margin: auto;
+  flex-shrink: 0;
 }
 
 @keyframes fadeIn {
@@ -4247,6 +4271,31 @@ h1, h2, h3,
   border-radius: var(--radius);
   background: var(--glass-bg);
   -webkit-overflow-scrolling: touch;
+  /* Wide tables (head-to-head) still scroll sideways: themed thin bar, not
+     the bright native one. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border-strong) transparent;
+}
+
+/* Phones: fit the standard tables without sideways scrolling — drop the
+   desktop min-width, tighten cells, and let the player name ellipsize. */
+@media (max-width: 420px) {
+  .rankings-table:not(.h2h-table) {
+    min-width: 0;
+    font-size: 0.78rem;
+  }
+  .rankings-table:not(.h2h-table) th,
+  .rankings-table:not(.h2h-table) td {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+  .rankings-table:not(.h2h-table) td.col-name {
+    max-width: 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .rankings-table {
@@ -4736,7 +4785,10 @@ h1, h2, h3,
     line-height: 1.15;
     letter-spacing: 0.01em;
     color: var(--text);
-    overflow-wrap: anywhere;
+    /* Break between words; a word too long for the line hyphenates (lang is
+       set on <html>) rather than splitting mid-letter. */
+    overflow-wrap: break-word;
+    hyphens: auto;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -4864,13 +4916,13 @@ h1, h2, h3,
   .app-footer-inner {
     flex-wrap: wrap;
     justify-content: center;
-    gap: 6px 10px;
+    gap: 6px 14px;
     max-width: calc(100vw - 16px);
   }
+  /* The footer wraps here, and a "·" can't know it ended a line — it was
+     left dangling at line ends. Spacing alone separates the items. */
   .app-footer-inner .sep {
-    /* Hide separators on the second line for visual cleanness when
-       wrapped. CSS doesn't expose 'is this on a new line' so just
-       keep them — but reduce gap so it stays clean. */
+    display: none;
   }
 }
 
@@ -4893,8 +4945,11 @@ h1, h2, h3,
     z-index: 9999;
   }
   body::after {
-    content: "↻  Please rotate to portrait\Ato play DotDuel";
-    white-space: pre;
+    /* Translated text set on <html> by App (--rotate-msg); English fallback. */
+    content: "↻  " var(--rotate-msg, "Please rotate your phone to portrait to play DotDuel");
+    white-space: normal;
+    max-width: 22em;
+    margin: auto;
     position: fixed;
     inset: 0;
     z-index: 10000;
@@ -4907,7 +4962,7 @@ h1, h2, h3,
     font-size: 1.1rem;
     line-height: 1.6;
     letter-spacing: 0.02em;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-body);
   }
 }
 
@@ -5057,6 +5112,13 @@ h1, h2, h3,
 /* ---------- Theme popover swatch grid ---------- */
 .theme-card {
   max-width: 540px;
+}
+/* The swatch grid is the scrolling part, so every theme and the Done button
+   stay reachable on short screens (the card itself clips). */
+.theme-card .theme-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .theme-grid {
@@ -5313,7 +5375,7 @@ html[data-art~="menu-button"] .menu-shelf {
   --cap-l: calc(var(--plaque-h) * var(--menu-btn-cap-l));
   --cap-r: calc(var(--plaque-h) * var(--menu-btn-cap-r));
   height: var(--plaque-h);
-  padding: 0 calc(var(--cap-r) * 0.9) 0 calc(var(--cap-l) * 0.9);
+  padding: 0 var(--cap-r) 0 var(--cap-l);
   background: none;
   border: 0;
   border-radius: 0;
@@ -5326,7 +5388,8 @@ html[data-art~="menu-button"] .menu-shelf {
 html[data-art~="menu-button"] .menu-shelf::before {
   display: none;
 }
-html[data-art~="menu-button"] .menu-shelf:hover:not(.disabled):not(:disabled) {
+html[data-art~="menu-button"] .menu-shelf:hover:not(.disabled):not(:disabled),
+html[data-art~="menu-button"] .menu-shelf:focus-visible {
   background: none;
   box-shadow: none;
   transform: translateY(-1px);
@@ -5338,8 +5401,13 @@ html[data-art~="menu-button"] .menu-shelf:active:not(.disabled):not(:disabled) {
 }
 html[data-art~="menu-button"] .menu-shelf.disabled,
 html[data-art~="menu-button"] .menu-shelf:disabled {
-  opacity: 0.6;
+  opacity: 0.8;
   filter: grayscale(0.7) brightness(0.8);
+}
+/* Locked/sign-in state lines must stay readable on the dimmed plaque. */
+html[data-art~="menu-button"] .menu-shelf:disabled .menu-shelf-sub,
+html[data-art~="menu-button"] .menu-shelf.disabled .menu-shelf-sub {
+  color: var(--text);
 }
 html[data-art~="menu-button"] .menu-shelf-inner {
   width: 100%;
@@ -5439,19 +5507,103 @@ html[data-art~="pill-button"] .menu-auth-btn-cta:hover {
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
-html[data-art~="pill-button"] .menu-auth-btn:hover {
+html[data-art~="pill-button"] .menu-auth-btn:hover,
+html[data-art~="pill-button"] .menu-auth-btn:focus-visible {
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45)) brightness(1.12);
 }
 html[data-art~="pill-button"] .menu-auth-btn-cta {
   color: var(--accent);
 }
 
+/* ---- Painted surfaces (themeArt: primaryButton / cardFrame / titleBanner) */
+html[data-art~="primary-button"] .hotseat-start,
+html[data-art~="primary-button"] .game-over-buttons .primary {
+  --btn-h: 50px;
+  --cap-l: calc(var(--btn-h) * var(--primary-btn-cap-l));
+  --cap-r: calc(var(--btn-h) * var(--primary-btn-cap-r));
+  height: var(--btn-h);
+  padding: 0 calc(var(--cap-r) * 0.9) 0 calc(var(--cap-l) * 0.9);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-image-source: var(--primary-btn-img);
+  border-image-slice: var(--primary-btn-slice);
+  border-image-width: 0 var(--cap-r) 0 var(--cap-l);
+  border-image-repeat: stretch;
+  color: var(--on-accent);
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+}
+html[data-art~="primary-button"] .hotseat-start:hover,
+html[data-art~="primary-button"] .game-over-buttons .primary:hover:not(:disabled) {
+  background: none;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) brightness(1.06);
+}
+html[data-art~="primary-button"] .game-over-buttons .primary::before,
+html[data-art~="primary-button"] .game-over-buttons .primary::after {
+  display: none;
+}
+html[data-art~="card-frame"] .game-over-card,
+html[data-art~="card-frame"] .confirm-card,
+html[data-art~="card-frame"] .rules-card,
+html[data-art~="card-frame"] .menu-lang-pop {
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-image-source: var(--card-frame-img);
+  border-image-slice: var(--card-frame-slice);
+  border-image-width: var(--card-frame-width);
+  border-image-repeat: stretch;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.55));
+}
+html[data-art~="card-frame"] .game-over-card::before,
+html[data-art~="card-frame"] .rules-card::before {
+  display: none;
+}
+html[data-art~="card-frame"] .confirm-card,
+html[data-art~="card-frame"] .menu-lang-pop {
+  padding: 26px 28px;
+}
+html[data-art~="title-banner"] .menu > h2 {
+  --banner-h: 52px;
+  --cap-l: calc(var(--banner-h) * var(--title-banner-cap-l));
+  --cap-r: calc(var(--banner-h) * var(--title-banner-cap-r));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: var(--banner-h);
+  min-width: min(100%, 240px);
+  max-width: 100%;
+  padding: 0 calc(var(--cap-r) * 0.95) 10% calc(var(--cap-l) * 0.95);
+  border: 0;
+  border-image-source: var(--title-banner-img);
+  border-image-slice: var(--title-banner-slice);
+  border-image-width: 0 var(--cap-r) 0 var(--cap-l);
+  border-image-repeat: stretch;
+  color: var(--p2-glow);
+  font-size: clamp(0.92rem, 4.2vw, 1.15rem);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .app-footer-ctl {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  padding: 2px 4px;
-  margin: -2px 0;
+  /* Bigger hit area (≈32px) without growing the footer row. */
+  min-width: 32px;
+  min-height: 32px;
+  padding: 6px 6px;
+  margin: -8px -2px;
   background: none;
   border: 0;
   border-radius: 6px;

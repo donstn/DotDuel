@@ -166,6 +166,33 @@ export async function blockUser(blockedUid: string): Promise<void> {
   await rpc('block_user', { p_blocked: blockedUid });
 }
 
+export interface BlockedUser {
+  uid: string;
+  displayName: string;
+}
+
+// People I've blocked. Names come from the public `usernames` table (profiles
+// are owner-only under RLS); everyone blockable has one, since friend requests
+// go by username.
+export async function listBlocked(): Promise<BlockedUser[]> {
+  const me = await sid();
+  if (!me) return [];
+  const { data: rows, error } = await supabase
+    .from('blocks')
+    .select('blocked')
+    .eq('blocker', me);
+  if (error || !rows || rows.length === 0) return [];
+  const uids = rows.map((r) => r.blocked as string);
+  const { data: names } = await supabase
+    .from('usernames')
+    .select('uid, display_name')
+    .in('uid', uids);
+  const byUid = new Map((names ?? []).map((n) => [n.uid as string, n.display_name as string]));
+  return uids
+    .map((uid) => ({ uid, displayName: byUid.get(uid) ?? 'Player' }))
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
+}
+
 export async function unblockUser(blockedUid: string): Promise<void> {
   await rpc('unblock_user', { p_blocked: blockedUid });
 }

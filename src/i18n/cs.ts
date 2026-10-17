@@ -30,6 +30,10 @@ export const cs: Messages = {
     d: 'R',
     l: 'P',
     you: 'Ty',
+    ok: 'OK',
+    done: 'Hotovo',
+    advertisement: 'Reklama',
+    rotateToPortrait: 'Otočte telefon na výšku, abyste mohli hrát DotDuel',
   },
 
   lang: {
@@ -167,12 +171,24 @@ export const cs: Messages = {
     bot: 'BOT',
     aiOpponent: 'Soupeř AI',
     moveFailed: 'Tah se neodeslal — zkus to znovu',
+    hotseatLeaveTitle: 'Opustit tuto hru?',
+    hotseatLeaveBody: 'Rozehraná hra bude ztracena.',
+    hotseatLeaveConfirm: 'Odejít',
+    dailyLoading: 'Načítání denní hádanky…',
+    dailyLoadFailed: 'Denní hádanku se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu.',
+    dotEmptyPlace: (r: number, p: number) => `Řada ${r}, pozice ${p}, prázdná. Položte tečku.`,
+    dotEmpty: (r: number, p: number) => `Řada ${r}, pozice ${p}, prázdná.`,
+    dotOwned: (r: number, p: number, pl: number) => `Řada ${r}, pozice ${p}, hráč ${pl}.`,
+    dotClaim: (r: number, p: number, pl: number, pts: number) =>
+      `Řada ${r}, pozice ${p}, hráč ${pl}. Získat linii (${pts} b.).`,
+    scoreAria: (n1: string, s1: number, n2: string, s2: number) =>
+      `Skóre: ${n1} ${s1}, ${n2} ${s2}`,
   },
 
   rules: {
     aria: 'Jak hrát DotDuel',
     close: 'Zavřít pravidla',
-    title: 'Jak hrát DotDuel',
+    title: 'Pravidla',
     tagline: 'Střídejte se. Dokončujte linie. Získejte nejvíce bodů.',
     goalH: 'Cíl',
     goalP: 'Získej více bodů než soupeř.',
@@ -963,6 +979,10 @@ export const cs: Messages = {
     sentH: 'Odeslané',
     waitingForThem: 'čeká se na ně',
     cancel: 'Zrušit',
+    blockedH: 'Zablokovaní',
+    unblock: 'Odblokovat',
+    unblockConfirm: (name: string) =>
+      `Odblokovat hráče ${name}? Znovu vám bude moci posílat žádosti o přátelství a pozvánky.`,
   },
 
   invite: {
@@ -1276,7 +1296,7 @@ export const cs: Messages = {
   sidePanel: {
     featuredTitle: (title: string) => `${title} — klepni pro úspěchy`,
     noGames: 'zatím žádné hry',
-    botLabel: (level: string) => `Bot · ${level}`,
+    botLabel: (level: string) => `Bot (${level})`,
     botShort: (level: number) => `Bot L${level}`,
     hotseat: 'Místní hra',
     hotseatShort: 'MH',

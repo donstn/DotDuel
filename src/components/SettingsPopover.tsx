@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { resetStats } from '../storage';
+import { DEFAULT_P1_NAME, DEFAULT_P2_NAME, resetStats } from '../storage';
 import type { Settings } from '../storage';
 import { useT } from '../i18n';
 
@@ -36,7 +36,13 @@ export function SettingsPopover({
   onOpenThemes,
 }: Props) {
   const t = useT();
-  const [local, setLocal] = useState<Settings>(settings);
+  // Stored English defaults show as empty fields (the translated placeholder
+  // shows instead); empty fields save back as the defaults.
+  const [local, setLocal] = useState<Settings>(() => ({
+    ...settings,
+    playerName: settings.playerName === DEFAULT_P1_NAME ? '' : settings.playerName,
+    opponentName: settings.opponentName === DEFAULT_P2_NAME ? '' : settings.opponentName,
+  }));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -51,7 +57,11 @@ export function SettingsPopover({
   }, [local]);
 
   function commit() {
-    onChange(local);
+    onChange({
+      ...local,
+      playerName: local.playerName.trim() || DEFAULT_P1_NAME,
+      opponentName: local.opponentName.trim() || DEFAULT_P2_NAME,
+    });
   }
 
   function done() {

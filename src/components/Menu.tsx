@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AppUser } from '../auth/AppUser';
-import { availableDifficulties, isUnlocked } from '../storage';
+import { availableDifficulties, DEFAULT_P1_NAME, DEFAULT_P2_NAME, isUnlocked } from '../storage';
 import type { Settings } from '../storage';
 import { PLAYABLE_SHAPE_META } from '../types';
 import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
@@ -391,6 +391,21 @@ export function Menu({
 
   // ---- Level 1: Rankings ----
   if (!mode && category === 'rankings') {
+    // Sign-in-only: first when available, last when locked (like the other screens).
+    const puzzleCard = (
+      <button
+        className={`menu-shelf ${user ? '' : 'disabled'}`}
+        disabled={!user || !onOpenPuzzleLeaderboard}
+        onClick={() => onOpenPuzzleLeaderboard?.()}
+        title={user ? '' : t.common.signInToView}
+      >
+        <CardInner
+          icon={plaque ? undefined : <PuzzleIcon />}
+          title={t.menu.puzzleRankings}
+          sub={user ? desc(t.menu.puzzleRankingsSub) : t.common.signInToView}
+        />
+      </button>
+    );
     return (
       <div className="menu">
         <button className="link-btn back-link" onClick={() => setCategory(null)}>
@@ -398,18 +413,7 @@ export function Menu({
         </button>
         <h2>{t.menu.rankings}</h2>
         <div className="menu-shelves">
-          <button
-            className={`menu-shelf ${user ? '' : 'disabled'}`}
-            disabled={!user || !onOpenPuzzleLeaderboard}
-            onClick={() => onOpenPuzzleLeaderboard?.()}
-            title={user ? '' : t.common.signInToView}
-          >
-            <CardInner
-              icon={plaque ? undefined : <PuzzleIcon />}
-              title={t.menu.puzzleRankings}
-              sub={user ? desc(t.menu.puzzleRankingsSub) : t.common.signInToView}
-            />
-          </button>
+          {user && puzzleCard}
           <button className="menu-shelf" onClick={() => onOpenRankings('local')}>
             <CardInner
               icon={plaque ? undefined : <HouseIcon />}
@@ -431,6 +435,7 @@ export function Menu({
               sub={desc(t.menu.achievementsSub)}
             />
           </button>
+          {!user && puzzleCard}
         </div>
       </div>
     );
@@ -602,11 +607,11 @@ function VsAISetup({
 }: VsAISetupProps) {
   const t = useT();
   const [name, setName] = useState(
-    lockedName ?? (settings.playerName || 'Player 1'),
+    lockedName ?? (settings.playerName === DEFAULT_P1_NAME ? '' : settings.playerName),
   );
 
   const start = () => {
-    onStart((lockedName ?? name).trim() || 'Player 1');
+    onStart((lockedName ?? name).trim() || DEFAULT_P1_NAME);
   };
 
   const onKey = (e: React.KeyboardEvent) => {
@@ -663,14 +668,16 @@ function HotseatSetup({
 }: HotseatSetupProps) {
   const t = useT();
   const [p1, setP1] = useState(
-    lockedP1Name ?? (settings.playerName || 'Player 1'),
+    lockedP1Name ?? (settings.playerName === DEFAULT_P1_NAME ? '' : settings.playerName),
   );
-  const [p2, setP2] = useState(settings.opponentName || 'Player 2');
+  const [p2, setP2] = useState(
+    settings.opponentName === DEFAULT_P2_NAME ? '' : settings.opponentName,
+  );
   const [swap, setSwap] = useState(settings.hotseatColorSwap);
 
   const start = () => {
-    const p1Final = (lockedP1Name ?? p1).trim() || 'Player 1';
-    onStart(p1Final, p2.trim() || 'Player 2', swap);
+    const p1Final = (lockedP1Name ?? p1).trim() || DEFAULT_P1_NAME;
+    onStart(p1Final, p2.trim() || DEFAULT_P2_NAME, swap);
   };
 
   const onKey = (e: React.KeyboardEvent) => {

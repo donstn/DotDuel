@@ -32,6 +32,10 @@ export const pl: Messages = {
     d: 'R',
     l: 'P',
     you: 'Ty',
+    ok: 'OK',
+    done: 'Gotowe',
+    advertisement: 'Reklama',
+    rotateToPortrait: 'Obróć telefon pionowo, aby grać w DotDuel',
   },
 
   lang: {
@@ -169,12 +173,24 @@ export const pl: Messages = {
     bot: 'BOT',
     aiOpponent: 'Przeciwnik AI',
     moveFailed: 'Ruch nie został wysłany — spróbuj ponownie',
+    hotseatLeaveTitle: 'Opuścić tę grę?',
+    hotseatLeaveBody: 'Trwająca gra zostanie utracona.',
+    hotseatLeaveConfirm: 'Wyjdź',
+    dailyLoading: 'Wczytywanie codziennej łamigłówki…',
+    dailyLoadFailed: 'Nie udało się wczytać codziennej łamigłówki. Sprawdź połączenie i spróbuj ponownie.',
+    dotEmptyPlace: (r: number, p: number) => `Rząd ${r}, pozycja ${p}, pusta. Postaw kropkę.`,
+    dotEmpty: (r: number, p: number) => `Rząd ${r}, pozycja ${p}, pusta.`,
+    dotOwned: (r: number, p: number, pl: number) => `Rząd ${r}, pozycja ${p}, gracz ${pl}.`,
+    dotClaim: (r: number, p: number, pl: number, pts: number) =>
+      `Rząd ${r}, pozycja ${p}, gracz ${pl}. Odbierz linię (${pts} pkt).`,
+    scoreAria: (n1: string, s1: number, n2: string, s2: number) =>
+      `Wynik: ${n1} ${s1}, ${n2} ${s2}`,
   },
 
   rules: {
     aria: 'Jak grać w DotDuel',
     close: 'Zamknij zasady',
-    title: 'Jak grać w DotDuel',
+    title: 'Zasady',
     tagline: 'Graj na zmianę. Kończ linie. Zdobądź najwięcej punktów.',
     goalH: 'Cel',
     goalP: 'Zdobądź więcej punktów niż przeciwnik.',
@@ -965,6 +981,10 @@ export const pl: Messages = {
     sentH: 'Wysłane',
     waitingForThem: 'oczekuje na odpowiedź',
     cancel: 'Anuluj',
+    blockedH: 'Zablokowani',
+    unblock: 'Odblokuj',
+    unblockConfirm: (name: string) =>
+      `Odblokować ${name}? Ta osoba znów będzie mogła wysyłać Ci zaproszenia do znajomych i do gry.`,
   },
 
   invite: {
@@ -1278,7 +1298,7 @@ export const pl: Messages = {
   sidePanel: {
     featuredTitle: (title: string) => `${title} — dotknij, aby zobaczyć osiągnięcia`,
     noGames: 'brak gier',
-    botLabel: (level: string) => `Bot · ${level}`,
+    botLabel: (level: string) => `Bot (${level})`,
     botShort: (level: number) => `Bot L${level}`,
     hotseat: 'Gra lokalna',
     hotseatShort: 'GL',

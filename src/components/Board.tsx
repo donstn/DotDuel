@@ -254,6 +254,11 @@ export function Board({
   const [focusedDotId, setFocusedDotId] = useState<number | null>(null);
   const dotRefs = useRef(new Map<number, SVGCircleElement | null>());
 
+  // Each float removes itself after its own duration. Timers are NOT cleared
+  // when the next scoreEvent arrives (that used to strand floats from fast
+  // scoring in the DOM, replaying on a later re-render) — only on unmount.
+  const floatTimers = useRef<number[]>([]);
+  useEffect(() => () => floatTimers.current.forEach((t) => window.clearTimeout(t)), []);
   useEffect(() => {
     if (!scoreEvent) return;
     if (scoreEvent.points <= 0) return;
@@ -264,11 +269,16 @@ export function Board({
       player: scoreEvent.player,
     };
     setFloats((prev) => [...prev, float]);
-    const timer = window.setTimeout(() => {
-      setFloats((prev) => prev.filter((f) => f.id !== float.id));
-    }, SCORE_FLOAT_DURATION_MS);
-    return () => window.clearTimeout(timer);
+    floatTimers.current.push(
+      window.setTimeout(() => {
+        setFloats((prev) => prev.filter((f) => f.id !== float.id));
+      }, SCORE_FLOAT_DURATION_MS),
+    );
   }, [scoreEvent]);
+  // New game (Play again / rematch): nothing from the previous board carries over.
+  useEffect(() => {
+    if (state.turn === 0) setFloats([]);
+  }, [state.turn]);
 
   const linesById = useMemo(() => {
     const map = new Map<string, Line>();
@@ -521,14 +531,14 @@ export function Board({
           const posNum = d.col + 1;
           let ariaLabel: string;
           if (!cd && !disabled) {
-            ariaLabel = `Row ${rowNum}, position ${posNum}, empty. Place your dot.`;
+            ariaLabel = t.game.dotEmptyPlace(rowNum, posNum);
           } else if (canClaim && claimLine) {
             const pts = claimLine.length;
-            ariaLabel = `Row ${rowNum}, position ${posNum}, Player ${owner}. Claim line worth ${pts} point${pts === 1 ? '' : 's'}.`;
+            ariaLabel = t.game.dotClaim(rowNum, posNum, owner, pts);
           } else if (owner) {
-            ariaLabel = `Row ${rowNum}, position ${posNum}, Player ${owner}.`;
+            ariaLabel = t.game.dotOwned(rowNum, posNum, owner);
           } else {
-            ariaLabel = `Row ${rowNum}, position ${posNum}, empty.`;
+            ariaLabel = t.game.dotEmpty(rowNum, posNum);
           }
           return (
             <g key={d.id} className="dot-group">

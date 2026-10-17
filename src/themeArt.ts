@@ -18,6 +18,17 @@ export interface StretchArt {
   capRight: number;
 }
 
+/** Frame stretchable both ways (nine-slice): corners stay as painted. */
+export interface NineArt {
+  url: string;
+  width: number;
+  height: number;
+  capLeft: number;
+  capRight: number;
+  capTop: number;
+  capBottom: number;
+}
+
 /** Fixed panel with a text-safe box (fractions of width / height). */
 export interface PanelArt {
   url: string;
@@ -30,6 +41,12 @@ export interface ThemeArt {
   headerSign?: PanelArt;
   menuButton?: StretchArt;
   pillButton?: StretchArt;
+  /** Main call to action (Start game, Play again). */
+  primaryButton?: StretchArt;
+  /** Sub-screen heading banner. */
+  titleBanner?: StretchArt;
+  /** Popovers, confirm dialogs, game-over card, language list. */
+  cardFrame?: NineArt;
   shapeIcons?: Record<ShapeId, string>;
 }
 
@@ -54,6 +71,32 @@ const ART: Partial<Record<ThemeId, ThemeArt>> = {
       height: 179,
       capLeft: 106,
       capRight: 108,
+    },
+    // primaryButton / titleBanner caps are set by eye at the end of the
+    // ornament: the script's plain-detector also counts the button's soft
+    // centre glow and the banner's arc, which would leave no room for text.
+    primaryButton: {
+      url: '/art/forest-pearl/primary-button.webp',
+      width: 916,
+      height: 201,
+      capLeft: 165,
+      capRight: 165,
+    },
+    titleBanner: {
+      url: '/art/forest-pearl/title-banner.webp',
+      width: 588,
+      height: 178,
+      capLeft: 115,
+      capRight: 115,
+    },
+    cardFrame: {
+      url: '/art/forest-pearl/card-frame.webp',
+      width: 284,
+      height: 371,
+      capLeft: 30,
+      capRight: 29,
+      capTop: 33,
+      capBottom: 36,
     },
     shapeIcons: {
       triangle: '/art/forest-pearl/menu-icon-shape-triangle.png',
@@ -91,6 +134,25 @@ function themeArtVars(art: ThemeArt): { vars: Record<string, string>; slots: str
   if (art.pillButton) {
     Object.assign(vars, stretchVars('pill-btn', art.pillButton));
     slots.push('pill-button');
+  }
+  if (art.primaryButton) {
+    Object.assign(vars, stretchVars('primary-btn', art.primaryButton));
+    slots.push('primary-button');
+  }
+  if (art.titleBanner) {
+    Object.assign(vars, stretchVars('title-banner', art.titleBanner));
+    slots.push('title-banner');
+  }
+  if (art.cardFrame) {
+    const f = art.cardFrame;
+    // Rendered at 80% of the painted pixels (crisp on 2–3× screens).
+    const px = (v: number) => `${Math.round(v * 0.8)}px`;
+    Object.assign(vars, {
+      '--card-frame-img': `url("${f.url}")`,
+      '--card-frame-slice': `${f.capTop} ${f.capRight} ${f.capBottom} ${f.capLeft} fill`,
+      '--card-frame-width': `${px(f.capTop)} ${px(f.capRight)} ${px(f.capBottom)} ${px(f.capLeft)}`,
+    });
+    slots.push('card-frame');
   }
   if (art.headerSign) {
     const { width, height, text } = art.headerSign;

@@ -3,20 +3,12 @@
 // game end, and triggers Elo finalize. Clients never write `games` directly.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { applyAction } from '../_shared/engine/game.ts';
-import { pickAIAction } from '../_shared/engine/ai.ts';
-import type { GameState, Player } from '../_shared/engine/types.ts';
+import type { GameState } from '../_shared/engine/types.ts';
+import { botToMove, doBotMove, finish } from '../_shared/bot.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const ABORT_FIRST_MOVE_MS = 10000;
-
-// Per-time-control caps on bot think delay (ms) so Bullet bots don't burn their
-// own clock. Mirrors Firebase BOT_THINK_CAP_MS.
-const BOT_THINK_CAP_MS: Record<string, number> = {
-  '1min': 1200,
-  '3min': 2200,
-  '5min': 3500,
-};
 
 // Supabase Edge runtime: keep the instance alive for a fire-and-forget task
 // (the bot's delayed move) after the HTTP response has been sent.
@@ -33,156 +25,6 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...CORS, 'Content-Type': 'application/json' },
   });
-}
-
-// deno-lint-ignore no-explicit-any
-type Admin = any;
-
-async function finish(
-  admin: Admin,
-  gameId: string,
-  state: GameState,
-  winner: 1 | 2 | null,
-  reason: string,
-  now: number,
-) {
-  // Mirror the top-level finish into the `state` jsonb too. The client keys
-  // GameOver off state.finished (App.tsx: showOver = state.finished), so a
-  // timeout/resign/abort that only flipped the columns would leave both boards
-  // stuck. (applyAction already sets these on a normal end.)
-  const finishedState = { ...state, finished: true, winner };
-  await admin
-    .from('games')
-    .update({
-      status: 'finished',
-      state: finishedState,
-      winner: winner === null ? null : String(winner),
-      finished_reason: reason,
-      finished_at: new Date(now).toISOString(),
-    })
-    .eq('id', gameId);
-  await admin.rpc('finalize_game', { p_game_id: gameId });
-}
-
-// If the player whose turn it now is happens to be a bot, return its think
-// delay (ms) and level; otherwise null. Reached after a human move, or via the
-// 'botStart' action when the bot is P1 and must open. A bot move always passes
-// the turn back to the human — no chaining.
-async function botToMove(
-  admin: Admin,
-  game: Record<string, unknown>,
-): Promise<{ uid: string; level: number; delayMs: number } | null> {
-  const state = game.state as GameState;
-  const slot = state.current;
-  const botUid = slot === 1 ? game.p1_uid : game.p2_uid;
-  const { data: bot } = await admin
-    .from('bots')
-    .select('uid, bot_level, active, think_delay_range')
-    .eq('uid', botUid)
-    .eq('active', true)
-    .maybeSingle();
-  if (!bot) return null;
-
-  const clock = game.clock as { p1RemainingMs: number; p2RemainingMs: number };
-  const remaining = slot === 1 ? clock.p1RemainingMs : clock.p2RemainingMs;
-  const range = (bot.think_delay_range ?? { min: 800, max: 2500 }) as {
-    min: number;
-    max: number;
-  };
-  const tc = String(game.time_control);
-  // Cap by time-control AND never spend >25% of the bot's remaining clock.
-  const safeCap = Math.min(BOT_THINK_CAP_MS[tc] ?? range.max, range.max, Math.floor(remaining * 0.25));
-  const safeMin = Math.min(range.min, safeCap);
-  const delayMs = safeMin + Math.random() * Math.max(0, safeCap - safeMin);
-  return { uid: bot.uid as string, level: bot.bot_level as number, delayMs };
-}
-
-// Background task: wait the think delay, re-read the game (it may have ended or
-// the turn may have moved on), then apply the bot's move with the same clock /
-// finish / finalize logic the human path uses.
-async function doBotMove(admin: Admin, gameId: string, level: number, delayMs: number) {
-  await new Promise((r) => setTimeout(r, delayMs));
-
-  const { data: game, error } = await admin
-    .from('games')
-    .select('*')
-    .eq('id', gameId)
-    .single();
-  if (error || !game || game.status !== 'active') return;
-
-  const state = game.state as GameState;
-  const slot = state.current;
-
-  // Safety: only ever apply a move on a BOT's turn. If the turn somehow advanced
-  // during the think-delay (or this fires for a non-bot game), never move on a
-  // human's slot.
-  const turnUid = slot === 1 ? game.p1_uid : game.p2_uid;
-  const { data: botRow } = await admin
-    .from('bots')
-    .select('uid')
-    .eq('uid', turnUid)
-    .maybeSingle();
-  if (!botRow) return;
-
-  const clock = game.clock as {
-    p1RemainingMs: number;
-    p2RemainingMs: number;
-    turnStartedAt: number;
-    current: 1 | 2;
-    totalMs: number;
-  };
-  const now = Date.now();
-  const curKey = slot === 1 ? 'p1RemainingMs' : 'p2RemainingMs';
-  const elapsed = clock.turnStartedAt > 0 ? now - clock.turnStartedAt : 0;
-  const newRemaining = clock[curKey] - elapsed;
-  if (newRemaining <= 0) {
-    await finish(admin, gameId, state, slot === 1 ? 2 : 1, 'timeout', now);
-    return;
-  }
-
-  let newState: GameState;
-  try {
-    const action = pickAIAction(state, level as Parameters<typeof pickAIAction>[1], slot as Player);
-    newState = applyAction(state, action);
-  } catch (e) {
-    // The bot engine failed on this state. Rather than strand the human (who'd
-    // otherwise wait out their own clock against a bot that never moves), end
-    // the game rating-neutral (aborted ⇒ finalize_game applies no Elo change).
-    console.error(`doBotMove engine failure for game ${gameId}:`, e);
-    await finish(admin, gameId, state, null, 'aborted', now);
-    return;
-  }
-
-  const newClock = {
-    ...clock,
-    [curKey]: newRemaining,
-    turnStartedAt: now,
-    current: newState.current,
-  };
-  const updates: Record<string, unknown> = { state: newState, clock: newClock };
-  if (newState.finished) {
-    updates.status = 'finished';
-    updates.winner = newState.winner === null ? null : String(newState.winner);
-    updates.finished_reason = 'normal';
-    updates.finished_at = new Date(now).toISOString();
-  }
-  // Turn guard: a duplicate 'botStart' can schedule two doBotMoves off the same
-  // state — only the first write lands, the second matches no row.
-  const { error: upErr, data: written } = await admin
-    .from('games')
-    .update(updates)
-    .eq('id', gameId)
-    .eq('state->>turn', String(state.turn))
-    .select('id');
-  if (!upErr && (!written || written.length === 0)) return;
-  if (upErr) {
-    // Don't finalize against a state we failed to persist.
-    console.error(`doBotMove update failed for game ${gameId}:`, upErr);
-    return;
-  }
-  if (newState.finished) {
-    await admin.rpc('finalize_game', { p_game_id: gameId });
-  }
 }
 
 Deno.serve(async (req) => {
@@ -258,7 +100,7 @@ Deno.serve(async (req) => {
       if (clock.turnStartedAt <= 0) return json({ error: 'CLOCK_NOT_STARTED' }, 409);
       const bot = await botToMove(admin, game);
       if (!bot) return json({ error: 'NOT_BOT_TURN' }, 409);
-      EdgeRuntime.waitUntil(doBotMove(admin, gameId, bot.level, bot.delayMs));
+      EdgeRuntime.waitUntil(doBotMove(admin, gameId, bot.level, bot.delayMs, bot.turn));
       return json({ ok: true });
     }
 
@@ -326,7 +168,7 @@ Deno.serve(async (req) => {
       const updatedGame = { ...game, state: newState, clock: newClock };
       const bot = await botToMove(admin, updatedGame);
       if (bot) {
-        EdgeRuntime.waitUntil(doBotMove(admin, gameId, bot.level, bot.delayMs));
+        EdgeRuntime.waitUntil(doBotMove(admin, gameId, bot.level, bot.delayMs, bot.turn));
       }
     }
     return json({ ok: true });

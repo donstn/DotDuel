@@ -3,6 +3,29 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.14.0] - 2026-10-17
+
+### Changed
+
+- **Menu header** — the DotDuel wordmark and tagline plaque are one painted
+  sign (`header-combined.webp`, 94 KB, replacing 1.03 MB of PNGs) with the
+  greeting set into its panel.
+- **Plaque menu buttons** — menu cards and account pills use stretchable
+  painted plates (three-slice `border-image`); text-only except the shape and
+  bot pickers. Theme art now goes through `src/themeArt.ts`; prompts and the
+  processing script (`scripts/process-art.mjs`) are documented in `docs/art/`.
+- **Language + theme controls** moved from the menu corners into the footer.
+  The home menu fits one screen down to ~560px visible height.
+- **Phone score strip** — under 720px the two player cards are replaced by one
+  strip (full names, rating, large centred score, ranked clocks).
+- **Android 1.2** (versionCode 3) for closed testing.
+
+### Fixed
+
+- **Ranked bot matches** — the first mover is a coin flip (was always the
+  human). When the bot is P1 the client sends `submit-move { kind: 'botStart' }`
+  after its board loads; `bot_fallback_sweep` coin-flips too.
+
 ## [0.4.13.0] - 2026-10-11
 
 ### Added

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { AppUser } from '../auth/AppUser';
 import {
   aiOpponentDisplayName,
+  displayPlayerName,
   aiOpponentKey,
   hotseatTotal,
   isAiOpponentKey,
@@ -508,7 +509,7 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
                                 openSubject({ kind: 'player', key: r.key, name: r.name })
                               }
                             >
-                              {r.name}
+                              {displayPlayerName(r.name, t)}
                             </button>
                           </td>
                           <td className="col-num">{r.games}</td>

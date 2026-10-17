@@ -3,6 +3,26 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.15.0] - 2026-10-17
+
+### Changed
+
+- **Painted surfaces** — primary buttons, card frame (popovers, dialogs,
+  game-over, language list) and title banners from a new Gemini sheet, via
+  `src/themeArt.ts`; all Forest & Pearl art now goes through the art contract.
+- **Art PNG → WebP** — 6.9 MB → 0.8 MB; offline precache 9.95 → 2.94 MB.
+- **Achievement toasts paused** (`SHOW_ACHIEVEMENT_TOASTS`); unlocks still record.
+
+### Fixed
+
+- **Bot opener server-side** — `request-bot-match` plays the bot's opening move
+  when it's P1 (old clients were auto-aborting); bot writes guarded by status +
+  turn (a resign during the think delay could be overwritten).
+- **QA pass** — game-over / theme-picker scrolling, stranded score floaters,
+  resign + hot-seat leave confirms, translations (default names, rotate prompt,
+  daily puzzle, board aria), unblock UI, avatar colour rings, rankings table at
+  320px, footer tap targets / separators, focus styles.
+
 ## [0.4.14.0] - 2026-10-17
 
 ### Changed

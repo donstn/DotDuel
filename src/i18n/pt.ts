@@ -284,6 +284,40 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.15.0': {
+        highlight: 'Polimento antes dos testes',
+        changes: [
+          'Botões, janelas e títulos de tela agora têm o mesmo visual de madeira entalhada do menu.',
+          'A tela de resultados rola em celulares pequenos, então “Compartilhar” está sempre ao alcance.',
+          'Desistir pede confirmação, e sair de uma partida de dois jogadores no meio também.',
+          'Em partidas ranqueadas em que o bot joga primeiro, versões antigas do app não cancelam mais a partida.',
+          'Agora você pode desbloquear jogadores de novo em Amigos → Todos.',
+          'Mais partes do jogo estão traduzidas, incluindo os nomes padrão dos jogadores.',
+          'O app baixa muito menos: as ilustrações estão cerca de 8 vezes menores.',
+          'Os avisos de conquistas estão pausados por enquanto; as conquistas continuam sendo desbloqueadas.',
+        ],
+      },
+      'Alpha 0.4.14.0': {
+        highlight: 'Um visual novo para o menu',
+        changes: [
+          'O menu inicial ganhou um visual de madeira entalhada: uma única placa com sua saudação, botões de madeira, e tudo cabe em uma tela.',
+          'Os seletores de idioma e de tema foram para a barra inferior.',
+          'No celular, o placar agora é uma única barra acima do tabuleiro, com os nomes completos, os ratings e um placar grande no meio.',
+          'Em partidas ranqueadas contra bots, quem começa agora é decidido no cara ou coroa, então você não começa mais sempre.',
+        ],
+      },
+      'Alpha 0.4.13.0': {
+        highlight: 'Calendário dos resultados diários',
+        changes: [
+          'O ranking do desafio diário agora é um calendário. Veja o vencedor de cada dia num relance e toque em qualquer dia para ver todos que jogaram, do melhor ao pior.',
+        ],
+      },
+      'Alpha 0.4.12.4': {
+        highlight: 'Corrigido: uma jogada online às vezes sumia depois de colocada',
+        changes: [
+          'Em partidas online, um ponto colocado às vezes sumia logo depois, e era preciso colocá-lo de novo — uma falha de rede descartava a jogada sem aviso. Agora ela é reenviada automaticamente e, se ainda assim falhar, você verá uma mensagem clara em vez de o ponto simplesmente sumir.',
+        ],
+      },
       'Alpha 0.4.12.3': {
         highlight: 'Os cartões dos jogadores agora realmente se alinham',
         changes: [

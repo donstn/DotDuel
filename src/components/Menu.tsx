@@ -5,7 +5,7 @@ import type { Settings } from '../storage';
 import { PLAYABLE_SHAPE_META } from '../types';
 import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
 import type { ThemeId } from '../theme';
-import { LANGS, useLang, useT } from '../i18n';
+import { useT } from '../i18n';
 import { FriendsButton } from './FriendsButton';
 import { TellAFriendButton } from './TellAFriendButton';
 import type { MyDailyAttempt } from '../cloud/dailyLeaderboard';
@@ -49,7 +49,6 @@ interface Props {
   onOpenProfile: () => void;
   onSignOut: () => void;
   onOpenMultiplayer: () => void;
-  onOpenThemes: () => void;
   mpLockedByOther: boolean;
   mpUnreachable: boolean;
   /** Signed-in player's referral code — invite links carry ?ref=<CODE>. */
@@ -116,7 +115,6 @@ export function Menu({
   onOpenProfile,
   onSignOut,
   onOpenMultiplayer,
-  onOpenThemes,
   mpLockedByOther,
   mpUnreachable,
   refCode = null,
@@ -136,8 +134,6 @@ export function Menu({
   const [shape, setShape] = useState<ShapeId | null>(null);
   const [aiDifficulty, setAiDifficulty] = useState<Difficulty | null>(null);
   const t = useT();
-  const { lang, setLang } = useLang();
-  const [langOpen, setLangOpen] = useState(false);
 
   useEffect(() => {
     onDepthChange?.(category !== null || mode !== null);
@@ -265,67 +261,6 @@ export function Menu({
       );
     return (
       <div className="menu">
-        {langOpen && (
-          <div className="menu-lang-backdrop" onClick={() => setLangOpen(false)} />
-        )}
-        <div className="menu-topleft">
-          <div className="menu-lang">
-            <button
-              type="button"
-              className="menu-lang-btn"
-              onClick={() => setLangOpen((o) => !o)}
-              aria-label={t.lang.label}
-              title={t.lang.label}
-              aria-haspopup="menu"
-              aria-expanded={langOpen}
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                <path
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 0c2.5 2.6 2.5 15.4 0 18m0-18c-2.5 2.6-2.5 15.4 0 18M3.5 9h17M3.5 15h17"
-                />
-              </svg>
-              <span className="menu-lang-code">{lang.toUpperCase()}</span>
-            </button>
-            {langOpen && (
-              <div className="menu-lang-pop" role="menu">
-                {LANGS.map((l) => (
-                  <button
-                    key={l.code}
-                    type="button"
-                    role="menuitemradio"
-                    aria-checked={l.code === lang}
-                    className={`menu-lang-opt ${l.code === lang ? 'is-on' : ''}`}
-                    onClick={() => {
-                      setLang(l.code);
-                      setLangOpen(false);
-                    }}
-                  >
-                    {l.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="menu-topright">
-          <button
-            type="button"
-            className="menu-theme-btn"
-            onClick={onOpenThemes}
-            aria-label={t.menu.changeTheme}
-            title={t.menu.changeTheme}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
-              <path
-                fill="currentColor"
-                d="M12 3a9 9 0 0 0 0 18 1.5 1.5 0 0 0 1.16-2.46 1.5 1.5 0 0 1 1.16-2.46H17a4 4 0 0 0 4-4c0-4.97-4.03-9-9-9zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
-              />
-            </svg>
-          </button>
-        </div>
         {art.headerSign ? (
           <div className="header-sign">
             <h1 className="header-sign-title">

@@ -2614,7 +2614,6 @@ export default function App() {
           onOpenProfile={() => setProfileOpen(true)}
           onSignOut={() => void onSignOutSafe()}
           onOpenMultiplayer={openMultiplayer}
-          onOpenThemes={() => setThemeOpen(true)}
           mpLockedByOther={mpLockedByOther}
           mpUnreachable={mpUnreachable}
           refCode={cloudProfile?.referralCode ?? null}
@@ -2642,6 +2641,8 @@ export default function App() {
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPrivacy={() => setPrivacyOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
+          onOpenThemes={() => setThemeOpen(true)}
+          showLanguage
           version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}

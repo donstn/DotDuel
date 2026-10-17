@@ -721,6 +721,9 @@ export const cs: Messages = {
     collectFriendsLead: 'Přátelé a pozvánky:',
     collectFriends:
       'tvůj seznam přátel, čekající žádosti, stav online a pozvánky do hry. Pokud ses připojil přes odkaz s pozvánkou nebo QR kód jiného hráče, zaznamenáme, který hráč tě pozval (jeho náhodný kód pozvánky — aby bylo možné v budoucnu uznat odměny za doporučení).',
+    collectDailyLead: 'Výsledky denní hádanky:',
+    collectDaily:
+      'u každé dokončené denní hádanky — tvé zobrazované jméno, nejlepší skóre, počet pokusů a čas dokončení. Veřejně zobrazeno v kalendáři denních výsledků.',
     collectDeviceLead: 'Data pouze v zařízení:',
     collectDevice:
       'tvůj postup pro jednoho hráče, statistiky proti botům / místní hry, předvolba tématu a příznak „výukový program zobrazen“. Uloženo v localStorage tvého prohlížeče a nikdy nám neodesíláno.',
@@ -753,6 +756,8 @@ export const cs: Messages = {
     keepLive: 'smazáno přibližně do 24 hodin po skončení hry.',
     keepAnalyticsLead: 'Analytika:',
     keepAnalytics: 'podle výchozího nastavení Google (aktuálně 14 měsíců pro data o událostech).',
+    keepDailyLead: 'Výsledky denní hádanky:',
+    keepDaily: 'až 24 měsíců od data hádanky, poté trvale smazány.',
     keepDeviceLead: 'Data pouze v zařízení:',
     keepDevice: 'zůstávají, dokud nevymažeš data prohlížeče.',
     rightsH: 'Tvá práva',

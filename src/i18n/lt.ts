@@ -721,6 +721,9 @@ export const lt: Messages = {
     collectFriendsLead: 'Draugai ir kvietimai:',
     collectFriends:
       'jūsų draugų sąrašas, laukiantys prašymai, prisijungimo būsena ir žaidimo kvietimai. Jei prisijungėte per kito žaidėjo kvietimo nuorodą ar QR kodą, įrašome, kuris žaidėjas jus pakvietė (jo atsitiktinį kvietimo kodą – kad ateityje būtų galima atsidėkoti už rekomendacijas).',
+    collectDailyLead: 'Dienos galvosūkio rezultatai:',
+    collectDaily:
+      'kiekvienam užbaigtam dienos galvosūkiui — jūsų rodomas vardas, geriausias rezultatas, bandymų skaičius ir užbaigimo laikas. Rodoma viešai dienos rezultatų kalendoriuje.',
     collectDeviceLead: 'Tik įrenginyje saugomi duomenys:',
     collectDevice:
       'jūsų vieno žaidėjo pažanga, žaidimų su botu / vietinių žaidimų statistika, temos pasirinkimas ir „mokymas peržiūrėtas“ žyma. Saugoma jūsų naršyklės „localStorage“ ir niekada mums neperduodama.',
@@ -753,6 +756,8 @@ export const lt: Messages = {
     keepLive: 'ištrinama per ~24 valandas po žaidimo pabaigos.',
     keepAnalyticsLead: 'Analitika:',
     keepAnalytics: 'pagal Google numatytąsias nuostatas (šiuo metu 14 mėnesių įvykių duomenims).',
+    keepDailyLead: 'Dienos galvosūkio rezultatai:',
+    keepDaily: 'iki 24 mėnesių nuo galvosūkio datos, tada visam laikui ištrinami.',
     keepDeviceLead: 'Tik įrenginyje saugomi duomenys:',
     keepDevice: 'lieka tol, kol išvalysite naršyklės duomenis.',
     rightsH: 'Jūsų teisės',

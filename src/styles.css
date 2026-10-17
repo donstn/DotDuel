@@ -5347,6 +5347,15 @@ html[data-art~="menu-button"] .menu-shelf-inner {
   justify-content: center;
   gap: 10px;
 }
+/* Cards with an icon (shape / bot pickers): a fixed-width block, centred on
+   the plaque, with icon + text left-aligned inside it — so the icons form one
+   column and the names start on one line, whatever the name lengths. Width is
+   relative to the shared column (cqw), so it scales with the buttons. */
+html[data-art~="menu-button"] .menu-shelf-inner:has(.menu-shelf-ic) {
+  width: 48cqw;
+  max-width: 100%;
+  justify-content: flex-start;
+}
 html[data-art~="menu-button"] .menu-shelf-ic {
   width: auto;
   height: auto;

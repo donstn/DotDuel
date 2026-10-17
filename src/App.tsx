@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useT } from './i18n';
 import type { Messages } from './i18n';
 import { AdBanner } from './components/AdBanner';
@@ -85,6 +85,7 @@ import {
 } from './cloud/matchHistory';
 import { ClockBadge } from './components/ClockBadge';
 import { ScoreStrip } from './components/ScoreStrip';
+import { applyThemeArt } from './themeArt';
 import { MatchFoundScreen } from './components/MatchFoundScreen';
 import { MatchmakingWaiting } from './components/MatchmakingWaiting';
 import { MultiplayerLobby } from './components/MultiplayerLobby';
@@ -977,6 +978,9 @@ export default function App() {
     setAchToasts((q) => [...q, ...fresh]);
     void pushUnlocks(fresh);
   };
+
+  // Before paint, so plaque buttons never flash their CSS fallback.
+  useLayoutEffect(() => applyThemeArt(theme), [theme]);
 
   // Apply colour theme to <html data-theme>, persist, and count "themes tried".
   useEffect(() => {
@@ -2610,7 +2614,6 @@ export default function App() {
           onOpenProfile={() => setProfileOpen(true)}
           onSignOut={() => void onSignOutSafe()}
           onOpenMultiplayer={openMultiplayer}
-          onOpenThemes={() => setThemeOpen(true)}
           mpLockedByOther={mpLockedByOther}
           mpUnreachable={mpUnreachable}
           refCode={cloudProfile?.referralCode ?? null}
@@ -2638,6 +2641,8 @@ export default function App() {
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPrivacy={() => setPrivacyOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
+          onOpenThemes={() => setThemeOpen(true)}
+          showLanguage
           version={APP_VERSION}
         />
         {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}

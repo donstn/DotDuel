@@ -5,7 +5,7 @@ import type { Settings } from '../storage';
 import { PLAYABLE_SHAPE_META } from '../types';
 import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
 import type { ThemeId } from '../theme';
-import { LANGS, useLang, useT } from '../i18n';
+import { useT } from '../i18n';
 import { FriendsButton } from './FriendsButton';
 import { TellAFriendButton } from './TellAFriendButton';
 import type { MyDailyAttempt } from '../cloud/dailyLeaderboard';
@@ -27,19 +27,13 @@ import {
   TrophyIcon,
 } from './MenuIcons';
 import { AIAvatar } from './SidePanel';
+import { themeArt } from '../themeArt';
 
 const SHAPE_ICON: Record<ShapeId, (p: { className?: string }) => JSX.Element> = {
   triangle: TriangleShapeIcon,
   square: SquareShapeIcon,
   rectangle: RectangleShapeIcon,
   rhombus: RhombusShapeIcon,
-};
-
-const SHAPE_ICON_ART: Record<ShapeId, string> = {
-  triangle: '/art/forest-pearl/menu-icon-shape-triangle.png',
-  square: '/art/forest-pearl/menu-icon-shape-square.png',
-  rectangle: '/art/forest-pearl/menu-icon-shape-rectangle.png',
-  rhombus: '/art/forest-pearl/menu-icon-shape-rhombus.png',
 };
 
 interface Props {
@@ -55,7 +49,6 @@ interface Props {
   onOpenProfile: () => void;
   onSignOut: () => void;
   onOpenMultiplayer: () => void;
-  onOpenThemes: () => void;
   mpLockedByOther: boolean;
   mpUnreachable: boolean;
   /** Signed-in player's referral code — invite links carry ?ref=<CODE>. */
@@ -92,18 +85,18 @@ function CardInner({
   sub,
   iconClass = '',
 }: {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   title: string;
-  sub: string;
+  sub?: string;
   /** Extra class on the icon slot (e.g. "is-avatar" for the bot faces). */
   iconClass?: string;
 }) {
   return (
     <span className="menu-shelf-inner">
-      <span className={`menu-shelf-ic ${iconClass}`}>{icon}</span>
+      {icon && <span className={`menu-shelf-ic ${iconClass}`}>{icon}</span>}
       <span className="menu-shelf-body">
         <strong>{title}</strong>
-        <span className="menu-shelf-sub">{sub}</span>
+        {sub && <span className="menu-shelf-sub">{sub}</span>}
       </span>
     </span>
   );
@@ -122,7 +115,6 @@ export function Menu({
   onOpenProfile,
   onSignOut,
   onOpenMultiplayer,
-  onOpenThemes,
   mpLockedByOther,
   mpUnreachable,
   refCode = null,
@@ -142,8 +134,6 @@ export function Menu({
   const [shape, setShape] = useState<ShapeId | null>(null);
   const [aiDifficulty, setAiDifficulty] = useState<Difficulty | null>(null);
   const t = useT();
-  const { lang, setLang } = useLang();
-  const [langOpen, setLangOpen] = useState(false);
 
   useEffect(() => {
     onDepthChange?.(category !== null || mode !== null);
@@ -160,24 +150,14 @@ export function Menu({
     else if (category !== null) setCategory(null);
   }, [backSignal, aiDifficulty, shape, mode, category]);
 
-  const dailyIcon =
-    theme === 'forest-pearl' ? (
-      // Reuse the puzzle-rankings art here too — the daily puzzle mode and
-      // its rankings are the same feature ("Dienos galvosūkis" / "Galvosūkių
-      // reitingai" both share the "galvosūkis/puzzle" word), so pairing an
-      // hourglass with a puzzle piece read as two unrelated icons for what's
-      // actually one subject.
-      <img src="/art/forest-pearl/menu-icon-puzzle-rankings.png" alt="" aria-hidden="true" />
-    ) : (
-      <DailyIcon />
-    );
-  const onlineIcon =
-    theme === 'forest-pearl' ? (
-      <img src="/art/forest-pearl/menu-icon-online.png" alt="" aria-hidden="true" />
-    ) : (
-      <GlobeIcon />
-    );
-  const iconClass = theme === 'forest-pearl' ? 'is-avatar' : '';
+  // Painted plaque buttons (when the theme has them) are text-only: icons go,
+  // and descriptive subtitles too — only state lines (locked, sign in,
+  // attempts) fit between the plaque's decorated ends.
+  const art = themeArt(theme);
+  const plaque = Boolean(art.menuButton);
+  const desc = (s: string) => (plaque ? undefined : s);
+  const dailyIcon = plaque ? undefined : <DailyIcon />;
+  const onlineIcon = plaque ? undefined : <GlobeIcon />;
 
   // ---- Daily-puzzle shelf card (3-state, sign-in gated) ----
   const dailyCard = () => {
@@ -190,7 +170,6 @@ export function Menu({
           <button className="menu-shelf disabled" disabled title={t.menu.dailyDoneTitle}>
             <CardInner
               icon={dailyIcon}
-              iconClass={iconClass}
               title={t.menu.dailyPuzzle}
               sub={t.menu.dailyDoneSub(best ?? 0)}
             />
@@ -203,7 +182,7 @@ export function Menu({
           : t.menu.dailyFreshSub(MAX_ATTEMPTS_PER_DAY);
       return (
         <button className="menu-shelf" onClick={onStartDailyPuzzle}>
-          <CardInner icon={dailyIcon} iconClass={iconClass} title={t.menu.dailyPuzzle} sub={sub} />
+          <CardInner icon={dailyIcon} title={t.menu.dailyPuzzle} sub={sub} />
         </button>
       );
     }
@@ -211,7 +190,6 @@ export function Menu({
       <button className="menu-shelf disabled" disabled title={t.menu.dailySignInTitle}>
         <CardInner
           icon={dailyIcon}
-          iconClass={iconClass}
           title={t.menu.dailyPuzzle}
           sub={t.common.signInToPlay}
         />
@@ -226,7 +204,6 @@ export function Menu({
         <button className="menu-shelf disabled" disabled title={t.menu.onlineSignInTitle}>
           <CardInner
             icon={onlineIcon}
-            iconClass={iconClass}
             title={t.menu.onlineRanked}
             sub={t.common.signInToPlay}
           />
@@ -242,7 +219,6 @@ export function Menu({
         >
           <CardInner
             icon={onlineIcon}
-            iconClass={iconClass}
             title={t.menu.onlineRanked}
             sub={t.menu.onlineUnreachable}
           />
@@ -254,7 +230,6 @@ export function Menu({
         <button className="menu-shelf disabled" disabled title={t.menu.onlineLockedTitle}>
           <CardInner
             icon={onlineIcon}
-            iconClass={iconClass}
             title={t.menu.onlineRanked}
             sub={t.menu.onlineLocked}
           />
@@ -265,9 +240,8 @@ export function Menu({
       <button className="menu-shelf" onClick={onOpenMultiplayer}>
         <CardInner
           icon={onlineIcon}
-          iconClass={iconClass}
           title={t.menu.onlineRanked}
-          sub={t.menu.onlineFindMatch}
+          sub={desc(t.menu.onlineFindMatch)}
         />
       </button>
     );
@@ -287,71 +261,10 @@ export function Menu({
       );
     return (
       <div className="menu">
-        {langOpen && (
-          <div className="menu-lang-backdrop" onClick={() => setLangOpen(false)} />
-        )}
-        <div className="menu-topleft">
-          <div className="menu-lang">
-            <button
-              type="button"
-              className="menu-lang-btn"
-              onClick={() => setLangOpen((o) => !o)}
-              aria-label={t.lang.label}
-              title={t.lang.label}
-              aria-haspopup="menu"
-              aria-expanded={langOpen}
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                <path
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 0c2.5 2.6 2.5 15.4 0 18m0-18c-2.5 2.6-2.5 15.4 0 18M3.5 9h17M3.5 15h17"
-                />
-              </svg>
-              <span className="menu-lang-code">{lang.toUpperCase()}</span>
-            </button>
-            {langOpen && (
-              <div className="menu-lang-pop" role="menu">
-                {LANGS.map((l) => (
-                  <button
-                    key={l.code}
-                    type="button"
-                    role="menuitemradio"
-                    aria-checked={l.code === lang}
-                    className={`menu-lang-opt ${l.code === lang ? 'is-on' : ''}`}
-                    onClick={() => {
-                      setLang(l.code);
-                      setLangOpen(false);
-                    }}
-                  >
-                    {l.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="menu-topright">
-          <button
-            type="button"
-            className="menu-theme-btn"
-            onClick={onOpenThemes}
-            aria-label={t.menu.changeTheme}
-            title={t.menu.changeTheme}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
-              <path
-                fill="currentColor"
-                d="M12 3a9 9 0 0 0 0 18 1.5 1.5 0 0 0 1.16-2.46 1.5 1.5 0 0 1 1.16-2.46H17a4 4 0 0 0 4-4c0-4.97-4.03-9-9-9zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
-              />
-            </svg>
-          </button>
-        </div>
-        {theme === 'forest-pearl' ? (
+        {art.headerSign ? (
           <div className="header-sign">
             <h1 className="header-sign-title">
-              <img src="/art/forest-pearl/header-combined.webp" alt="DotDuel" className="header-sign-art" />
+              <img src={art.headerSign.url} alt="DotDuel" className="header-sign-art" />
             </h1>
             <p className="header-sign-text">
               <span>{greeting}</span>
@@ -403,44 +316,23 @@ export function Menu({
         <div className="menu-shelves">
           <button className="menu-shelf" onClick={() => setCategory('single')}>
             <CardInner
-              icon={
-                theme === 'forest-pearl' ? (
-                  <img src="/art/forest-pearl/avatar-l1.png" alt="" aria-hidden="true" />
-                ) : (
-                  <BotSquadIcon />
-                )
-              }
-              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+              icon={plaque ? undefined : <BotSquadIcon />}
               title={t.menu.singlePlayer}
-              sub={t.menu.singlePlayerSub}
+              sub={desc(t.menu.singlePlayerSub)}
             />
           </button>
           <button className="menu-shelf" onClick={() => setCategory('multi')}>
             <CardInner
-              icon={
-                theme === 'forest-pearl' ? (
-                  <img src="/art/forest-pearl/menu-icon-multiplayer.png" alt="" aria-hidden="true" />
-                ) : (
-                  <DuelIcon />
-                )
-              }
-              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+              icon={plaque ? undefined : <DuelIcon />}
               title={t.menu.multiplayer}
-              sub={t.menu.multiplayerSub}
+              sub={desc(t.menu.multiplayerSub)}
             />
           </button>
           <button className="menu-shelf" onClick={() => setCategory('rankings')}>
             <CardInner
-              icon={
-                theme === 'forest-pearl' ? (
-                  <img src="/art/forest-pearl/menu-icon-rankings.png" alt="" aria-hidden="true" />
-                ) : (
-                  <PodiumIcon />
-                )
-              }
-              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+              icon={plaque ? undefined : <PodiumIcon />}
               title={t.menu.rankings}
-              sub={t.menu.rankingsSub}
+              sub={desc(t.menu.rankingsSub)}
             />
           </button>
         </div>
@@ -464,16 +356,9 @@ export function Menu({
         <div className="menu-shelves">
           <button className="menu-shelf" onClick={() => setMode('ai')}>
             <CardInner
-              icon={
-                theme === 'forest-pearl' ? (
-                  <img src="/art/forest-pearl/avatar-l1.png" alt="" aria-hidden="true" />
-                ) : (
-                  <BotSquadIcon />
-                )
-              }
-              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+              icon={plaque ? undefined : <BotSquadIcon />}
               title={t.menu.bots}
-              sub={t.menu.botsSub}
+              sub={desc(t.menu.botsSub)}
             />
           </button>
           {dailyCard()}
@@ -493,16 +378,9 @@ export function Menu({
         <div className="menu-shelves">
           <button className="menu-shelf" onClick={() => setMode('hotseat')}>
             <CardInner
-              icon={
-                theme === 'forest-pearl' ? (
-                  <img src="/art/forest-pearl/menu-icon-hotseat.png" alt="" aria-hidden="true" />
-                ) : (
-                  <DeviceIcon />
-                )
-              }
-              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+              icon={plaque ? undefined : <DeviceIcon />}
               title={t.menu.hotseat}
-              sub={t.menu.hotseatSub}
+              sub={desc(t.menu.hotseatSub)}
             />
           </button>
           {onlineCard()}
@@ -527,58 +405,30 @@ export function Menu({
             title={user ? '' : t.common.signInToView}
           >
             <CardInner
-              icon={
-                theme === 'forest-pearl' ? (
-                  <img src="/art/forest-pearl/menu-icon-puzzle-rankings.png" alt="" aria-hidden="true" />
-                ) : (
-                  <PuzzleIcon />
-                )
-              }
-              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+              icon={plaque ? undefined : <PuzzleIcon />}
               title={t.menu.puzzleRankings}
-              sub={user ? t.menu.puzzleRankingsSub : t.common.signInToView}
+              sub={user ? desc(t.menu.puzzleRankingsSub) : t.common.signInToView}
             />
           </button>
           <button className="menu-shelf" onClick={() => onOpenRankings('local')}>
             <CardInner
-              icon={
-                theme === 'forest-pearl' ? (
-                  <img src="/art/forest-pearl/menu-icon-local-rankings.png" alt="" aria-hidden="true" />
-                ) : (
-                  <HouseIcon />
-                )
-              }
-              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+              icon={plaque ? undefined : <HouseIcon />}
               title={t.menu.localRankings}
-              sub={t.menu.localRankingsSub}
+              sub={desc(t.menu.localRankingsSub)}
             />
           </button>
           <button className="menu-shelf" onClick={() => onOpenRankings('global')}>
             <CardInner
-              icon={
-                theme === 'forest-pearl' ? (
-                  <img src="/art/forest-pearl/menu-icon-rated-rankings.png" alt="" aria-hidden="true" />
-                ) : (
-                  <TrophyIcon />
-                )
-              }
-              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+              icon={plaque ? undefined : <TrophyIcon />}
               title={t.menu.ratedRankings}
-              sub={t.menu.ratedRankingsSub}
+              sub={desc(t.menu.ratedRankingsSub)}
             />
           </button>
           <button className="menu-shelf" onClick={onOpenAchievements}>
             <CardInner
-              icon={
-                theme === 'forest-pearl' ? (
-                  <img src="/art/forest-pearl/menu-icon-achievements.png" alt="" aria-hidden="true" />
-                ) : (
-                  <AchievementsIcon />
-                )
-              }
-              iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+              icon={plaque ? undefined : <AchievementsIcon />}
               title={t.menu.achievements}
-              sub={t.menu.achievementsSub}
+              sub={desc(t.menu.achievementsSub)}
             />
           </button>
         </div>
@@ -598,13 +448,13 @@ export function Menu({
               <button key={s.id} className="menu-shelf" onClick={() => setShape(s.id)}>
                 <CardInner
                   icon={
-                    theme === 'forest-pearl' ? (
-                      <img src={SHAPE_ICON_ART[s.id]} alt="" aria-hidden="true" />
+                    art.shapeIcons ? (
+                      <img src={art.shapeIcons[s.id]} alt="" aria-hidden="true" />
                     ) : (
                       <ShapeIcon />
                     )
                   }
-                  iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+                  iconClass={art.shapeIcons ? 'is-avatar' : ''}
                   title={t.shapes[s.id]}
                   sub={t.menu.dots(s.dots)}
                 />
@@ -656,13 +506,13 @@ export function Menu({
               >
                 <CardInner
                   icon={
-                    theme === 'forest-pearl' ? (
-                      <img src={SHAPE_ICON_ART[s.id]} alt="" aria-hidden="true" />
+                    art.shapeIcons ? (
+                      <img src={art.shapeIcons[s.id]} alt="" aria-hidden="true" />
                     ) : (
                       <ShapeIcon />
                     )
                   }
-                  iconClass={theme === 'forest-pearl' ? 'is-avatar' : ''}
+                  iconClass={art.shapeIcons ? 'is-avatar' : ''}
                   title={t.shapes[s.id]}
                   sub={unlockedAny ? t.menu.dots(s.dots) : t.common.locked}
                 />

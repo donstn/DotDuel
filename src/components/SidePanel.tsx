@@ -15,6 +15,11 @@ import {
   type PlayerRow,
 } from '../storage';
 
+export type AvatarSpec =
+  | 'human'
+  | { kind: 'ai'; level: Difficulty }
+  | { kind: 'guest'; label: string };
+
 interface SidePanelProps {
   side: 'left' | 'right';
   player: Player;
@@ -25,7 +30,7 @@ interface SidePanelProps {
   rating?: string;
   /** Optional live element (e.g. a clock) rendered in the rating slot. */
   ratingSlot?: ReactNode;
-  avatar: 'human' | { kind: 'ai'; level: Difficulty } | { kind: 'guest'; label: string };
+  avatar: AvatarSpec;
   theme?: ThemeId;
   colorSwap?: boolean;
   /** Per-name stats. Pass `null` for AI panel (no stats tracked). */
@@ -38,7 +43,7 @@ interface SidePanelProps {
   onFeaturedClick?: () => void;
 }
 
-function effectiveColor(player: Player, swap: boolean): 1 | 2 {
+export function effectiveColor(player: Player, swap: boolean): 1 | 2 {
   if (!swap) return player;
   return player === 1 ? 2 : 1;
 }
@@ -86,13 +91,7 @@ export function SidePanel({
   return (
     <aside className={cls}>
       <div className="avatar-frame">
-        {avatar === 'human' ? (
-          <HumanAvatar player={color} theme={theme} />
-        ) : avatar.kind === 'guest' ? (
-          <GuestAvatar label={avatar.label} player={color} />
-        ) : (
-          <AIAvatar level={avatar.level} theme={theme} />
-        )}
+        <PlayerAvatar avatar={avatar} color={color} theme={theme} />
       </div>
       {belowAvatar && <div className="player-below-avatar">{belowAvatar}</div>}
       <div className="player-name-row">
@@ -119,6 +118,20 @@ export function SidePanel({
       {thinking && <div className="thinking-dots" aria-label={tr.game.thinking}>···</div>}
     </aside>
   );
+}
+
+export function PlayerAvatar({
+  avatar,
+  color,
+  theme,
+}: {
+  avatar: AvatarSpec;
+  color: 1 | 2;
+  theme?: ThemeId;
+}) {
+  if (avatar === 'human') return <HumanAvatar player={color} theme={theme} />;
+  if (avatar.kind === 'guest') return <GuestAvatar label={avatar.label} player={color} />;
+  return <AIAvatar level={avatar.level} theme={theme} />;
 }
 
 function PointsTotals({ stats }: { stats: PlayerRow }) {

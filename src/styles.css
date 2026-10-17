@@ -3993,7 +3993,11 @@ h1, h2, h3,
 @media (max-width: 420px) {
   .rankings-table:not(.h2h-table) {
     min-width: 0;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
+  }
+  .rankings-table:not(.h2h-table) thead th {
+    font-size: 0.66rem;
+    letter-spacing: 0.02em;
   }
   .rankings-table:not(.h2h-table) th,
   .rankings-table:not(.h2h-table) td {
@@ -5118,6 +5122,15 @@ html[data-art~="card-frame"] .confirm-card,
 html[data-art~="card-frame"] .menu-lang-pop {
   padding: 26px 28px;
 }
+/* Achievements scroll its badge rows edge to edge — inset them (and the
+   detail box) clear of the frame like every other popover body. */
+html[data-art~="card-frame"] .ach-scroll {
+  padding: 0 18px 8px 22px;
+}
+html[data-art~="card-frame"] .ach-detail {
+  margin-left: 22px;
+  margin-right: 22px;
+}
 html[data-art~="title-banner"] .menu > h2 {
   --banner-h: 52px;
   --cap-l: calc(var(--banner-h) * var(--title-banner-cap-l));
@@ -5143,6 +5156,20 @@ html[data-art~="title-banner"] .menu > h2 {
   text-overflow: ellipsis;
 }
 
+/* Short screens: a slimmer title banner (setup screens have the most rows). */
+@media (max-height: 680px) {
+  html[data-art~="title-banner"] .menu > h2 {
+    --banner-h: 42px;
+    font-size: clamp(0.88rem, 4vw, 1.05rem);
+  }
+  html[data-art~="menu-button"] .menu {
+    row-gap: 8px;
+  }
+  html[data-art~="menu-button"] .hotseat-setup {
+    gap: 8px;
+  }
+}
+
 /* ---- Game-over card in painted themes: one column, shared edges ------
    Scores, suggestion panel, actions and share all span the card's inner
    width. Actions stack full-width (two plaques side by side leave no room
@@ -5159,9 +5186,14 @@ html[data-art~="primary-button"] .go-suggestion {
   border: 1px solid rgba(var(--p2-rgb-bright), 0.14);
   border-radius: 14px;
 }
-/* Labels reserve two lines, centred, so both scores sit at the same height
-   even when one name wraps ("BOT (BEGINNER)"). */
+/* Both tiles stretch to the taller one; the label takes the free space
+   (centred) and the score sits at the bottom — so the two scores always
+   line up, however many lines a name wraps to. */
+html[data-art~="primary-button"] .final-score {
+  justify-content: space-between;
+}
 html[data-art~="primary-button"] .final-score span {
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5238,8 +5270,22 @@ html[data-art~="primary-button"] .go-cta-primary::before,
 html[data-art~="primary-button"] .go-cta-primary::after {
   display: none;
 }
+html[data-art~="primary-button"] .go-suggestion {
+  padding: 12px 10px;
+}
 html[data-art~="primary-button"] .go-suggestion .go-cta {
   --btn-h: 46px;
+  font-size: 0.95rem;
+}
+/* Narrow phones: the frame + card padding eat the width — give the card more
+   of the screen. */
+@media (max-width: 380px) {
+  html[data-art~="card-frame"] .game-over {
+    padding: 12px 10px;
+  }
+  html[data-art~="card-frame"] .game-over-card {
+    padding: 24px 26px;
+  }
 }
 /* Share + add-friend: the wooden pill. */
 html[data-art~="pill-button"] .go-share-btn,

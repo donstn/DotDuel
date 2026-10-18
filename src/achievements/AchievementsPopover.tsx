@@ -124,6 +124,11 @@ export function AchievementsPopover({ onClose }: { onClose: () => void }) {
             );
           })}
         </div>
+        <footer className="rules-footer-bar">
+          <button className="rules-got-it" onClick={onClose}>
+            {t.common.done}
+          </button>
+        </footer>
       </div>
     </div>
   );

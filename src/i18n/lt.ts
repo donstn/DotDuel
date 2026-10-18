@@ -295,6 +295,15 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.16.0': {
+        changes: [
+          'Žaidimas tęsiasi po puslapio perkrovimo ar programėlės atidarymo iš naujo.',
+          'Kvadrato ir stačiakampio žaidimų pabaigoje rodomas patarimas, kai liko tik paimti linijas, o bakstelėjus tuščią vietą apie tai pranešama.',
+          'Mygtukai „Prisijunkite, kad žaistumėte“ dabar atidaro prisijungimą.',
+          'Temų pasirinkimas nebeatsidaro du kartus.',
+          'Nauji žaidėjai patys pasirenka viešą vardą. Galima naudoti lietuviškas raides.',
+        ],
+      },
       'Alpha 0.4.15.0': {
         highlight: 'Paskutiniai šlifavimai prieš testavimą',
         changes: [

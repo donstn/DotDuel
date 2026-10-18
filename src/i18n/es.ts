@@ -285,6 +285,15 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.16.0': {
+        changes: [
+          'Tu partida continúa tras recargar o volver a abrir la app.',
+          'Final de las partidas en Cuadrado y Rectángulo: aparece un aviso cuando solo quedan líneas por reclamar, y al tocar un punto sin nada que reclamar te lo indica.',
+          'Los botones «Inicia sesión para jugar» ahora abren el inicio de sesión.',
+          'El selector de temas ya no se abre dos veces.',
+          'Los jugadores nuevos eligen su propio nombre público. Se permiten letras con acentos.',
+        ],
+      },
       'Alpha 0.4.15.0': {
         highlight: 'Pulido antes de las pruebas',
         changes: [

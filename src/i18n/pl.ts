@@ -297,6 +297,15 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.16.0': {
+        changes: [
+          'Gra jest kontynuowana po odświeżeniu strony lub ponownym otwarciu aplikacji.',
+          'Koniec gier na Kwadracie i Prostokącie: pojawia się podpowiedź, gdy zostały tylko linie do zajęcia, a dotknięcie kropki bez linii do zajęcia daje o tym znać.',
+          'Przyciski „Zaloguj się, aby zagrać” otwierają teraz logowanie.',
+          'Wybór motywu nie otwiera się już dwa razy.',
+          'Nowi gracze sami wybierają publiczną nazwę. Można używać polskich liter.',
+        ],
+      },
       'Alpha 0.4.15.0': {
         highlight: 'Szlify przed testami',
         changes: [

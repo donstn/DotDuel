@@ -3,6 +3,24 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.16.0] - 2026-10-18
+
+### Fixed
+
+- **Resume offline games** — vs-AI / hot-seat games saved each move
+  (`dotduel:activeGame:v1`), resumed on launch; validated against the board,
+  crash-loop guard.
+- **Claim-phase hint** — when all dots are placed, a one-shot hint over the
+  board; tapping a dot with nothing to claim shakes it and says so.
+- **Sign-in cards** — signed-out "Sign in to play" cards open the sign-in popover.
+- **Theme picker** rendered twice on the home menu.
+- **Double-tap on Start / Play again** no longer places a dot (350 ms input guard).
+
+### Changed
+
+- **Public names** — new Google sign-ups pick their game name (no auto handle
+  from the full Google name); accented Latin letters allowed.
+
 ## [0.4.15.0] - 2026-10-17
 
 ### Changed

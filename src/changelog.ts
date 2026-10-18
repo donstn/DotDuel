@@ -30,6 +30,32 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.16.0',
+    date: '2026-10-18',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Your game continues after reloading or reopening the app.',
+      },
+      {
+        kind: 'fixed',
+        text: 'End of Square and Rectangle games: a hint shows when only line claims are left, and tapping an empty spot tells you so.',
+      },
+      {
+        kind: 'fixed',
+        text: '“Sign in to play” buttons now open sign-in.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Theme picker no longer opens twice.',
+      },
+      {
+        kind: 'changed',
+        text: 'New players choose their own public name. Lithuanian letters are allowed.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.15.0',
     date: '2026-10-17',
     highlight: 'Polish before testing',

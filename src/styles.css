@@ -3017,6 +3017,21 @@ h1, h2, h3,
   padding: 12px 14px;
 }
 
+/* Links to the web guide pages, under the last rules card. */
+.rules-more {
+  column-span: all;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 14px;
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+}
+.rules-more a {
+  color: var(--accent);
+  white-space: nowrap;
+}
+
 .rules-body section:last-child {
   margin-bottom: 0;
 }

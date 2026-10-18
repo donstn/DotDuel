@@ -1,0 +1,86 @@
+/* Static guide pages (how to play, strategy, about, changelog). Same palette
+   and fonts as the game; no JS. */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/outfit-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/chakra-petch-700.woff2') format('woff2');
+}
+:root {
+  --bg: #07130c;
+  --panel: #0f2117;
+  --line: #24402f;
+  --text: #e8f3ea;
+  --muted: #a9c2b0;
+  --accent: #7bdb95;
+  --gold: #f2d06b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(ellipse at top, #10301d 0%, var(--bg) 60%) fixed, var(--bg);
+  color: var(--text);
+  font-family: 'Outfit', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+}
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+a { color: var(--accent); }
+h1, h2, h3, .brand { font-family: 'Chakra Petch', 'Outfit', system-ui, sans-serif; letter-spacing: 0.01em; }
+h1 { font-size: clamp(1.7rem, 6vw, 2.3rem); line-height: 1.2; margin: 28px 0 8px; }
+h2 { font-size: 1.3rem; margin: 36px 0 8px; color: #f4fff6; }
+h3 { font-size: 1.05rem; margin: 22px 0 4px; }
+.lead { color: var(--muted); font-size: 1.08rem; margin: 0 0 8px; }
+ul, ol { padding-left: 22px; }
+li { margin: 6px 0; }
+strong { color: #fff; }
+
+.site-head { border-bottom: 1px solid var(--line); background: rgba(7, 19, 12, 0.85); }
+.head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; padding-bottom: 6px; }
+.brand { color: var(--text); text-decoration: none; font-size: 1.4rem; }
+.site-nav { display: flex; flex-wrap: wrap; gap: 4px 16px; padding-bottom: 10px; font-size: 0.95rem; }
+.site-nav a { color: var(--muted); text-decoration: none; padding: 4px 0; }
+.site-nav a[aria-current='page'] { color: var(--text); border-bottom: 2px solid var(--accent); }
+.site-nav .lang { margin-left: auto; }
+
+.play-btn {
+  display: inline-block;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: linear-gradient(#9ff0b3, #5cc77a);
+  color: #06210f;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.play-btn.big { padding: 12px 28px; font-size: 1.1rem; }
+.cta { text-align: center; margin: 40px 0 8px; }
+
+.diagrams { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 18px 0; }
+.diagram { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.diagram svg { display: block; width: 100%; max-width: 240px; height: auto; margin: 0 auto; }
+.diagram figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 8px; text-align: center; }
+
+.note { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 10px; padding: 12px 16px; margin: 16px 0; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; margin: 12px 0; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; }
+
+.release { border-top: 1px solid var(--line); padding-top: 4px; }
+.release h2 { margin-bottom: 0; }
+.release time { color: var(--muted); font-size: 0.9rem; }
+.release .highlight { color: var(--gold); margin: 4px 0 0; }
+
+.site-foot { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--line); margin-top: 48px; padding-top: 16px; padding-bottom: 32px; }
+.site-foot a { color: var(--muted); }

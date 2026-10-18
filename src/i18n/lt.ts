@@ -224,6 +224,8 @@ export const lt: Messages = {
     modeHotseat: '– du žaidėjai, vienas įrenginys.',
     modeMpLead: 'Internetinis',
     modeMp: '– tiesioginiai žaidimai su pasauliniu Elo reitingu, šachmatinio tipo laikrodžiais ir revanšais.',
+    moreGuide: 'Išsamus vadovas su pavyzdžiais',
+    moreStrategy: 'Strategijos patarimai',
     gotIt: 'Supratau',
   },
 

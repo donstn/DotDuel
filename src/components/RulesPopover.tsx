@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useT } from '../i18n';
+import { useLang, useT } from '../i18n';
 
 interface Props {
   onClose: () => void;
@@ -7,6 +7,12 @@ interface Props {
 
 export function RulesPopover({ onClose }: Props) {
   const t = useT();
+  const { lang } = useLang();
+  // The web guide pages exist in English and Lithuanian. Absolute + new tab so
+  // the Android app opens them in the browser instead of inside its WebView.
+  const site = 'https://www.dotduel.com';
+  const guide = lang === 'lt' ? `${site}/lt/kaip-zaisti/` : `${site}/how-to-play/`;
+  const strategy = lang === 'lt' ? `${site}/lt/strategija/` : `${site}/strategy/`;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -90,6 +96,11 @@ export function RulesPopover({ onClose }: Props) {
               <li><strong>{t.rules.modeMpLead}</strong> {t.rules.modeMp}</li>
             </ul>
           </section>
+
+          <p className="rules-more">
+            <a href={guide} target="_blank" rel="noopener">{t.rules.moreGuide}</a>
+            <a href={strategy} target="_blank" rel="noopener">{t.rules.moreStrategy}</a>
+          </p>
         </div>
 
         <footer className="rules-footer-bar">

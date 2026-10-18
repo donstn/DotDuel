@@ -34,6 +34,9 @@ export default defineConfig(() => ({
         globPatterns: ['**/*.{js,css,html,svg,png,webp,ico,webmanifest,woff2,json,txt,mp3}'],
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        // The static guide pages (scripts/build-pages.ts) are real pages, not
+        // routes of the app — never answer them with the cached app shell.
+        navigateFallbackDenylist: [/^\/(how-to-play|strategy|about|changelog|lt)(\/|$)/, /\.(html|xml|txt)$/],
       },
       // No SW in `npm run dev` — only in the production build.
       devOptions: { enabled: false },

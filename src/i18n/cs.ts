@@ -224,6 +224,8 @@ export const cs: Messages = {
     modeHotseat: '— dva hráči, jedno zařízení.',
     modeMpLead: 'Více hráčů',
     modeMp: '— živě, se světovým žebříčkem Elo, šachovým měřením času a odvetami.',
+    moreGuide: 'Úplný průvodce (anglicky)',
+    moreStrategy: 'Strategické tipy (anglicky)',
     gotIt: 'Rozumím',
   },
 

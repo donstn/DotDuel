@@ -226,6 +226,8 @@ export const pl: Messages = {
     modeHotseat: '— dwóch graczy, jedno urządzenie.',
     modeMpLead: 'Wielu graczy',
     modeMp: '— na żywo, ze światowym rankingiem Elo, szachowym pomiarem czasu i rewanżami.',
+    moreGuide: 'Pełny poradnik (po angielsku)',
+    moreStrategy: 'Porady strategiczne (po angielsku)',
     gotIt: 'Rozumiem',
   },
 

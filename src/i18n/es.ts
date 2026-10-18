@@ -214,6 +214,8 @@ export const es: Messages = {
     modeHotseat: '— dos jugadores, un dispositivo.',
     modeMpLead: 'Multijugador',
     modeMp: '— en directo, con clasificación Elo mundial, controles de tiempo tipo ajedrez y revanchas.',
+    moreGuide: 'Guía completa (en inglés)',
+    moreStrategy: 'Consejos de estrategia (en inglés)',
     gotIt: 'Entendido',
   },
 

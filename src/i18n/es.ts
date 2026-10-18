@@ -214,6 +214,8 @@ export const es: Messages = {
     modeHotseat: '— dos jugadores, un dispositivo.',
     modeMpLead: 'Multijugador',
     modeMp: '— en directo, con clasificación Elo mundial, controles de tiempo tipo ajedrez y revanchas.',
+    moreGuide: 'Guía completa (en inglés)',
+    moreStrategy: 'Consejos de estrategia (en inglés)',
     gotIt: 'Entendido',
   },
 
@@ -285,6 +287,11 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.17.0': {
+        changes: [
+          'Una guía completa, consejos de estrategia y preguntas frecuentes en la web, enlazados desde la pantalla de Reglas.',
+        ],
+      },
       'Alpha 0.4.16.0': {
         changes: [
           'Tu partida continúa tras recargar o volver a abrir la app.',

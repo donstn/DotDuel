@@ -224,6 +224,8 @@ export const cs: Messages = {
     modeHotseat: '— dva hráči, jedno zařízení.',
     modeMpLead: 'Více hráčů',
     modeMp: '— živě, se světovým žebříčkem Elo, šachovým měřením času a odvetami.',
+    moreGuide: 'Úplný průvodce (anglicky)',
+    moreStrategy: 'Strategické tipy (anglicky)',
     gotIt: 'Rozumím',
   },
 
@@ -295,6 +297,11 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.17.0': {
+        changes: [
+          'Úplný průvodce, strategické tipy a časté dotazy na webu, odkaz najdeš na obrazovce Pravidel.',
+        ],
+      },
       'Alpha 0.4.16.0': {
         changes: [
           'Hra pokračuje i po obnovení stránky nebo znovuotevření aplikace.',

@@ -244,6 +244,8 @@ export const en = {
     modeHotseat: '— two players, one device.',
     modeMpLead: 'Multiplayer',
     modeMp: '— live with global Elo ranking, chess-style time controls, and rematches.',
+    moreGuide: 'Full guide with examples',
+    moreStrategy: 'Strategy tips',
     gotIt: 'Got it',
   },
 

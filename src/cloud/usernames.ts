@@ -22,23 +22,30 @@ export interface CloudProfile {
   };
 }
 
-export const USERNAME_RE = /^[a-zA-Z0-9_-]{3,16}$/;
+// ASCII letters plus the accented letters of Latin-1 / Latin Extended-A, so
+// Lithuanian, Polish, Czech, Spanish and Portuguese names keep their accents.
+// Other look-alikes (dotted İ, dotless ı, ĸ, long ſ, fullwidth, small caps,
+// other scripts) stay out to limit impersonation.
+const NAME_CHARS = 'A-Za-z0-9_À-ÖØ-öø-įĲ-ķĹ-ž-';
+export const USERNAME_RE = new RegExp(`^[${NAME_CHARS}]{3,16}$`);
+const NON_NAME_CHAR = new RegExp(`[^${NAME_CHARS}]`, 'g');
 
 export function normName(name: string): string {
-  return name.trim().toLowerCase();
+  return name.normalize('NFC').trim().toLowerCase();
 }
 
 export function sanitizeForUsername(raw: string): string {
-  return raw.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 16);
+  return Array.from(raw.normalize('NFC').replace(NON_NAME_CHAR, '')).slice(0, 16).join('');
 }
 
 export function suggestUsername(
   authDisplayName: string | null,
   authEmail: string | null,
 ): string {
+  // First name only — the full Google name is never suggested as a public handle.
   if (authDisplayName) {
-    const s = sanitizeForUsername(authDisplayName);
-    if (s.length >= 3) return s;
+    const s = sanitizeForUsername(authDisplayName.trim().split(/\s+/)[0] ?? '');
+    if (Array.from(s).length >= 3) return s;
   }
   if (authEmail) {
     const prefix = authEmail.split('@')[0] ?? '';
@@ -52,9 +59,10 @@ export function suggestUsername(
 export type UsernameInvalidReason = 'short' | 'long' | 'chars';
 
 export function validateUsername(name: string): UsernameInvalidReason | null {
-  const trimmed = name.trim();
-  if (trimmed.length < 3) return 'short';
-  if (trimmed.length > 16) return 'long';
+  const trimmed = name.normalize('NFC').trim();
+  const len = Array.from(trimmed).length;
+  if (len < 3) return 'short';
+  if (len > 16) return 'long';
   if (!USERNAME_RE.test(trimmed)) return 'chars';
   return null;
 }
@@ -176,7 +184,7 @@ export async function checkAvailability(
   desired: string,
   _ownUid: string,
 ): Promise<boolean> {
-  const trimmed = desired.trim();
+  const trimmed = desired.normalize('NFC').trim();
   if (!USERNAME_RE.test(trimmed)) return false;
   const sid = await profileSid();
   const lower = normName(trimmed);
@@ -192,14 +200,22 @@ export async function checkAvailability(
   return !data || data.uid === sid;
 }
 
-// Auto-provision a username for a signed-in user who lacks one (e.g. a Google
-// sign-up that got a display_name but never claimed a handle), derived from their
-// display name. Idempotent + no-op when they already have one or have no name
-// (those still see the claim picker). Server-side dedup via the ensure_username
-// RPC. Called once on sign-in so the user is findable by username for friends.
-export async function ensureUsername(): Promise<void> {
-  const { error } = await supabase.rpc('ensure_username');
-  if (error) console.warn('ensureUsername failed:', error.message);
+// Whether the signed-in user has picked a public game name yet. New Google
+// sign-ups don't have one: they choose it in the claim picker instead of
+// getting a handle derived from their real name. Null when it can't be read.
+export async function hasUsername(): Promise<boolean | null> {
+  const sid = await profileSid();
+  if (!sid) return null;
+  const { data, error } = await supabase
+    .from('usernames')
+    .select('lower')
+    .eq('uid', sid)
+    .limit(1);
+  if (error) {
+    console.warn('hasUsername failed:', error.message);
+    return null;
+  }
+  return (data?.length ?? 0) > 0;
 }
 
 interface ClaimSeed {
@@ -215,7 +231,7 @@ export async function claimUsername(
   const sid = await profileSid();
   if (!sid) throw new Error('NOT_SIGNED_IN');
   const lower = normName(desired);
-  const display = desired.trim();
+  const display = desired.normalize('NFC').trim();
   try {
     const { data: existing } = await supabase
       .from('usernames')
@@ -244,7 +260,7 @@ export async function renameUsername(
   if (!sid) throw new Error('NOT_SIGNED_IN');
   const oldLower = normName(oldName);
   const newLower = normName(newName);
-  const newDisplay = newName.trim();
+  const newDisplay = newName.normalize('NFC').trim();
   try {
     if (oldLower !== newLower) {
       const { data: existing } = await supabase

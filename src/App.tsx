@@ -39,7 +39,7 @@ import { useAuth } from './auth/useAuth';
 import { useSupabaseUser } from './auth/useSupabaseUser';
 import { saveCloudProgress, syncOnSignIn } from './cloud/progressSync';
 import {
-  ensureUsername,
+  hasUsername,
   suggestUsername,
   watchProfile,
   type CloudProfile,
@@ -129,26 +129,32 @@ import {
 import { primeAudio, playSfx, setSfxEnabled, setMusicEnabled, setAmbianceTheme } from './audio';
 import { pickAIAction } from './ai';
 import { applyAction, applyClaim, applyMove, createGame } from './game';
-import { getBoard } from './geometry';
+import { getBoard, getBoards } from './geometry';
 import {
   aiOpponentDisplayName,
   aiOpponentKey,
+  clearActiveGame,
+  clearResumeAttempt,
   getPlayerRow,
+  loadActiveGame,
   loadProgress,
+  markResumeAttempt,
   loadSettings,
   migrateStatsKey,
   normKey,
   recordGameResult,
   recordWin,
   resetProgress,
+  saveActiveGame,
   saveProgress,
   saveSettings,
+  type ActiveGame,
   type Settings,
   DEFAULT_P1_NAME,
   DEFAULT_P2_NAME,
   displayPlayerName,
 } from './storage';
-import type { Difficulty, GameAction, GameMode, GameState, Progress, ShapeId } from './types';
+import { BANNED_SHAPES, type Difficulty, type GameAction, type GameMode, type GameState, type Progress, type ShapeId } from './types';
 import { APP_VERSION } from './version';
 import { bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './telemetry';
 
@@ -162,14 +168,44 @@ interface SessionConfig {
 
 const AI_DELAY_MS = 250;
 
+// A saved game only resumes if every dot / line it mentions exists on its board.
+function activeGameFitsBoard(g: ActiveGame): boolean {
+  if (BANNED_SHAPES.has(g.shape)) return false;
+  const board = getBoards()[g.shape];
+  if (!board) return false;
+  const lineIds = new Set(board.lines.map((l) => l.id));
+  return (
+    Object.keys(g.state.colored).every((id) => Number(id) >= 0 && Number(id) < board.dots.length) &&
+    g.state.pending.every((id) => lineIds.has(id)) &&
+    g.state.completed.every((c) => lineIds.has(c.lineId)) &&
+    (g.lastDot === null || (g.lastDot >= 0 && g.lastDot < board.dots.length))
+  );
+}
+
+// Read once per page load (module scope, so React StrictMode's double render
+// can't trip the crash-loop guard).
+function takeResumableGame(): ActiveGame | null {
+  const g = loadActiveGame();
+  if (!g) {
+    clearResumeAttempt();
+    return null;
+  }
+  if (!activeGameFitsBoard(g) || !markResumeAttempt()) {
+    clearActiveGame();
+    return null;
+  }
+  return g;
+}
+const RESUMED_GAME = takeResumableGame();
+
 // Effective "show pending-claim rings" rule (Phase 1b — replaces the old
 // universal gamesPlayed/claimsMade learning window). Tiered by mode AND
 // shape:
 //   vs AI L1/L2/L3 on triangle — respects settings.showClaimableLines (default ON)
 //   vs AI L4 on triangle       — respects settings.showClaimableLinesL4 (default OFF)
 //   vs AI L5 on triangle       — never
-//   square / rectangle         — never (visual bug: many pending rings
-//                                  trigger flicker / crash; deferred)
+//   square / rectangle         — never (learning aid is Triangle-only; the
+//                                  old flicker was mix-blend-mode, see bugs.md)
 //   hot-seat / MP / daily      — never (perception is part of the game)
 function effectiveShowRings(
   settings: Settings,
@@ -186,7 +222,7 @@ function effectiveShowRings(
 }
 
 // Whether the eye-toggle button should be rendered for the current mode.
-// Triangle-only for now — same flicker bug on square/rectangle gates it.
+// Triangle-only, matching effectiveShowRings.
 function ringToggleAvailable(
   mode: GameMode | undefined,
   difficulty: Difficulty | undefined,
@@ -243,13 +279,32 @@ export default function App() {
   // Phone layout renders only the score strip; wider screens only the side
   // panels (a hidden twin would keep its clocks ticking).
   const phoneLayout = useMediaQuery(PHONE_GAME_LAYOUT);
-  const [screen, setScreen] = useState<Screen>('menu');
+  // A vs-AI / hot-seat game interrupted by a reload or the OS killing the app
+  // resumes where it was left.
+  const [resumed] = useState<ActiveGame | null>(RESUMED_GAME);
+  // The resumed game has been running for a few seconds (renders, the bot's
+  // reply), so it's safe to resume again after the next reload (see
+  // markResumeAttempt).
+  // A normal page close also counts: the listener only lives while the app is
+  // mounted, and a render crash unmounts it, so a crashed resume keeps the flag.
+  useEffect(() => {
+    if (!resumed) return;
+    const id = window.setTimeout(clearResumeAttempt, 4000);
+    window.addEventListener('pagehide', clearResumeAttempt);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener('pagehide', clearResumeAttempt);
+    };
+  }, [resumed]);
+  const [screen, setScreen] = useState<Screen>(resumed ? 'game' : 'menu');
   const [progress, setProgress] = useState<Progress>(() => loadProgress());
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
-  const [config, setConfig] = useState<SessionConfig | null>(null);
-  const [state, setState] = useState<GameState | null>(null);
+  const [config, setConfig] = useState<SessionConfig | null>(() =>
+    resumed ? { mode: resumed.mode, shape: resumed.shape, difficulty: resumed.difficulty } : null,
+  );
+  const [state, setState] = useState<GameState | null>(() => resumed?.state ?? null);
   const [thinking, setThinking] = useState(false);
-  const [lastDot, setLastDot] = useState<number | null>(null);
+  const [lastDot, setLastDot] = useState<number | null>(() => resumed?.lastDot ?? null);
   const [unlockInfo, setUnlockInfo] = useState<{
     shape: ShapeId | null;
     difficulty: Difficulty | null;
@@ -335,10 +390,12 @@ export default function App() {
   const aiTimer = useRef<number | null>(null);
   const winRecorded = useRef(false);
   const gameEndCounted = useRef(false);
-  const claimsInGame = useRef(0);
-  const gameStartedAtRef = useRef<number>(0);
-  const gameStartedFiredRef = useRef(false);
-  const firstScoreFiredRef = useRef(false);
+  const claimsInGame = useRef(RESUMED_GAME?.claims ?? 0);
+  const gameStartedAtRef = useRef<number>(resumed ? Date.now() : 0);
+  const gameStartedFiredRef = useRef(!!resumed);
+  const firstScoreFiredRef = useRef(
+    !!resumed && resumed.state.scores[1] + resumed.state.scores[2] > 0,
+  );
   const gameFinishedFiredRef = useRef(false);
   const gameIndexRef = useRef<number>(0);
   const [scoreEvent, setScoreEvent] = useState<{
@@ -526,11 +583,30 @@ export default function App() {
     setScoreEvent(null);
     setPendingFlash(false);
     prevPendingLenRef.current = 0;
+    clearActiveGame();
     setScreen('menu');
     setState(null);
     setConfig(null);
     setThinking(false);
   };
+
+  useEffect(() => {
+    if (!state || !config) return;
+    // An untouched board isn't worth resuming — a reload goes back to the menu.
+    if ((config.mode !== 'ai' && config.mode !== 'hotseat') || state.finished || state.turn === 0) {
+      clearActiveGame();
+      return;
+    }
+    saveActiveGame({
+      mode: config.mode,
+      shape: config.shape,
+      difficulty: config.difficulty,
+      state,
+      lastDot,
+      claims: claimsInGame.current,
+      savedAt: Date.now(),
+    });
+  }, [state, config, lastDot]);
 
   const playAgain = () => {
     if (!config) return;
@@ -902,12 +978,19 @@ export default function App() {
     return unsub;
   }, [user?.uid]);
 
-  // Auto-provision a username for sign-ups that have a display name but never
-  // claimed a handle (Google), so they're findable by friends. No-op otherwise.
-  // watchProfile above picks up any resulting display_name change live.
+  // New sign-ups pick their public game name themselves (claim picker below)
+  // instead of getting one derived from their real Google name.
+  const [needsUsername, setNeedsUsername] = useState(false);
   useEffect(() => {
+    setNeedsUsername(false);
     if (!user) return;
-    void ensureUsername();
+    let alive = true;
+    void hasUsername().then((has) => {
+      if (alive && has === false) setNeedsUsername(true);
+    });
+    return () => {
+      alive = false;
+    };
   }, [user?.uid]);
 
   // Cache the resolved username per-uid so the next load shows it instantly
@@ -2702,13 +2785,6 @@ export default function App() {
         {changelogOpen && (
           <ChangelogPopover onClose={() => setChangelogOpen(false)} />
         )}
-        {themeOpen && (
-          <ThemePopover
-            current={theme}
-            onSelect={setTheme}
-            onClose={() => setThemeOpen(false)}
-          />
-        )}
         {settingsOpen && (
           <SettingsPopover
             settings={settings}
@@ -2814,7 +2890,7 @@ export default function App() {
             }}
           />
         )}
-        {user && cloudProfileLoaded && !cloudProfile?.displayName && (
+        {user && cloudProfileLoaded && (needsUsername || !cloudProfile?.displayName) && (
           <UsernamePicker
             mode="claim"
             uid={user.uid}
@@ -2824,6 +2900,10 @@ export default function App() {
               authProvider: user.provider ?? null,
             }}
             onSuccess={(newName) => {
+              setNeedsUsername(false);
+              // Stats recorded under the pre-pick (Google) name follow the new name.
+              const oldName = cloudProfile?.displayName;
+              if (oldName && oldName !== newName) migrateStatsKey(oldName, newName);
               setCloudProfile((prev) => ({
                 email: prev?.email ?? user.email,
                 authProvider:
@@ -3167,13 +3247,6 @@ export default function App() {
       {changelogOpen && (
         <ChangelogPopover onClose={() => setChangelogOpen(false)} />
       )}
-      {themeOpen && (
-        <ThemePopover
-          current={theme}
-          onSelect={setTheme}
-          onClose={() => setThemeOpen(false)}
-        />
-      )}
       {settingsOpen && (
         <SettingsPopover
           settings={settings}
@@ -3182,6 +3255,13 @@ export default function App() {
           onResetProgress={onProgressResetWiped}
           onClose={() => setSettingsOpen(false)}
           onOpenThemes={() => setThemeOpen(true)}
+        />
+      )}
+      {themeOpen && (
+        <ThemePopover
+          current={theme}
+          onSelect={setTheme}
+          onClose={() => setThemeOpen(false)}
         />
       )}
       {signInOpen && <SignInPopover onClose={() => setSignInOpen(false)} />}
@@ -3203,7 +3283,7 @@ export default function App() {
           }}
         />
       )}
-      {user && cloudProfileLoaded && !cloudProfile?.displayName && (
+      {user && cloudProfileLoaded && (needsUsername || !cloudProfile?.displayName) && (
         <UsernamePicker
           mode="claim"
           uid={user.uid}
@@ -3213,6 +3293,10 @@ export default function App() {
             authProvider: user.provider ?? null,
           }}
           onSuccess={(newName) => {
+            setNeedsUsername(false);
+            // Stats recorded under the pre-pick (Google) name follow the new name.
+            const oldName = cloudProfile?.displayName;
+            if (oldName && oldName !== newName) migrateStatsKey(oldName, newName);
             setCloudProfile((prev) => ({
               email: prev?.email ?? user.email,
               authProvider:

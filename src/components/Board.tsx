@@ -20,6 +20,8 @@ interface FloatingScore {
 }
 
 const SCORE_FLOAT_DURATION_MS = 1050;
+const INPUT_GUARD_MS = 350;
+const BOARD_HINT_MS = 3200;
 
 interface Props {
   state: GameState;
@@ -282,6 +284,53 @@ export function Board({
     if (state.turn === 0) setFloats([]);
   }, [state.turn]);
 
+  // Ignore taps for a moment after the board appears (or a new game starts on
+  // it), so the second tap of a double-tap on Start / Play again can't land on
+  // a dot.
+  const inputReadyAt = useRef(0);
+  useEffect(() => {
+    if (state.turn === 0) inputReadyAt.current = performance.now() + INPUT_GUARD_MS;
+  }, [state.turn]);
+  useEffect(() => {
+    inputReadyAt.current = performance.now() + INPUT_GUARD_MS;
+  }, []);
+  const inputReady = () => performance.now() >= inputReadyAt.current;
+
+  // Claim phase: every dot is coloured but lines are still pending, so each
+  // turn must be a claim. Tell the player once per game, and again whenever a
+  // tap lands on a dot with nothing to claim (that dot also shakes).
+  const claimPhase =
+    !disabled &&
+    !state.finished &&
+    state.pending.length > 0 &&
+    board.dots.every((d) => state.colored[d.id]);
+  const [boardHint, setBoardHint] = useState<{ text: string; seq: number } | null>(null);
+  const hintTimer = useRef<number | null>(null);
+  const claimHintShown = useRef(false);
+  const showBoardHint = (text: string) => {
+    setBoardHint((prev) => ({ text, seq: (prev?.seq ?? 0) + 1 }));
+    if (hintTimer.current !== null) window.clearTimeout(hintTimer.current);
+    hintTimer.current = window.setTimeout(() => setBoardHint(null), BOARD_HINT_MS);
+  };
+  useEffect(
+    () => () => {
+      if (hintTimer.current !== null) window.clearTimeout(hintTimer.current);
+    },
+    [],
+  );
+  useEffect(() => {
+    if (state.turn === 0) {
+      claimHintShown.current = false;
+      setBoardHint(null);
+    }
+  }, [state.turn]);
+  useEffect(() => {
+    if (!claimPhase || claimHintShown.current) return;
+    claimHintShown.current = true;
+    showBoardHint(t.game.claimPhaseHint);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claimPhase]);
+
   const linesById = useMemo(() => {
     const map = new Map<string, Line>();
     for (const line of board.lines) map.set(line.id, line);
@@ -315,15 +364,32 @@ export function Board({
     return !!claimableLineForDot(dotId);
   };
 
+  // One-shot nudge via the Web Animations API, so the dot isn't remounted
+  // (which would replay its pop and drop keyboard focus).
+  const shakeDot = (dotId: number) => {
+    const g = dotRefs.current.get(dotId)?.parentElement;
+    if (!g?.animate || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const dx = dotRadius * 0.22;
+    g.animate(
+      [0, -dx, dx, -dx, dx, 0].map((x) => ({ transform: `translateX(${x}px)` })),
+      { duration: 320, easing: 'ease-in-out' },
+    );
+  };
+
   const activateDot = (dotId: number) => {
-    if (disabled) return;
+    if (disabled || !inputReady()) return;
     const cd = state.colored[dotId];
     if (!cd) {
       onDotClick?.(dotId);
       return;
     }
     const claim = claimableLineForDot(dotId);
-    if (claim && onClaimClick) onClaimClick(claim.id);
+    if (claim && onClaimClick) {
+      onClaimClick(claim.id);
+    } else if (claimPhase) {
+      shakeDot(dotId);
+      showBoardHint(t.game.nothingToClaim);
+    }
   };
 
   // Roving-tabindex grid navigation: the board is a single Tab stop; arrow keys
@@ -592,7 +658,7 @@ export function Board({
                 }}
                 style={{
                   cursor: !cd && !disabled ? 'pointer' : 'default',
-                  pointerEvents: cd && !canClaim ? 'none' : 'auto',
+                  pointerEvents: cd && !canClaim && !claimPhase ? 'none' : 'auto',
                 }}
               />
               {boardArt && ownerColor && (
@@ -635,7 +701,7 @@ export function Board({
                   r={dotRadius * 1.4}
                   fill="transparent"
                   aria-hidden="true"
-                  onClick={() => onDotClick?.(d.id)}
+                  onClick={() => activateDot(d.id)}
                   style={{ cursor: 'pointer' }}
                 />
               )}
@@ -767,6 +833,11 @@ export function Board({
           );
         })}
       </svg>
+      {boardHint && (
+        <div key={boardHint.seq} className="board-hint" role="status">
+          {boardHint.text}
+        </div>
+      )}
       <div className="sr-only" role="status" aria-live="polite">
         {liveMessage}
       </div>

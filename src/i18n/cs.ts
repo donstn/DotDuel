@@ -150,6 +150,8 @@ export const cs: Messages = {
     leaveMatch: 'Opustit hru',
     backToMenu: 'Zpět do menu',
     dailyTime: 'Tvůj čas na tento pokus',
+    claimPhaseHint: 'Vše položeno — klepni na linii a zaber ji.',
+    nothingToClaim: 'Touto tečkou nevede žádná nezabraná linie.',
     seeUnclaimed: 'Zobrazit nezabrané linie',
     seeUnclaimedTitle: (on: boolean) => `Zobrazit nezabrané linie: ${on ? 'zap.' : 'vyp.'}`,
     rules: 'Jak hrát',
@@ -293,6 +295,15 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.16.0': {
+        changes: [
+          'Hra pokračuje i po obnovení stránky nebo znovuotevření aplikace.',
+          'Konec her na Čtverci a Obdélníku: když zbývá jen zabírat linie, zobrazí se nápověda, a klepnutí na tečku bez linie k zabrání tě na to upozorní.',
+          'Tlačítka „Přihlas se pro hru“ teď otevírají přihlášení.',
+          'Výběr motivu se už neotevírá dvakrát.',
+          'Noví hráči si sami volí veřejné jméno. Lze používat písmena s diakritikou.',
+        ],
+      },
       'Alpha 0.4.15.0': {
         highlight: 'Doladění před testováním',
         changes: [

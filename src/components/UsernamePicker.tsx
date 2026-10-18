@@ -64,7 +64,7 @@ export function UsernamePicker({
       clearTimeout(debounceRef.current);
       debounceRef.current = null;
     }
-    const trimmed = name.trim();
+    const trimmed = name.normalize('NFC').trim();
     if (!trimmed) {
       setAvail({ kind: 'idle' });
       return;
@@ -100,7 +100,7 @@ export function UsernamePicker({
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (avail.kind !== 'available') return;
-    const trimmed = name.trim();
+    const trimmed = name.normalize('NFC').trim();
     setSubmitting(true);
     setSubmitError(null);
     try {

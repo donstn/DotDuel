@@ -140,6 +140,8 @@ export const pt: Messages = {
     leaveMatch: 'Sair da partida',
     backToMenu: 'Voltar ao menu',
     dailyTime: 'Seu tempo para esta tentativa',
+    claimPhaseHint: 'Tudo colocado: toque numa linha.',
+    nothingToClaim: 'Nenhuma linha não marcada passa por esse ponto.',
     seeUnclaimed: 'Ver linhas não marcadas',
     seeUnclaimedTitle: (on: boolean) =>
       `Ver linhas não marcadas: ${on ? 'ativado' : 'desativado'}`,
@@ -284,6 +286,15 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.16.0': {
+        changes: [
+          'Sua partida continua depois de recarregar ou reabrir o app.',
+          'Final das partidas em Quadrado e Retângulo: aparece uma dica quando só restam linhas para marcar, e tocar num ponto sem nada para marcar avisa você.',
+          'Os botões “Entre para jogar” agora abrem o login.',
+          'O seletor de temas não abre mais duas vezes.',
+          'Novos jogadores escolhem o próprio nome público. Letras acentuadas são permitidas.',
+        ],
+      },
       'Alpha 0.4.15.0': {
         highlight: 'Polimento antes dos testes',
         changes: [

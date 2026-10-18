@@ -127,7 +127,6 @@ export const lt: Messages = {
 
   footer: {
     howToPlay: 'Kaip žaisti',
-    rules: 'Taisyklės',
     settings: 'Nustatymai',
     privacy: 'Privatumas',
     theme: 'Tema',
@@ -224,7 +223,7 @@ export const lt: Messages = {
     modeHotseat: '– du žaidėjai, vienas įrenginys.',
     modeMpLead: 'Internetinis',
     modeMp: '– tiesioginiai žaidimai su pasauliniu Elo reitingu, šachmatinio tipo laikrodžiais ir revanšais.',
-    moreGuide: 'Išsamus vadovas su pavyzdžiais',
+    moreGuide: 'Išsamus vadovas svetainėje',
     moreStrategy: 'Strategijos patarimai',
     gotIt: 'Supratau',
   },
@@ -1520,6 +1519,8 @@ export const lt: Messages = {
     prev: 'Atgal',
     next: 'Toliau',
     done: 'Supratau',
+    tabSteps: 'Žingsniai',
+    tabRules: 'Taisyklės',
     scenes: {
       place: {
         title: 'Padėkite tašką',

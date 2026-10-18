@@ -125,7 +125,6 @@ export const cs: Messages = {
 
   footer: {
     howToPlay: 'Jak hrát',
-    rules: 'Pravidla',
     settings: 'Nastavení',
     privacy: 'Soukromí',
     theme: 'Téma',
@@ -224,7 +223,7 @@ export const cs: Messages = {
     modeHotseat: '— dva hráči, jedno zařízení.',
     modeMpLead: 'Více hráčů',
     modeMp: '— živě, se světovým žebříčkem Elo, šachovým měřením času a odvetami.',
-    moreGuide: 'Úplný průvodce (anglicky)',
+    moreGuide: 'Úplný průvodce na webu (anglicky)',
     moreStrategy: 'Strategické tipy (anglicky)',
     gotIt: 'Rozumím',
   },
@@ -1522,6 +1521,8 @@ export const cs: Messages = {
     prev: 'Předchozí',
     next: 'Další',
     done: 'Rozumím',
+    tabSteps: 'Po krocích',
+    tabRules: 'Pravidla',
     scenes: {
       place: {
         title: 'Polož tečku',

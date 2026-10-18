@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Board } from './Board';
+import { RulesContent } from './RulesContent';
 import { getScenes, type Scene } from './howto/sceneBuilders';
 import type { Player } from '../types';
 import type { ThemeId } from '../theme';
@@ -77,14 +78,21 @@ function ScoreBoard({
   );
 }
 
+export type HowToTab = 'steps' | 'rules';
+
+// The single in-game help window: animated step-by-step scenes, and the full
+// rules text in a second tab. (The extended web version is the "Guide" pages.)
 export function HowToPlayPopover({
   onClose,
   theme,
+  initialTab = 'steps',
 }: {
   onClose: () => void;
   theme?: ThemeId;
+  initialTab?: HowToTab;
 }) {
   const t = useT();
+  const [tab, setTab] = useState<HowToTab>(initialTab);
   const reduced = usePrefersReducedMotion();
   const scenes = getScenes();
   const [idx, setIdx] = useState(0);
@@ -107,13 +115,14 @@ export function HowToPlayPopover({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
+      else if (tab !== 'steps') return;
       else if (e.key === 'ArrowRight') go(1);
       else if (e.key === 'ArrowLeft') go(-1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onClose, scenes.length]);
+  }, [onClose, scenes.length, tab]);
 
   const captions = t.howto.scenes as Record<string, { title: string; body: string }>;
   const cap = captions[scene.id] ?? { title: '', body: '' };
@@ -133,91 +142,110 @@ export function HowToPlayPopover({
 
         <header className="rules-header">
           <h2>{t.howto.title}</h2>
-          <p className="rules-tagline">{t.howto.tagline}</p>
+          <p className="rules-tagline">{tab === 'steps' ? t.howto.tagline : t.rules.tagline}</p>
         </header>
 
-        <div className="howto-body">
-          <ScoreBoard
-            scores={frame.state.scores}
-            winner={frame.state.finished ? frame.state.winner : null}
-            t={t}
-          />
-
-          <div
-            className="howto-stage"
-            onPointerDown={(e) => {
-              swipeX.current = e.clientX;
-              swiped.current = false;
-            }}
-            onPointerUp={(e) => {
-              if (swipeX.current === null) return;
-              const dx = e.clientX - swipeX.current;
-              swipeX.current = null;
-              if (Math.abs(dx) > 40) {
-                swiped.current = true; // swallow the click that follows the swipe
-                go(dx < 0 ? 1 : -1);
-              }
-            }}
-          >
+        <div className="howto-tabs" role="tablist" aria-label={t.howto.title}>
+          {(['steps', 'rules'] as const).map((k) => (
             <button
+              key={k}
               type="button"
-              className="howto-nav howto-prev"
-              onClick={() => go(-1)}
-              aria-label={t.howto.prev}
+              role="tab"
+              aria-selected={tab === k}
+              className={`howto-tab${tab === k ? ' is-active' : ''}`}
+              onClick={() => setTab(k)}
             >
-              ‹
+              {k === 'steps' ? t.howto.tabSteps : t.howto.tabRules}
             </button>
-            <button
-              type="button"
-              className="howto-board"
-              key={scene.id}
-              onClick={() => {
-                if (swiped.current) {
-                  swiped.current = false;
-                  return;
-                }
-                if (!reduced) setPaused((p) => !p);
-              }}
-              aria-label={`${cap.title}. ${cap.body}`}
-            >
-              <Board
-                state={frame.state}
-                disabled
-                lastDot={frame.lastDot}
-                scoreEvent={paused || reduced ? null : frame.score}
-                theme={theme}
-              />
-            </button>
-            <button
-              type="button"
-              className="howto-nav howto-next"
-              onClick={() => go(1)}
-              aria-label={t.howto.next}
-            >
-              ›
-            </button>
-          </div>
-
-          <div className="howto-caption" aria-live="polite">
-            <strong className="howto-caption-title">{cap.title}</strong>
-            <span className="howto-caption-body">{cap.body}</span>
-          </div>
-
-          <div className="howto-dots" role="group" aria-label={t.howto.title}>
-            {scenes.map((s, n) => (
-              <button
-                key={s.id}
-                type="button"
-                aria-current={n === idx ? 'true' : undefined}
-                aria-label={`${n + 1}/${scenes.length}: ${captions[s.id]?.title ?? s.id}`}
-                className={`howto-dot ${n === idx ? 'is-active' : ''}`}
-                onClick={() => setIdx(n)}
-              >
-                <span className="howto-dot-pip" aria-hidden="true" />
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
+
+        {tab === 'rules' ? (
+          <RulesContent />
+        ) : (
+          <div className="howto-body">
+            <ScoreBoard
+              scores={frame.state.scores}
+              winner={frame.state.finished ? frame.state.winner : null}
+              t={t}
+            />
+
+            <div
+              className="howto-stage"
+              onPointerDown={(e) => {
+                swipeX.current = e.clientX;
+                swiped.current = false;
+              }}
+              onPointerUp={(e) => {
+                if (swipeX.current === null) return;
+                const dx = e.clientX - swipeX.current;
+                swipeX.current = null;
+                if (Math.abs(dx) > 40) {
+                  swiped.current = true; // swallow the click that follows the swipe
+                  go(dx < 0 ? 1 : -1);
+                }
+              }}
+            >
+              <button
+                type="button"
+                className="howto-nav howto-prev"
+                onClick={() => go(-1)}
+                aria-label={t.howto.prev}
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                className="howto-board"
+                key={scene.id}
+                onClick={() => {
+                  if (swiped.current) {
+                    swiped.current = false;
+                    return;
+                  }
+                  if (!reduced) setPaused((p) => !p);
+                }}
+                aria-label={`${cap.title}. ${cap.body}`}
+              >
+                <Board
+                  state={frame.state}
+                  disabled
+                  lastDot={frame.lastDot}
+                  scoreEvent={paused || reduced ? null : frame.score}
+                  theme={theme}
+                />
+              </button>
+              <button
+                type="button"
+                className="howto-nav howto-next"
+                onClick={() => go(1)}
+                aria-label={t.howto.next}
+              >
+                ›
+              </button>
+            </div>
+
+            <div className="howto-caption" aria-live="polite">
+              <strong className="howto-caption-title">{cap.title}</strong>
+              <span className="howto-caption-body">{cap.body}</span>
+            </div>
+
+            <div className="howto-dots" role="group" aria-label={t.howto.title}>
+              {scenes.map((s, n) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  aria-current={n === idx ? 'true' : undefined}
+                  aria-label={`${n + 1}/${scenes.length}: ${captions[s.id]?.title ?? s.id}`}
+                  className={`howto-dot ${n === idx ? 'is-active' : ''}`}
+                  onClick={() => setIdx(n)}
+                >
+                  <span className="howto-dot-pip" aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <footer className="rules-footer-bar">
           <button className="rules-got-it" onClick={onClose}>

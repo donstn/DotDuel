@@ -127,7 +127,6 @@ export const pl: Messages = {
 
   footer: {
     howToPlay: 'Jak grać',
-    rules: 'Zasady',
     settings: 'Ustawienia',
     privacy: 'Prywatność',
     theme: 'Motyw',
@@ -226,7 +225,7 @@ export const pl: Messages = {
     modeHotseat: '— dwóch graczy, jedno urządzenie.',
     modeMpLead: 'Wielu graczy',
     modeMp: '— na żywo, ze światowym rankingiem Elo, szachowym pomiarem czasu i rewanżami.',
-    moreGuide: 'Pełny poradnik (po angielsku)',
+    moreGuide: 'Pełny poradnik na stronie (po angielsku)',
     moreStrategy: 'Porady strategiczne (po angielsku)',
     gotIt: 'Rozumiem',
   },
@@ -1524,6 +1523,8 @@ export const pl: Messages = {
     prev: 'Poprzedni',
     next: 'Dalej',
     done: 'Rozumiem',
+    tabSteps: 'Krok po kroku',
+    tabRules: 'Zasady',
     scenes: {
       place: {
         title: 'Postaw kropkę',

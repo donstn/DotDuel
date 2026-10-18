@@ -141,7 +141,6 @@ export const en = {
   // Persistent footer (also shown in-game).
   footer: {
     howToPlay: 'How to play',
-    rules: 'Rules',
     settings: 'Settings',
     privacy: 'Privacy',
     theme: 'Theme',
@@ -244,7 +243,7 @@ export const en = {
     modeHotseat: '— two players, one device.',
     modeMpLead: 'Multiplayer',
     modeMp: '— live with global Elo ranking, chess-style time controls, and rematches.',
-    moreGuide: 'Full guide with examples',
+    moreGuide: 'Full guide on the website',
     moreStrategy: 'Strategy tips',
     gotIt: 'Got it',
   },
@@ -963,6 +962,8 @@ export const en = {
     prev: 'Previous',
     next: 'Next',
     done: 'Got it',
+    tabSteps: 'Step by step',
+    tabRules: 'Rules',
     scenes: {
       place: {
         title: 'Place a dot',

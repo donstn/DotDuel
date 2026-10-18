@@ -2250,6 +2250,46 @@ html[data-art~="menu-button"] .menu-share-link {
 .howto-card {
   max-width: 460px;
 }
+/* Step by step / Rules switch at the top of the How to play window. */
+.howto-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 0 16px 6px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--glass-border);
+  flex: 0 0 auto;
+}
+.howto-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.howto-tab.is-active {
+  background: var(--accent);
+  color: #06210f;
+}
+.howto-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* The rules tab lives in the narrow help card: one column even on desktop. */
+.howto-card .rules-body {
+  column-count: 1;
+}
 .howto-body {
   display: flex;
   flex-direction: column;

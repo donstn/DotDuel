@@ -116,7 +116,6 @@ export const pt: Messages = {
 
   footer: {
     howToPlay: 'Como jogar',
-    rules: 'Regras',
     settings: 'Configurações',
     privacy: 'Privacidade',
     theme: 'Tema',
@@ -215,7 +214,7 @@ export const pt: Messages = {
     modeHotseat: '— dois jogadores, um dispositivo.',
     modeMpLead: 'Multijogador',
     modeMp: '— ao vivo, com ranking Elo mundial, controles de tempo estilo xadrez e revanches.',
-    moreGuide: 'Guia completo (em inglês)',
+    moreGuide: 'Guia completo no site (em inglês)',
     moreStrategy: 'Dicas de estratégia (em inglês)',
     gotIt: 'Entendi',
   },
@@ -1513,6 +1512,8 @@ export const pt: Messages = {
     prev: 'Anterior',
     next: 'Próximo',
     done: 'Entendi',
+    tabSteps: 'Passo a passo',
+    tabRules: 'Regras',
     scenes: {
       place: {
         title: 'Coloque um ponto',

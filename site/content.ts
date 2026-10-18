@@ -7,10 +7,10 @@ type Content = Omit<PageInput, 'lang' | 'key'>;
 
 const howToPlay: Record<Lang, Content> = {
   en: {
-    title: 'How to play DotDuel — rules, scoring and board shapes',
+    title: 'DotDuel guide — how to play, rules, scoring and board shapes',
     description:
       'Learn DotDuel in two minutes: place dots, complete lines, score the longest one, and claim the lines left waiting. Rules, scoring examples and all board shapes.',
-    h1: 'How to play DotDuel',
+    h1: 'DotDuel guide: how to play',
     lead: 'Two players take turns colouring dots. Complete a line and you score its length. The rules take two minutes to learn; the tactics take a lot longer.',
     body: `
     <h2>The goal</h2>
@@ -64,10 +64,10 @@ const howToPlay: Record<Lang, Content> = {
 `,
   },
   lt: {
-    title: 'Kaip žaisti DotDuel – taisyklės, taškai ir lentų formos',
+    title: 'DotDuel vadovas – kaip žaisti, taisyklės, taškai ir lentų formos',
     description:
       'Išmokite DotDuel per dvi minutes: dėkite taškus, užbaikite linijas, gaukite taškus už ilgiausią ir paimkite laukiančias linijas. Taisyklės, pavyzdžiai ir visos lentų formos.',
-    h1: 'Kaip žaisti DotDuel',
+    h1: 'DotDuel vadovas: kaip žaisti',
     lead: 'Du žaidėjai pakaitomis spalvina taškus. Užbaigus liniją gaunama tiek taškų, kiek ji ilga. Taisykles išmoksite per dvi minutes, o taktiką – kur kas ilgiau.',
     body: `
     <h2>Tikslas</h2>
@@ -165,7 +165,7 @@ const strategy: Record<Lang, Content> = {
       <tr><td>Hard</td><td>Weighs its gain against your best reply</td><td>Counting what a move gives away (tip 2)</td></tr>
       <tr><td>Impossible</td><td>Looks two moves ahead and values the waiting lines</td><td>Tempo, waiting lines and endgame parity (tips 4–6)</td></tr>
     </table></div>
-    <p>Not sure about a rule? Go back to <a href="/how-to-play/">How to play</a>.</p>
+    <p>Not sure about a rule? Go back to the <a href="/how-to-play/">guide</a>.</p>
 `,
   },
   lt: {
@@ -210,7 +210,7 @@ const strategy: Record<Lang, Content> = {
       <tr><td>Sunkus</td><td>Pasveria savo naudą prieš geriausią jūsų atsakymą</td><td>Skaičiuoti, ką ėjimas atiduoda (2 patarimas)</td></tr>
       <tr><td>Neįmanomas</td><td>Žiūri du ėjimus į priekį ir vertina laukiančias linijas</td><td>Laukimo ėjimų, laukiančių linijų ir pabaigos (4–6 patarimai)</td></tr>
     </table></div>
-    <p>Neaiški taisyklė? Grįžkite į <a href="/lt/kaip-zaisti/">Kaip žaisti</a>.</p>
+    <p>Neaiški taisyklė? Grįžkite į <a href="/lt/kaip-zaisti/">vadovą</a>.</p>
 `,
   },
 };

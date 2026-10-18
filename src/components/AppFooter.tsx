@@ -3,7 +3,6 @@ import { LANGS, useLang, useT } from '../i18n';
 
 interface Props {
   onOpenHowTo: () => void;
-  onOpenRules: () => void;
   onOpenSettings: () => void;
   onOpenPrivacy: () => void;
   onOpenChangelog: () => void;
@@ -16,7 +15,6 @@ interface Props {
 
 export function AppFooter({
   onOpenHowTo,
-  onOpenRules,
   onOpenSettings,
   onOpenPrivacy,
   onOpenChangelog,
@@ -110,16 +108,6 @@ export function AppFooter({
           }}
         >
           {t.footer.howToPlay}
-        </a>
-        <span className="sep">·</span>
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            onOpenRules();
-          }}
-        >
-          {t.footer.rules}
         </a>
         <span className="sep">·</span>
         <a

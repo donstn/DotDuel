@@ -33,6 +33,9 @@ body {
   font-family: 'Outfit', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 17px;
   line-height: 1.65;
+  /* Inside the Android app the page runs edge to edge under the status and
+     navigation bars; 0 on the web. */
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
 }
 .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
 a { color: var(--accent); }

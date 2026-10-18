@@ -5,7 +5,7 @@ import { getScenes, type Scene } from './howto/sceneBuilders';
 import type { Player } from '../types';
 import type { ThemeId } from '../theme';
 import { useLang, useT } from '../i18n';
-import { SITE_ORIGIN, guidePath } from '../guideLinks';
+import { guideLinkProps } from '../guideLinks';
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(
@@ -87,10 +87,14 @@ export function HowToPlayPopover({
   onClose,
   theme,
   initialTab = 'steps',
+  showGuideLinks = true,
 }: {
   onClose: () => void;
   theme?: ThemeId;
   initialTab?: HowToTab;
+  /** False during clocked games in the app, where opening a page would
+   *  leave the running game. */
+  showGuideLinks?: boolean;
 }) {
   const t = useT();
   const { lang } = useLang();
@@ -250,16 +254,14 @@ export function HowToPlayPopover({
         )}
 
         <footer className="rules-footer-bar howto-footer">
-          {/* Absolute + new tab: the Android app opens these in the browser
-              instead of navigating its WebView away from the game. */}
-          <nav className="howto-more" aria-label={t.rules.moreAria}>
-            <a href={SITE_ORIGIN + guidePath(lang, 'guide')} target="_blank" rel="noopener">
-              {t.rules.moreGuide}
-            </a>
-            <a href={SITE_ORIGIN + guidePath(lang, 'strategy')} target="_blank" rel="noopener">
-              {t.rules.moreStrategy}
-            </a>
-          </nav>
+          {showGuideLinks ? (
+            <nav className="howto-more" aria-label={t.rules.moreAria}>
+              <a {...guideLinkProps(lang, 'guide')}>{t.rules.moreGuide}</a>
+              <a {...guideLinkProps(lang, 'strategy')}>{t.rules.moreStrategy}</a>
+            </nav>
+          ) : (
+            <span />
+          )}
           <button className="rules-got-it" onClick={onClose}>
             {t.howto.done}
           </button>

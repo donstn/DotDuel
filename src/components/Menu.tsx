@@ -6,8 +6,7 @@ import { PLAYABLE_SHAPE_META } from '../types';
 import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
 import type { ThemeId } from '../theme';
 import { useLang, useT } from '../i18n';
-import { guidePath } from '../guideLinks';
-import { isNativeApp } from '../nativeAds';
+import { guideLinkProps } from '../guideLinks';
 import { FriendsButton } from './FriendsButton';
 import { TellAFriendButton } from './TellAFriendButton';
 import type { MyDailyAttempt } from '../cloud/dailyLeaderboard';
@@ -343,18 +342,12 @@ export function Menu({
             />
           </button>
         </div>
-        {/* Web only: the guide pages are plain site pages; in the Android app
-            they'd leave the game (the help window links them instead). */}
-        {(!user || !isNativeApp()) && (
-          <div className="menu-share-row">
-            {!user && <TellAFriendButton variant="share" className="menu-share-link" />}
-            {!isNativeApp() && (
-              <a className="menu-share-link" href={guidePath(lang, 'guide')}>
-                {t.menu.guide}
-              </a>
-            )}
-          </div>
-        )}
+        <div className="menu-share-row">
+          {!user && <TellAFriendButton variant="share" className="menu-share-link" />}
+          <a className="menu-share-link" {...guideLinkProps(lang, 'guide', false)}>
+            {t.menu.guide}
+          </a>
+        </div>
       </div>
     );
   }

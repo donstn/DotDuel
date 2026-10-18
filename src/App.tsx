@@ -2638,7 +2638,7 @@ export default function App() {
           onOpenChangelog={() => setChangelogOpen(true)}
           version={APP_VERSION}
         />
-        {howTo && <HowToPlayPopover initialTab={howTo} onClose={() => setHowTo(null)} theme={theme} />}
+        {howTo && <HowToPlayPopover initialTab={howTo} onClose={() => setHowTo(null)} theme={theme} showGuideLinks={!isNativeApp()} />}
         {privacyOpen && (
           <PrivacyPopover
             onClose={() => setPrivacyOpen(false)}
@@ -2770,7 +2770,14 @@ export default function App() {
           showLanguage
           version={APP_VERSION}
         />
-        {howTo && <HowToPlayPopover initialTab={howTo} onClose={() => setHowTo(null)} theme={theme} />}
+        {howTo && (
+          <HowToPlayPopover
+            initialTab={howTo}
+            onClose={() => setHowTo(null)}
+            theme={theme}
+            showGuideLinks={!isNativeApp() || (screen !== 'matchmaking' && screen !== 'matchFound')}
+          />
+        )}
         {privacyOpen && (
           <PrivacyPopover
             onClose={() => setPrivacyOpen(false)}
@@ -3230,7 +3237,14 @@ export default function App() {
         onOpenChangelog={() => setChangelogOpen(true)}
         version={APP_VERSION}
       />
-      {howTo && <HowToPlayPopover initialTab={howTo} onClose={() => setHowTo(null)} theme={theme} />}
+      {howTo && (
+        <HowToPlayPopover
+          initialTab={howTo}
+          onClose={() => setHowTo(null)}
+          theme={theme}
+          showGuideLinks={!isNativeApp() || config.mode !== 'daily'}
+        />
+      )}
       {privacyOpen && (
         <PrivacyPopover
           onClose={() => setPrivacyOpen(false)}

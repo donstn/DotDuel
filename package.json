@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build && tsx scripts/build-pages.ts",
     "build:pages": "tsx scripts/build-pages.ts",
     "build:staging": "tsc -b && vite build --mode staging",
-    "build:android-release": "tsc -b && vite build --mode androidrelease",
+    "build:android-release": "tsc -b && vite build --mode androidrelease && tsx scripts/build-pages.ts --app",
     "preview": "vite preview",
     "simulate": "tsx scripts/simulate.ts",
     "simulate:l4": "tsx scripts/simulate-l4.ts",

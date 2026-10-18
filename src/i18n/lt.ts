@@ -297,6 +297,11 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.17.0': {
+        changes: [
+          'Svetainėje – išsamus vadovas, strategijos patarimai ir DUK, pasiekiami iš Taisyklių lango.',
+        ],
+      },
       'Alpha 0.4.16.0': {
         changes: [
           'Žaidimas tęsiasi po puslapio perkrovimo ar programėlės atidarymo iš naujo.',

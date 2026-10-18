@@ -288,6 +288,11 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.17.0': {
+        changes: [
+          'Um guia completo, dicas de estratégia e perguntas frequentes no site, com link na tela de Regras.',
+        ],
+      },
       'Alpha 0.4.16.0': {
         changes: [
           'Sua partida continua depois de recarregar ou reabrir o app.',

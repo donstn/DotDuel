@@ -287,6 +287,11 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.17.0': {
+        changes: [
+          'Una guía completa, consejos de estrategia y preguntas frecuentes en la web, enlazados desde la pantalla de Reglas.',
+        ],
+      },
       'Alpha 0.4.16.0': {
         changes: [
           'Tu partida continúa tras recargar o volver a abrir la app.',

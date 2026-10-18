@@ -3,6 +3,15 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.17.0] - 2026-10-18
+
+### Added
+
+- **Guide pages** — How to play, Strategy, About & FAQ and Changelog as static
+  HTML pages in English and Lithuanian (`scripts/build-pages.ts`, `site/`), a
+  generated sitemap, a readable homepage intro, and links from the Rules
+  popover. Fixes AdSense "low value content" (crawler saw an empty page).
+
 ## [0.4.16.0] - 2026-10-18
 
 ### Fixed

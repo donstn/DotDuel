@@ -63,6 +63,7 @@ export const cs: Messages = {
 
     profile: 'Profil',
     signOut: 'Odhlásit se',
+    guide: 'Průvodce',
     signIn: 'Přihlásit se',
 
     singlePlayer: 'Jeden hráč',
@@ -223,8 +224,9 @@ export const cs: Messages = {
     modeHotseat: '— dva hráči, jedno zařízení.',
     modeMpLead: 'Více hráčů',
     modeMp: '— živě, se světovým žebříčkem Elo, šachovým měřením času a odvetami.',
-    moreGuide: 'Úplný průvodce na webu (anglicky)',
-    moreStrategy: 'Strategické tipy (anglicky)',
+    moreGuide: 'Průvodce ↗',
+    moreStrategy: 'Strategie ↗',
+    moreAria: 'Více na webu (anglicky)',
     gotIt: 'Rozumím',
   },
 

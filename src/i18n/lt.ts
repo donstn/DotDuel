@@ -65,6 +65,7 @@ export const lt: Messages = {
 
     profile: 'Profilis',
     signOut: 'Atsijungti',
+    guide: 'Vadovas',
     signIn: 'Prisijungti',
 
     singlePlayer: 'Vienas žaidėjas',
@@ -223,8 +224,9 @@ export const lt: Messages = {
     modeHotseat: '– du žaidėjai, vienas įrenginys.',
     modeMpLead: 'Internetinis',
     modeMp: '– tiesioginiai žaidimai su pasauliniu Elo reitingu, šachmatinio tipo laikrodžiais ir revanšais.',
-    moreGuide: 'Išsamus vadovas svetainėje',
-    moreStrategy: 'Strategijos patarimai',
+    moreGuide: 'Vadovas ↗',
+    moreStrategy: 'Strategija ↗',
+    moreAria: 'Daugiau svetainėje',
     gotIt: 'Supratau',
   },
 

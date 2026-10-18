@@ -70,6 +70,7 @@ export const en = {
     // Auth row.
     profile: 'Profile',
     signOut: 'Sign out',
+    guide: 'Guide',
     signIn: 'Sign in',
 
     // Top-level category shelves.
@@ -243,8 +244,9 @@ export const en = {
     modeHotseat: '— two players, one device.',
     modeMpLead: 'Multiplayer',
     modeMp: '— live with global Elo ranking, chess-style time controls, and rematches.',
-    moreGuide: 'Full guide on the website',
-    moreStrategy: 'Strategy tips',
+    moreGuide: 'Guide ↗',
+    moreStrategy: 'Strategy ↗',
+    moreAria: 'More on the website',
     gotIt: 'Got it',
   },
 

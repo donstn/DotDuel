@@ -54,6 +54,7 @@ export const pt: Messages = {
 
     profile: 'Perfil',
     signOut: 'Sair',
+    guide: 'Guia',
     signIn: 'Entrar',
 
     singlePlayer: 'Um jogador',
@@ -214,8 +215,9 @@ export const pt: Messages = {
     modeHotseat: '— dois jogadores, um dispositivo.',
     modeMpLead: 'Multijogador',
     modeMp: '— ao vivo, com ranking Elo mundial, controles de tempo estilo xadrez e revanches.',
-    moreGuide: 'Guia completo no site (em inglês)',
-    moreStrategy: 'Dicas de estratégia (em inglês)',
+    moreGuide: 'Guia ↗',
+    moreStrategy: 'Estratégia ↗',
+    moreAria: 'Mais no site (em inglês)',
     gotIt: 'Entendi',
   },
 

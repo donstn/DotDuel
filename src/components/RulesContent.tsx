@@ -1,14 +1,8 @@
-import { useLang, useT } from '../i18n';
+import { useT } from '../i18n';
 
 // Rules text: the "Rules" tab of the How to play window (HowToPlayPopover).
 export function RulesContent() {
   const t = useT();
-  const { lang } = useLang();
-  // The web guide exists in English and Lithuanian. Absolute + new tab so the
-  // Android app opens it in the browser instead of inside its WebView.
-  const site = 'https://www.dotduel.com';
-  const guide = lang === 'lt' ? `${site}/lt/kaip-zaisti/` : `${site}/how-to-play/`;
-  const strategy = lang === 'lt' ? `${site}/lt/strategija/` : `${site}/strategy/`;
 
   return (
     <div className="rules-body">
@@ -70,11 +64,6 @@ export function RulesContent() {
           <li><strong>{t.rules.modeMpLead}</strong> {t.rules.modeMp}</li>
         </ul>
       </section>
-
-      <p className="rules-more">
-        <a href={guide} target="_blank" rel="noopener">{t.rules.moreGuide}</a>
-        <a href={strategy} target="_blank" rel="noopener">{t.rules.moreStrategy}</a>
-      </p>
     </div>
   );
 }

@@ -65,6 +65,7 @@ export const pl: Messages = {
 
     profile: 'Profil',
     signOut: 'Wyloguj się',
+    guide: 'Poradnik',
     signIn: 'Zaloguj się',
 
     singlePlayer: 'Jeden gracz',
@@ -225,8 +226,9 @@ export const pl: Messages = {
     modeHotseat: '— dwóch graczy, jedno urządzenie.',
     modeMpLead: 'Wielu graczy',
     modeMp: '— na żywo, ze światowym rankingiem Elo, szachowym pomiarem czasu i rewanżami.',
-    moreGuide: 'Pełny poradnik na stronie (po angielsku)',
-    moreStrategy: 'Porady strategiczne (po angielsku)',
+    moreGuide: 'Poradnik ↗',
+    moreStrategy: 'Strategia ↗',
+    moreAria: 'Więcej na stronie (po angielsku)',
     gotIt: 'Rozumiem',
   },
 

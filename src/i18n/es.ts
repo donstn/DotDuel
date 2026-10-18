@@ -54,6 +54,7 @@ export const es: Messages = {
 
     profile: 'Perfil',
     signOut: 'Cerrar sesión',
+    guide: 'Guía',
     signIn: 'Iniciar sesión',
 
     singlePlayer: 'Un jugador',
@@ -213,8 +214,9 @@ export const es: Messages = {
     modeHotseat: '— dos jugadores, un dispositivo.',
     modeMpLead: 'Multijugador',
     modeMp: '— en directo, con clasificación Elo mundial, controles de tiempo tipo ajedrez y revanchas.',
-    moreGuide: 'Guía completa en la web (en inglés)',
-    moreStrategy: 'Consejos de estrategia (en inglés)',
+    moreGuide: 'Guía ↗',
+    moreStrategy: 'Estrategia ↗',
+    moreAria: 'Más en la web (en inglés)',
     gotIt: 'Entendido',
   },
 

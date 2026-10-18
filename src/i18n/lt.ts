@@ -150,6 +150,8 @@ export const lt: Messages = {
     leaveMatch: 'Palikti žaidimą',
     backToMenu: 'Grįžti į meniu',
     dailyTime: 'Šio bandymo laikas',
+    claimPhaseHint: 'Visi taškai padėti – bakstelėkite spalvotą tašką ant nepaimtos linijos.',
+    nothingToClaim: 'Per šį tašką nėra nepaimtos linijos.',
     seeUnclaimed: 'Rodyti nepaimtas linijas',
     seeUnclaimedTitle: (on: boolean) => `Rodyti nepaimtas linijas: ${on ? 'įjungta' : 'išjungta'}`,
     rules: 'Kaip žaisti',

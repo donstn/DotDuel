@@ -191,7 +191,7 @@ export function Menu({
       );
     }
     return (
-      <button className="menu-shelf disabled" disabled title={t.menu.dailySignInTitle}>
+      <button className="menu-shelf disabled needs-signin" onClick={onOpenSignIn} title={t.menu.dailySignInTitle}>
         <CardInner
           icon={dailyIcon}
           title={t.menu.dailyPuzzle}
@@ -205,7 +205,7 @@ export function Menu({
   const onlineCard = () => {
     if (!user) {
       return (
-        <button className="menu-shelf disabled" disabled title={t.menu.onlineSignInTitle}>
+        <button className="menu-shelf disabled needs-signin" onClick={onOpenSignIn} title={t.menu.onlineSignInTitle}>
           <CardInner
             icon={onlineIcon}
             title={t.menu.onlineRanked}
@@ -398,9 +398,9 @@ export function Menu({
     // Sign-in-only: first when available, last when locked (like the other screens).
     const puzzleCard = (
       <button
-        className={`menu-shelf ${user ? '' : 'disabled'}`}
-        disabled={!user || !onOpenPuzzleLeaderboard}
-        onClick={() => onOpenPuzzleLeaderboard?.()}
+        className={`menu-shelf ${user ? '' : 'disabled needs-signin'}`}
+        disabled={!!user && !onOpenPuzzleLeaderboard}
+        onClick={() => (user ? onOpenPuzzleLeaderboard?.() : onOpenSignIn())}
         title={user ? '' : t.common.signInToView}
       >
         <CardInner

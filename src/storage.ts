@@ -1,4 +1,4 @@
-import type { Difficulty, Progress, ShapeId } from './types';
+import type { Difficulty, GameState, Progress, ShapeId } from './types';
 import type { Messages } from './i18n';
 
 const KEY = 'dotduel:progress:v3';
@@ -509,4 +509,101 @@ export function purgePlayer(name: string): void {
     }
   }
   saveStats(store);
+}
+
+// ---------------- In-progress offline game (v1) ----------------
+//
+// vs-AI and hot-seat games are saved after every move so a reload, or Android
+// killing the app in the background, resumes the game instead of dropping it.
+// Cleared when the game ends or the player leaves it. Online and daily games
+// are excluded (server state / server clock).
+
+const ACTIVE_GAME_KEY = 'dotduel:activeGame:v1';
+const ACTIVE_GAME_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
+
+export interface ActiveGame {
+  mode: 'ai' | 'hotseat';
+  shape: ShapeId;
+  difficulty?: Difficulty;
+  state: GameState;
+  lastDot: number | null;
+  savedAt: number;
+}
+
+export function saveActiveGame(g: ActiveGame): void {
+  try {
+    localStorage.setItem(ACTIVE_GAME_KEY, JSON.stringify(g));
+  } catch {
+    // ignore quota / private-mode
+  }
+}
+
+export function clearActiveGame(): void {
+  try {
+    localStorage.removeItem(ACTIVE_GAME_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+export function loadActiveGame(): ActiveGame | null {
+  try {
+    const raw = localStorage.getItem(ACTIVE_GAME_KEY);
+    if (!raw) return null;
+    const g = JSON.parse(raw) as Partial<ActiveGame>;
+    const s = g.state as Partial<GameState> | undefined;
+    const valid =
+      (g.mode === 'ai' || g.mode === 'hotseat') &&
+      typeof g.shape === 'string' &&
+      typeof g.savedAt === 'number' &&
+      Date.now() - g.savedAt < ACTIVE_GAME_MAX_AGE_MS &&
+      (g.mode === 'hotseat' || typeof g.difficulty === 'number') &&
+      !!s &&
+      s.shape === g.shape &&
+      !s.finished &&
+      (s.current === 1 || s.current === 2) &&
+      typeof s.turn === 'number' &&
+      !!s.colored &&
+      typeof s.colored === 'object' &&
+      Array.isArray(s.completed) &&
+      Array.isArray(s.pending) &&
+      !!s.scores &&
+      typeof s.scores[1] === 'number' &&
+      typeof s.scores[2] === 'number';
+    if (!valid) {
+      clearActiveGame();
+      return null;
+    }
+    return { ...(g as ActiveGame), lastDot: typeof g.lastDot === 'number' ? g.lastDot : null };
+  } catch {
+    clearActiveGame();
+    return null;
+  }
+}
+
+// Crash-loop guard: set while a saved game is being resumed and cleared once it
+// has rendered. If it is still set on the next launch, that resume crashed, so
+// the saved game is dropped instead of crashing every launch.
+const RESUME_ATTEMPT_KEY = 'dotduel:activeGameResuming:v1';
+
+/** Returns false when the previous resume never finished rendering. */
+export function markResumeAttempt(): boolean {
+  try {
+    if (localStorage.getItem(RESUME_ATTEMPT_KEY)) {
+      localStorage.removeItem(RESUME_ATTEMPT_KEY);
+      return false;
+    }
+    localStorage.setItem(RESUME_ATTEMPT_KEY, '1');
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+export function clearResumeAttempt(): void {
+  try {
+    localStorage.removeItem(RESUME_ATTEMPT_KEY);
+  } catch {
+    // ignore
+  }
 }

@@ -140,6 +140,8 @@ export const es: Messages = {
     leaveMatch: 'Salir de la partida',
     backToMenu: 'Volver al menú',
     dailyTime: 'Tu tiempo para este intento',
+    claimPhaseHint: 'Todos los puntos colocados: toca un punto de color de una línea sin reclamar.',
+    nothingToClaim: 'Ninguna línea sin reclamar pasa por ese punto.',
     seeUnclaimed: 'Ver líneas sin reclamar',
     seeUnclaimedTitle: (on: boolean) => `Ver líneas sin reclamar: ${on ? 'activado' : 'desactivado'}`,
     rules: 'Cómo jugar',

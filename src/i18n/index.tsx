@@ -72,6 +72,7 @@ function matchTag(tags: readonly (string | undefined)[]): Lang | null {
     if (l.startsWith('pt')) return 'pt';
     if (l.startsWith('pl')) return 'pl';
     if (l.startsWith('cs')) return 'cs';
+    if (l.startsWith('en')) return 'en';
   }
   return null;
 }
@@ -87,10 +88,15 @@ export function detectLang(): Lang {
   const saved = savedLang();
   if (saved) return saved;
   try {
-    const tags = navigator.languages?.length ? navigator.languages : [navigator.language];
-    // Honour the user's ORDER of preference: first matching supported language wins.
-    const m = matchTag(tags);
-    if (m) return m;
+    // The native WebView reports en-US whatever the device language, so there
+    // the timezone guess stands in until LanguageProvider reads the device.
+    if (!Capacitor.isNativePlatform()) {
+      const tags = navigator.languages?.length ? navigator.languages : [navigator.language];
+      // Honour the user's ORDER of preference: first matching supported language
+      // wins — an explicit English preference beats the Vilnius timezone guess.
+      const m = matchTag(tags);
+      if (m) return m;
+    }
     if (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Europe/Vilnius') return 'lt';
   } catch {
     // ignore — default below.

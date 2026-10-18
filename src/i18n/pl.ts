@@ -152,6 +152,8 @@ export const pl: Messages = {
     leaveMatch: 'Opuść grę',
     backToMenu: 'Powrót do menu',
     dailyTime: 'Twój czas na tę próbę',
+    claimPhaseHint: 'Wszystkie kropki postawione — dotknij kolorowej kropki na niezajętej linii.',
+    nothingToClaim: 'Przez tę kropkę nie biegnie żadna niezajęta linia.',
     seeUnclaimed: 'Pokaż niezajęte linie',
     seeUnclaimedTitle: (on: boolean) => `Pokaż niezajęte linie: ${on ? 'wł.' : 'wył.'}`,
     rules: 'Jak grać',

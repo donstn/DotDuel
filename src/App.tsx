@@ -282,10 +282,19 @@ export default function App() {
   // A vs-AI / hot-seat game interrupted by a reload or the OS killing the app
   // resumes where it was left.
   const [resumed] = useState<ActiveGame | null>(RESUMED_GAME);
-  // The resumed game rendered, so it's safe to resume again after the next
-  // reload (see markResumeAttempt).
+  // The resumed game has been running for a few seconds (renders, the bot's
+  // reply), so it's safe to resume again after the next reload (see
+  // markResumeAttempt).
+  // A normal page close also counts: the listener only lives while the app is
+  // mounted, and a render crash unmounts it, so a crashed resume keeps the flag.
   useEffect(() => {
-    if (resumed) clearResumeAttempt();
+    if (!resumed) return;
+    const id = window.setTimeout(clearResumeAttempt, 4000);
+    window.addEventListener('pagehide', clearResumeAttempt);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener('pagehide', clearResumeAttempt);
+    };
   }, [resumed]);
   const [screen, setScreen] = useState<Screen>(resumed ? 'game' : 'menu');
   const [progress, setProgress] = useState<Progress>(() => loadProgress());
@@ -381,7 +390,7 @@ export default function App() {
   const aiTimer = useRef<number | null>(null);
   const winRecorded = useRef(false);
   const gameEndCounted = useRef(false);
-  const claimsInGame = useRef(0);
+  const claimsInGame = useRef(RESUMED_GAME?.claims ?? 0);
   const gameStartedAtRef = useRef<number>(resumed ? Date.now() : 0);
   const gameStartedFiredRef = useRef(!!resumed);
   const firstScoreFiredRef = useRef(
@@ -583,7 +592,8 @@ export default function App() {
 
   useEffect(() => {
     if (!state || !config) return;
-    if ((config.mode !== 'ai' && config.mode !== 'hotseat') || state.finished) {
+    // An untouched board isn't worth resuming — a reload goes back to the menu.
+    if ((config.mode !== 'ai' && config.mode !== 'hotseat') || state.finished || state.turn === 0) {
       clearActiveGame();
       return;
     }
@@ -593,6 +603,7 @@ export default function App() {
       difficulty: config.difficulty,
       state,
       lastDot,
+      claims: claimsInGame.current,
       savedAt: Date.now(),
     });
   }, [state, config, lastDot]);
@@ -2890,6 +2901,9 @@ export default function App() {
             }}
             onSuccess={(newName) => {
               setNeedsUsername(false);
+              // Stats recorded under the pre-pick (Google) name follow the new name.
+              const oldName = cloudProfile?.displayName;
+              if (oldName && oldName !== newName) migrateStatsKey(oldName, newName);
               setCloudProfile((prev) => ({
                 email: prev?.email ?? user.email,
                 authProvider:
@@ -3280,6 +3294,9 @@ export default function App() {
           }}
           onSuccess={(newName) => {
             setNeedsUsername(false);
+            // Stats recorded under the pre-pick (Google) name follow the new name.
+            const oldName = cloudProfile?.displayName;
+            if (oldName && oldName !== newName) migrateStatsKey(oldName, newName);
             setCloudProfile((prev) => ({
               email: prev?.email ?? user.email,
               authProvider:

@@ -527,6 +527,8 @@ export interface ActiveGame {
   difficulty?: Difficulty;
   state: GameState;
   lastDot: number | null;
+  /** Claims made so far this game (feeds the learning-window counter). */
+  claims?: number;
   savedAt: number;
 }
 

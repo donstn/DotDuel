@@ -143,7 +143,7 @@ async function rpc(fn: string, args: Record<string, unknown>): Promise<void> {
 }
 
 export async function sendFriendRequestByUsername(username: string): Promise<void> {
-  await rpc('send_friend_request', { target_username: username });
+  await rpc('send_friend_request', { target_username: username.normalize('NFC') });
 }
 
 export async function sendFriendRequestByUid(uid: string): Promise<void> {

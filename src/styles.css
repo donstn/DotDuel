@@ -2734,17 +2734,7 @@ h1, h2, h3,
   8%, 85% { opacity: 1; transform: translate(-50%, 0); }
   100% { opacity: 0; transform: translate(-50%, 0); }
 }
-/* A tap on a dot with nothing to claim during the claim phase. */
-.dot-shake {
-  animation: dotShake 320ms ease-in-out;
-}
-@keyframes dotShake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-0.07px); }
-  40%, 80% { transform: translateX(0.07px); }
-}
 @media (prefers-reduced-motion: reduce) {
-  .dot-shake { animation: none; }
   .board-hint { animation: none; }
 }
 

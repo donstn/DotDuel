@@ -150,7 +150,7 @@ export const cs: Messages = {
     leaveMatch: 'Opustit hru',
     backToMenu: 'Zpět do menu',
     dailyTime: 'Tvůj čas na tento pokus',
-    claimPhaseHint: 'Všechny tečky položeny — klepni na barevnou tečku na nezabrané linii.',
+    claimPhaseHint: 'Vše položeno — klepni na linii a zaber ji.',
     nothingToClaim: 'Touto tečkou nevede žádná nezabraná linie.',
     seeUnclaimed: 'Zobrazit nezabrané linie',
     seeUnclaimedTitle: (on: boolean) => `Zobrazit nezabrané linie: ${on ? 'zap.' : 'vyp.'}`,

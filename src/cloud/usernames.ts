@@ -22,12 +22,13 @@ export interface CloudProfile {
   };
 }
 
-// Latin-script letters (so Lithuanian/Polish/Czech/Spanish/Portuguese names keep
-// their accents; other scripts are out to avoid look-alike impersonation),
-// digits, _ and -.
-const NAME_CHAR = String.raw`(?:(?=\p{L})\p{Script=Latin}|\p{Nd}|[_-])`;
-export const USERNAME_RE = new RegExp(`^${NAME_CHAR}{3,16}$`, 'u');
-const NON_NAME_CHAR = new RegExp(`(?!${NAME_CHAR}).`, 'gu');
+// ASCII letters plus the accented letters of Latin-1 / Latin Extended-A, so
+// Lithuanian, Polish, Czech, Spanish and Portuguese names keep their accents.
+// Other look-alikes (dotted İ, dotless ı, ĸ, long ſ, fullwidth, small caps,
+// other scripts) stay out to limit impersonation.
+const NAME_CHARS = 'A-Za-z0-9_À-ÖØ-öø-įĲ-ķĹ-ž-';
+export const USERNAME_RE = new RegExp(`^[${NAME_CHARS}]{3,16}$`);
+const NON_NAME_CHAR = new RegExp(`[^${NAME_CHARS}]`, 'g');
 
 export function normName(name: string): string {
   return name.normalize('NFC').trim().toLowerCase();
@@ -259,7 +260,7 @@ export async function renameUsername(
   if (!sid) throw new Error('NOT_SIGNED_IN');
   const oldLower = normName(oldName);
   const newLower = normName(newName);
-  const newDisplay = newName.trim();
+  const newDisplay = newName.normalize('NFC').trim();
   try {
     if (oldLower !== newLower) {
       const { data: existing } = await supabase

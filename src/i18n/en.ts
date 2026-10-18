@@ -166,7 +166,7 @@ export const en = {
     leaveMatch: 'Leave match',
     backToMenu: 'Back to menu',
     dailyTime: 'Your time for this attempt',
-    claimPhaseHint: 'All dots placed — tap a coloured dot on an unclaimed line.',
+    claimPhaseHint: 'All dots placed — tap a line to claim it.',
     nothingToClaim: 'No unclaimed line through that dot.',
     seeUnclaimed: 'See unclaimed lines',
     seeUnclaimedTitle: (on: boolean) => `See unclaimed lines: ${on ? 'on' : 'off'}`,

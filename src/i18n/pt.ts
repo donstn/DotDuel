@@ -140,7 +140,7 @@ export const pt: Messages = {
     leaveMatch: 'Sair da partida',
     backToMenu: 'Voltar ao menu',
     dailyTime: 'Seu tempo para esta tentativa',
-    claimPhaseHint: 'Todos os pontos colocados: toque em um ponto colorido de uma linha não marcada.',
+    claimPhaseHint: 'Tudo colocado: toque numa linha.',
     nothingToClaim: 'Nenhuma linha não marcada passa por esse ponto.',
     seeUnclaimed: 'Ver linhas não marcadas',
     seeUnclaimedTitle: (on: boolean) =>

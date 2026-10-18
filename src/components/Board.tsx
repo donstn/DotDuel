@@ -305,7 +305,6 @@ export function Board({
     state.pending.length > 0 &&
     board.dots.every((d) => state.colored[d.id]);
   const [boardHint, setBoardHint] = useState<{ text: string; seq: number } | null>(null);
-  const [shake, setShake] = useState<{ dotId: number; seq: number } | null>(null);
   const hintTimer = useRef<number | null>(null);
   const claimHintShown = useRef(false);
   const showBoardHint = (text: string) => {
@@ -323,7 +322,6 @@ export function Board({
     if (state.turn === 0) {
       claimHintShown.current = false;
       setBoardHint(null);
-      setShake(null);
     }
   }, [state.turn]);
   useEffect(() => {
@@ -366,6 +364,18 @@ export function Board({
     return !!claimableLineForDot(dotId);
   };
 
+  // One-shot nudge via the Web Animations API, so the dot isn't remounted
+  // (which would replay its pop and drop keyboard focus).
+  const shakeDot = (dotId: number) => {
+    const g = dotRefs.current.get(dotId)?.parentElement;
+    if (!g?.animate || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const dx = dotRadius * 0.22;
+    g.animate(
+      [0, -dx, dx, -dx, dx, 0].map((x) => ({ transform: `translateX(${x}px)` })),
+      { duration: 320, easing: 'ease-in-out' },
+    );
+  };
+
   const activateDot = (dotId: number) => {
     if (disabled || !inputReady()) return;
     const cd = state.colored[dotId];
@@ -377,7 +387,7 @@ export function Board({
     if (claim && onClaimClick) {
       onClaimClick(claim.id);
     } else if (claimPhase) {
-      setShake((prev) => ({ dotId, seq: (prev?.seq ?? 0) + 1 }));
+      shakeDot(dotId);
       showBoardHint(t.game.nothingToClaim);
     }
   };
@@ -599,10 +609,7 @@ export function Board({
             ariaLabel = t.game.dotEmpty(rowNum, posNum);
           }
           return (
-            <g
-              key={shake?.dotId === d.id ? `${d.id}-shake-${shake.seq}` : d.id}
-              className={`dot-group${shake?.dotId === d.id ? ' dot-shake' : ''}`}
-            >
+            <g key={d.id} className="dot-group">
               {hintGlow && (
                 <circle
                   cx={d.x}

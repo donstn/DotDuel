@@ -853,10 +853,17 @@ export default function App() {
     if (!state || !state.finished || !config) return;
     if (gameEndCounted.current) return;
     gameEndCounted.current = true;
+    const runKey = `${config.shape}:${config.difficulty}`;
+    const lostToBot = config.mode === 'ai' && state.winner === 2;
+    const prevRun = settings.aiLossRun.key === runKey ? settings.aiLossRun.n : 0;
     updateSettings({
       ...settings,
       gamesPlayed: settings.gamesPlayed + 1,
       claimsMade: settings.claimsMade + claimsInGame.current,
+      aiLossRun:
+        config.mode === 'ai'
+          ? { key: runKey, n: lostToBot ? prevRun + 1 : 0 }
+          : settings.aiLossRun,
     });
 
     // Record W/D/L for the human player(s), tagged by shape (always)
@@ -3292,6 +3299,11 @@ export default function App() {
           mode={config.mode}
           shape={config.shape}
           difficulty={config.difficulty}
+          lossRun={
+            settings.aiLossRun.key === `${config.shape}:${config.difficulty}`
+              ? settings.aiLossRun.n
+              : 0
+          }
           finishedReason={offlineResigned ? 'resign' : undefined}
           p1Name={p1Label}
           p2Name={p2Label}

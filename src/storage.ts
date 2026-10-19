@@ -138,6 +138,8 @@ export interface Settings {
   lastPlayedAt: number;
   sfxEnabled: boolean;
   musicEnabled: boolean;
+  /** Losses in a row vs one bot (`shape:difficulty`); a win or draw resets it. */
+  aiLossRun: { key: string; n: number };
 }
 
 function defaultSettings(): Settings {
@@ -154,6 +156,7 @@ function defaultSettings(): Settings {
     lastPlayedAt: 0,
     sfxEnabled: true,
     musicEnabled: true,
+    aiLossRun: { key: '', n: 0 },
   };
 }
 

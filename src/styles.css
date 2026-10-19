@@ -5242,7 +5242,10 @@ html[data-art~="title-banner"] .menu > h2 {
   height: var(--banner-h);
   min-width: min(100%, 240px);
   max-width: 100%;
-  padding: 0 calc(var(--cap-r) * 0.95) 10% calc(var(--cap-l) * 0.95);
+  /* Lift the text onto the panel (centre ≈ 42% down the art). Fixed to the
+     banner height — a % here follows the screen width and pushed the text
+     off the top on wide phones. */
+  padding: 0 calc(var(--cap-r) * 0.95) calc(var(--banner-h) * 0.16) calc(var(--cap-l) * 0.95);
   border: 0;
   border-image-source: var(--title-banner-img);
   border-image-slice: var(--title-banner-slice);
@@ -5582,6 +5585,12 @@ html[data-art~="pill-button"] .go-share-row {
   background: rgba(28, 122, 61, 0.2);
   box-shadow: 0 0 0 1px rgba(123, 219, 149, 0.45) inset,
               0 6px 20px rgba(0, 0, 0, 0.32);
+}
+
+.menu-card-selected span,
+.menu-card-selected .menu-card-sub {
+  color: var(--text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .menu-card-sub {

@@ -7383,35 +7383,53 @@ body.has-native-banner #root {
 
 /* Spotlight: everything except the ringed dots steps back. Static — no
    animation on board content. */
-.board-spotlight > g:not(.dot-group-spot) {
+.board-spotlight > g:not(.dot-group-spot):not(.coach-keep):not(.coach-hand) {
   opacity: 0.32;
 }
 .coach-ring {
   stroke: #ffd680;
   opacity: 0.95;
 }
-/* The tap hand is a teaching overlay, not board content: it taps three times
-   and then holds still (no infinite animation). */
-.coach-hand {
-  transform-box: fill-box;
-  transform-origin: 50% 0%;
-  animation: coachTap 1.1s ease-in-out 0.3s 3;
-  pointer-events: none;
+.coach-band {
+  stroke: var(--accent);
+  opacity: 0.28;
 }
-.coach-hand-down {
-  transform-origin: 50% 100%;
-  animation-name: coachTapDown;
+.coach-gap-ring,
+.coach-waiting {
+  stroke: #ffd680;
+}
+.coach-label {
+  fill: #ffd680;
+  stroke: #06210f;
+  paint-order: stroke;
+}
+/* The tap hand is a teaching overlay: it taps three times and then holds
+   still (no infinite animation). Outline drawn first, fill on top, so the
+   overlapping finger shapes read as one hand. */
+.coach-hand-outline {
+  fill: #0b1a10;
+  stroke: #0b1a10;
+  stroke-width: 1.1;
+}
+.coach-hand-fill {
+  fill: #fff8e8;
+}
+.coach-hand-cuff {
+  fill: var(--accent);
+  stroke: #0b1a10;
+  stroke-width: 0.6;
+}
+.coach-hand-tap {
+  transform-box: fill-box;
+  transform-origin: 30% 0%;
+  animation: coachTap 0.9s ease-in-out 0.3s 3;
 }
 @keyframes coachTap {
-  0%, 100% { transform: translateY(0); }
-  45% { transform: translateY(-14%); }
-}
-@keyframes coachTapDown {
-  0%, 100% { transform: translateY(0); }
-  45% { transform: translateY(14%); }
+  0%, 100% { transform: translateY(0) scale(1); }
+  45% { transform: translateY(-8%) scale(0.9); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .coach-hand { animation: none; }
+  .coach-hand-tap { animation: none; }
 }
 
 .btn-coach-skip {

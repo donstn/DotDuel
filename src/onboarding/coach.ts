@@ -7,26 +7,29 @@ import { applyAction, createGame, pointsIfPlayed } from '../game';
 import { getBoard } from '../geometry';
 import type { GameAction, GameState } from '../types';
 
-// A game already under way, so the lesson is about a minute long. Chosen with
-// a search so that, at the start:
-//   - the struck lines are 6–7 (the Coach is slightly ahead);
+// A game already under way, so the lesson is short. Chosen with a search so
+// that, at the start:
+//   - the struck lines are 8–8;
 //   - the only lines one dot short are the 1-dot corners (0, 7, 35), h:r4
-//     (gap at 28) and two more: d2:s4 (gap 11, 5 pts) and d1:c5 (gap 20, 3 pts);
-//   - no empty dot finishes two lines at once, and the two scripted taps
-//     (35, 28) open no new line, so each step shows exactly what it teaches.
-const OPENING_P1 = [1, 4, 6, 9, 13, 15, 18, 21, 25, 27, 32, 34];
-const OPENING_P2 = [2, 5, 8, 12, 14, 17, 19, 22, 26, 29, 33];
+//     (gap 28), the double at 15 (h:r2, 6 pts + d2:s2, 3 pts — one tap
+//     finishes both) and two singles: d1:c3 (gap 24, 5) and d1:c4 (gap 12, 4);
+//   - the scripted taps (35, 28, 15) open no new line, so each step shows
+//     exactly what it teaches.
+const OPENING_P1 = [2, 4, 6, 10, 13, 16, 18, 20, 22, 26, 29, 34];
+const OPENING_P2 = [3, 5, 9, 11, 14, 17, 19, 21, 25, 27, 33];
 const OPENING_LINES: { lineId: string; player: 1 | 2 }[] = [
-  { lineId: 'h:r6', player: 1 },
-  { lineId: 'd1:c6', player: 1 },
-  { lineId: 'd2:s1', player: 1 },
-  { lineId: 'd1:c4', player: 2 },
-  { lineId: 'd2:s2', player: 2 },
+  { lineId: 'd2:s4', player: 1 },
+  { lineId: 'd1:c5', player: 1 },
+  { lineId: 'd2:s3', player: 2 },
+  { lineId: 'h:r6', player: 2 },
+  { lineId: 'd1:c6', player: 2 },
 ];
 
 export const COACH_CORNER_DOT = 35; // apex: a 1-dot line → +1
 export const COACH_FINISH_LINE = 'h:r4'; // 26 27 [28] 29 → +4
 export const COACH_FINISH_DOT = 28;
+export const COACH_DOUBLE_DOT = 15; // finishes h:r2 (6, scores) and d2:s2 (3, waits)
+export const COACH_DOUBLE_LINES = ['h:r2', 'd2:s2'];
 
 export function coachOpening(): GameState {
   const board = getBoard('triangle');
@@ -95,10 +98,11 @@ function linesOpened(state: GameState, dotId: number): number {
 // it was (same gap, same points) — the scripted steps rely on them.
 function keepsGaps(state: GameState, dotId: number): boolean {
   const after = applyAction(state, { kind: 'dot', dotId });
+  const board = getBoard(state.shape);
   return scoringDots(state).every(
     (id) =>
-      pointsIfPlayed(after, getBoard(state.shape), id).pending.length === 0 &&
-      gainAt(after, id) === gainAt(state, id),
+      pointsIfPlayed(after, board, id).pending.length ===
+        pointsIfPlayed(state, board, id).pending.length && gainAt(after, id) === gainAt(state, id),
   );
 }
 

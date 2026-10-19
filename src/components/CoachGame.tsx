@@ -4,6 +4,8 @@ import { getBoard } from '../geometry';
 import { useT } from '../i18n';
 import {
   COACH_CORNER_DOT,
+  COACH_DOUBLE_DOT,
+  COACH_DOUBLE_LINES,
   COACH_FINISH_DOT,
   COACH_FINISH_LINE,
   coachBotAction,
@@ -21,14 +23,17 @@ import { ScoreStrip } from './ScoreStrip';
 import { SidePanel } from './SidePanel';
 
 // First-game tutorial: a real Triangle game, already under way, against the
-// Coach. Three guided turns (tap a corner → finish a line → find a line on
-// your own), then the player plays it out with hints only when stuck.
+// Coach. Guided turns — tap a corner → finish a line → finish two lines at
+// once (only the longest scores) → claim the waiting one → find a line on
+// your own — then the player plays it out with hints only when stuck.
 
-type Stage = 'corner' | 'finish' | 'find' | 'free';
+type Stage = 'corner' | 'finish' | 'double' | 'claim' | 'find' | 'free';
 type BotStyle = 'quiet' | 'greedy' | 'easy';
 
 // Long enough to read the "+N" line before the Coach answers.
 const BOT_DELAY_MS = 1100;
+// After "two lines at once" there is more to read.
+const BOT_DELAY_DOUBLE_MS = 2400;
 const BOT_DELAY_FREE_MS = 650;
 const IDLE_HINT_MS = 6000;
 const END_CARD_DELAY_MS = 900;
@@ -37,10 +42,9 @@ interface Props {
   theme: ThemeId;
   phoneLayout: boolean;
   playerName: string;
-  /** Explain "two lines at once" the first time it happens (once per device). */
-  showPendingTip: boolean;
+  /** Called once the lesson has taught waiting lines (the in-game tip is then redundant). */
   onPendingTipSeen: () => void;
-  /** Started again from How to play (kept apart in analytics). */
+  /** Started again from the menu / How to play (kept apart in analytics). */
   replay: boolean;
   onFinished: () => void;
   onSkip: () => void;
@@ -51,7 +55,6 @@ export function CoachGame({
   theme,
   phoneLayout,
   playerName,
-  showPendingTip,
   onPendingTipSeen,
   replay,
   onFinished,
@@ -71,12 +74,10 @@ export function CoachGame({
     seq: number;
   } | null>(null);
   const [idle, setIdle] = useState(false);
-  const [tipOpen, setTipOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
   const botStyle = useRef<BotStyle>('quiet');
   const nextStage = useRef<Stage>('finish');
   const freeMoves = useRef(0);
-  const tipShown = useRef(false);
 
   useEffect(() => {
     trackEvent('tutorial_start', { replay: replay ? 1 : 0 });
@@ -86,8 +87,11 @@ export function CoachGame({
   const totalPoints = getBoard('triangle').lines.reduce((s, l) => s + l.length, 0);
   const remaining = totalPoints - state.scores[1] - state.scores[2];
   const myTurn = state.current === 1 && !state.finished;
+  // The Coach's turn right after "two lines at once": the waiting line stays marked.
+  const showWaiting = stage === 'claim' || (stage === 'double' && state.pending.length > 0);
 
-  const playerMoved = () => {
+  // What the player's move means for the script: message, Coach style, next step.
+  const afterPlayer = (points: number) => {
     setMisses(0);
     setIdle(false);
     if (stage === 'corner') {
@@ -97,8 +101,18 @@ export function CoachGame({
     } else if (stage === 'finish') {
       setMsg(t.coach.finishDone);
       botStyle.current = 'quiet';
+      nextStage.current = 'double';
+    } else if (stage === 'double') {
+      setMsg(t.coach.doubleDone(points));
+      botStyle.current = 'quiet';
+      nextStage.current = 'claim';
+    } else if (stage === 'claim') {
+      setMsg(t.coach.claimDone(points));
+      onPendingTipSeen();
+      botStyle.current = 'quiet';
       nextStage.current = 'find';
     } else if (stage === 'find') {
+      setMsg(t.coach.findDone(points));
       botStyle.current = 'greedy';
       nextStage.current = 'free';
     } else {
@@ -122,10 +136,9 @@ export function CoachGame({
     if (r.pointsGained > 0 || r.newlyPending.length > 0) {
       setScoreEvent({ dotId, points: r.pointsGained, player: 1, seq: Date.now() });
     }
-    if (stage === 'find') setMsg(t.coach.findDone(r.pointsGained));
     setLastDot(dotId);
     setState(r.state);
-    playerMoved();
+    afterPlayer(r.pointsGained);
   };
 
   const onClaim = (lineId: string) => {
@@ -133,44 +146,57 @@ export function CoachGame({
     const r = applyClaim(state, lineId);
     claimFloat(lineId, r.pointsGained, 1);
     setState(r.state);
-    playerMoved();
+    afterPlayer(r.pointsGained);
   };
 
-  // The Coach's turn (it waits while the pending-line tip is open, so the
-  // board the tip talks about stays put).
+  // The Coach's turn.
   useEffect(() => {
-    if (state.finished || state.current !== 2 || tipOpen) return;
+    if (state.finished || state.current !== 2) return;
     const style = botStyle.current;
-    const id = window.setTimeout(
-      () => {
-        const action = coachBotAction(state, style);
-        let gained = 0;
-        if (action.kind === 'dot') {
-          const r = applyMove(state, action.dotId);
-          gained = r.pointsGained;
-          if (gained > 0 || r.newlyPending.length > 0) {
-            setScoreEvent({ dotId: action.dotId, points: gained, player: 2, seq: Date.now() });
-          }
-          setLastDot(action.dotId);
-          setState(r.state);
-        } else {
-          const r = applyClaim(state, action.lineId);
-          gained = r.pointsGained;
-          claimFloat(action.lineId, gained, 2);
-          setState(r.state);
+    const delay =
+      nextStage.current === 'claim'
+        ? BOT_DELAY_DOUBLE_MS
+        : style === 'easy'
+          ? BOT_DELAY_FREE_MS
+          : BOT_DELAY_MS;
+    const id = window.setTimeout(() => {
+      const action = coachBotAction(state, style);
+      let gained = 0;
+      if (action.kind === 'dot') {
+        const r = applyMove(state, action.dotId);
+        gained = r.pointsGained;
+        if (gained > 0 || r.newlyPending.length > 0) {
+          setScoreEvent({ dotId: action.dotId, points: gained, player: 2, seq: Date.now() });
         }
-        const ns = nextStage.current;
-        if (style === 'quiet') setMsg(ns === 'finish' ? t.coach.finish : t.coach.find);
-        else if (style === 'greedy') setMsg(gained > 0 ? t.coach.botTook(gained) : t.coach.free);
-        setStage(ns);
-      },
-      style === 'easy' ? BOT_DELAY_FREE_MS : BOT_DELAY_MS,
-    );
+        setLastDot(action.dotId);
+        setState(r.state);
+      } else {
+        const r = applyClaim(state, action.lineId);
+        gained = r.pointsGained;
+        claimFloat(action.lineId, gained, 2);
+        setState(r.state);
+      }
+      const ns = nextStage.current;
+      if (style === 'quiet') {
+        setMsg(
+          ns === 'finish'
+            ? t.coach.finish
+            : ns === 'double'
+              ? t.coach.double
+              : ns === 'claim'
+                ? t.coach.claim
+                : t.coach.find,
+        );
+      } else if (style === 'greedy') {
+        setMsg(gained > 0 ? t.coach.botTook(gained) : t.coach.free);
+      }
+      setStage(ns);
+    }, delay);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, tipOpen]);
+  }, [state]);
 
-  // Stuck in free play: after a while, show the open lines.
+  // Stuck in free play: after a while, show the best open line.
   useEffect(() => {
     if (stage !== 'free' || !myTurn || idle) return;
     if (scoringDots(state).length === 0) return;
@@ -181,15 +207,6 @@ export function CoachGame({
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, stage, idle]);
-
-  // First pending line: explain it once.
-  useEffect(() => {
-    if (state.pending.length === 0 || tipShown.current || !showPendingTip) return;
-    tipShown.current = true;
-    setTipOpen(true);
-    onPendingTipSeen();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.pending.length]);
 
   useEffect(() => {
     if (!state.finished) return;
@@ -204,22 +221,40 @@ export function CoachGame({
   }, [state.finished, state.winner]);
 
   const marks: CoachMarks = {};
-  if (tipOpen) {
-    marks.spotlight = state.pending.flatMap(lineDots);
-  } else if (myTurn) {
+  if (showWaiting) {
+    marks.waiting = state.pending;
+    // Right after the double, keep the line that scored lit too.
+    marks.spotlight =
+      stage === 'double' ? COACH_DOUBLE_LINES.flatMap(lineDots) : state.pending.flatMap(lineDots);
+  }
+  if (myTurn) {
     if (stage === 'corner') {
       marks.spotlight = [COACH_CORNER_DOT];
+      marks.rings = [COACH_CORNER_DOT];
       marks.pointer = COACH_CORNER_DOT;
       marks.canPlace = (id) => id === COACH_CORNER_DOT;
       marks.onRefused = () => setMsg(t.coach.corner);
     } else if (stage === 'finish') {
       marks.spotlight = lineDots(COACH_FINISH_LINE);
-      if (misses >= 2) marks.pointer = COACH_FINISH_DOT;
+      marks.bands = [COACH_FINISH_LINE];
+      marks.gap = COACH_FINISH_DOT;
+      marks.label = { dot: COACH_FINISH_DOT, text: `+${gainAt(state, COACH_FINISH_DOT)}` };
+      marks.pointer = COACH_FINISH_DOT;
       marks.canPlace = (id) => id === COACH_FINISH_DOT;
-      marks.onRefused = () => {
-        setMisses((m) => m + 1);
-        setMsg(t.coach.finishMiss);
-      };
+      marks.onRefused = () => setMsg(t.coach.finishMiss);
+    } else if (stage === 'double') {
+      marks.spotlight = COACH_DOUBLE_LINES.flatMap(lineDots);
+      marks.bands = COACH_DOUBLE_LINES;
+      marks.gap = COACH_DOUBLE_DOT;
+      marks.pointer = COACH_DOUBLE_DOT;
+      marks.canPlace = (id) => id === COACH_DOUBLE_DOT;
+      marks.onRefused = () => setMsg(t.coach.double);
+    } else if (stage === 'claim') {
+      // Point at the waiting line's dot farthest from where the two lines met.
+      const dots = state.pending.flatMap(lineDots).filter((id) => id !== COACH_DOUBLE_DOT);
+      marks.pointer = dots[0] ?? null;
+      marks.canPlace = () => false;
+      marks.onRefused = () => setMsg(t.coach.claim);
     } else if (stage === 'find') {
       const open = scoringDots(state);
       if (misses >= 2) marks.spotlight = linesFinishedBy(state, open.slice(0, 2));
@@ -231,6 +266,7 @@ export function CoachGame({
       };
     } else if (idle) {
       marks.spotlight = linesFinishedBy(state, scoringDots(state).slice(0, 1));
+      marks.rings = marks.spotlight;
     }
   }
 
@@ -245,15 +281,10 @@ export function CoachGame({
 
   const bubble = (
     <div className="coach-slot">
-      {(tipOpen || msg) && (
-        <div className={`coach-bubble${tipOpen ? ' coach-bubble-tip' : ''}`} role="status" aria-live="polite">
+      {msg && (
+        <div className="coach-bubble" role="status" aria-live="polite">
           <span className="coach-bubble-name">{t.coach.name}</span>
-          <span className="coach-bubble-text">{tipOpen ? t.coach.pendingTip : msg}</span>
-          {tipOpen && (
-            <button type="button" className="coach-bubble-btn" onClick={() => setTipOpen(false)}>
-              {t.coach.gotIt}
-            </button>
-          )}
+          <span className="coach-bubble-text">{msg}</span>
         </div>
       )}
     </div>
@@ -301,11 +332,11 @@ export function CoachGame({
         <Board
           state={state}
           onDotClick={onDot}
-          onClaimClick={stage === 'free' ? onClaim : undefined}
-          disabled={!myTurn || tipOpen}
+          onClaimClick={stage === 'claim' || stage === 'free' ? onClaim : undefined}
+          disabled={!myTurn}
           lastDot={lastDot}
           theme={theme}
-          showHints={stage === 'free' && (myTurn || tipOpen)}
+          showHints={(stage === 'claim' || stage === 'free') && myTurn}
           scoreEvent={scoreEvent}
           coach={marks}
         />

@@ -2758,7 +2758,6 @@ export default function App() {
         theme={theme}
         phoneLayout={phoneLayout}
         playerName={displayPlayerName(coachName, t)}
-        showPendingTip={!settings.pendingTipSeen}
         onPendingTipSeen={markPendingTipSeen}
         replay={coachReplay}
         onFinished={() => {

@@ -155,9 +155,10 @@ import {
 } from './storage';
 import { BANNED_SHAPES, type Difficulty, type GameAction, type GameMode, type GameState, type Progress, type ShapeId } from './types';
 import { APP_VERSION } from './version';
+import { CoachGame } from './components/CoachGame';
 import { bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './telemetry';
 
-type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound' | 'mpgame';
+type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound' | 'mpgame' | 'coach';
 
 interface SessionConfig {
   mode: GameMode;
@@ -311,6 +312,12 @@ export default function App() {
   // One help window (How to play) with a step-by-step tab and a rules tab;
   // null = closed.
   const [howTo, setHowTo] = useState<HowToTab | null>(null);
+  // Brand-new player (nothing played, no saved game): offer the first-game
+  // tutorial before anything else.
+  const [pendingTipOpen, setPendingTipOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(
+    () => !resumed && !settings.tutorialSeen && settings.gamesPlayed === 0,
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rankingsOpen, setRankingsOpen] = useState(false);
   const [rankingsView, setRankingsView] = useState<'global' | 'local'>('global');
@@ -440,6 +447,44 @@ export default function App() {
     saveSettings(next);
   };
 
+  const markTutorialSeen = () => {
+    setSettings((prev) => {
+      const next = { ...prev, tutorialSeen: true };
+      saveSettings(next);
+      return next;
+    });
+  };
+
+  const openCoach = () => {
+    setWelcomeOpen(false);
+    setHowTo(null);
+    setScreen('coach');
+  };
+
+  // Just-in-time tip the first time two lines finish at once (newer players
+  // only; the tutorial shows the same tip if it happens there first).
+  const pendingCount = screen === 'game' ? state?.pending.length ?? 0 : 0;
+  useEffect(() => {
+    if (pendingCount === 0 || settings.pendingTipSeen || settings.gamesPlayed >= 10) return;
+    setPendingTipOpen(true);
+    setSettings((prev) => {
+      const next = { ...prev, pendingTipSeen: true };
+      saveSettings(next);
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingCount]);
+  useEffect(() => {
+    if (screen !== 'game') setPendingTipOpen(false);
+  }, [screen]);
+
+  const leaveCoach = (how: 'skip' | 'bot' | 'menu') => {
+    markTutorialSeen();
+    if (how === 'skip') trackEvent('tutorial_skip');
+    if (how === 'bot') startGame('ai', 'triangle', 1);
+    else setScreen('menu');
+  };
+
   // Keep audio.ts's enabled-flags in sync with Settings, from whichever path
   // changed them (updateSettings above, or the direct setSettings/saveSettings
   // call in onToggleRings further down — neither of which touch these two
@@ -510,9 +555,13 @@ export default function App() {
       auth_state: user ? 'signed_in' : 'anon',
     });
     if (Date.now() - settings.lastPlayedAt > 60 * 60 * 1000) {
-      const nextSettings: Settings = { ...settings, lastPlayedAt: Date.now() };
-      setSettings(nextSettings);
-      saveSettings(nextSettings);
+      // Functional update: a caller may have changed settings in the same tick
+      // (e.g. the tutorial marking itself seen right before starting a game).
+      setSettings((prev) => {
+        const nextSettings: Settings = { ...prev, lastPlayedAt: Date.now() };
+        saveSettings(nextSettings);
+        return nextSettings;
+      });
     }
     setConfig({ mode, shape, difficulty });
     let initial = createGame(shape, mode, difficulty);
@@ -1669,6 +1718,14 @@ export default function App() {
   // screen/menu level); returns false only once there's truly nothing left
   // to back through, so the caller can exit the app / let the browser leave.
   const performInAppBack = (): boolean => {
+    if (screen === 'coach') {
+      leaveCoach('skip');
+      return true;
+    }
+    if (welcomeOpen && screen === 'menu') {
+      setWelcomeOpen(false);
+      return true;
+    }
     // Open dialog or popup menu (footer language list): close it first.
     if (document.querySelector('[role="dialog"], [role="menu"]')) {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
@@ -2660,6 +2717,30 @@ export default function App() {
     );
   }
 
+  if (screen === 'coach') {
+    const coachName =
+      user && cloudProfile?.displayName
+        ? cloudProfile.displayName
+        : settings.playerName || DEFAULT_P1_NAME;
+    return (
+      <CoachGame
+        theme={theme}
+        phoneLayout={phoneLayout}
+        playerName={displayPlayerName(coachName, t)}
+        showPendingTip={!settings.pendingTipSeen}
+        onPendingTipSeen={() => {
+          setSettings((prev) => {
+            const next = { ...prev, pendingTipSeen: true };
+            saveSettings(next);
+            return next;
+          });
+        }}
+        onSkip={() => leaveCoach('skip')}
+        onDone={(next) => leaveCoach(next)}
+      />
+    );
+  }
+
   const isMenuScreen =
     screen === 'menu' ||
     screen === 'lobby' ||
@@ -2776,7 +2857,36 @@ export default function App() {
             onClose={() => setHowTo(null)}
             theme={theme}
             showGuideLinks={!isNativeApp() || (screen !== 'matchmaking' && screen !== 'matchFound')}
+            onPlayTutorial={screen === 'menu' ? openCoach : undefined}
           />
+        )}
+        {welcomeOpen && screen === 'menu' && (
+          <div
+            className="confirm-overlay welcome-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="welcome-title"
+          >
+            <div className="confirm-card welcome-card">
+              <h3 id="welcome-title">{t.coach.welcomeTitle}</h3>
+              <p>{t.coach.welcomeBody}</p>
+              <button type="button" className="hotseat-start" onClick={openCoach}>
+                {t.coach.welcomePlay}
+              </button>
+              <span className="welcome-time">{t.coach.welcomeTime}</span>
+              <button
+                type="button"
+                className="link-btn welcome-skip"
+                onClick={() => {
+                  setWelcomeOpen(false);
+                  markTutorialSeen();
+                  trackEvent('tutorial_declined');
+                }}
+              >
+                {t.coach.welcomeSkip}
+              </button>
+            </div>
+          </div>
         )}
         {privacyOpen && (
           <PrivacyPopover
@@ -3143,6 +3253,14 @@ export default function App() {
         </div>
       )}
       <AdBanner placement="ingame" />
+      {pendingTipOpen && !showOver && (
+        <div className="coach-bubble coach-bubble-tip coach-bubble-floating" role="status" aria-live="polite">
+          <span className="coach-bubble-text">{t.coach.pendingTip}</span>
+          <button type="button" className="coach-bubble-btn" onClick={() => setPendingTipOpen(false)}>
+            {t.coach.gotIt}
+          </button>
+        </div>
+      )}
       {showOver && (
         <GameOver
           state={state}

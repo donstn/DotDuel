@@ -7378,3 +7378,185 @@ body.has-native-banner #root {
   padding-bottom: 56px;
   box-sizing: border-box;
 }
+
+/* ---------------- First-game tutorial (Coach) ---------------- */
+
+/* Spotlight: everything except the ringed dots steps back. Static — no
+   animation on board content. */
+.board-spotlight > g:not(.dot-group-spot) {
+  opacity: 0.32;
+}
+.coach-ring {
+  stroke: #ffd680;
+  opacity: 0.95;
+}
+/* The tap hand is a teaching overlay, not board content: it taps three times
+   and then holds still (no infinite animation). */
+.coach-hand {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+  animation: coachTap 1.1s ease-in-out 0.3s 3;
+  pointer-events: none;
+  filter: drop-shadow(0 0.04px 0.08px rgba(0, 0, 0, 0.6));
+}
+.coach-hand-down {
+  transform-origin: 50% 100%;
+  animation-name: coachTapDown;
+}
+@keyframes coachTap {
+  0%, 100% { transform: translateY(0); }
+  45% { transform: translateY(-14%); }
+}
+@keyframes coachTapDown {
+  0%, 100% { transform: translateY(0); }
+  45% { transform: translateY(14%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coach-hand { animation: none; }
+}
+
+.btn-coach-skip {
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-coach-skip:hover {
+  border-color: var(--glass-border-strong);
+  color: var(--accent);
+}
+
+/* Fixed-height slot under the board so a longer message never shifts it. */
+.coach-slot {
+  flex-shrink: 0;
+  min-height: 86px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 6px 12px calc(10px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+.coach-bubble {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  width: 100%;
+  max-width: 520px;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(8, 20, 12, 0.9);
+  border: 1px solid var(--glass-border-strong);
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+.coach-bubble-name {
+  flex-basis: 100%;
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.coach-bubble-text {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.coach-bubble-tip {
+  border-color: #ffd680;
+}
+.coach-bubble-btn {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 7px 14px;
+  border-radius: 10px;
+  background: var(--accent);
+  border: 0;
+  color: #06210f;
+  font-weight: 700;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+.coach-bubble-floating {
+  position: fixed;
+  left: 50%;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(calc(100vw - 24px), 480px);
+  z-index: 150;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.welcome-card,
+.coach-end-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.welcome-card p,
+.coach-end-card p {
+  margin-bottom: 14px;
+}
+.welcome-card .hotseat-start,
+.coach-end-card .hotseat-start {
+  width: 100%;
+  max-width: 280px;
+  margin: 0;
+}
+.welcome-time {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin: 2px 0 6px;
+}
+.welcome-skip,
+.coach-end-menu {
+  margin-top: 6px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
+.coach-end-score {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text) !important;
+  margin: 2px 0 8px !important;
+}
+
+.howto-play-tutorial {
+  align-self: center;
+  margin-top: 6px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border-strong);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+/* Phone: the board takes its natural height and the Coach's bubble sits
+   right under it, not at the far bottom of the screen. A long message
+   shrinks the board instead of running off the screen. */
+.coach-screen .game-body:has(> .score-strip) {
+  display: flex;
+  flex-direction: column;
+}
+.coach-screen .game-body:has(> .score-strip) .board-wrap {
+  flex: 0 1 auto;
+  min-height: 120px;
+  height: min(calc(100vw * 0.9), 100%);
+}
+.coach-screen .game-body:has(> .score-strip) .coach-slot {
+  flex: 1 0 auto;
+  min-height: 86px;
+  padding-left: 0;
+  padding-right: 0;
+}

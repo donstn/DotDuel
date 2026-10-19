@@ -129,6 +129,8 @@ export interface Settings {
   opponentName: string;
   hotseatColorSwap: boolean;
   tutorialSeen: boolean;
+  /** One-time "two lines at once" tip shown. */
+  pendingTipSeen: boolean;
   gamesPlayed: number;
   claimsMade: number;
   showClaimableLines: boolean;
@@ -144,6 +146,7 @@ function defaultSettings(): Settings {
     opponentName: DEFAULT_P2_NAME,
     hotseatColorSwap: false,
     tutorialSeen: false,
+    pendingTipSeen: false,
     gamesPlayed: 0,
     claimsMade: 0,
     showClaimableLines: true,

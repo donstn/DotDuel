@@ -23,6 +23,17 @@ const SCORE_FLOAT_DURATION_MS = 1050;
 const INPUT_GUARD_MS = 350;
 const BOARD_HINT_MS = 3200;
 
+/** Tutorial guidance (first-game Coach only; real games never pass it). */
+export interface CoachMarks {
+  /** Dots to ring; every other dot and line is dimmed. */
+  spotlight?: number[];
+  /** Dot the hand pointer taps. */
+  pointer?: number | null;
+  /** Empty dots this returns false for can't be placed (they shake instead). */
+  canPlace?: (dotId: number) => boolean;
+  onRefused?: (dotId: number) => void;
+}
+
 interface Props {
   state: GameState;
   onDotClick?: (dotId: number) => void;
@@ -33,6 +44,7 @@ interface Props {
   showHints?: boolean;
   scoreEvent?: ScoreEvent | null;
   theme?: ThemeId;
+  coach?: CoachMarks;
 }
 
 function colorIndex(player: Player, swap: boolean): 1 | 2 {
@@ -219,6 +231,7 @@ export function Board({
   showHints = false,
   scoreEvent = null,
   theme,
+  coach,
 }: Props) {
   const t = useT();
   const boardArt = themeArt(theme).board;
@@ -380,6 +393,11 @@ export function Board({
     if (disabled || !inputReady()) return;
     const cd = state.colored[dotId];
     if (!cd) {
+      if (coach?.canPlace && !coach.canPlace(dotId)) {
+        shakeDot(dotId);
+        coach.onRefused?.(dotId);
+        return;
+      }
       onDotClick?.(dotId);
       return;
     }
@@ -438,10 +456,15 @@ export function Board({
       : t.game.liveWin(state.winner as Player, state.scores[1], state.scores[2])
     : t.game.liveTurn(state.current, state.scores[1], state.scores[2]);
 
+  const spot = coach?.spotlight?.length ? new Set(coach.spotlight) : null;
+  const pointerDot = coach?.pointer != null ? board.dots[coach.pointer] : null;
+  // The hand sits under the dot, pointing up, unless that would leave the board.
+  const pointerBelow = !!pointerDot && pointerDot.y + dotRadius * 3.4 < vbExp.y + vbExp.h;
+
   return (
     <div className="board-wrap">
       <svg
-        className="board"
+        className={spot ? 'board board-spotlight' : 'board'}
         role="group"
         aria-label={t.game.boardAriaLabel(t.shapes[state.shape])}
         viewBox={`${vbExp.x} ${vbExp.y} ${vbExp.w} ${vbExp.h}`}
@@ -609,7 +632,18 @@ export function Board({
             ariaLabel = t.game.dotEmpty(rowNum, posNum);
           }
           return (
-            <g key={d.id} className="dot-group">
+            <g key={d.id} className={spot?.has(d.id) ? 'dot-group dot-group-spot' : 'dot-group'}>
+              {spot?.has(d.id) && (
+                <circle
+                  cx={d.x}
+                  cy={d.y}
+                  r={dotRadius * 1.38}
+                  className="coach-ring"
+                  fill="none"
+                  strokeWidth={dotRadius * 0.16}
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
               {hintGlow && (
                 <circle
                   cx={d.x}
@@ -832,6 +866,19 @@ export function Board({
             </g>
           );
         })}
+        {pointerDot && (
+          <text
+            key={coach?.pointer}
+            x={pointerDot.x + dotRadius * 0.15}
+            y={pointerBelow ? pointerDot.y + dotRadius * 3.1 : pointerDot.y - dotRadius * 1.25}
+            fontSize={dotRadius * 2.6}
+            textAnchor="middle"
+            className={pointerBelow ? 'coach-hand' : 'coach-hand coach-hand-down'}
+            aria-hidden="true"
+          >
+            {pointerBelow ? '👆' : '👇'}
+          </text>
+        )}
       </svg>
       {boardHint && (
         <div key={boardHint.seq} className="board-hint" role="status">

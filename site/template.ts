@@ -27,7 +27,7 @@ export const PATHS: Record<Lang, Record<PageKey['key'], string>> = {
 
 const NAV: Record<Lang, Record<PageKey['key'], string> & { play: string; privacy: string; other: string }> = {
   en: {
-    howToPlay: 'How to play',
+    howToPlay: 'Guide',
     strategy: 'Strategy',
     about: 'About',
     changelog: 'Changelog',
@@ -36,7 +36,7 @@ const NAV: Record<Lang, Record<PageKey['key'], string> & { play: string; privacy
     other: 'Lietuviškai',
   },
   lt: {
-    howToPlay: 'Kaip žaisti',
+    howToPlay: 'Vadovas',
     strategy: 'Strategija',
     about: 'Apie',
     changelog: 'Naujienos',
@@ -78,7 +78,7 @@ export function renderPage(p: PageInput): string {
 <html lang="${p.lang}">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>${esc(p.title)}</title>
   <meta name="description" content="${esc(p.description)}" />
   <link rel="canonical" href="${ORIGIN}${path}" />

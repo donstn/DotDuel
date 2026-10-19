@@ -4,7 +4,10 @@
 // without running the game. Content: site/content.ts; changelog text comes
 // from src/changelog.ts (+ the Lithuanian translations in src/i18n/lt.ts).
 //
-//   tsx scripts/build-pages.ts
+//   tsx scripts/build-pages.ts         (website)
+//   tsx scripts/build-pages.ts --app   (Android bundle: Capacitor's local
+//     server answers folder URLs like /strategy/ with the app's index.html,
+//     so internal links point at /strategy/index.html instead)
 import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,11 +21,13 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = resolve(root, 'dist');
 const MESSAGES = { en, lt };
 const KINDS: ChangeKind[] = ['added', 'changed', 'fixed'];
+const APP = process.argv.includes('--app');
 
 function write(path: string, html: string) {
   const file = resolve(dist, `.${path}index.html`);
   mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, html);
+  // Site-relative folder links only (canonical/hreflang URLs are absolute).
+  writeFileSync(file, APP ? html.replace(/href="(\/(?:lt\/)?[a-z-]+\/)"/g, 'href="$1index.html"') : html);
 }
 
 function formatDate(iso: string, lang: Lang): string {

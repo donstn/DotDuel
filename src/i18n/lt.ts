@@ -65,6 +65,7 @@ export const lt: Messages = {
 
     profile: 'Profilis',
     signOut: 'Atsijungti',
+    guide: 'Vadovas',
     signIn: 'Prisijungti',
 
     singlePlayer: 'Vienas žaidėjas',
@@ -127,7 +128,6 @@ export const lt: Messages = {
 
   footer: {
     howToPlay: 'Kaip žaisti',
-    rules: 'Taisyklės',
     settings: 'Nustatymai',
     privacy: 'Privatumas',
     theme: 'Tema',
@@ -224,8 +224,9 @@ export const lt: Messages = {
     modeHotseat: '– du žaidėjai, vienas įrenginys.',
     modeMpLead: 'Internetinis',
     modeMp: '– tiesioginiai žaidimai su pasauliniu Elo reitingu, šachmatinio tipo laikrodžiais ir revanšais.',
-    moreGuide: 'Išsamus vadovas su pavyzdžiais',
-    moreStrategy: 'Strategijos patarimai',
+    moreGuide: 'Vadovas ↗',
+    moreStrategy: 'Strategija ↗',
+    moreAria: 'Daugiau svetainėje',
     gotIt: 'Supratau',
   },
 
@@ -297,6 +298,13 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.18.0': {
+        changes: [
+          '„Kaip žaisti“ ir „Taisyklės“ dabar viename lange su dviem skirtukais.',
+          'Vadovas su strategijos patarimais – ir Android programėlėje, net be interneto.',
+          'Ekranų pavadinimai dabar per vidurį juostos visuose telefonuose.',
+        ],
+      },
       'Alpha 0.4.17.0': {
         changes: [
           'Svetainėje – išsamus vadovas, strategijos patarimai ir DUK, pasiekiami iš Taisyklių lango.',
@@ -1520,6 +1528,8 @@ export const lt: Messages = {
     prev: 'Atgal',
     next: 'Toliau',
     done: 'Supratau',
+    tabSteps: 'Žingsniai',
+    tabRules: 'Taisyklės',
     scenes: {
       place: {
         title: 'Padėkite tašką',

@@ -70,6 +70,7 @@ export const en = {
     // Auth row.
     profile: 'Profile',
     signOut: 'Sign out',
+    guide: 'Guide',
     signIn: 'Sign in',
 
     // Top-level category shelves.
@@ -141,7 +142,6 @@ export const en = {
   // Persistent footer (also shown in-game).
   footer: {
     howToPlay: 'How to play',
-    rules: 'Rules',
     settings: 'Settings',
     privacy: 'Privacy',
     theme: 'Theme',
@@ -244,8 +244,9 @@ export const en = {
     modeHotseat: '— two players, one device.',
     modeMpLead: 'Multiplayer',
     modeMp: '— live with global Elo ranking, chess-style time controls, and rematches.',
-    moreGuide: 'Full guide with examples',
-    moreStrategy: 'Strategy tips',
+    moreGuide: 'Guide ↗',
+    moreStrategy: 'Strategy ↗',
+    moreAria: 'More on the website',
     gotIt: 'Got it',
   },
 
@@ -963,6 +964,8 @@ export const en = {
     prev: 'Previous',
     next: 'Next',
     done: 'Got it',
+    tabSteps: 'Step by step',
+    tabRules: 'Rules',
     scenes: {
       place: {
         title: 'Place a dot',

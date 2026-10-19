@@ -5,7 +5,8 @@ import type { Settings } from '../storage';
 import { PLAYABLE_SHAPE_META } from '../types';
 import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
 import type { ThemeId } from '../theme';
-import { useT } from '../i18n';
+import { useLang, useT } from '../i18n';
+import { guideLinkProps } from '../guideLinks';
 import { FriendsButton } from './FriendsButton';
 import { TellAFriendButton } from './TellAFriendButton';
 import type { MyDailyAttempt } from '../cloud/dailyLeaderboard';
@@ -138,6 +139,7 @@ export function Menu({
   const [shape, setShape] = useState<ShapeId | null>(null);
   const [aiDifficulty, setAiDifficulty] = useState<Difficulty | null>(null);
   const t = useT();
+  const { lang } = useLang();
 
   useEffect(() => {
     onDepthChange?.(category !== null || mode !== null);
@@ -340,11 +342,12 @@ export function Menu({
             />
           </button>
         </div>
-        {!user && (
-          <div className="menu-share-row">
-            <TellAFriendButton variant="share" className="menu-share-link" />
-          </div>
-        )}
+        <div className="menu-share-row">
+          {!user && <TellAFriendButton variant="share" className="menu-share-link" />}
+          <a className="menu-share-link" {...guideLinkProps(lang, 'guide', false)}>
+            {t.menu.guide}
+          </a>
+        </div>
       </div>
     );
   }

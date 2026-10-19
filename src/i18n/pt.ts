@@ -54,6 +54,7 @@ export const pt: Messages = {
 
     profile: 'Perfil',
     signOut: 'Sair',
+    guide: 'Guia',
     signIn: 'Entrar',
 
     singlePlayer: 'Um jogador',
@@ -116,7 +117,6 @@ export const pt: Messages = {
 
   footer: {
     howToPlay: 'Como jogar',
-    rules: 'Regras',
     settings: 'Configurações',
     privacy: 'Privacidade',
     theme: 'Tema',
@@ -215,8 +215,9 @@ export const pt: Messages = {
     modeHotseat: '— dois jogadores, um dispositivo.',
     modeMpLead: 'Multijogador',
     modeMp: '— ao vivo, com ranking Elo mundial, controles de tempo estilo xadrez e revanches.',
-    moreGuide: 'Guia completo (em inglês)',
-    moreStrategy: 'Dicas de estratégia (em inglês)',
+    moreGuide: 'Guia ↗',
+    moreStrategy: 'Estratégia ↗',
+    moreAria: 'Mais no site (em inglês)',
     gotIt: 'Entendi',
   },
 
@@ -288,6 +289,13 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.18.0': {
+        changes: [
+          '“Como jogar” e “Regras” agora ficam numa só janela com duas abas.',
+          'Um guia com dicas de estratégia, também dentro do app Android e offline.',
+          'Os títulos das telas agora ficam centralizados na faixa em todos os celulares.',
+        ],
+      },
       'Alpha 0.4.17.0': {
         changes: [
           'Um guia completo, dicas de estratégia e perguntas frequentes no site, com link na tela de Regras.',
@@ -1513,6 +1521,8 @@ export const pt: Messages = {
     prev: 'Anterior',
     next: 'Próximo',
     done: 'Entendi',
+    tabSteps: 'Passo a passo',
+    tabRules: 'Regras',
     scenes: {
       place: {
         title: 'Coloque um ponto',

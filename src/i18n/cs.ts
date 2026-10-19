@@ -63,6 +63,7 @@ export const cs: Messages = {
 
     profile: 'Profil',
     signOut: 'Odhlásit se',
+    guide: 'Průvodce',
     signIn: 'Přihlásit se',
 
     singlePlayer: 'Jeden hráč',
@@ -125,7 +126,6 @@ export const cs: Messages = {
 
   footer: {
     howToPlay: 'Jak hrát',
-    rules: 'Pravidla',
     settings: 'Nastavení',
     privacy: 'Soukromí',
     theme: 'Téma',
@@ -224,8 +224,9 @@ export const cs: Messages = {
     modeHotseat: '— dva hráči, jedno zařízení.',
     modeMpLead: 'Více hráčů',
     modeMp: '— živě, se světovým žebříčkem Elo, šachovým měřením času a odvetami.',
-    moreGuide: 'Úplný průvodce (anglicky)',
-    moreStrategy: 'Strategické tipy (anglicky)',
+    moreGuide: 'Průvodce ↗',
+    moreStrategy: 'Strategie ↗',
+    moreAria: 'Více na webu (anglicky)',
     gotIt: 'Rozumím',
   },
 
@@ -297,6 +298,13 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.18.0': {
+        changes: [
+          '„Jak hrát“ a „Pravidla“ jsou teď v jednom okně se dvěma záložkami.',
+          'Průvodce se strategickými tipy – i v aplikaci pro Android a offline.',
+          'Nadpisy obrazovek jsou teď na všech telefonech uprostřed stuhy.',
+        ],
+      },
       'Alpha 0.4.17.0': {
         changes: [
           'Úplný průvodce, strategické tipy a časté dotazy na webu, odkaz najdeš na obrazovce Pravidel.',
@@ -1522,6 +1530,8 @@ export const cs: Messages = {
     prev: 'Předchozí',
     next: 'Další',
     done: 'Rozumím',
+    tabSteps: 'Po krocích',
+    tabRules: 'Pravidla',
     scenes: {
       place: {
         title: 'Polož tečku',

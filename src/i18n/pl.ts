@@ -65,6 +65,7 @@ export const pl: Messages = {
 
     profile: 'Profil',
     signOut: 'Wyloguj się',
+    guide: 'Poradnik',
     signIn: 'Zaloguj się',
 
     singlePlayer: 'Jeden gracz',
@@ -127,7 +128,6 @@ export const pl: Messages = {
 
   footer: {
     howToPlay: 'Jak grać',
-    rules: 'Zasady',
     settings: 'Ustawienia',
     privacy: 'Prywatność',
     theme: 'Motyw',
@@ -226,8 +226,9 @@ export const pl: Messages = {
     modeHotseat: '— dwóch graczy, jedno urządzenie.',
     modeMpLead: 'Wielu graczy',
     modeMp: '— na żywo, ze światowym rankingiem Elo, szachowym pomiarem czasu i rewanżami.',
-    moreGuide: 'Pełny poradnik (po angielsku)',
-    moreStrategy: 'Porady strategiczne (po angielsku)',
+    moreGuide: 'Poradnik ↗',
+    moreStrategy: 'Strategia ↗',
+    moreAria: 'Więcej na stronie (po angielsku)',
     gotIt: 'Rozumiem',
   },
 
@@ -299,6 +300,13 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.18.0': {
+        changes: [
+          '„Jak grać” i „Zasady” są teraz w jednym oknie z dwiema kartami.',
+          'Poradnik z poradami strategicznymi – także w aplikacji na Androida i offline.',
+          'Tytuły ekranów są teraz wyśrodkowane na wstędze na każdym telefonie.',
+        ],
+      },
       'Alpha 0.4.17.0': {
         changes: [
           'Pełny poradnik, porady strategiczne i FAQ na stronie, dostępne z ekranu Zasad.',
@@ -1524,6 +1532,8 @@ export const pl: Messages = {
     prev: 'Poprzedni',
     next: 'Dalej',
     done: 'Rozumiem',
+    tabSteps: 'Krok po kroku',
+    tabRules: 'Zasady',
     scenes: {
       place: {
         title: 'Postaw kropkę',

@@ -30,8 +30,7 @@ import { pushUnlocks, syncAchievementsOnSignIn } from './achievements/cloudSync'
 import { getFeatured, onAchievementsChange } from './achievements/store';
 import { ACHIEVEMENT_BY_ID } from './achievements/catalog';
 import { achTitle } from './achievements/localize';
-import { RulesPopover } from './components/RulesPopover';
-import { HowToPlayPopover } from './components/HowToPlayPopover';
+import { HowToPlayPopover, type HowToTab } from './components/HowToPlayPopover';
 import { SettingsPopover } from './components/SettingsPopover';
 import { SidePanel } from './components/SidePanel';
 import { SignInPopover } from './auth/SignInPopover';
@@ -309,8 +308,9 @@ export default function App() {
     shape: ShapeId | null;
     difficulty: Difficulty | null;
   }>({ shape: null, difficulty: null });
-  const [rulesOpen, setRulesOpen] = useState(false);
-  const [howToOpen, setHowToOpen] = useState(false);
+  // One help window (How to play) with a step-by-step tab and a rules tab;
+  // null = closed.
+  const [howTo, setHowTo] = useState<HowToTab | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rankingsOpen, setRankingsOpen] = useState(false);
   const [rankingsView, setRankingsView] = useState<'global' | 'local'>('global');
@@ -1732,7 +1732,7 @@ export default function App() {
   // menu with nothing open. Native app: the hardware back button above
   // covers this instead.
   const anyPopoverOpen =
-    rulesOpen || howToOpen || settingsOpen || rankingsOpen || achievementsOpen ||
+    howTo !== null || settingsOpen || rankingsOpen || achievementsOpen ||
     signInOpen || profileOpen || renameOpen || resignConfirmOpen || hotseatLeaveOpen || themeOpen ||
     privacyOpen || changelogOpen || friendsOpen || puzzleLbOpen || !!sendInviteFor;
   const hasInAppBackTarget = screen !== 'menu' || menuCanGoBack || anyPopoverOpen;
@@ -2429,7 +2429,7 @@ export default function App() {
           </div>
           <button
             className="btn-rules"
-            onClick={() => setRulesOpen(true)}
+            onClick={() => setHowTo('rules')}
             aria-label={t.game.showRules}
             title={t.game.rules}
           >
@@ -2632,15 +2632,13 @@ export default function App() {
           </div>
         )}
         <AppFooter
-          onOpenHowTo={() => setHowToOpen(true)}
-          onOpenRules={() => setRulesOpen(true)}
+          onOpenHowTo={() => setHowTo('steps')}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPrivacy={() => setPrivacyOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
           version={APP_VERSION}
         />
-        {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
-        {howToOpen && <HowToPlayPopover onClose={() => setHowToOpen(false)} theme={theme} />}
+        {howTo && <HowToPlayPopover initialTab={howTo} onClose={() => setHowTo(null)} theme={theme} showGuideLinks={!isNativeApp()} />}
         {privacyOpen && (
           <PrivacyPopover
             onClose={() => setPrivacyOpen(false)}
@@ -2764,8 +2762,7 @@ export default function App() {
           <AdBanner placement="menu" />
         )}
         <AppFooter
-          onOpenHowTo={() => setHowToOpen(true)}
-          onOpenRules={() => setRulesOpen(true)}
+          onOpenHowTo={() => setHowTo('steps')}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPrivacy={() => setPrivacyOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
@@ -2773,8 +2770,14 @@ export default function App() {
           showLanguage
           version={APP_VERSION}
         />
-        {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
-        {howToOpen && <HowToPlayPopover onClose={() => setHowToOpen(false)} theme={theme} />}
+        {howTo && (
+          <HowToPlayPopover
+            initialTab={howTo}
+            onClose={() => setHowTo(null)}
+            theme={theme}
+            showGuideLinks={!isNativeApp() || (screen !== 'matchmaking' && screen !== 'matchFound')}
+          />
+        )}
         {privacyOpen && (
           <PrivacyPopover
             onClose={() => setPrivacyOpen(false)}
@@ -3069,7 +3072,7 @@ export default function App() {
         </div>
         <button
           className="btn-rules"
-          onClick={() => setRulesOpen(true)}
+          onClick={() => setHowTo('rules')}
           aria-label={t.game.showRules}
           title={t.game.rules}
         >
@@ -3228,15 +3231,20 @@ export default function App() {
         </div>
       )}
       <AppFooter
-        onOpenHowTo={() => setHowToOpen(true)}
-        onOpenRules={() => setRulesOpen(true)}
+        onOpenHowTo={() => setHowTo('steps')}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenPrivacy={() => setPrivacyOpen(true)}
         onOpenChangelog={() => setChangelogOpen(true)}
         version={APP_VERSION}
       />
-      {rulesOpen && <RulesPopover onClose={() => setRulesOpen(false)} />}
-      {howToOpen && <HowToPlayPopover onClose={() => setHowToOpen(false)} theme={theme} />}
+      {howTo && (
+        <HowToPlayPopover
+          initialTab={howTo}
+          onClose={() => setHowTo(null)}
+          theme={theme}
+          showGuideLinks={!isNativeApp() || config.mode !== 'daily'}
+        />
+      )}
       {privacyOpen && (
         <PrivacyPopover
           onClose={() => setPrivacyOpen(false)}

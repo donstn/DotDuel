@@ -300,6 +300,13 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.18.0': {
+        changes: [
+          '„Jak grać” i „Zasady” są teraz w jednym oknie z dwiema kartami.',
+          'Poradnik z poradami strategicznymi – także w aplikacji na Androida i offline.',
+          'Tytuły ekranów są teraz wyśrodkowane na wstędze na każdym telefonie.',
+        ],
+      },
       'Alpha 0.4.17.0': {
         changes: [
           'Pełny poradnik, porady strategiczne i FAQ na stronie, dostępne z ekranu Zasad.',

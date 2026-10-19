@@ -288,6 +288,13 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.18.0': {
+        changes: [
+          '«Cómo jugar» y «Reglas» ahora están en una sola ventana con dos pestañas.',
+          'Una guía con consejos de estrategia, también dentro de la app de Android y sin conexión.',
+          'Los títulos de pantalla ahora quedan centrados en su cinta en todos los móviles.',
+        ],
+      },
       'Alpha 0.4.17.0': {
         changes: [
           'Una guía completa, consejos de estrategia y preguntas frecuentes en la web, enlazados desde la pantalla de Reglas.',

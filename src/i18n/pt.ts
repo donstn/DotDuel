@@ -289,6 +289,13 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.18.0': {
+        changes: [
+          '“Como jogar” e “Regras” agora ficam numa só janela com duas abas.',
+          'Um guia com dicas de estratégia, também dentro do app Android e offline.',
+          'Os títulos das telas agora ficam centralizados na faixa em todos os celulares.',
+        ],
+      },
       'Alpha 0.4.17.0': {
         changes: [
           'Um guia completo, dicas de estratégia e perguntas frequentes no site, com link na tela de Regras.',

@@ -3,6 +3,25 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.18.0] - 2026-10-19
+
+### Changed
+
+- **One help window** — "How to play" and "Rules" merged into one popover with
+  Step by step / Rules tabs; Rules removed from the footer; website page renamed
+  "Guide"; Guide/Strategy links in the help window's bottom bar and a Guide pill
+  on the home screen.
+
+### Added
+
+- **Guide inside the Android app** — guide pages bundled offline
+  (`build-pages --app`); hidden during clocked games.
+
+### Fixed
+
+- **Title banner** — bottom padding was a width-relative %, pushing titles off
+  the top of the ribbon on wider phones.
+
 ## [0.4.17.0] - 2026-10-18
 
 ### Added

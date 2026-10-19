@@ -298,6 +298,13 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.18.0': {
+        changes: [
+          '„Kaip žaisti“ ir „Taisyklės“ dabar viename lange su dviem skirtukais.',
+          'Vadovas su strategijos patarimais – ir Android programėlėje, net be interneto.',
+          'Ekranų pavadinimai dabar per vidurį juostos visuose telefonuose.',
+        ],
+      },
       'Alpha 0.4.17.0': {
         changes: [
           'Svetainėje – išsamus vadovas, strategijos patarimai ir DUK, pasiekiami iš Taisyklių lango.',

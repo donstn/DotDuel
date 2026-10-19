@@ -298,6 +298,13 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.18.0': {
+        changes: [
+          '„Jak hrát“ a „Pravidla“ jsou teď v jednom okně se dvěma záložkami.',
+          'Průvodce se strategickými tipy – i v aplikaci pro Android a offline.',
+          'Nadpisy obrazovek jsou teď na všech telefonech uprostřed stuhy.',
+        ],
+      },
       'Alpha 0.4.17.0': {
         changes: [
           'Úplný průvodce, strategické tipy a časté dotazy na webu, odkaz najdeš na obrazovce Pravidel.',

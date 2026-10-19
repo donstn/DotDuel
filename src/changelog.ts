@@ -30,6 +30,24 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.18.0',
+    date: '2026-10-19',
+    changes: [
+      {
+        kind: 'changed',
+        text: "'How to play' and 'Rules' are now one window with two tabs.",
+      },
+      {
+        kind: 'added',
+        text: 'A Guide with strategy tips, also inside the Android app and offline.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Screen titles now sit centred on their banner on every phone.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.17.0',
     date: '2026-10-18',
     changes: [

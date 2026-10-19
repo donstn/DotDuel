@@ -9,8 +9,8 @@ import type { BoardShape, Difficulty, GameAction, GameState, Player } from './ty
 
 const PENDING_DISCOUNT = 0.5;
 const BEGINNER_SCORE_RATE = 0.35;
-const EASY_SCORE_RATE = 0.85;
-const MEDIUM_SAFE_RATE = 0.4;
+const EASY_SCORE_RATE = 0.6;
+const MEDIUM_SAFE_RATE = 0.1;
 
 function rand<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];

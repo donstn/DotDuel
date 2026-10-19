@@ -147,13 +147,12 @@ export const pl: Messages = {
     liveTurn: (current: number, s1: number, s2: number) =>
       `Ruch gracza ${current}. Wynik: Gracz 1 – ${s1}; Gracz 2 – ${s2}.`,
     linesToClaim: (n: number) =>
-      plural(n, 'linia do zajęcia', 'linie do zajęcia', 'linii do zajęcia'),
-    pendingTitle:
-      'Linie czekają na zajęcie — dotknij kolorowej kropki na jednej z nich, aby ją zająć.',
+      plural(n, 'niezajęta linia', 'niezajęte linie', 'niezajętych linii'),
+    pendingTitle: "Niezajęte linie — dotknij kolorowej kropki na jednej z nich, aby ją zająć.",
     leaveMatch: 'Opuść grę',
     backToMenu: 'Powrót do menu',
     dailyTime: 'Twój czas na tę próbę',
-    claimPhaseHint: 'Wszystko postawione — dotknij linii.',
+    claimPhaseHint: "Wszystkie kropki postawione — dotknij niezajętej linii.",
     nothingToClaim: 'Przez tę kropkę nie biegnie żadna niezajęta linia.',
     seeUnclaimed: 'Pokaż niezajęte linie',
     seeUnclaimedTitle: (on: boolean) => `Pokaż niezajęte linie: ${on ? 'wł.' : 'wył.'}`,
@@ -210,8 +209,7 @@ export const pl: Messages = {
     catchP:
       'Jeśli Twoja kropka ukończy kilka linii naraz, punktujesz tylko najdłuższą. Pozostałe ukończone linie stają się niezajęte — każdy może je zająć w późniejszej turze.',
     watchH: 'Obserwuj planszę',
-    watchP:
-      'Gra nie oznacza niezajętych linii. Wypatrz w pełni pokolorowaną linię, która nie została przekreślona, i dotknij dowolnej jej kropki, aby ją zająć. Darmowe punkty za uważność.',
+    watchP: "W grze z botem na trójkącie (poza poziomem Niemożliwy) niezajęte linie mają żółty pierścień (można go wyłączyć). W pozostałych grach nic ich nie oznacza: wypatrz w pełni pokolorowaną, jeszcze nieprzekreśloną linię i dotknij dowolnej jej kropki, aby ją zająć. Darmowe punkty za uważność.",
     endH: 'Koniec gry',
     endP:
       'Gdy wszystkie kropki są pokolorowane i wszystkie ukończone linie zostały zajęte. Wygrywa najwyższy wynik; równy wynik to remis.',
@@ -301,6 +299,14 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.22.0': {
+        changes: [
+          'Lekcja prowadzi teraz także przez ostatnie ruchy, gdy zostają tylko niezajęte linie.',
+          'Dotknięcia między kropkami teraz się liczą, także przy zajmowaniu linii.',
+          'Boty Łatwy i Średni są znów nieco łagodniejsze, żeby nowi gracze nie utknęli.',
+          'Linie, za które nikt jeszcze nie dostał punktów, mają teraz wszędzie jedną nazwę: niezajęte linie.',
+        ],
+      },
       'Alpha 0.4.21.0': {
         changes: [
           'Bot Niemożliwy myśli teraz o ruch dalej i dużo trudniej go pokonać.',
@@ -1564,8 +1570,8 @@ export const pl: Messages = {
         body: 'Pokoloruj wszystkie kropki na prostej linii, a zdobędziesz tyle punktów, ile wynosi jej długość.',
       },
       claim: {
-        title: 'Zajmuj czekające linie',
-        body: 'Jeden ruch może ukończyć kilka linii — punktuje tylko najdłuższa, reszta czeka (świecąc). Dotknij kropki na czekającej linii, aby zająć jej punkty. Może to zrobić każdy z graczy.',
+        title: "Zajmuj niezajęte linie",
+        body: "Jeden ruch może ukończyć kilka linii — punktuje tylko najdłuższa, reszta zostaje niezajęta (świeci). Dotknij kropki na niezajętej linii, aby zabrać jej punkty. Może to zrobić każdy gracz.",
       },
       triThreeWays: {
         title: 'Trójkąt: 3 kierunki',
@@ -1595,9 +1601,9 @@ export const pl: Messages = {
     finishMiss: "Nie ta. Wypełnij lukę w świecącej linii.",
     finishDone: "+4! Linia daje punkt za każdą kropkę.",
     double: "Ta kropka kończy DWIE linie. Dotknij jej!",
-    doubleDone: (n: number) => `Punkty daje tylko najdłuższa linia: +${n}. Druga czeka.`,
-    claim: "Czekająca linia nie należy do nikogo: Trener mógł ją zabrać! Dotknij czekającej linii, żeby ją zająć.",
-    claimDone: (n: number) => `+${n}! Zajęcie linii zużywa ruch. Zabieraj czekające linie przed Trenerem.`,
+    doubleDone: (n: number) => `Punkty daje tylko najdłuższa linia: +${n}. Druga zostaje niezajęta.`,
+    claim: "Niezajęta linia nie należy do nikogo: Trener mógł ją zabrać! Dotknij niezajętej linii, żeby ją zająć.",
+    claimDone: (n: number) => `+${n}! Zajęcie linii zużywa ruch. Zabieraj niezajęte linie przed Trenerem.`,
     find: "Twój ruch: znajdź linię, której brakuje tylko jednej kropki.",
     findMiss: "To nie kończy żadnej linii. Szukaj linii z jedną luką.",
     findHelp: "Oto one. Dłuższa linia daje więcej punktów!",
@@ -1605,7 +1611,9 @@ export const pl: Messages = {
     botTook: (n: number) => `Trener też wziął linię (+${n}). Każdą lukę, którą zostawisz, może zająć każdy!`,
     free: "Teraz dograj do końca. Wygrywa ten, kto ma więcej punktów!",
     idleHint: "Wskazówka: jest linia z jedną luką. Weź ją!",
-    pendingTip: "Dwie linie naraz! Punkty daje tylko najdłuższa, druga czeka. W kolejnym ruchu dotknij jednej z jej kropek, żeby ją zająć. Może to zrobić każdy gracz.",
+    claimEnd: "Nie ma już pustych kropek. Dotknij niezajętej linii, żeby zabrać jej punkty.",
+    claimHint: "Wskazówka: niezajęta linia jest wciąż wolna. Dotknij jej, żeby zabrać punkty.",
+    pendingTip: "Dwie linie naraz! Punkty daje tylko najdłuższa, druga zostaje niezajęta. W kolejnym ruchu dotknij jej kropki, aby ją zająć. Może to zrobić każdy gracz.",
     gotIt: "Rozumiem",
     wonTitle: "Twoja pierwsza wygrana!",
     endTitle: "Dobra gra!",

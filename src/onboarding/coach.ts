@@ -1,7 +1,7 @@
 // First-game tutorial ("Coach" match): a partly-filled real Triangle, the
 // scripted steps that teach "finish a line to score it", and the Coach bot.
 // Pure logic — no React. Pending lines / claiming are NOT taught here; they
-// get a just-in-time tip the first time they happen (see CoachTip).
+// get a just-in-time tip the first time they happen.
 
 import { applyAction, createGame, pointsIfPlayed } from '../game';
 import { getBoard } from '../geometry';
@@ -96,7 +96,8 @@ function linesOpened(state: GameState, dotId: number): number {
 function keepsGaps(state: GameState, dotId: number): boolean {
   const after = applyAction(state, { kind: 'dot', dotId });
   return scoringDots(state).every(
-    (id) => id === dotId || pointsIfPlayed(after, getBoard(state.shape), id).pending.length === 0 &&
+    (id) =>
+      pointsIfPlayed(after, getBoard(state.shape), id).pending.length === 0 &&
       gainAt(after, id) === gainAt(state, id),
   );
 }

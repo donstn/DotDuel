@@ -40,6 +40,9 @@ interface Props {
   /** Explain "two lines at once" the first time it happens (once per device). */
   showPendingTip: boolean;
   onPendingTipSeen: () => void;
+  /** Started again from How to play (kept apart in analytics). */
+  replay: boolean;
+  onFinished: () => void;
   onSkip: () => void;
   onDone: (next: 'bot' | 'menu') => void;
 }
@@ -50,6 +53,8 @@ export function CoachGame({
   playerName,
   showPendingTip,
   onPendingTipSeen,
+  replay,
+  onFinished,
   onSkip,
   onDone,
 }: Props) {
@@ -74,7 +79,8 @@ export function CoachGame({
   const tipShown = useRef(false);
 
   useEffect(() => {
-    trackEvent('tutorial_start');
+    trackEvent('tutorial_start', { replay: replay ? 1 : 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const totalPoints = getBoard('triangle').lines.reduce((s, l) => s + l.length, 0);
@@ -100,7 +106,14 @@ export function CoachGame({
       setMsg(freeMoves.current === 1 ? t.coach.free : '');
       botStyle.current = 'easy';
     }
-    trackEvent('tutorial_step', { step: stage });
+    if (stage !== 'free') trackEvent('tutorial_step', { step: stage, replay: replay ? 1 : 0 });
+  };
+
+  const claimFloat = (lineId: string, points: number, player: Player) => {
+    const line = getBoard('triangle').lines.find((l) => l.id === lineId);
+    if (!line) return;
+    const mid = line.dotIds[Math.floor(line.dotIds.length / 2)];
+    setScoreEvent({ dotId: mid, points, player, seq: Date.now() });
   };
 
   const onDot = (dotId: number) => {
@@ -118,11 +131,7 @@ export function CoachGame({
   const onClaim = (lineId: string) => {
     if (!myTurn) return;
     const r = applyClaim(state, lineId);
-    const line = getBoard('triangle').lines.find((l) => l.id === lineId);
-    if (line) {
-      const mid = line.dotIds[Math.floor(line.dotIds.length / 2)];
-      setScoreEvent({ dotId: mid, points: r.pointsGained, player: 1, seq: Date.now() });
-    }
+    claimFloat(lineId, r.pointsGained, 1);
     setState(r.state);
     playerMoved();
   };
@@ -147,11 +156,7 @@ export function CoachGame({
         } else {
           const r = applyClaim(state, action.lineId);
           gained = r.pointsGained;
-          const line = getBoard('triangle').lines.find((l) => l.id === action.lineId);
-          if (line) {
-            const mid = line.dotIds[Math.floor(line.dotIds.length / 2)];
-            setScoreEvent({ dotId: mid, points: gained, player: 2, seq: Date.now() });
-          }
+          claimFloat(action.lineId, gained, 2);
           setState(r.state);
         }
         const ns = nextStage.current;
@@ -188,11 +193,14 @@ export function CoachGame({
 
   useEffect(() => {
     if (!state.finished) return;
+    onFinished();
     trackEvent('tutorial_complete', {
       result: state.winner === 1 ? 'win' : state.winner === 2 ? 'loss' : 'draw',
+      replay: replay ? 1 : 0,
     });
     const id = window.setTimeout(() => setEndOpen(true), END_CARD_DELAY_MS);
     return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.finished, state.winner]);
 
   const marks: CoachMarks = {};
@@ -294,7 +302,7 @@ export function CoachGame({
           state={state}
           onDotClick={onDot}
           onClaimClick={stage === 'free' ? onClaim : undefined}
-          disabled={!myTurn}
+          disabled={!myTurn || tipOpen}
           lastDot={lastDot}
           theme={theme}
           showHints={stage === 'free' && (myTurn || tipOpen)}

@@ -1556,7 +1556,6 @@ export const pt: Messages = {
   },
   coach: {
     name: "Treinador",
-    tutorial: "Tutorial",
     skip: "Pular",
     welcomeTitle: "Boas-vindas ao DotDuel",
     welcomeBody: "Os jogadores colocam pontos alternadamente. Complete uma linha reta e ganhe tantos pontos quanto o comprimento dela. Vence quem fizer mais pontos.",

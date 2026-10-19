@@ -1567,7 +1567,6 @@ export const pl: Messages = {
   },
   coach: {
     name: "Trener",
-    tutorial: "Samouczek",
     skip: "Pomiń",
     welcomeTitle: "Witaj w DotDuel",
     welcomeBody: "Gracze na zmianę stawiają kropki. Dokończ prostą linię, a dostaniesz punkt za każdą jej kropkę. Wygrywa ten, kto ma więcej punktów.",

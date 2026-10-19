@@ -7397,7 +7397,6 @@ body.has-native-banner #root {
   transform-origin: 50% 0%;
   animation: coachTap 1.1s ease-in-out 0.3s 3;
   pointer-events: none;
-  filter: drop-shadow(0 0.04px 0.08px rgba(0, 0, 0, 0.6));
 }
 .coach-hand-down {
   transform-origin: 50% 100%;
@@ -7488,7 +7487,7 @@ body.has-native-banner #root {
 .coach-bubble-floating {
   position: fixed;
   left: 50%;
-  bottom: calc(64px + env(safe-area-inset-bottom));
+  top: calc(8px + env(safe-area-inset-top));
   transform: translateX(-50%);
   width: min(calc(100vw - 24px), 480px);
   z-index: 150;

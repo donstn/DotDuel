@@ -1563,7 +1563,6 @@ export const lt: Messages = {
   },
   coach: {
     name: "Treneris",
-    tutorial: "Mokymai",
     skip: "Praleisti",
     welcomeTitle: "Sveiki atvykę į DotDuel",
     welcomeBody: "Žaidėjai paeiliui deda taškus. Užbaikite tiesią liniją – ji duos tiek taškų, koks jos ilgis. Laimi surinkęs daugiau.",

@@ -1554,7 +1554,6 @@ export const es: Messages = {
   },
   coach: {
     name: "Entrenador",
-    tutorial: "Tutorial",
     skip: "Saltar",
     welcomeTitle: "Te damos la bienvenida a DotDuel",
     welcomeBody: "Los jugadores colocan puntos por turnos. Completa una línea recta y suma tantos puntos como su longitud. Gana quien sume más.",

@@ -999,7 +999,6 @@ export const en = {
   },
   coach: {
     name: "Coach",
-    tutorial: "Tutorial",
     skip: "Skip",
     welcomeTitle: "Welcome to DotDuel",
     welcomeBody: "Take turns placing dots. Finish a straight line and it scores a point for every dot in it. Most points wins.",

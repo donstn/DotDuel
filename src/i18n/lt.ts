@@ -66,6 +66,7 @@ export const lt: Messages = {
     profile: 'Profilis',
     signOut: 'Atsijungti',
     guide: 'Vadovas',
+    lesson: 'Pakartoti pamoką',
     signIn: 'Prisijungti',
 
     singlePlayer: 'Vienas žaidėjas',

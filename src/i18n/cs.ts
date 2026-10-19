@@ -64,6 +64,7 @@ export const cs: Messages = {
     profile: 'Profil',
     signOut: 'Odhlásit se',
     guide: 'Průvodce',
+    lesson: 'Zopakovat lekci',
     signIn: 'Přihlásit se',
 
     singlePlayer: 'Jeden hráč',

@@ -66,6 +66,7 @@ export const pl: Messages = {
     profile: 'Profil',
     signOut: 'Wyloguj się',
     guide: 'Poradnik',
+    lesson: 'Powtórz lekcję',
     signIn: 'Zaloguj się',
 
     singlePlayer: 'Jeden gracz',

@@ -55,6 +55,7 @@ export const es: Messages = {
     profile: 'Perfil',
     signOut: 'Cerrar sesión',
     guide: 'Guía',
+    lesson: 'Repetir la lección',
     signIn: 'Iniciar sesión',
 
     singlePlayer: 'Un jugador',

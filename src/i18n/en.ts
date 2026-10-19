@@ -71,6 +71,7 @@ export const en = {
     profile: 'Profile',
     signOut: 'Sign out',
     guide: 'Guide',
+    lesson: 'Replay lesson',
     signIn: 'Sign in',
 
     // Top-level category shelves.

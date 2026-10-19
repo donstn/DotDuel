@@ -55,6 +55,7 @@ export const pt: Messages = {
     profile: 'Perfil',
     signOut: 'Sair',
     guide: 'Guia',
+    lesson: 'Repetir a lição',
     signIn: 'Entrar',
 
     singlePlayer: 'Um jogador',

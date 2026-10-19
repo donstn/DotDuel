@@ -2847,6 +2847,7 @@ export default function App() {
           }}
           onOpenAchievements={() => setAchievementsOpen(true)}
           onOpenSignIn={() => setSignInOpen(true)}
+          onPlayTutorial={openCoach}
           onOpenProfile={() => setProfileOpen(true)}
           onSignOut={() => void onSignOutSafe()}
           onOpenMultiplayer={openMultiplayer}

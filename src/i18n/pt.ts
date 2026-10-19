@@ -135,13 +135,12 @@ export const pt: Messages = {
       `Fim de jogo. O Jogador ${winner} venceu, ${s1} a ${s2}.`,
     liveTurn: (current: number, s1: number, s2: number) =>
       `Vez do Jogador ${current}. Placar: Jogador 1, ${s1}; Jogador 2, ${s2}.`,
-    linesToClaim: (n: number) => (n === 1 ? 'linha para marcar' : 'linhas para marcar'),
-    pendingTitle:
-      'Linhas esperando para serem marcadas: toque em um ponto colorido de uma delas para marcá-la.',
+    linesToClaim: (n: number) => (n === 1 ? 'linha não marcada' : 'linhas não marcadas'),
+    pendingTitle: "Linhas não marcadas — toque em um ponto colorido de uma delas para marcá-la.",
     leaveMatch: 'Sair da partida',
     backToMenu: 'Voltar ao menu',
     dailyTime: 'Seu tempo para esta tentativa',
-    claimPhaseHint: 'Tudo colocado: toque numa linha.',
+    claimPhaseHint: "Todos os pontos colocados — toque em uma linha não marcada.",
     nothingToClaim: 'Nenhuma linha não marcada passa por esse ponto.',
     seeUnclaimed: 'Ver linhas não marcadas',
     seeUnclaimedTitle: (on: boolean) =>
@@ -199,8 +198,7 @@ export const pt: Messages = {
     catchP:
       'Se o seu ponto concluir várias linhas de uma vez, você pontua apenas a mais longa. As outras linhas concluídas ficam não marcadas: qualquer um pode marcá-las em um turno posterior.',
     watchH: 'Fique de olho no tabuleiro',
-    watchP:
-      'O jogo não sinaliza as linhas não marcadas. Identifique uma linha totalmente colorida que não esteja riscada e toque em qualquer um de seus pontos para marcá-la. Pontos de graça por prestar atenção.',
+    watchP: "Contra o bot no Triângulo (exceto no Impossível), linhas não marcadas ganham um anel amarelo (dá para desligar). Nos outros jogos nada as indica: procure uma linha toda colorida que ainda não foi riscada e toque em qualquer ponto dela para marcá-la. Pontos grátis por prestar atenção.",
     endH: 'Fim da partida',
     endP:
       'Quando todos os pontos estão coloridos e todas as linhas concluídas foram marcadas. Vence quem tiver mais pontos; em caso de igualdade, é empate.',
@@ -290,6 +288,14 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.22.0': {
+        changes: [
+          'A lição agora guia você nas últimas jogadas, quando só restam linhas não marcadas.',
+          'Toques entre os pontos agora contam, inclusive ao marcar uma linha.',
+          'Os bots Fácil e Médio estão um pouco mais suaves de novo, para os novos jogadores não travarem.',
+          'Linhas que ninguém pontuou ainda agora têm um só nome em todo lugar: linhas não marcadas.',
+        ],
+      },
       'Alpha 0.4.21.0': {
         changes: [
           'O bot Impossível agora pensa uma jogada à frente e é muito mais difícil de vencer.',
@@ -1553,8 +1559,8 @@ export const pt: Messages = {
         body: 'Pinte todos os pontos de uma linha reta e ela vale tantos pontos quanto o seu comprimento.',
       },
       claim: {
-        title: 'Marque linhas pendentes',
-        body: 'Um movimento pode concluir várias linhas — só a mais longa pontua, as outras ficam esperando (brilhando). Toque em um ponto de uma linha pendente para marcar os pontos dela. Qualquer jogador pode pegá-las.',
+        title: "Pegue linhas não marcadas",
+        body: "Um movimento pode concluir várias linhas — só a mais longa pontua; as outras ficam não marcadas (brilhando). Toque em um ponto de uma linha não marcada para pegar os pontos dela. Qualquer jogador pode.",
       },
       triThreeWays: {
         title: 'Triângulo: 3 direções',
@@ -1584,9 +1590,9 @@ export const pt: Messages = {
     finishMiss: "Esse não. Preencha o espaço na linha brilhante.",
     finishDone: "+4! Uma linha vale tantos pontos quanto o comprimento dela.",
     double: "Este ponto completa DUAS linhas. Toque nele!",
-    doubleDone: (n: number) => `Só a linha mais longa pontua: +${n}. A outra fica esperando.`,
-    claim: "Linhas esperando não são de ninguém: o Treinador poderia ter pegado! Toque na linha esperando para marcá-la.",
-    claimDone: (n: number) => `+${n}! Marcar usa a sua jogada. Pegue as linhas esperando antes do Treinador.`,
+    doubleDone: (n: number) => `Só a linha mais longa pontua: +${n}. A outra fica não marcada.`,
+    claim: "Linhas não marcadas não são de ninguém: o Treinador poderia ter pegado! Toque na linha não marcada para marcá-la.",
+    claimDone: (n: number) => `+${n}! Marcar usa a sua jogada. Pegue as linhas não marcadas antes do Treinador.`,
     find: "Sua vez: encontre uma linha à qual falte só um ponto.",
     findMiss: "Isso não completa uma linha. Procure uma linha com um só espaço.",
     findHelp: "Aqui estão. A linha mais longa vale mais!",
@@ -1594,7 +1600,9 @@ export const pt: Messages = {
     botTook: (n: number) => `O Treinador também pegou uma linha (+${n}). Qualquer espaço que você deixar pode ser pego por qualquer um!`,
     free: "Agora jogue até o fim. Vence quem fizer mais pontos!",
     idleHint: "Dica: há uma linha com um só espaço. Pegue-a!",
-    pendingTip: "Duas linhas de uma vez! Só a mais longa pontua; a outra fica esperando. Numa próxima jogada, toque num dos pontos dela para marcá-la. Qualquer jogador pode.",
+    claimEnd: "Não há mais pontos vazios. Toque na linha não marcada para pegar os pontos dela.",
+    claimHint: "Dica: uma linha não marcada ainda está livre. Toque nela para pegar os pontos.",
+    pendingTip: "Duas linhas de uma vez! Só a mais longa pontua; a outra fica não marcada. Em uma jogada seguinte, toque em um dos pontos dela para marcá-la. Qualquer jogador pode.",
     gotIt: "Entendi",
     wonTitle: "Você venceu sua primeira partida!",
     endTitle: "Boa partida!",

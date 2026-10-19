@@ -3,6 +3,33 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.22.0] - 2026-10-19
+
+Fixes from the onboarding review (UX + UI agents, 8 simulated player types).
+
+### Fixed
+
+- **Lesson endgame** — when no empty dots are left, the Coach says so and the
+  tap hand points at the longest unclaimed line (`claimTarget` in
+  `src/onboarding/coach.ts`); the idle tip also covers claims. The free-play
+  Coach now takes the smallest unclaimed line, so the endgame pile drops from
+  8 to 3–5. The board's own one-time "all dots placed" pop-up is skipped in
+  the lesson.
+- **Tap zones** — every tappable dot (empty, or a coloured dot that claims a
+  line) now answers taps anywhere in its cell (half the dot spacing); claims
+  used to need a tap on the drawn dot (~16–20 px on phones).
+
+### Changed
+
+- **Easy/Medium softened** — Easy takes the biggest line 60% of the time
+  (was 85%), Medium plays safe 10% of the time (was 40%). Child 6–8 first
+  beats Easy in ~9 games (was ~51 after 0.4.20.0); older adults beat Medium
+  78% of the time (was 30%).
+- **One term: "unclaimed line"** in the Coach, badge, toggle, help, rules and
+  Guide pages (all 6 languages). The rules no longer claim the game never
+  marks them (it does vs bots on Triangle, except Impossible); the Strategy
+  page describes the new three-move Impossible bot.
+
 ## [0.4.21.0] - 2026-10-19
 
 ### Changed

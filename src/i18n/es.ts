@@ -135,13 +135,12 @@ export const es: Messages = {
       `Partida terminada. Gana el Jugador ${winner}, ${s1} a ${s2}.`,
     liveTurn: (current: number, s1: number, s2: number) =>
       `Turno del Jugador ${current}. Puntuación: Jugador 1, ${s1}; Jugador 2, ${s2}.`,
-    linesToClaim: (n: number) => (n === 1 ? 'línea por reclamar' : 'líneas por reclamar'),
-    pendingTitle:
-      'Líneas esperando a ser reclamadas: toca un punto de color en una de ellas para reclamarla.',
+    linesToClaim: (n: number) => (n === 1 ? 'línea sin reclamar' : 'líneas sin reclamar'),
+    pendingTitle: "Líneas sin reclamar: toca un punto de color de una de ellas para reclamarla.",
     leaveMatch: 'Salir de la partida',
     backToMenu: 'Volver al menú',
     dailyTime: 'Tu tiempo para este intento',
-    claimPhaseHint: 'Todo colocado: toca una línea.',
+    claimPhaseHint: "Todos los puntos colocados: toca una línea sin reclamar.",
     nothingToClaim: 'Ninguna línea sin reclamar pasa por ese punto.',
     seeUnclaimed: 'Ver líneas sin reclamar',
     seeUnclaimedTitle: (on: boolean) => `Ver líneas sin reclamar: ${on ? 'activado' : 'desactivado'}`,
@@ -198,8 +197,7 @@ export const es: Messages = {
     catchP:
       'Si tu punto completa varias líneas a la vez, solo puntúas la más larga. Las demás líneas terminadas quedan sin reclamar: cualquiera puede llevárselas en un turno posterior.',
     watchH: 'Observa el tablero',
-    watchP:
-      'El juego no marca las líneas sin reclamar. Detecta una línea totalmente coloreada que no esté tachada y toca cualquiera de sus puntos para reclamarla. Puntos gratis por estar atento.',
+    watchP: "Contra el bot en el Triángulo (salvo en Imposible), las líneas sin reclamar llevan un anillo amarillo (puedes desactivarlo). En el resto de partidas nada las marca: busca una línea totalmente coloreada que no esté tachada y toca cualquiera de sus puntos para reclamarla. Puntos gratis por estar atento.",
     endH: 'Fin de la partida',
     endP:
       'Cuando todos los puntos están coloreados y todas las líneas terminadas han sido reclamadas. Gana quien tenga más puntos; si hay igualdad, es empate.',
@@ -289,6 +287,14 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.22.0': {
+        changes: [
+          'La lección ahora te guía en las últimas jugadas, cuando solo quedan líneas sin reclamar.',
+          'Los toques entre puntos ahora cuentan, también al reclamar una línea.',
+          'Los bots Fácil y Medio vuelven a ser un poco más suaves, para que los nuevos jugadores no se atasquen.',
+          'Las líneas que nadie ha puntuado aún tienen ahora un solo nombre en todas partes: líneas sin reclamar.',
+        ],
+      },
       'Alpha 0.4.21.0': {
         changes: [
           'El bot Imposible ahora piensa una jugada más adelante y es mucho más difícil de vencer.',
@@ -1551,8 +1557,8 @@ export const es: Messages = {
         body: 'Colorea todos los puntos de una línea recta y anota tantos puntos como su longitud.',
       },
       claim: {
-        title: 'Reclama líneas en espera',
-        body: 'Un movimiento puede terminar varias líneas: solo anota la más larga; el resto espera. Toca un punto de una línea en espera para reclamar sus puntos. Cualquiera de los dos jugadores puede llevárselos.',
+        title: "Llévate las líneas sin reclamar",
+        body: "Un movimiento puede terminar varias líneas: solo puntúa la más larga; las demás quedan sin reclamar (brillan). Toca un punto de una línea sin reclamar para llevarte sus puntos. Cualquier jugador puede hacerlo.",
       },
       triThreeWays: {
         title: 'Triángulo: 3 direcciones',
@@ -1582,9 +1588,9 @@ export const es: Messages = {
     finishMiss: "Ese no. Rellena el hueco de la línea que brilla.",
     finishDone: "¡+4! Una línea suma tantos puntos como su longitud.",
     double: "Este punto completa DOS líneas. ¡Tócalo!",
-    doubleDone: (n: number) => `Solo puntúa la línea más larga: +${n}. La otra queda en espera.`,
-    claim: "Las líneas en espera no son de nadie: ¡el Entrenador podía habérsela llevado! Toca la línea en espera para reclamarla.",
-    claimDone: (n: number) => `¡+${n}! Reclamar gasta tu turno. Llévate las líneas en espera antes que el Entrenador.`,
+    doubleDone: (n: number) => `Solo puntúa la línea más larga: +${n}. La otra queda sin reclamar.`,
+    claim: "Las líneas sin reclamar no son de nadie: ¡el Entrenador podía habérsela llevado! Toca la línea sin reclamar para reclamarla.",
+    claimDone: (n: number) => `¡+${n}! Reclamar gasta tu turno. Llévate las líneas sin reclamar antes que el Entrenador.`,
     find: "Tu turno: busca una línea a la que le falte solo un punto.",
     findMiss: "Eso no completa ninguna línea. Busca una línea con un solo hueco.",
     findHelp: "Aquí están. ¡La línea más larga da más puntos!",
@@ -1592,7 +1598,9 @@ export const es: Messages = {
     botTook: (n: number) => `El Entrenador también se llevó una línea (+${n}). ¡Cualquier hueco que dejes lo puede aprovechar cualquiera!`,
     free: "Ahora juega hasta el final. ¡Gana quien sume más!",
     idleHint: "Consejo: hay una línea con un solo hueco. ¡Aprovéchala!",
-    pendingTip: "¡Dos líneas a la vez! Solo puntúa la más larga; la otra queda en espera. En un turno posterior, toca uno de sus puntos para reclamarla. Puede hacerlo cualquier jugador.",
+    claimEnd: "No quedan puntos vacíos. Toca la línea sin reclamar para llevarte sus puntos.",
+    claimHint: "Consejo: aún queda una línea sin reclamar. Tócala para llevarte sus puntos.",
+    pendingTip: "¡Dos líneas a la vez! Solo puntúa la más larga; la otra queda sin reclamar. En un turno posterior, toca uno de sus puntos para reclamarla. Puede hacerlo cualquier jugador.",
     gotIt: "Entendido",
     wonTitle: "¡Has ganado tu primera partida!",
     endTitle: "¡Buena partida!",

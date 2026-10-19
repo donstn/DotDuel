@@ -166,6 +166,7 @@ interface SessionConfig {
   difficulty?: Difficulty;
 }
 
+const AD_FREE_FIRST_GAMES = 3;
 const AI_DELAY_MS = 250;
 
 // A saved game only resumes if every dot / line it mentions exists on its board.
@@ -1081,6 +1082,9 @@ export default function App() {
     }
   }, [user?.uid, cloudProfile?.displayName]);
 
+  // No ads until a new player has finished a few games (the lesson does not count).
+  const adsWarm = settings.gamesPlayed >= AD_FREE_FIRST_GAMES;
+
   // Native app (Capacitor/AdMob): initialize ads + UMP consent once at boot.
   // No-op on web (web uses AdSense via AdBanner). Respects the same ads gates.
   useEffect(() => {
@@ -1112,12 +1116,12 @@ export default function App() {
   // mpgame). No-op on web.
   useEffect(() => {
     if (!isNativeApp()) return;
-    if (screen === 'matchFound' || screen === 'mpgame') {
+    if (!adsWarm || screen === 'matchFound' || screen === 'mpgame') {
       void hideNativeBanner();
     } else {
       void showNativeBanner();
     }
-  }, [screen]);
+  }, [screen, adsWarm]);
 
   // 2b-v2 — subscribe to today's per-user daily-puzzle attempt doc so the
   // menu card can render the right state (not started / N/3 / 3/3 done)
@@ -2875,7 +2879,7 @@ export default function App() {
     return (
       <>
         {mainContent}
-        {(screen === 'menu' || screen === 'lobby' || screen === 'matchmaking') && (
+        {adsWarm && (screen === 'menu' || screen === 'lobby' || screen === 'matchmaking') && (
           <AdBanner placement="menu" />
         )}
         <AppFooter
@@ -3284,7 +3288,7 @@ export default function App() {
           </button>
         </div>
       )}
-      <AdBanner placement="ingame" />
+      {adsWarm && <AdBanner placement="ingame" />}
       {pendingTipOpen && !showOver && (
         <div className="coach-bubble coach-bubble-tip coach-bubble-floating" role="status" aria-live="polite">
           <span className="coach-bubble-text">{t.coach.pendingTip}</span>

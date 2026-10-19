@@ -3809,6 +3809,18 @@ h1, h2, h3,
 .ad-slot .adsbygoogle {
   max-height: 90px;
 }
+/* No empty box: keep the space while AdSense loads (no layout jump), drop
+   the frame until it fills, and collapse the slot if it comes back unfilled. */
+.ad-slot:has(ins.adsbygoogle):not(:has(ins[data-ad-status="filled"])) {
+  background: transparent;
+  border-color: transparent;
+}
+.ad-slot:has(ins.adsbygoogle):not(:has(ins[data-ad-status="filled"]))::before {
+  content: none;
+}
+.ad-slot:has(ins[data-ad-status="unfilled"]) {
+  display: none;
+}
 .ad-slot::before {
   content: "Ad";
   position: absolute;

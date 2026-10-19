@@ -15,7 +15,8 @@
     "simulate:l4": "tsx scripts/simulate-l4.ts",
     "simulate:f": "tsx scripts/simulate-variant-f.ts",
     "simulate:tri8": "tsx scripts/simulate-triangle8.ts",
-    "simulate:square": "tsx scripts/simulate-square.ts"
+    "simulate:square": "tsx scripts/simulate-square.ts",
+    "simulate:ladder": "tsx scripts/simulate-ladder.ts"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.0.0",

@@ -8,6 +8,9 @@ import {
 import type { BoardShape, Difficulty, GameAction, GameState, Player } from './types';
 
 const PENDING_DISCOUNT = 0.5;
+const BEGINNER_SCORE_RATE = 0.35;
+const EASY_SCORE_RATE = 0.85;
+const MEDIUM_SAFE_RATE = 0.4;
 
 function rand<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -50,9 +53,15 @@ function immediateGainOfAction(
   return pointsIfPlayed(state, board, action.dotId).gained;
 }
 
-function pickPureRandomAction(state: GameState, board: BoardShape): GameAction {
-  const actions = availableActions(state, board);
-  return rand(actions);
+function scoringActions(state: GameState, board: BoardShape) {
+  return availableActions(state, board)
+    .map((a) => ({ a, gain: immediateGainOfAction(state, board, a) }))
+    .filter((x) => x.gain > 0);
+}
+
+function biggestOf(scoring: { a: GameAction; gain: number }[]): GameAction {
+  const top = Math.max(...scoring.map((x) => x.gain));
+  return rand(scoring.filter((x) => x.gain === top)).a;
 }
 
 function fallbackRandomAction(state: GameState, board: BoardShape): GameAction {
@@ -61,43 +70,32 @@ function fallbackRandomAction(state: GameState, board: BoardShape): GameAction {
   return { kind: 'claim', lineId: rand(state.pending) };
 }
 
-function pickEasyAction(state: GameState, board: BoardShape): GameAction {
-  const actions = availableActions(state, board);
-  let bestObvious: GameAction | null = null;
-  let bestObviousGain = 0;
-  for (const a of shuffle(actions)) {
-    if (a.kind === 'claim') {
-      const line = board.lines.find((l) => l.id === a.lineId);
-      if (line && line.length === 1 && line.length > bestObviousGain) {
-        bestObviousGain = line.length;
-        bestObvious = a;
-      }
-      continue;
-    }
-    const { gained, biggest } = pointsIfPlayed(state, board, a.dotId);
-    const closesCorner = biggest !== null && biggest.length === 1;
-    const isBigWin = gained >= 5;
-    if ((closesCorner || isBigWin) && gained > bestObviousGain) {
-      bestObviousGain = gained;
-      bestObvious = a;
-    }
-  }
-  if (bestObvious) return bestObvious;
+// Finishes some line now and then (not necessarily the biggest), so a
+// beginner sees that the bot scores and can take waiting lines too.
+function pickBeginnerAction(state: GameState, board: BoardShape): GameAction {
+  const scoring = scoringActions(state, board);
+  if (scoring.length > 0 && Math.random() < BEGINNER_SCORE_RATE) return rand(scoring).a;
   return fallbackRandomAction(state, board);
 }
 
-function pickGreedyOrRandomAction(state: GameState, board: BoardShape): GameAction {
-  const actions = availableActions(state, board);
-  let best: GameAction | null = null;
-  let bestGain = 0;
-  for (const a of shuffle(actions)) {
-    const gain = immediateGainOfAction(state, board, a);
-    if (gain > bestGain) {
-      bestGain = gain;
-      best = a;
-    }
+function pickEasyAction(state: GameState, board: BoardShape): GameAction {
+  const scoring = scoringActions(state, board);
+  if (scoring.length > 0 && Math.random() < EASY_SCORE_RATE) return biggestOf(scoring);
+  return fallbackRandomAction(state, board);
+}
+
+// Greedy; with nothing to score, sometimes picks a dot that hands the
+// opponent nothing new.
+function pickMediumAction(state: GameState, board: BoardShape): GameAction {
+  const scoring = scoringActions(state, board);
+  if (scoring.length > 0) return biggestOf(scoring);
+  if (Math.random() < MEDIUM_SAFE_RATE) {
+    const before = opponentBestResponseGain(state, board);
+    const safe = availableDots(state, board).filter(
+      (d) => opponentBestResponseGain(applyAction(state, { kind: 'dot', dotId: d }), board) <= before
+    );
+    if (safe.length > 0) return { kind: 'dot', dotId: rand(safe) };
   }
-  if (best) return best;
   return fallbackRandomAction(state, board);
 }
 
@@ -206,11 +204,11 @@ export function pickAIAction(
   const board = getBoard(state.shape);
   switch (difficulty) {
     case 1:
-      return pickPureRandomAction(state, board);
+      return pickBeginnerAction(state, board);
     case 2:
       return pickEasyAction(state, board);
     case 3:
-      return pickGreedyOrRandomAction(state, board);
+      return pickMediumAction(state, board);
     case 4:
       return pickGreedyMinSetupAction(state, board);
     case 5:

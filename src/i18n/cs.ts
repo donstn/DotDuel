@@ -207,7 +207,7 @@ export const cs: Messages = {
     catchP:
       'Pokud tvá tečka dokončí několik linií najednou, boduješ jen tu nejdelší. Ostatní dokončené linie se stanou nezabranými — kdokoli je může získat v pozdějším tahu.',
     watchH: 'Sleduj desku',
-    watchP: "Ve hře s botem na trojúhelníku (kromě úrovně Nemožná) mají nezabrané linie žlutý kroužek (lze ho vypnout). Jinde je nic neoznačuje: najdi úplně vybarvenou linii, která ještě není přeškrtnutá, a klepni na kteroukoli její tečku. Body zdarma za pozornost.",
+    watchP: "Ve hře s botem na trojúhelníku (kromě úrovně Nemožná) jsou nezabrané linie vyznačené přerušovanou čarou (lze ji vypnout). Jinde je nic neoznačuje: najdi úplně vybarvenou linii, která ještě není přeškrtnutá, a klepni na kteroukoli její tečku. Body zdarma za pozornost.",
     endH: 'Konec hry',
     endP:
       'Když jsou všechny tečky vybarvené a všechny dokončené linie zabrané. Vyhrává nejvyšší skóre; shodné skóre znamená remízu.',

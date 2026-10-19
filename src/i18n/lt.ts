@@ -208,7 +208,7 @@ export const lt: Messages = {
     catchP:
       'Jei jūsų taškas iškart užbaigia kelias linijas, gausite taškų tik už ilgiausią. Kitos užbaigtos linijos tampa nepaimtos – bet kuris žaidėjas gali jas pasiimti vėlesniu ėjimu.',
     watchH: 'Stebėkite lentą',
-    watchP: "Žaidžiant su botu trikampyje (išskyrus „Neįmanomą“) nepaimtos linijos pažymimos geltonu žiedu (jį galima išjungti). Kitur jos nežymimos: pastebėkite visiškai nuspalvintą, dar neperbrauktą liniją ir bakstelėkite bet kurį jos tašką, kad ją pasiimtumėte. Nemokami taškai už dėmesingumą.",
+    watchP: "Žaidžiant su botu trikampyje (išskyrus „Neįmanomą“) nepaimtos linijos pažymimos punktyrine linija (ją galima išjungti). Kitur jos nežymimos: pastebėkite visiškai nuspalvintą, dar neperbrauktą liniją ir bakstelėkite bet kurį jos tašką, kad ją pasiimtumėte. Nemokami taškai už dėmesingumą.",
     endH: 'Žaidimo pabaiga',
     endP:
       'Kai visi taškai nuspalvinti ir visos užbaigtos linijos paimtos. Laimi daugiausiai taškų surinkęs žaidėjas; lygus rezultatas – lygiosios.',

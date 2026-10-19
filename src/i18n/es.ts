@@ -197,7 +197,7 @@ export const es: Messages = {
     catchP:
       'Si tu punto completa varias líneas a la vez, solo puntúas la más larga. Las demás líneas terminadas quedan sin reclamar: cualquiera puede llevárselas en un turno posterior.',
     watchH: 'Observa el tablero',
-    watchP: "Contra el bot en el Triángulo (salvo en Imposible), las líneas sin reclamar llevan un anillo amarillo (puedes desactivarlo). En el resto de partidas nada las marca: busca una línea totalmente coloreada que no esté tachada y toca cualquiera de sus puntos para reclamarla. Puntos gratis por estar atento.",
+    watchP: "Contra el bot en el Triángulo (salvo en Imposible), las líneas sin reclamar se marcan con una línea discontinua (puedes desactivarla). En el resto de partidas nada las marca: busca una línea totalmente coloreada que no esté tachada y toca cualquiera de sus puntos para reclamarla. Puntos gratis por estar atento.",
     endH: 'Fin de la partida',
     endP:
       'Cuando todos los puntos están coloreados y todas las líneas terminadas han sido reclamadas. Gana quien tenga más puntos; si hay igualdad, es empate.',

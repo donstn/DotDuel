@@ -2863,12 +2863,14 @@ h1, h2, h3,
   to { opacity: 1; }
 }
 
-/* Static yellow ring on colored dots that belong to a pending line.
-   Shown only during the learning-hint window for new players. No
-   animation — kept calm so a busy board never strobes. */
-.dot-hint-ring {
-  stroke: #ffd680;
-  stroke-width: 0.08;
+/* Unclaimed (pending) line: one static dashed stroke, shown during the
+   learning window and in the lesson. Not gold — gold means "tap here". */
+.waiting-line {
+  stroke: #fffbea;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9));
+}
+.strike-old {
   opacity: 0.55;
 }
 
@@ -7403,8 +7405,7 @@ body.has-native-banner #root {
   stroke: var(--accent);
   opacity: 0.28;
 }
-.coach-gap-ring,
-.coach-waiting {
+.coach-gap-ring {
   stroke: #ffd680;
 }
 .coach-label {

@@ -209,7 +209,7 @@ export const pl: Messages = {
     catchP:
       'Jeśli Twoja kropka ukończy kilka linii naraz, punktujesz tylko najdłuższą. Pozostałe ukończone linie stają się niezajęte — każdy może je zająć w późniejszej turze.',
     watchH: 'Obserwuj planszę',
-    watchP: "W grze z botem na trójkącie (poza poziomem Niemożliwy) niezajęte linie mają żółty pierścień (można go wyłączyć). W pozostałych grach nic ich nie oznacza: wypatrz w pełni pokolorowaną, jeszcze nieprzekreśloną linię i dotknij dowolnej jej kropki, aby ją zająć. Darmowe punkty za uważność.",
+    watchP: "W grze z botem na trójkącie (poza poziomem Niemożliwy) niezajęte linie są zaznaczone linią przerywaną (można ją wyłączyć). W pozostałych grach nic ich nie oznacza: wypatrz w pełni pokolorowaną, jeszcze nieprzekreśloną linię i dotknij dowolnej jej kropki, aby ją zająć. Darmowe punkty za uważność.",
     endH: 'Koniec gry',
     endP:
       'Gdy wszystkie kropki są pokolorowane i wszystkie ukończone linie zostały zajęte. Wygrywa najwyższy wynik; równy wynik to remis.',

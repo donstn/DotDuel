@@ -198,7 +198,7 @@ export const pt: Messages = {
     catchP:
       'Se o seu ponto concluir várias linhas de uma vez, você pontua apenas a mais longa. As outras linhas concluídas ficam não marcadas: qualquer um pode marcá-las em um turno posterior.',
     watchH: 'Fique de olho no tabuleiro',
-    watchP: "Contra o bot no Triângulo (exceto no Impossível), linhas não marcadas ganham um anel amarelo (dá para desligar). Nos outros jogos nada as indica: procure uma linha toda colorida que ainda não foi riscada e toque em qualquer ponto dela para marcá-la. Pontos grátis por prestar atenção.",
+    watchP: "Contra o bot no Triângulo (exceto no Impossível), linhas não marcadas aparecem com uma linha tracejada (dá para desligar). Nos outros jogos nada as indica: procure uma linha toda colorida que ainda não foi riscada e toque em qualquer ponto dela para marcá-la. Pontos grátis por prestar atenção.",
     endH: 'Fim da partida',
     endP:
       'Quando todos os pontos estão coloridos e todas as linhas concluídas foram marcadas. Vence quem tiver mais pontos; em caso de igualdade, é empate.',

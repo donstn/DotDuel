@@ -299,6 +299,11 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.21.0': {
+        changes: [
+          'Úroveň Nemožná teď přemýšlí o tah dál, takže je mnohem těžší ji porazit.',
+        ],
+      },
       'Alpha 0.4.20.0': {
         changes: [
           'První tři úrovně botů hrají o něco chytřeji, takže tě každá hra něco naučí.',

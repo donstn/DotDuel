@@ -23,6 +23,27 @@ const SCORE_FLOAT_DURATION_MS = 1050;
 const INPUT_GUARD_MS = 350;
 const BOARD_HINT_MS = 3200;
 
+/** Tutorial guidance (first-game Coach only; real games never pass it). */
+export interface CoachMarks {
+  /** Dots kept at full strength; every other dot and line is dimmed. */
+  spotlight?: number[];
+  /** Dots that also get a gold ring. */
+  rings?: number[];
+  /** Lines to highlight with a soft band behind their dots. */
+  bands?: string[];
+  /** The empty dot to tap: dashed ring + a ghost of the player's colour. */
+  gap?: number | null;
+  /** Small gold label (e.g. "+4") above a dot. */
+  label?: { dot: number; text: string } | null;
+  /** Waiting (pending) lines drawn as a dashed "not taken yet" stroke. */
+  waiting?: string[];
+  /** Dot the hand pointer taps. */
+  pointer?: number | null;
+  /** Empty dots this returns false for can't be placed (they shake instead). */
+  canPlace?: (dotId: number) => boolean;
+  onRefused?: (dotId: number) => void;
+}
+
 interface Props {
   state: GameState;
   onDotClick?: (dotId: number) => void;
@@ -33,6 +54,7 @@ interface Props {
   showHints?: boolean;
   scoreEvent?: ScoreEvent | null;
   theme?: ThemeId;
+  coach?: CoachMarks;
 }
 
 function colorIndex(player: Player, swap: boolean): 1 | 2 {
@@ -209,6 +231,36 @@ function minkowskiHullPath(poly: Pt[], gap: number): string {
   return d + 'Z';
 }
 
+// Tutorial tap hand, drawn (not an emoji) so it looks the same everywhere and
+// stays visible on light dots. Fingertip at (x, y); `flip` points it down.
+function CoachHand({ x, y, size, flip }: { x: number; y: number; size: number; flip: boolean }) {
+  const s = size / 16;
+  const parts = (
+    <>
+      <rect x="2" y="0" width="2.6" height="9" rx="1.3" />
+      <rect x="4.4" y="5" width="2.1" height="4.5" rx="1.05" />
+      <rect x="6.3" y="5.6" width="2.1" height="4" rx="1.05" />
+      <rect x="8.1" y="6.4" width="1.9" height="3.4" rx="0.95" />
+      <rect x="2" y="7" width="8" height="6.4" rx="2.4" />
+      <rect x="-0.3" y="7.6" width="3.4" height="2.2" rx="1.1" transform="rotate(28 1.4 8.7)" />
+    </>
+  );
+  return (
+    <g
+      className="coach-hand"
+      transform={`translate(${x} ${y}) scale(${s} ${flip ? -s : s}) translate(-3.3 0)`}
+      aria-hidden="true"
+      style={{ pointerEvents: 'none' }}
+    >
+      <g className="coach-hand-tap">
+        <g className="coach-hand-outline">{parts}</g>
+        <g className="coach-hand-fill">{parts}</g>
+        <rect className="coach-hand-cuff" x="2.7" y="13" width="6.6" height="2.8" rx="0.8" />
+      </g>
+    </g>
+  );
+}
+
 export function Board({
   state,
   onDotClick,
@@ -219,6 +271,7 @@ export function Board({
   showHints = false,
   scoreEvent = null,
   theme,
+  coach,
 }: Props) {
   const t = useT();
   const boardArt = themeArt(theme).board;
@@ -380,6 +433,11 @@ export function Board({
     if (disabled || !inputReady()) return;
     const cd = state.colored[dotId];
     if (!cd) {
+      if (coach?.canPlace && !coach.canPlace(dotId)) {
+        shakeDot(dotId);
+        coach.onRefused?.(dotId);
+        return;
+      }
       onDotClick?.(dotId);
       return;
     }
@@ -438,10 +496,18 @@ export function Board({
       : t.game.liveWin(state.winner as Player, state.scores[1], state.scores[2])
     : t.game.liveTurn(state.current, state.scores[1], state.scores[2]);
 
+  const spot = coach?.spotlight?.length ? new Set(coach.spotlight) : null;
+  const rings = coach?.rings?.length ? new Set(coach.rings) : null;
+  const gapDot = coach?.gap != null ? board.dots[coach.gap] : null;
+  const labelDot = coach?.label ? board.dots[coach.label.dot] : null;
+  const pointerDot = coach?.pointer != null ? board.dots[coach.pointer] : null;
+  // The hand sits under the dot, pointing up, unless that would leave the board.
+  const pointerBelow = !!pointerDot && pointerDot.y + dotRadius * 2.6 < vbExp.y + vbExp.h;
+
   return (
     <div className="board-wrap">
       <svg
-        className="board"
+        className={spot ? 'board board-spotlight' : 'board'}
         role="group"
         aria-label={t.game.boardAriaLabel(t.shapes[state.shape])}
         viewBox={`${vbExp.x} ${vbExp.y} ${vbExp.w} ${vbExp.h}`}
@@ -572,6 +638,21 @@ export function Board({
           pointerEvents="none"
         />
 
+        {coach?.bands?.map((id) => {
+          const line = linesById.get(id);
+          if (!line) return null;
+          const e = lineEndpoints(board, line, dotRadius * 0.5);
+          return (
+            <line
+              key={`band-${id}`}
+              {...e}
+              className="coach-band"
+              strokeWidth={dotRadius * 2.4}
+              strokeLinecap="round"
+              style={{ pointerEvents: 'none' }}
+            />
+          );
+        })}
         {board.dots.map((d) => {
           const cd = state.colored[d.id];
           const isLast = lastDot === d.id;
@@ -609,7 +690,18 @@ export function Board({
             ariaLabel = t.game.dotEmpty(rowNum, posNum);
           }
           return (
-            <g key={d.id} className="dot-group">
+            <g key={d.id} className={spot?.has(d.id) ? 'dot-group dot-group-spot' : 'dot-group'}>
+              {rings?.has(d.id) && (
+                <circle
+                  cx={d.x}
+                  cy={d.y}
+                  r={dotRadius * 1.38}
+                  className="coach-ring"
+                  fill="none"
+                  strokeWidth={dotRadius * 0.16}
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
               {hintGlow && (
                 <circle
                   cx={d.x}
@@ -746,6 +838,7 @@ export function Board({
           const outer = strokeWidth * 0.575;
           const innerHighlight = strokeWidth * 0.22;
           const cIdx = colorIndex(c.player, colorSwap);
+          const keep = spot && line.dotIds.every((id) => spot.has(id)) ? 'coach-keep' : undefined;
           if (boardArt) {
             const midX = (x1 + x2) / 2;
             const midY = (y1 + y2) / 2;
@@ -790,6 +883,7 @@ export function Board({
             return (
               <g
                 key={c.lineId}
+                className={keep}
                 transform={`translate(${midX} ${midY}) rotate(${groupRotate})`}
                 style={{ pointerEvents: 'none' }}
               >
@@ -808,7 +902,7 @@ export function Board({
           return (
             <g
               key={c.lineId}
-              className={`crossline-group crossline-group-p${cIdx}`}
+              className={`crossline-group crossline-group-p${cIdx}${keep ? ' coach-keep' : ''}`}
               style={{ pointerEvents: 'none' }}
             >
               <line
@@ -832,6 +926,65 @@ export function Board({
             </g>
           );
         })}
+        {coach?.waiting?.map((id) => {
+          const line = linesById.get(id);
+          if (!line) return null;
+          const e = lineEndpoints(board, line, dotRadius * 0.9);
+          return (
+            <line
+              key={`wait-${id}`}
+              {...e}
+              className="coach-waiting"
+              strokeWidth={dotRadius * 0.22}
+              strokeDasharray={`${dotRadius * 0.5} ${dotRadius * 0.38}`}
+              strokeLinecap="round"
+              style={{ pointerEvents: 'none' }}
+            />
+          );
+        })}
+        {gapDot && (
+          <g className="coach-keep" style={{ pointerEvents: 'none' }}>
+            <circle
+              cx={gapDot.x}
+              cy={gapDot.y}
+              r={dotRadius * 0.82}
+              fill="url(#dot-p1)"
+              opacity={0.4}
+            />
+            <circle
+              cx={gapDot.x}
+              cy={gapDot.y}
+              r={dotRadius * 1.4}
+              fill="none"
+              className="coach-gap-ring"
+              strokeWidth={dotRadius * 0.14}
+              strokeDasharray={`${dotRadius * 0.55} ${dotRadius * 0.35}`}
+            />
+          </g>
+        )}
+        {labelDot && coach?.label && (
+          <text
+            x={labelDot.x}
+            y={labelDot.y - dotRadius * 1.75}
+            fontSize={dotRadius * 1.1}
+            fontWeight="800"
+            textAnchor="middle"
+            className="coach-label"
+            strokeWidth={dotRadius * 0.14}
+            style={{ pointerEvents: 'none' }}
+          >
+            {coach.label.text}
+          </text>
+        )}
+        {pointerDot && (
+          <CoachHand
+            key={coach?.pointer}
+            x={pointerDot.x + dotRadius * 0.3}
+            y={pointerBelow ? pointerDot.y + dotRadius * 0.3 : pointerDot.y - dotRadius * 0.3}
+            size={dotRadius * 2.8}
+            flip={!pointerBelow}
+          />
+        )}
       </svg>
       {boardHint && (
         <div key={boardHint.seq} className="board-hint" role="status">

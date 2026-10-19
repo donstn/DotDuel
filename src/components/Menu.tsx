@@ -47,6 +47,8 @@ interface Props {
   onOpenRankings: (view?: 'global' | 'local') => void;
   onOpenAchievements: () => void;
   onOpenSignIn: () => void;
+  /** Start the first-game lesson again. */
+  onPlayTutorial: () => void;
   onOpenProfile: () => void;
   onSignOut: () => void;
   onOpenMultiplayer: () => void;
@@ -117,6 +119,7 @@ export function Menu({
   onOpenRankings,
   onOpenAchievements,
   onOpenSignIn,
+  onPlayTutorial,
   onOpenProfile,
   onSignOut,
   onOpenMultiplayer,
@@ -347,6 +350,9 @@ export function Menu({
           <a className="menu-share-link" {...guideLinkProps(lang, 'guide', false)}>
             {t.menu.guide}
           </a>
+          <button type="button" className="menu-share-link" onClick={onPlayTutorial}>
+            {t.menu.lesson}
+          </button>
         </div>
       </div>
     );

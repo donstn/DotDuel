@@ -155,9 +155,10 @@ import {
 } from './storage';
 import { BANNED_SHAPES, type Difficulty, type GameAction, type GameMode, type GameState, type Progress, type ShapeId } from './types';
 import { APP_VERSION } from './version';
+import { CoachGame } from './components/CoachGame';
 import { bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './telemetry';
 
-type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound' | 'mpgame';
+type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound' | 'mpgame' | 'coach';
 
 interface SessionConfig {
   mode: GameMode;
@@ -311,6 +312,12 @@ export default function App() {
   // One help window (How to play) with a step-by-step tab and a rules tab;
   // null = closed.
   const [howTo, setHowTo] = useState<HowToTab | null>(null);
+  // Brand-new player (nothing played, no saved game): offer the first-game
+  // tutorial before anything else.
+  const [pendingTipOpen, setPendingTipOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(
+    () => !resumed && !settings.tutorialSeen && settings.gamesPlayed === 0,
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rankingsOpen, setRankingsOpen] = useState(false);
   const [rankingsView, setRankingsView] = useState<'global' | 'local'>('global');
@@ -440,6 +447,64 @@ export default function App() {
     saveSettings(next);
   };
 
+  const markTutorialSeen = () => {
+    setSettings((prev) => {
+      const next = { ...prev, tutorialSeen: true };
+      saveSettings(next);
+      return next;
+    });
+  };
+
+  const markPendingTipSeen = () => {
+    setSettings((prev) => {
+      const next = { ...prev, pendingTipSeen: true };
+      saveSettings(next);
+      return next;
+    });
+  };
+
+  // Closing the welcome card any way but "Learn by playing" counts as a no.
+  const declineWelcome = () => {
+    setWelcomeOpen(false);
+    markTutorialSeen();
+    trackEvent('tutorial_declined');
+  };
+
+  const [coachReplay, setCoachReplay] = useState(false);
+  const coachFinished = useRef(false);
+  const openCoach = () => {
+    setCoachReplay(settings.tutorialSeen);
+    coachFinished.current = false;
+    setWelcomeOpen(false);
+    setHowTo(null);
+    setScreen('coach');
+  };
+
+  // Just-in-time tip the first time two lines finish at once (newer players
+  // only; the tutorial shows the same tip if it happens there first).
+  const pendingCount = screen === 'game' ? state?.pending.length ?? 0 : 0;
+  useEffect(() => {
+    if (pendingCount === 0 || settings.pendingTipSeen || settings.gamesPlayed >= 10) return;
+    // Not on the clock: the daily puzzle's 3 minutes keep running.
+    if (config?.mode === 'daily') return;
+    setPendingTipOpen(true);
+    markPendingTipSeen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingCount]);
+  useEffect(() => {
+    if (screen !== 'game') setPendingTipOpen(false);
+    if (screen !== 'menu') setWelcomeOpen(false);
+  }, [screen]);
+
+  const leaveCoach = (how: 'skip' | 'bot' | 'menu') => {
+    markTutorialSeen();
+    if (how === 'skip' && !coachFinished.current) {
+      trackEvent('tutorial_skip', { replay: coachReplay ? 1 : 0 });
+    }
+    if (how === 'bot') startGame('ai', 'triangle', 1);
+    else setScreen('menu');
+  };
+
   // Keep audio.ts's enabled-flags in sync with Settings, from whichever path
   // changed them (updateSettings above, or the direct setSettings/saveSettings
   // call in onToggleRings further down — neither of which touch these two
@@ -510,11 +575,16 @@ export default function App() {
       auth_state: user ? 'signed_in' : 'anon',
     });
     if (Date.now() - settings.lastPlayedAt > 60 * 60 * 1000) {
-      const nextSettings: Settings = { ...settings, lastPlayedAt: Date.now() };
-      setSettings(nextSettings);
-      saveSettings(nextSettings);
+      // Functional update: a caller may have changed settings in the same tick
+      // (e.g. the tutorial marking itself seen right before starting a game).
+      setSettings((prev) => {
+        const nextSettings: Settings = { ...prev, lastPlayedAt: Date.now() };
+        saveSettings(nextSettings);
+        return nextSettings;
+      });
     }
     setConfig({ mode, shape, difficulty });
+    setPendingTipOpen(false);
     let initial = createGame(shape, mode, difficulty);
     // Daily-puzzle seeded opening gets replayed here so the player starts
     // mid-game on the shared pre-positioned board. The opening is an AI-vs-AI
@@ -1669,6 +1739,14 @@ export default function App() {
   // screen/menu level); returns false only once there's truly nothing left
   // to back through, so the caller can exit the app / let the browser leave.
   const performInAppBack = (): boolean => {
+    if (screen === 'coach') {
+      leaveCoach('skip');
+      return true;
+    }
+    if (welcomeOpen && screen === 'menu') {
+      declineWelcome();
+      return true;
+    }
     // Open dialog or popup menu (footer language list): close it first.
     if (document.querySelector('[role="dialog"], [role="menu"]')) {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
@@ -1721,6 +1799,16 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [resignConfirmOpen, hotseatLeaveOpen]);
 
+  useEffect(() => {
+    if (!welcomeOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') declineWelcome();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [welcomeOpen]);
+
   // Web back button/gesture: with no history entries of our own, pressing
   // back jumps straight past the app to whatever page was previously in
   // browser history (e.g. the referring page), skipping in-app navigation
@@ -1735,7 +1823,7 @@ export default function App() {
     howTo !== null || settingsOpen || rankingsOpen || achievementsOpen ||
     signInOpen || profileOpen || renameOpen || resignConfirmOpen || hotseatLeaveOpen || themeOpen ||
     privacyOpen || changelogOpen || friendsOpen || puzzleLbOpen || !!sendInviteFor;
-  const hasInAppBackTarget = screen !== 'menu' || menuCanGoBack || anyPopoverOpen;
+  const hasInAppBackTarget = screen !== 'menu' || menuCanGoBack || anyPopoverOpen || welcomeOpen;
   const wasAtAppRootRef = useRef(true);
   useEffect(() => {
     if (isNativeApp()) return;
@@ -2660,6 +2748,27 @@ export default function App() {
     );
   }
 
+  if (screen === 'coach') {
+    const coachName =
+      user && cloudProfile?.displayName
+        ? cloudProfile.displayName
+        : settings.playerName || DEFAULT_P1_NAME;
+    return (
+      <CoachGame
+        theme={theme}
+        phoneLayout={phoneLayout}
+        playerName={displayPlayerName(coachName, t)}
+        onPendingTipSeen={markPendingTipSeen}
+        replay={coachReplay}
+        onFinished={() => {
+          coachFinished.current = true;
+        }}
+        onSkip={() => leaveCoach('skip')}
+        onDone={(next) => leaveCoach(next)}
+      />
+    );
+  }
+
   const isMenuScreen =
     screen === 'menu' ||
     screen === 'lobby' ||
@@ -2737,6 +2846,7 @@ export default function App() {
           }}
           onOpenAchievements={() => setAchievementsOpen(true)}
           onOpenSignIn={() => setSignInOpen(true)}
+          onPlayTutorial={openCoach}
           onOpenProfile={() => setProfileOpen(true)}
           onSignOut={() => void onSignOutSafe()}
           onOpenMultiplayer={openMultiplayer}
@@ -2776,7 +2886,32 @@ export default function App() {
             onClose={() => setHowTo(null)}
             theme={theme}
             showGuideLinks={!isNativeApp() || (screen !== 'matchmaking' && screen !== 'matchFound')}
+            onPlayTutorial={screen === 'menu' ? openCoach : undefined}
           />
+        )}
+        {welcomeOpen && screen === 'menu' && (
+          <div
+            className="confirm-overlay welcome-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="welcome-title"
+          >
+            <div className="confirm-card welcome-card">
+              <h3 id="welcome-title">{t.coach.welcomeTitle}</h3>
+              <p>{t.coach.welcomeBody}</p>
+              <button type="button" className="hotseat-start" onClick={openCoach}>
+                {t.coach.welcomePlay}
+              </button>
+              <span className="welcome-time">{t.coach.welcomeTime}</span>
+              <button
+                type="button"
+                className="link-btn welcome-skip"
+                onClick={declineWelcome}
+              >
+                {t.coach.welcomeSkip}
+              </button>
+            </div>
+          </div>
         )}
         {privacyOpen && (
           <PrivacyPopover
@@ -3143,6 +3278,14 @@ export default function App() {
         </div>
       )}
       <AdBanner placement="ingame" />
+      {pendingTipOpen && !showOver && (
+        <div className="coach-bubble coach-bubble-tip coach-bubble-floating" role="status" aria-live="polite">
+          <span className="coach-bubble-text">{t.coach.pendingTip}</span>
+          <button type="button" className="coach-bubble-btn" onClick={() => setPendingTipOpen(false)}>
+            {t.coach.gotIt}
+          </button>
+        </div>
+      )}
       {showOver && (
         <GameOver
           state={state}

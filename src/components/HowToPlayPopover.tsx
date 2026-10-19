@@ -88,6 +88,7 @@ export function HowToPlayPopover({
   theme,
   initialTab = 'steps',
   showGuideLinks = true,
+  onPlayTutorial,
 }: {
   onClose: () => void;
   theme?: ThemeId;
@@ -95,6 +96,8 @@ export function HowToPlayPopover({
   /** False during clocked games in the app, where opening a page would
    *  leave the running game. */
   showGuideLinks?: boolean;
+  /** Replay the first-game tutorial (menu only — it would leave a game). */
+  onPlayTutorial?: () => void;
 }) {
   const t = useT();
   const { lang } = useLang();
@@ -250,6 +253,11 @@ export function HowToPlayPopover({
                 </button>
               ))}
             </div>
+            {onPlayTutorial && (
+              <button type="button" className="howto-play-tutorial" onClick={onPlayTutorial}>
+                ▶ {t.coach.replay}
+              </button>
+            )}
           </div>
         )}
 

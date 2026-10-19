@@ -3,6 +3,17 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.21.0] - 2026-10-19
+
+### Changed
+
+- **Impossible (L5) looks three moves deep** (`src/ai.ts`) — my move, every
+  reply, then my best follow-up (full width, threat-ordered with cut-offs),
+  replacing the top-10 two-move search. Pending split modelled as "whoever
+  moves next takes the biggest". Beats L4 ~80% on Triangle/Rectangle and ~70%
+  on Square over 200 games; slowest move < 10 ms on desktop. Online ranked
+  bots unchanged until the Edge Function engine copy is redeployed.
+
 ## [0.4.20.0] - 2026-10-19
 
 ### Changed

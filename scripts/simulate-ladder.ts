@@ -5,12 +5,12 @@ import type { BoardShape, Difficulty, GameAction, GameState, ShapeId } from '../
 
 // Difficulty ladder check: how often stand-in human players (moving first, as
 // in the app) beat each bot level. Aim (2026-10-19): Beginner ~60% for the
-// novice, Easy ~50% / Medium ~15% for the learner, Hard ≈ 0% for both.
+// novice, Easy ~50% / Medium ~15% for the learner, Hard and Impossible ≈ 0% for both.
 
 type Player = (s: GameState, b: BoardShape) => GameAction;
 const N = Number(process.argv[2] ?? 300);
 const SHAPES: ShapeId[] = ['triangle', 'square'];
-const LEVELS: Difficulty[] = [1, 2, 3, 4];
+const LEVELS: Difficulty[] = [1, 2, 3, 4, 5];
 
 const rand = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
 

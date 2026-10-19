@@ -301,6 +301,11 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.21.0': {
+        changes: [
+          'Bot Niemożliwy myśli teraz o ruch dalej i dużo trudniej go pokonać.',
+        ],
+      },
       'Alpha 0.4.20.0': {
         changes: [
           'Pierwsze trzy poziomy botów grają nieco mądrzej, więc każda gra czegoś uczy.',

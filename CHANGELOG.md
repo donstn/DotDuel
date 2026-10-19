@@ -3,6 +3,18 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.20.0] - 2026-10-19
+
+### Changed
+
+- **Bots L1–L3 a little stronger** (`src/ai.ts`) — Beginner finishes a line
+  ~35% of the time instead of playing purely at random; Easy takes the biggest
+  line ~85% of the time instead of only corners/5+ lines; Medium stays greedy
+  and, when nothing scores, ~40% of the time avoids dots that hand the opponent
+  a line. Hard/Impossible unchanged. Ladder check: `npm run simulate:ladder`.
+  Online ranked bots unchanged until the Edge Function engine copy is
+  redeployed.
+
 ## [0.4.19.0] - 2026-10-19
 
 ### Added

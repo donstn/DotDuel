@@ -290,6 +290,11 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.20.0': {
+        changes: [
+          'Os três primeiros níveis de bot jogam um pouco melhor, então cada partida ensina algo.',
+        ],
+      },
       'Alpha 0.4.19.0': {
         changes: [
           'Novos jogadores aprendem jogando: uma primeira partida curta com um Treinador, disponível a qualquer momento na tela inicial.',

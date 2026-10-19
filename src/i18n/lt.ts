@@ -299,6 +299,11 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.19.0': {
+        changes: [
+          'Nauji žaidėjai mokosi žaisdami – trumpas pirmasis žaidimas su Treneriu, kurį bet kada galima žaisti iš pagrindinio ekrano.',
+        ],
+      },
       'Alpha 0.4.18.0': {
         changes: [
           '„Kaip žaisti“ ir „Taisyklės“ dabar viename lange su dviem skirtukais.',

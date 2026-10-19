@@ -301,6 +301,11 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.19.0': {
+        changes: [
+          'Nowi gracze uczą się, grając – krótka pierwsza gra z Trenerem, dostępna w każdej chwili z ekranu głównego.',
+        ],
+      },
       'Alpha 0.4.18.0': {
         changes: [
           '„Jak grać” i „Zasady” są teraz w jednym oknie z dwiema kartami.',

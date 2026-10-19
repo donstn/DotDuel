@@ -1595,6 +1595,7 @@ export const cs: Messages = {
   },
   coach: {
     name: "Trenér",
+    yourDots: "Tvoje tečky",
     skip: "Přeskočit",
     welcomeTitle: "Vítej v DotDuelu",
     welcomeBody: "Hráči se střídají v pokládání teček. Dokonči rovnou linii a získáš bod za každou její tečku. Vyhrává víc bodů.",

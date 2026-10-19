@@ -7487,11 +7487,35 @@ body.has-native-banner #root {
 }
 .coach-bubble-name {
   flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   color: var(--accent);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+/* First step only: which colour is "you" (themes differ, so a swatch, not a word). */
+.coach-you {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text);
+  letter-spacing: normal;
+  text-transform: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.coach-you-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--p1-bright), var(--p1) 70%);
+  box-shadow: 0 0 0 1.5px var(--p1-glow);
 }
 .coach-bubble-text {
   flex: 1 1 200px;

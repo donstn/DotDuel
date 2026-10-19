@@ -296,7 +296,15 @@ export function CoachGame({
     <div className="coach-slot">
       {shownMsg && (
         <div className="coach-bubble" role="status" aria-live="polite">
-          <span className="coach-bubble-name">{t.coach.name}</span>
+          <span className="coach-bubble-name">
+            {t.coach.name}
+            {stage === 'corner' && (
+              <span className="coach-you">
+                <span className="coach-you-dot" aria-hidden="true" />
+                {t.coach.yourDots}
+              </span>
+            )}
+          </span>
           <span className="coach-bubble-text">{shownMsg}</span>
         </div>
       )}

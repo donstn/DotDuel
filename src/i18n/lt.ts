@@ -298,6 +298,11 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.22.1': {
+        changes: [
+          'Varžovo paieškos langai dabar su pieštu rėmeliu, o pagrindinis mygtukas neturi pilko stačiakampio.',
+        ],
+      },
       'Alpha 0.4.22.0': {
         changes: [
           'Pamoka dabar padeda ir paskutiniais ėjimais, kai lieka tik nepaimtos linijos.',

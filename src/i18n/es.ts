@@ -287,6 +287,11 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.22.1': {
+        changes: [
+          'Las pantallas de búsqueda de rival usan el marco pintado y el botón principal ya no tiene el recuadro gris.',
+        ],
+      },
       'Alpha 0.4.22.0': {
         changes: [
           'La lección ahora te guía en las últimas jugadas, cuando solo quedan líneas sin reclamar.',

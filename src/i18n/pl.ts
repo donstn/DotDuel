@@ -299,6 +299,11 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.22.1': {
+        changes: [
+          'Ekrany szukania przeciwnika mają malowaną ramkę, a główny przycisk nie ma już szarego prostokąta.',
+        ],
+      },
       'Alpha 0.4.22.0': {
         changes: [
           'Lekcja prowadzi teraz także przez ostatnie ruchy, gdy zostają tylko niezajęte linie.',

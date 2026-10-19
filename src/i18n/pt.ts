@@ -288,6 +288,11 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.22.1': {
+        changes: [
+          'As telas de busca de adversário usam a moldura pintada e o botão principal perdeu a caixa cinza.',
+        ],
+      },
       'Alpha 0.4.22.0': {
         changes: [
           'A lição agora guia você nas últimas jogadas, quando só restam linhas não marcadas.',

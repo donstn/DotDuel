@@ -289,6 +289,11 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.19.0': {
+        changes: [
+          'Los nuevos jugadores aprenden jugando: una primera partida corta con un Entrenador, disponible en cualquier momento desde la pantalla de inicio.',
+        ],
+      },
       'Alpha 0.4.18.0': {
         changes: [
           '«Cómo jugar» y «Reglas» ahora están en una sola ventana con dos pestañas.',

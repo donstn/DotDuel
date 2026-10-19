@@ -3,6 +3,18 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.19.0] - 2026-10-19
+
+### Added
+
+- **First-game lesson (Coach)** — welcome card for brand-new players, then an
+  interactive game vs the Coach on a part-filled Triangle: tap a corner,
+  finish a line, finish two lines at once (only the longest scores), claim
+  the waiting line, find a line alone, then free play. Spotlight, line bands
+  and a tap hand (3 taps, then still) via `Board`'s optional `coach` prop.
+  "Play lesson" on the home screen and in How to play. One-time "two lines
+  at once" tip for new players in real games.
+
 ## [0.4.18.0] - 2026-10-19
 
 ### Changed

@@ -299,6 +299,11 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.19.0': {
+        changes: [
+          'Noví hráči se učí hraním – krátká první hra s Trenérem, kterou si můžeš kdykoli zahrát z úvodní obrazovky.',
+        ],
+      },
       'Alpha 0.4.18.0': {
         changes: [
           '„Jak hrát“ a „Pravidla“ jsou teď v jednom okně se dvěma záložkami.',

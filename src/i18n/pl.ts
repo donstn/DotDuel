@@ -66,7 +66,7 @@ export const pl: Messages = {
     profile: 'Profil',
     signOut: 'Wyloguj się',
     guide: 'Poradnik',
-    lesson: 'Powtórz lekcję',
+    lesson: 'Zagraj lekcję',
     signIn: 'Zaloguj się',
 
     singlePlayer: 'Jeden gracz',
@@ -1597,6 +1597,5 @@ export const pl: Messages = {
     endBody: "Znasz już podstawy. Spróbujesz z prawdziwym przeciwnikiem?",
     playBot: "Graj z botem",
     menu: "Menu",
-    replay: "Zagraj samouczek",
   },
 };

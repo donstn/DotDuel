@@ -71,7 +71,7 @@ export const en = {
     profile: 'Profile',
     signOut: 'Sign out',
     guide: 'Guide',
-    lesson: 'Replay lesson',
+    lesson: 'Play lesson',
     signIn: 'Sign in',
 
     // Top-level category shelves.
@@ -1029,7 +1029,6 @@ export const en = {
     endBody: "You know the basics. Ready for a real opponent?",
     playBot: "Play a bot",
     menu: "Menu",
-    replay: "Play the tutorial",
   },
 };
 

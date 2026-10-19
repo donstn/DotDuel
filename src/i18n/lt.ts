@@ -66,7 +66,7 @@ export const lt: Messages = {
     profile: 'Profilis',
     signOut: 'Atsijungti',
     guide: 'Vadovas',
-    lesson: 'Pakartoti pamoką',
+    lesson: 'Žaisti pamoką',
     signIn: 'Prisijungti',
 
     singlePlayer: 'Vienas žaidėjas',
@@ -1593,6 +1593,5 @@ export const lt: Messages = {
     endBody: "Pagrindus jau mokate. Pasiruošę tikram varžovui?",
     playBot: "Žaisti su botu",
     menu: "Meniu",
-    replay: "Žaisti mokymus",
   },
 };

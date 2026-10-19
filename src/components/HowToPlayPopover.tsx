@@ -255,7 +255,7 @@ export function HowToPlayPopover({
             </div>
             {onPlayTutorial && (
               <button type="button" className="howto-play-tutorial" onClick={onPlayTutorial}>
-                ▶ {t.coach.replay}
+                ▶ {t.menu.lesson}
               </button>
             )}
           </div>

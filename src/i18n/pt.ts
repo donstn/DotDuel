@@ -55,7 +55,7 @@ export const pt: Messages = {
     profile: 'Perfil',
     signOut: 'Sair',
     guide: 'Guia',
-    lesson: 'Repetir a lição',
+    lesson: 'Jogar a lição',
     signIn: 'Entrar',
 
     singlePlayer: 'Um jogador',
@@ -1586,6 +1586,5 @@ export const pt: Messages = {
     endBody: "Você já sabe o básico. Que tal um adversário de verdade?",
     playBot: "Jogar contra um bot",
     menu: "Menu",
-    replay: "Jogar o tutorial",
   },
 };

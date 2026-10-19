@@ -64,7 +64,7 @@ export const cs: Messages = {
     profile: 'Profil',
     signOut: 'Odhlásit se',
     guide: 'Průvodce',
-    lesson: 'Zopakovat lekci',
+    lesson: 'Zahrát lekci',
     signIn: 'Přihlásit se',
 
     singlePlayer: 'Jeden hráč',
@@ -1595,6 +1595,5 @@ export const cs: Messages = {
     endBody: "Základy už znáš. Zkusíš skutečného soupeře?",
     playBot: "Hrát s botem",
     menu: "Menu",
-    replay: "Zahrát si výuku",
   },
 };

@@ -3,6 +3,15 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.22.1] - 2026-10-19
+
+### Fixed
+
+- **Matchmaking art** — the "Searching…" and "Opponent found!" cards use the
+  Forest & Pearl card frame, and the painted primary button (Ready!, Learn by
+  playing, lesson end card) no longer shows the old glossy highlight as a grey
+  box over its top half.
+
 ## [0.4.22.0] - 2026-10-19
 
 Fixes from the onboarding review (UX + UI agents, 8 simulated player types).

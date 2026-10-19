@@ -297,6 +297,11 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.22.1': {
+        changes: [
+          'Obrazovky hledání soupeře mají malovaný rámeček a hlavní tlačítko už nemá šedý obdélník.',
+        ],
+      },
       'Alpha 0.4.22.0': {
         changes: [
           'Lekce tě teď provede i posledními tahy, kdy zbývají jen nezabrané linie.',

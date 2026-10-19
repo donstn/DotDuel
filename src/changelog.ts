@@ -30,6 +30,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.22.1',
+    date: '2026-10-19',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Matchmaking screens use the painted card frame, and the main button lost its grey box.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.22.0',
     date: '2026-10-19',
     changes: [

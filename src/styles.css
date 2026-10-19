@@ -5194,10 +5194,17 @@ html[data-art~="primary-button"] .game-over-buttons .primary:hover:not(:disabled
   background: none;
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) brightness(1.06);
 }
+html[data-art~="primary-button"] .hotseat-start::before,
 html[data-art~="primary-button"] .game-over-buttons .primary::before,
 html[data-art~="primary-button"] .game-over-buttons .primary::after {
   display: none;
 }
+html[data-art~="primary-button"] .hotseat-start:hover:not(:disabled),
+html[data-art~="primary-button"] .hotseat-start:active:not(:disabled) {
+  box-shadow: none;
+}
+html[data-art~="card-frame"] .matchmaking-card,
+html[data-art~="card-frame"] .match-found-card,
 html[data-art~="card-frame"] .game-over-card,
 html[data-art~="card-frame"] .confirm-card,
 html[data-art~="card-frame"] .rules-card,
@@ -5218,6 +5225,8 @@ html[data-art~="card-frame"] .game-over-card::before,
 html[data-art~="card-frame"] .rules-card::before {
   display: none;
 }
+html[data-art~="card-frame"] .matchmaking-card,
+html[data-art~="card-frame"] .match-found-card,
 html[data-art~="card-frame"] .confirm-card,
 html[data-art~="card-frame"] .menu-lang-pop {
   padding: 26px 28px;

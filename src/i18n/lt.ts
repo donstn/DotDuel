@@ -146,12 +146,12 @@ export const lt: Messages = {
       `Žaidimas baigtas. Laimėjo ${winner} žaidėjas, ${s1} prieš ${s2}.`,
     liveTurn: (current: number, s1: number, s2: number) =>
       `Eina ${current} žaidėjas. Rezultatas: 1 žaidėjas – ${s1}; 2 žaidėjas – ${s2}.`,
-    linesToClaim: (n: number) => plural(n, 'paimtina linija', 'paimtinos linijos', 'paimtinų linijų'),
-    pendingTitle: 'Linijos laukia paėmimo – bakstelėkite spalvotą vienos iš jų tašką, kad ją paimtumėte.',
+    linesToClaim: (n: number) => plural(n, 'nepaimta linija', 'nepaimtos linijos', 'nepaimtų linijų'),
+    pendingTitle: "Nepaimtos linijos – bakstelėkite spalvotą vienos iš jų tašką, kad ją paimtumėte.",
     leaveMatch: 'Palikti žaidimą',
     backToMenu: 'Grįžti į meniu',
     dailyTime: 'Šio bandymo laikas',
-    claimPhaseHint: 'Visi taškai padėti – bakstelėkite liniją.',
+    claimPhaseHint: "Visi taškai padėti – bakstelėkite nepaimtą liniją.",
     nothingToClaim: 'Per šį tašką nėra nepaimtos linijos.',
     seeUnclaimed: 'Rodyti nepaimtas linijas',
     seeUnclaimedTitle: (on: boolean) => `Rodyti nepaimtas linijas: ${on ? 'įjungta' : 'išjungta'}`,
@@ -208,8 +208,7 @@ export const lt: Messages = {
     catchP:
       'Jei jūsų taškas iškart užbaigia kelias linijas, gausite taškų tik už ilgiausią. Kitos užbaigtos linijos tampa nepaimtos – bet kuris žaidėjas gali jas pasiimti vėlesniu ėjimu.',
     watchH: 'Stebėkite lentą',
-    watchP:
-      'Žaidimas nepažymės nepaimtų linijų. Pastebėkite visiškai nuspalvintą, dar neperbrauktą liniją ir bakstelėkite bet kurį jos tašką, kad ją pasiimtumėte. Nemokami taškai už dėmesingumą.',
+    watchP: "Žaidžiant su botu trikampyje (išskyrus „Neįmanomą“) nepaimtos linijos pažymimos geltonu žiedu (jį galima išjungti). Kitur jos nežymimos: pastebėkite visiškai nuspalvintą, dar neperbrauktą liniją ir bakstelėkite bet kurį jos tašką, kad ją pasiimtumėte. Nemokami taškai už dėmesingumą.",
     endH: 'Žaidimo pabaiga',
     endP:
       'Kai visi taškai nuspalvinti ir visos užbaigtos linijos paimtos. Laimi daugiausiai taškų surinkęs žaidėjas; lygus rezultatas – lygiosios.',
@@ -299,6 +298,14 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.22.0': {
+        changes: [
+          'Pamoka dabar padeda ir paskutiniais ėjimais, kai lieka tik nepaimtos linijos.',
+          'Dabar įskaitomi ir bakstelėjimai tarp taškų, taip pat imant liniją.',
+          'Lengvas ir vidutinis botai vėl šiek tiek švelnesni, kad nauji žaidėjai neįstrigtų.',
+          'Linijos, už kurias dar niekas negavo taškų, dabar visur vadinamos vienodai: nepaimtos linijos.',
+        ],
+      },
       'Alpha 0.4.21.0': {
         changes: [
           'Botas „Neįmanomas“ dabar galvoja vienu ėjimu toliau, todėl jį įveikti daug sunkiau.',
@@ -1560,8 +1567,8 @@ export const lt: Messages = {
         body: 'Nuspalvinkite visus tiesios linijos taškus ir ji duos tiek taškų, koks jos ilgis.',
       },
       claim: {
-        title: 'Pasiimkite laukiančias linijas',
-        body: 'Vienas ėjimas gali užbaigti kelias linijas – taškus duoda tik ilgiausia, kitos laukia (švyti). Bakstelėkite laukiančios linijos tašką, kad pasiimtumėte jos taškus. Jas gali pasiimti bet kuris žaidėjas.',
+        title: "Pasiimkite nepaimtas linijas",
+        body: "Vienas ėjimas gali užbaigti kelias linijas – taškus duoda tik ilgiausia, kitos lieka nepaimtos (švyti). Bakstelėkite nepaimtos linijos tašką ir pasiimkite jos taškus. Tai gali padaryti bet kuris žaidėjas.",
       },
       triThreeWays: {
         title: 'Trikampis: 3 kryptys',
@@ -1591,9 +1598,9 @@ export const lt: Messages = {
     finishMiss: "Ne tas. Užpildykite tarpą šviečiančioje linijoje.",
     finishDone: "+4! Linija duoda tiek taškų, koks jos ilgis.",
     double: "Šis taškas užbaigia DVI linijas. Bakstelėkite jį!",
-    doubleDone: (n: number) => `Taškus duoda tik ilgiausia linija: +${n}. Kita laukia.`,
-    claim: "Laukianti linija niekieno: Treneris galėjo ją pasiimti! Bakstelėkite laukiančią liniją ir pasiimkite ją.",
-    claimDone: (n: number) => `+${n}! Pasiimti liniją – tai jūsų ėjimas. Pasiimkite laukiančias linijas anksčiau už Trenerį.`,
+    doubleDone: (n: number) => `Taškus duoda tik ilgiausia linija: +${n}. Kita lieka nepaimta.`,
+    claim: "Nepaimta linija niekieno: Treneris galėjo ją pasiimti! Bakstelėkite nepaimtą liniją ir pasiimkite ją.",
+    claimDone: (n: number) => `+${n}! Pasiimti liniją – tai jūsų ėjimas. Pasiimkite nepaimtas linijas anksčiau už Trenerį.`,
     find: "Jūsų ėjimas: raskite liniją, kuriai trūksta vieno taško.",
     findMiss: "Tai neužbaigia linijos. Ieškokite linijos su vienu tarpu.",
     findHelp: "Štai jos. Ilgesnė linija duoda daugiau!",
@@ -1601,7 +1608,9 @@ export const lt: Messages = {
     botTook: (n: number) => `Treneris irgi paėmė liniją (+${n}). Paliktą tarpą gali užimti bet kas!`,
     free: "Dabar žaiskite iki galo. Laimi surinkęs daugiau!",
     idleHint: "Patarimas: yra linija su vienu tarpu. Užimkite ją!",
-    pendingTip: "Dvi linijos iš karto! Taškus duoda tik ilgiausia, kita laukia. Vėlesniu ėjimu bakstelėkite jos tašką ir pasiimkite ją. Tai gali padaryti bet kuris žaidėjas.",
+    claimEnd: "Tuščių taškų nebeliko. Bakstelėkite nepaimtą liniją ir pasiimkite jos taškus.",
+    claimHint: "Patarimas: nepaimta linija dar laisva. Bakstelėkite ją ir pasiimkite taškus.",
+    pendingTip: "Dvi linijos iš karto! Taškus duoda tik ilgiausia, kita lieka nepaimta. Vėlesniu ėjimu bakstelėkite jos tašką ir pasiimkite ją. Tai gali padaryti bet kuris žaidėjas.",
     gotIt: "Supratau",
     wonTitle: "Laimėjote pirmąjį žaidimą!",
     endTitle: "Geras žaidimas!",

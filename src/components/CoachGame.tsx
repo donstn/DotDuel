@@ -8,8 +8,10 @@ import {
   COACH_DOUBLE_LINES,
   COACH_FINISH_DOT,
   COACH_FINISH_LINE,
+  claimTarget,
   coachBotAction,
   coachOpening,
+  emptyDots,
   gainAt,
   lineDots,
   linesFinishedBy,
@@ -89,6 +91,8 @@ export function CoachGame({
   const myTurn = state.current === 1 && !state.finished;
   // The Coach's turn right after "two lines at once": the waiting line stays marked.
   const showWaiting = stage === 'claim' || (stage === 'double' && state.pending.length > 0);
+  // Endgame: no empty dots, only waiting lines left to claim.
+  const claimOnly = stage === 'free' && myTurn && emptyDots(state).length === 0 && state.pending.length > 0;
 
   // What the player's move means for the script: message, Coach style, next step.
   const afterPlayer = (points: number) => {
@@ -198,11 +202,12 @@ export function CoachGame({
 
   // Stuck in free play: after a while, show the best open line.
   useEffect(() => {
-    if (stage !== 'free' || !myTurn || idle) return;
-    if (scoringDots(state).length === 0) return;
+    if (stage !== 'free' || !myTurn || idle || claimOnly) return;
+    const canScore = scoringDots(state).length > 0;
+    if (!canScore && state.pending.length === 0) return;
     const id = window.setTimeout(() => {
       setIdle(true);
-      setMsg(t.coach.idleHint);
+      setMsg(canScore ? t.coach.idleHint : t.coach.claimHint);
     }, IDLE_HINT_MS);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -264,12 +269,20 @@ export function CoachGame({
         setMisses((m) => m + 1);
         setMsg(misses + 1 >= 2 ? t.coach.findHelp : t.coach.findMiss);
       };
+    } else if (claimOnly || (idle && scoringDots(state).length === 0)) {
+      const target = claimTarget(state);
+      if (target) {
+        marks.waiting = state.pending;
+        marks.spotlight = lineDots(target.lineId);
+        marks.pointer = target.dot;
+      }
     } else if (idle) {
       marks.spotlight = linesFinishedBy(state, scoringDots(state).slice(0, 1));
       marks.rings = marks.spotlight;
     }
   }
 
+  const shownMsg = claimOnly ? t.coach.claimEnd : msg;
   const won = state.winner === 1;
   const p1 = { name: playerName, score: state.scores[1], avatar: 'human' as const };
   const p2 = {
@@ -281,10 +294,10 @@ export function CoachGame({
 
   const bubble = (
     <div className="coach-slot">
-      {msg && (
+      {shownMsg && (
         <div className="coach-bubble" role="status" aria-live="polite">
           <span className="coach-bubble-name">{t.coach.name}</span>
-          <span className="coach-bubble-text">{msg}</span>
+          <span className="coach-bubble-text">{shownMsg}</span>
         </div>
       )}
     </div>

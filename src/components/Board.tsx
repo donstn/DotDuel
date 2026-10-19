@@ -378,11 +378,19 @@ export function Board({
     }
   }, [state.turn]);
   useEffect(() => {
-    if (!claimPhase || claimHintShown.current) return;
+    if (!claimPhase || claimHintShown.current || coach) return;
     claimHintShown.current = true;
     showBoardHint(t.game.claimPhaseHint);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [claimPhase]);
+
+  // Tap zone: the whole cell around a dot (half the nearest-neighbour gap), so
+  // taps between dots still land and claims don't need a pixel-perfect tap.
+  const hitRadius = useMemo(() => {
+    const [first, ...rest] = board.dots;
+    const gap = Math.min(...rest.map((d) => Math.hypot(d.x - first.x, d.y - first.y)));
+    return gap / 2;
+  }, [board.dots]);
 
   const linesById = useMemo(() => {
     const map = new Map<string, Line>();
@@ -786,11 +794,11 @@ export function Board({
                   style={{ pointerEvents: 'none' }}
                 />
               )}
-              {!cd && !disabled && (
+              {interactive && (
                 <circle
                   cx={d.x}
                   cy={d.y}
-                  r={dotRadius * 1.4}
+                  r={hitRadius}
                   fill="transparent"
                   aria-hidden="true"
                   onClick={() => activateDot(d.id)}

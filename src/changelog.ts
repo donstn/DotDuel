@@ -30,6 +30,28 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.22.0',
+    date: '2026-10-19',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'The lesson now guides you through the last moves, when only unclaimed lines are left to take.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Taps that land between dots now count, including when you claim a line.',
+      },
+      {
+        kind: 'changed',
+        text: 'Easy and Medium bots are a little gentler again, so new players don’t get stuck.',
+      },
+      {
+        kind: 'changed',
+        text: 'Lines nobody has scored yet now have one name everywhere: unclaimed lines.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.21.0',
     date: '2026-10-19',
     changes: [

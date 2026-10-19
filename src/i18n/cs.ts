@@ -145,13 +145,12 @@ export const cs: Messages = {
     liveTurn: (current: number, s1: number, s2: number) =>
       `Na tahu je hráč ${current}. Skóre: hráč 1, ${s1}; hráč 2, ${s2}.`,
     linesToClaim: (n: number) =>
-      plural(n, 'linie k zabrání', 'linie k zabrání', 'linií k zabrání'),
-    pendingTitle:
-      'Linie čekají na zabrání — klepni na barevnou tečku na některé z nich, abys ji zabral.',
+      plural(n, 'nezabraná linie', 'nezabrané linie', 'nezabraných linií'),
+    pendingTitle: "Nezabrané linie — klepni na barevnou tečku na některé z nich, abys ji zabral.",
     leaveMatch: 'Opustit hru',
     backToMenu: 'Zpět do menu',
     dailyTime: 'Tvůj čas na tento pokus',
-    claimPhaseHint: 'Vše položeno — klepni na linii a zaber ji.',
+    claimPhaseHint: "Všechny tečky jsou položené — klepni na nezabranou linii.",
     nothingToClaim: 'Touto tečkou nevede žádná nezabraná linie.',
     seeUnclaimed: 'Zobrazit nezabrané linie',
     seeUnclaimedTitle: (on: boolean) => `Zobrazit nezabrané linie: ${on ? 'zap.' : 'vyp.'}`,
@@ -208,8 +207,7 @@ export const cs: Messages = {
     catchP:
       'Pokud tvá tečka dokončí několik linií najednou, boduješ jen tu nejdelší. Ostatní dokončené linie se stanou nezabranými — kdokoli je může získat v pozdějším tahu.',
     watchH: 'Sleduj desku',
-    watchP:
-      'Hra nezabrané linie neoznačí. Vyhlédni si plně vybarvenou linii, která nebyla přeškrtnuta, a klepni na kteroukoli její tečku, abys ji zabral. Body zdarma za pozornost.',
+    watchP: "Ve hře s botem na trojúhelníku (kromě úrovně Nemožná) mají nezabrané linie žlutý kroužek (lze ho vypnout). Jinde je nic neoznačuje: najdi úplně vybarvenou linii, která ještě není přeškrtnutá, a klepni na kteroukoli její tečku. Body zdarma za pozornost.",
     endH: 'Konec hry',
     endP:
       'Když jsou všechny tečky vybarvené a všechny dokončené linie zabrané. Vyhrává nejvyšší skóre; shodné skóre znamená remízu.',
@@ -299,6 +297,14 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.22.0': {
+        changes: [
+          'Lekce tě teď provede i posledními tahy, kdy zbývají jen nezabrané linie.',
+          'Klepnutí mezi tečky se teď počítají, i když zabíráš linii.',
+          'Boti Snadný a Střední jsou zase o něco mírnější, aby noví hráči neuvízli.',
+          'Linie, za které ještě nikdo nedostal body, mají teď všude stejný název: nezabrané linie.',
+        ],
+      },
       'Alpha 0.4.21.0': {
         changes: [
           'Úroveň Nemožná teď přemýšlí o tah dál, takže je mnohem těžší ji porazit.',
@@ -1562,8 +1568,8 @@ export const cs: Messages = {
         body: 'Vybarvi všechny tečky na rovné linii a získáš tolik bodů, kolik je její délka.',
       },
       claim: {
-        title: 'Zaber čekající linie',
-        body: 'Jeden tah může dokončit několik linií — boduje jen ta nejdelší, ostatní čekají (svítí). Klepni na tečku na čekající linii, abys zabral její body. Zabrat je může kterýkoli hráč.',
+        title: "Ber nezabrané linie",
+        body: "Jeden tah může dokončit několik linií — boduje jen ta nejdelší, ostatní zůstanou nezabrané (svítí). Klepni na tečku nezabrané linie a vezmi si její body. Může to udělat kterýkoli hráč.",
       },
       triThreeWays: {
         title: 'Trojúhelník: 3 směry',
@@ -1593,9 +1599,9 @@ export const cs: Messages = {
     finishMiss: "Tahle ne. Doplň mezeru v zářící linii.",
     finishDone: "+4! Linie dává bod za každou tečku.",
     double: "Tahle tečka dokončí DVĚ linie. Klepni na ni!",
-    doubleDone: (n: number) => `Body dá jen nejdelší linie: +${n}. Druhá čeká.`,
-    claim: "Čekající linie nepatří nikomu: Trenér si ji mohl vzít! Klepni na čekající linii a zaber ji.",
-    claimDone: (n: number) => `+${n}! Zabrání stojí tah. Ber čekající linie dřív než Trenér.`,
+    doubleDone: (n: number) => `Body dá jen nejdelší linie: +${n}. Druhá zůstane nezabraná.`,
+    claim: "Nezabraná linie nepatří nikomu: Trenér si ji mohl vzít! Klepni na nezabranou linii a zaber ji.",
+    claimDone: (n: number) => `+${n}! Zabrání stojí tah. Ber nezabrané linie dřív než Trenér.`,
     find: "Jsi na tahu: najdi linii, které chybí jen jedna tečka.",
     findMiss: "Tím linii nedokončíš. Hledej linii s jednou mezerou.",
     findHelp: "Tady jsou. Delší linie dá víc bodů!",
@@ -1603,7 +1609,9 @@ export const cs: Messages = {
     botTook: (n: number) => `Trenér si taky vzal linii (+${n}). Každou mezeru, kterou necháš, může zabrat kdokoli!`,
     free: "Teď dohraj. Vyhrává víc bodů!",
     idleHint: "Tip: je tu linie s jednou mezerou. Vezmi si ji!",
-    pendingTip: "Dvě linie najednou! Body dá jen nejdelší, druhá čeká. V dalším tahu klepni na některou její tečku a zaber ji. Může to udělat kterýkoli hráč.",
+    claimEnd: "Prázdné tečky došly. Klepni na nezabranou linii a vezmi si její body.",
+    claimHint: "Tip: nezabraná linie je pořád volná. Klepni na ni a vezmi si body.",
+    pendingTip: "Dvě linie najednou! Body dá jen nejdelší, druhá zůstane nezabraná. V dalším tahu klepni na její tečku a zaber ji. Může to udělat kterýkoli hráč.",
     gotIt: "Rozumím",
     wonTitle: "Tvoje první výhra!",
     endTitle: "Dobrá hra!",

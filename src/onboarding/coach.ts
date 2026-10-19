@@ -1,7 +1,6 @@
 // First-game tutorial ("Coach" match): a partly-filled real Triangle, the
-// scripted steps that teach "finish a line to score it", and the Coach bot.
-// Pure logic — no React. Pending lines / claiming are NOT taught here; they
-// get a just-in-time tip the first time they happen.
+// scripted steps (finish a line, two lines at once, claim the waiting line),
+// and the Coach bot. Pure logic — no React.
 
 import { applyAction, createGame, pointsIfPlayed } from '../game';
 import { getBoard } from '../geometry';
@@ -57,7 +56,7 @@ export function gainAt(state: GameState, dotId: number): number {
   return pointsIfPlayed(state, getBoard(state.shape), dotId).gained;
 }
 
-function emptyDots(state: GameState): number[] {
+export function emptyDots(state: GameState): number[] {
   return getBoard(state.shape)
     .dots.filter((d) => !state.colored[d.id])
     .map((d) => d.id);
@@ -106,6 +105,18 @@ function keepsGaps(state: GameState, dotId: number): boolean {
   );
 }
 
+// The longest waiting line and a dot whose tap claims exactly it (a tap
+// claims the longest waiting line through the dot).
+export function claimTarget(state: GameState): { lineId: string; dot: number } | null {
+  if (state.pending.length === 0) return null;
+  const byLength = [...state.pending].sort((a, b) => lineLength(b) - lineLength(a));
+  const lineId = byLength[0];
+  const dots = lineDots(lineId);
+  const dot =
+    dots.find((d) => byLength.every((other) => other === lineId || !lineDots(other).includes(d))) ?? dots[0];
+  return { lineId, dot };
+}
+
 const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
 
 function lineLength(lineId: string): number {
@@ -124,7 +135,8 @@ function bestReply(state: GameState): number {
  *  - 'quiet': no points and leaves the lesson's gaps alone (scripted steps).
  *  - 'greedy': takes the biggest line on offer (the "anyone can take a gap" lesson).
  *  - 'easy': free play — the most generous move (own points minus what it
- *    hands the player), so a first-timer wins. Never claims unless forced.
+ *    hands the player), so a first-timer wins. Takes the smallest waiting line
+ *    first, so the player sees lines can be lost and they don't pile up.
  */
 export function coachBotAction(state: GameState, style: 'quiet' | 'greedy' | 'easy'): GameAction {
   const empty = emptyDots(state);
@@ -137,6 +149,10 @@ export function coachBotAction(state: GameState, style: 'quiet' | 'greedy' | 'ea
     if (best !== undefined) return { kind: 'dot', dotId: best };
   }
   if (style === 'easy') {
+    if (state.pending.length >= 1) {
+      const smallest = [...state.pending].sort((a, b) => lineLength(a) - lineLength(b))[0];
+      return { kind: 'claim', lineId: smallest };
+    }
     const scored = empty.map((id) => ({
       id,
       v: gainAt(state, id) - bestReply(applyAction(state, { kind: 'dot', dotId: id })),

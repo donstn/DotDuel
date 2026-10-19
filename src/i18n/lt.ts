@@ -299,6 +299,11 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.21.0': {
+        changes: [
+          'Botas „Neįmanomas“ dabar galvoja vienu ėjimu toliau, todėl jį įveikti daug sunkiau.',
+        ],
+      },
       'Alpha 0.4.20.0': {
         changes: [
           'Pirmieji trys botų lygiai žaidžia šiek tiek protingiau, todėl kiekvienas žaidimas ko nors išmoko.',

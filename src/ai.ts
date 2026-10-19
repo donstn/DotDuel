@@ -25,20 +25,47 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function evalState(state: GameState, me: Player, board: BoardShape): number {
-  const opp: Player = me === 1 ? 2 : 1;
-  let v = state.scores[me] - state.scores[opp];
-  if (state.pending.length === 0) return v;
-  const pendingLines = board.lines
-    .filter((l) => state.pending.includes(l.id))
-    .sort((a, b) => b.length - a.length);
-  let cur: Player = state.current;
-  for (const line of pendingLines) {
-    if (cur === me) v += line.length * PENDING_DISCOUNT;
-    else v -= line.length * PENDING_DISCOUNT;
+// Pending lines split greedily: whoever moves next takes the biggest, then
+// alternate. Discounted because the split rarely plays out that cleanly.
+function pendingShare(
+  state: GameState,
+  me: Player,
+  board: BoardShape,
+  leader: Player
+): number {
+  const lengths = state.pending
+    .map((id) => board.lines.find((l) => l.id === id)!.length)
+    .sort((x, y) => y - x);
+  let v = 0;
+  let cur = leader;
+  for (const len of lengths) {
+    v += (cur === me ? len : -len) * PENDING_DISCOUNT;
     cur = cur === 1 ? 2 : 1;
   }
   return v;
+}
+
+function scoreDiff(state: GameState, me: Player): number {
+  return state.scores[me] - state.scores[me === 1 ? 2 : 1];
+}
+
+// Gap dot -> points it scores right now (the biggest line it finishes).
+function gapGains(state: GameState, board: BoardShape): Map<number, number> {
+  const done = new Set(state.completed.map((c) => c.lineId));
+  const pending = new Set(state.pending);
+  const gains = new Map<number, number>();
+  for (const line of board.lines) {
+    if (done.has(line.id) || pending.has(line.id)) continue;
+    let gap = -1;
+    let empties = 0;
+    for (const d of line.dotIds) {
+      if (state.colored[d]) continue;
+      gap = d;
+      if (++empties > 1) break;
+    }
+    if (empties === 1 && line.length > (gains.get(gap) ?? 0)) gains.set(gap, line.length);
+  }
+  return gains;
 }
 
 function immediateGainOfAction(
@@ -128,71 +155,46 @@ function pickGreedyMinSetupAction(state: GameState, board: BoardShape): GameActi
   return best;
 }
 
-function pickMinimaxAction(
-  state: GameState,
-  board: BoardShape,
-  me: Player
-): GameAction {
-  const actions = availableActions(state, board);
-  if (actions.length === 0) {
-    return { kind: 'dot', dotId: -1 };
+// Value of a position where it is my move: either finish the best line now
+// (the opponent then leads the pending split) or claim / play quiet (I lead).
+function myBestFollowUp(state: GameState, me: Player, board: BoardShape): number {
+  if (state.finished) return scoreDiff(state, me);
+  const opp: Player = me === 1 ? 2 : 1;
+  let best = scoreDiff(state, me) + pendingShare(state, me, board, me);
+  for (const dotId of gapGains(state, board).keys()) {
+    const after = applyAction(state, { kind: 'dot', dotId });
+    best = Math.max(best, scoreDiff(after, me) + pendingShare(after, me, board, opp));
   }
+  return best;
+}
 
-  const myScored = actions.map((a) => ({
-    a,
-    after: applyAction(state, a),
-  }));
-  myScored.sort(
-    (x, y) => evalState(y.after, me, board) - evalState(x.after, me, board)
-  );
+// Threat order: claims and big finishes first, so the search cuts early.
+function byThreat(state: GameState, board: BoardShape, actions: GameAction[]): GameAction[] {
+  const gains = gapGains(state, board);
+  const threat = (a: GameAction) => (a.kind === 'claim' ? 1000 : gains.get(a.dotId) ?? 0);
+  return actions.sort((x, y) => threat(y) - threat(x));
+}
 
-  const branchLimit = actions.length <= 16 ? 16 : 10;
-  const myShortlist = myScored.slice(0, Math.min(myScored.length, branchLimit));
-
-  let best: GameAction = myShortlist[0].a;
-  let bestEval = -Infinity;
-
-  for (const { a, after } of shuffle(myShortlist)) {
-    if (after.finished) {
-      const ev = evalState(after, me, board);
-      if (ev > bestEval) {
-        bestEval = ev;
-        best = a;
+// Looks three moves deep: my move, every reply, then my best follow-up.
+function pickDeepAction(state: GameState, board: BoardShape, me: Player): GameAction {
+  const actions = byThreat(state, board, shuffle(availableActions(state, board)));
+  let best = actions[0];
+  let bestValue = -Infinity;
+  for (const a of actions) {
+    const after = applyAction(state, a);
+    let worst = Infinity;
+    if (after.finished) worst = scoreDiff(after, me);
+    else {
+      for (const reply of byThreat(after, board, availableActions(after, board))) {
+        worst = Math.min(worst, myBestFollowUp(applyAction(after, reply), me, board));
+        if (worst <= bestValue) break;
       }
-      continue;
     }
-    const oppActions = availableActions(after, board);
-    if (oppActions.length === 0) {
-      const ev = evalState(after, me, board);
-      if (ev > bestEval) {
-        bestEval = ev;
-        best = a;
-      }
-      continue;
-    }
-    const oppScored = oppActions.map((oa) => ({
-      a: oa,
-      after2: applyAction(after, oa),
-    }));
-    oppScored.sort(
-      (x, y) => evalState(x.after2, me, board) - evalState(y.after2, me, board)
-    );
-    const oppShortlist = oppScored.slice(
-      0,
-      Math.min(oppScored.length, branchLimit)
-    );
-
-    let worstForMe = Infinity;
-    for (const { after2 } of oppShortlist) {
-      const ev = evalState(after2, me, board);
-      if (ev < worstForMe) worstForMe = ev;
-    }
-    if (worstForMe > bestEval) {
-      bestEval = worstForMe;
+    if (worst > bestValue) {
+      bestValue = worst;
       best = a;
     }
   }
-
   return best;
 }
 
@@ -212,7 +214,7 @@ export function pickAIAction(
     case 4:
       return pickGreedyMinSetupAction(state, board);
     case 5:
-      return pickMinimaxAction(state, board, me);
+      return pickDeepAction(state, board, me);
   }
 }
 

@@ -964,8 +964,8 @@ export function Board({
         {labelDot && coach?.label && (
           <text
             x={labelDot.x}
-            y={labelDot.y - dotRadius * 1.75}
-            fontSize={dotRadius * 1.1}
+            y={labelDot.y - dotRadius * 2}
+            fontSize={dotRadius * 1.6}
             fontWeight="800"
             textAnchor="middle"
             className="coach-label"
@@ -979,7 +979,7 @@ export function Board({
           <CoachHand
             key={coach?.pointer}
             x={pointerDot.x + dotRadius * 0.3}
-            y={pointerBelow ? pointerDot.y + dotRadius * 0.3 : pointerDot.y - dotRadius * 0.3}
+            y={pointerBelow ? pointerDot.y + dotRadius * 0.85 : pointerDot.y - dotRadius * 0.85}
             size={dotRadius * 2.8}
             flip={!pointerBelow}
           />

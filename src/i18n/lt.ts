@@ -1608,7 +1608,7 @@ export const lt: Messages = {
     finishDone: "+4! Linija duoda tiek taškų, koks jos ilgis.",
     double: "Šis taškas užbaigia DVI linijas. Bakstelėkite jį!",
     doubleDone: (n: number) => `Taškus duoda tik ilgiausia linija: +${n}. Kita lieka nepaimta.`,
-    claim: "Nepaimta linija niekieno: Treneris galėjo ją pasiimti! Bakstelėkite nepaimtą liniją ir pasiimkite ją.",
+    claim: "Ši linija dar niekieno – Treneris galėjo ją pasiimti! Bakstelėkite ir pasiimkite.",
     claimDone: (n: number) => `+${n}! Pasiimti liniją – tai jūsų ėjimas. Pasiimkite nepaimtas linijas anksčiau už Trenerį.`,
     find: "Jūsų ėjimas: raskite liniją, kuriai trūksta vieno taško.",
     findMiss: "Tai neužbaigia linijos. Ieškokite linijos su vienu tarpu.",

@@ -18,6 +18,7 @@ import {
 
 export type AvatarSpec =
   | 'human'
+  | 'coach'
   | { kind: 'ai'; level: Difficulty }
   | { kind: 'guest'; label: string };
 
@@ -134,6 +135,7 @@ export function PlayerAvatar({
   theme?: ThemeId;
 }) {
   if (avatar === 'human') return <HumanAvatar player={color} theme={theme} />;
+  if (avatar === 'coach') return <CoachAvatar />;
   if (avatar.kind === 'guest') return <GuestAvatar label={avatar.label} player={color} />;
   return <AIAvatar level={avatar.level} theme={theme} />;
 }
@@ -341,6 +343,56 @@ export function AIAvatar({ level, theme }: { level: Difficulty; theme?: ThemeId 
     case 5:
       return <RobotL5 label={label} />;
   }
+}
+
+/* Lesson Coach — calm gold teacher bot with a cap and whistle, so it never
+   reads as the Beginner bot the player meets next. */
+function CoachAvatar() {
+  const t = useT();
+  return (
+    <svg viewBox="0 0 100 100" className="avatar-svg" role="img" aria-label={t.coach.name}>
+      <defs>
+        <radialGradient id="rbc-head" cx="40%" cy="30%" r="80%">
+          <stop offset="0%" stopColor="#fff1c2" />
+          <stop offset="55%" stopColor="#e7b84f" />
+          <stop offset="100%" stopColor="#7a5012" />
+        </radialGradient>
+      </defs>
+      {/* head */}
+      <rect
+        x="16"
+        y="28"
+        width="68"
+        height="56"
+        rx="20"
+        fill="url(#rbc-head)"
+        stroke="#3d2806"
+        strokeWidth="1.2"
+      />
+      {/* cap: crown + brim */}
+      <path d="M 24 32 Q 26 12 50 12 Q 74 12 76 32 Z" fill="#0d4a23" stroke="#06210f" strokeWidth="1.2" />
+      <path d="M 50 32 Q 78 30 90 36 Q 76 40 50 37 Z" fill="#0d4a23" stroke="#06210f" strokeWidth="1.2" />
+      <circle cx="50" cy="13" r="2.6" fill="#7bdb95" stroke="#06210f" strokeWidth="0.8" />
+      {/* friendly eyes */}
+      <ellipse cx="36" cy="51" rx="6.5" ry="7" fill="#ffffff" />
+      <ellipse cx="64" cy="51" rx="6.5" ry="7" fill="#ffffff" />
+      <circle cx="37" cy="52" r="3" fill="#2a1a04" />
+      <circle cx="65" cy="52" r="3" fill="#2a1a04" />
+      <circle cx="38.2" cy="50.6" r="1.1" fill="#ffffff" />
+      <circle cx="66.2" cy="50.6" r="1.1" fill="#ffffff" />
+      {/* smile */}
+      <path
+        d="M 38 66 Q 50 75 62 66"
+        stroke="#2a1a04"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* whistle on a cord */}
+      <path d="M 30 82 Q 50 92 70 82" stroke="#0d4a23" strokeWidth="1.6" fill="none" />
+      <rect x="62" y="80" width="12" height="7" rx="3" fill="#cfd8d2" stroke="#3a4a40" strokeWidth="1" />
+    </svg>
+  );
 }
 
 /* L1 Beginner — silliest, asymmetric, drooly smile, biggest cheeks */

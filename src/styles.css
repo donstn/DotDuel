@@ -7586,8 +7586,9 @@ body.has-native-banner #root {
   padding: 8px 12px;
   font-size: 0.9rem;
 }
-.coach-end-score {
-  font-size: 1.6rem;
+.coach-end-card .coach-end-score {
+  font-size: 2.4rem;
+  line-height: 1.1;
   font-weight: 800;
   color: var(--text) !important;
   margin: 2px 0 8px !important;

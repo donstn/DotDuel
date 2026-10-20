@@ -3164,7 +3164,9 @@ export default function App() {
   const p1Stats = getPlayerRow(p1Name);
   const p2StatsRow = config.mode === 'hotseat' ? getPlayerRow(p2Name) : null;
 
-  const aiResignAvailable = (config.mode === 'ai' || config.mode === 'daily') && !state.finished;
+  // No red Resign in a new player's very first game (the back arrow still leaves).
+  const aiResignAvailable =
+    (config.mode === 'ai' || config.mode === 'daily') && !state.finished && settings.gamesPlayed > 0;
   const backHandler =
     config.mode === 'ai' || config.mode === 'daily' ? onAiBackPressed : onHotseatBackPressed;
 

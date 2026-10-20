@@ -199,42 +199,15 @@ function takeResumableGame(): ActiveGame | null {
 }
 const RESUMED_GAME = takeResumableGame();
 
-// Effective "show pending-claim rings" rule (Phase 1b — replaces the old
-// universal gamesPlayed/claimsMade learning window). Tiered by mode AND
-// shape:
-//   vs AI L1/L2/L3 on triangle — respects settings.showClaimableLines (default ON)
-//   vs AI L4 on triangle       — respects settings.showClaimableLinesL4 (default OFF)
-//   vs AI L5 on triangle       — never
-//   square / rectangle         — never (learning aid is Triangle-only; the
-//                                  old flicker was mix-blend-mode, see bugs.md)
-//   hot-seat / MP / daily      — never (perception is part of the game)
+// Unclaimed lines are drawn only vs Beginner/Easy/Medium bots on Triangle.
+// Hardcoded, no toggle: from Expert up (and on other shapes, hot-seat, MP,
+// daily) spotting them is part of the game.
 function effectiveShowRings(
-  settings: Settings,
   mode: GameMode | undefined,
   difficulty: Difficulty | undefined,
   shape: ShapeId | undefined,
 ): boolean {
-  if (mode !== 'ai') return false;
-  if (shape !== 'triangle') return false;
-  if (!difficulty) return false;
-  if (difficulty === 5) return false;
-  if (difficulty === 4) return settings.showClaimableLinesL4;
-  return settings.showClaimableLines;
-}
-
-// Whether the eye-toggle button should be rendered for the current mode.
-// Triangle-only, matching effectiveShowRings.
-function ringToggleAvailable(
-  mode: GameMode | undefined,
-  difficulty: Difficulty | undefined,
-  shape: ShapeId | undefined,
-): boolean {
-  return (
-    mode === 'ai' &&
-    shape === 'triangle' &&
-    difficulty !== undefined &&
-    difficulty <= 4
-  );
+  return mode === 'ai' && shape === 'triangle' && difficulty !== undefined && difficulty <= 3;
 }
 
 // Shown on any mp-flow screen when the Supabase realtime server has been
@@ -507,9 +480,7 @@ export default function App() {
   };
 
   // Keep audio.ts's enabled-flags in sync with Settings, from whichever path
-  // changed them (updateSettings above, or the direct setSettings/saveSettings
-  // call in onToggleRings further down — neither of which touch these two
-  // fields, but this effect is correct regardless of which path fired).
+  // changed them.
   useEffect(() => {
     setSfxEnabled(settings.sfxEnabled);
     setMusicEnabled(settings.musicEnabled);
@@ -2379,17 +2350,7 @@ export default function App() {
     return getBoard(config.shape).lines.reduce((sum, l) => sum + l.length, 0);
   }, [config]);
 
-  const ringsVisible = effectiveShowRings(settings, config?.mode, config?.difficulty, config?.shape);
-  const showRingsToggle = ringToggleAvailable(config?.mode, config?.difficulty, config?.shape);
-
-  const onToggleRings = () => {
-    const next: Settings =
-      config?.difficulty === 4
-        ? { ...settings, showClaimableLinesL4: !settings.showClaimableLinesL4 }
-        : { ...settings, showClaimableLines: !settings.showClaimableLines };
-    setSettings(next);
-    saveSettings(next);
-  };
+  const ringsVisible = effectiveShowRings(config?.mode, config?.difficulty, config?.shape);
 
   const onProgressResetWiped = () => {
     setProgress(resetProgress());
@@ -3202,20 +3163,6 @@ export default function App() {
                 isRunning={dailyClock.running}
               />
             </div>
-          )}
-          {showRingsToggle && (
-            <button
-              type="button"
-              className={`btn-claim-toggle${ringsVisible ? ' on' : ' off'}`}
-              onClick={onToggleRings}
-              aria-pressed={ringsVisible}
-              title={t.game.seeUnclaimedTitle(ringsVisible)}
-            >
-              <span className="claim-toggle-label">{t.game.seeUnclaimed}</span>
-              <span className="claim-toggle-switch" aria-hidden="true">
-                <span className="claim-toggle-knob" />
-              </span>
-            </button>
           )}
         </div>
         <button

@@ -169,8 +169,6 @@ export const en = {
     dailyTime: 'Your time for this attempt',
     claimPhaseHint: "All dots placed — tap an unclaimed line to claim it.",
     nothingToClaim: 'No unclaimed line through that dot.',
-    seeUnclaimed: 'See unclaimed lines',
-    seeUnclaimedTitle: (on: boolean) => `See unclaimed lines: ${on ? 'on' : 'off'}`,
     rules: 'How to play',
     showRules: 'Show rules',
     resign: 'Resign',

@@ -153,8 +153,6 @@ export const lt: Messages = {
     dailyTime: 'Šio bandymo laikas',
     claimPhaseHint: "Visi taškai padėti – bakstelėkite nepaimtą liniją.",
     nothingToClaim: 'Per šį tašką nėra nepaimtos linijos.',
-    seeUnclaimed: 'Rodyti nepaimtas linijas',
-    seeUnclaimedTitle: (on: boolean) => `Rodyti nepaimtas linijas: ${on ? 'įjungta' : 'išjungta'}`,
     rules: 'Kaip žaisti',
     showRules: 'Rodyti taisykles',
     resign: 'Pasiduoti',

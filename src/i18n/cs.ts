@@ -152,8 +152,6 @@ export const cs: Messages = {
     dailyTime: 'Tvůj čas na tento pokus',
     claimPhaseHint: "Všechny tečky jsou položené — klepni na nezabranou linii.",
     nothingToClaim: 'Touto tečkou nevede žádná nezabraná linie.',
-    seeUnclaimed: 'Zobrazit nezabrané linie',
-    seeUnclaimedTitle: (on: boolean) => `Zobrazit nezabrané linie: ${on ? 'zap.' : 'vyp.'}`,
     rules: 'Jak hrát',
     showRules: 'Zobrazit pravidla',
     resign: 'Vzdát se',

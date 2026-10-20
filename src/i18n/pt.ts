@@ -142,9 +142,6 @@ export const pt: Messages = {
     dailyTime: 'Seu tempo para esta tentativa',
     claimPhaseHint: "Todos os pontos colocados — toque em uma linha não marcada.",
     nothingToClaim: 'Nenhuma linha não marcada passa por esse ponto.',
-    seeUnclaimed: 'Ver linhas não marcadas',
-    seeUnclaimedTitle: (on: boolean) =>
-      `Ver linhas não marcadas: ${on ? 'ativado' : 'desativado'}`,
     rules: 'Como jogar',
     showRules: 'Mostrar regras',
     resign: 'Desistir',

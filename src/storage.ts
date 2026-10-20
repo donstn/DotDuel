@@ -133,8 +133,6 @@ export interface Settings {
   pendingTipSeen: boolean;
   gamesPlayed: number;
   claimsMade: number;
-  showClaimableLines: boolean;
-  showClaimableLinesL4: boolean;
   lastPlayedAt: number;
   sfxEnabled: boolean;
   musicEnabled: boolean;
@@ -151,8 +149,6 @@ function defaultSettings(): Settings {
     pendingTipSeen: false,
     gamesPlayed: 0,
     claimsMade: 0,
-    showClaimableLines: true,
-    showClaimableLinesL4: false,
     lastPlayedAt: 0,
     sfxEnabled: true,
     musicEnabled: true,

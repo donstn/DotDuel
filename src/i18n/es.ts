@@ -142,8 +142,6 @@ export const es: Messages = {
     dailyTime: 'Tu tiempo para este intento',
     claimPhaseHint: "Todos los puntos colocados: toca una línea sin reclamar.",
     nothingToClaim: 'Ninguna línea sin reclamar pasa por ese punto.',
-    seeUnclaimed: 'Ver líneas sin reclamar',
-    seeUnclaimedTitle: (on: boolean) => `Ver líneas sin reclamar: ${on ? 'activado' : 'desactivado'}`,
     rules: 'Cómo jugar',
     showRules: 'Mostrar reglas',
     resign: 'Rendirse',

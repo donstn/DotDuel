@@ -285,6 +285,18 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.23.0': {
+        changes: [
+          'Las líneas sin reclamar se muestran como una línea discontinua contra los bots Principiante, Fácil y Medio; contra Difícil e Imposible tienes que encontrarlas tú. El interruptor ya no está.',
+          'Las líneas más antiguas se atenúan para que destaquen las nuevas.',
+          'Tras 3 derrotas seguidas contra el mismo bot, recibes un consejo y la opción de jugar un nivel más fácil.',
+          'El primer paso de la lección muestra cuáles son tus puntos.',
+          'Sin anuncios en tus 3 primeras partidas.',
+          'Se acabó el recuadro de anuncio vacío.',
+          'El Entrenador tiene su propio aspecto y la lección se lee mejor: «+N» y puntuación final más grandes, y la mano ya no tapa el punto.',
+          'Sin botón Rendirse en tu primerísima partida.',
+        ],
+      },
       'Alpha 0.4.22.1': {
         changes: [
           'Las pantallas de búsqueda de rival usan el marco pintado y el botón principal ya no tiene el recuadro gris.',

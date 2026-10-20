@@ -285,6 +285,18 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.23.0': {
+        changes: [
+          'Linhas não marcadas aparecem como uma linha tracejada contra os bots Iniciante, Fácil e Médio; contra Difícil e Impossível tens de as encontrar sozinho. O interruptor desapareceu.',
+          'Linhas mais antigas esbatem-se para que as mais recentes se destaquem.',
+          'Após 3 derrotas seguidas contra o mesmo bot, recebes uma dica e a opção de jogar um nível abaixo.',
+          'O primeiro passo da lição mostra quais são os teus pontos.',
+          'Sem anúncios nos teus 3 primeiros jogos.',
+          'Acabou a caixa de anúncio vazia.',
+          'O Treinador tem o seu próprio visual e a lição lê-se melhor: «+N» e resultado final maiores, e a mão já não tapa o ponto.',
+          'Sem botão Desistir no teu primeiro jogo.',
+        ],
+      },
       'Alpha 0.4.22.1': {
         changes: [
           'As telas de busca de adversário usam a moldura pintada e o botão principal perdeu a caixa cinza.',

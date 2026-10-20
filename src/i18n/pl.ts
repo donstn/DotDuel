@@ -297,6 +297,18 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.23.0': {
+        changes: [
+          'Niezajęte linie są pokazywane jako jedna przerywana linia w grze z botami Początkujący, Łatwy i Średni; z Trudnym i Niemożliwym musisz je wypatrzyć sam. Przełącznik zniknął.',
+          'Starsze linie blakną, by wyróżniały się najnowsze.',
+          'Po 3 porażkach z rzędu z tym samym botem dostajesz wskazówkę i opcję gry o poziom łatwiej.',
+          'Pierwszy krok lekcji pokazuje, które kropki są twoje.',
+          'Brak reklam w pierwszych 3 grach.',
+          'Koniec z pustym polem reklamy.',
+          'Trener ma własny wygląd, a lekcję łatwiej czytać: większe „+N” i wynik końcowy, ręka nie zasłania już kropki.',
+          'Brak przycisku Poddaj się w twojej pierwszej grze.',
+        ],
+      },
       'Alpha 0.4.22.1': {
         changes: [
           'Ekrany szukania przeciwnika mają malowaną ramkę, a główny przycisk nie ma już szarego prostokąta.',

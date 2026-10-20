@@ -296,6 +296,18 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.23.0': {
+        changes: [
+          'Nepaimtos linijos rodomos viena brūkšnine linija žaidžiant su Naujoku, Lengvu ir Vidutiniu botais; su Sunkiu ir Neįmanomu jas reikia pastebėti patiems. Jungiklio nebeliko.',
+          'Senesnės linijos išblunka, kad naujausios išsiskirtų.',
+          'Po 3 pralaimėjimų iš eilės tam pačiam botui gausite patarimą ir galimybę žaisti vienu lygiu lengviau.',
+          'Pirmajame pamokos žingsnyje matyti, kurie taškai jūsų.',
+          'Pirmuosiuose 3 žaidimuose reklamų nėra.',
+          'Nebėra tuščio reklamos langelio.',
+          'Treneris turi savo išvaizdą, o pamoką lengviau skaityti: didesnis „+N“ ir galutinis rezultatas, ranka nebeuždengia taško.',
+          'Pačiame pirmajame žaidime nėra mygtuko „Pasiduoti“.',
+        ],
+      },
       'Alpha 0.4.22.1': {
         changes: [
           'Varžovo paieškos langai dabar su pieštu rėmeliu, o pagrindinis mygtukas neturi pilko stačiakampio.',

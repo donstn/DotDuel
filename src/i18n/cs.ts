@@ -295,6 +295,18 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.23.0': {
+        changes: [
+          'Nezabrané linie se zobrazují jako jedna čárkovaná čára na úrovních Začátečnická, Snadná a Střední; na úrovních Těžká a Nemožná je musíte najít sami. Přepínač zmizel.',
+          'Starší linie blednou, aby vynikly ty nejnovější.',
+          'Po 3 prohrách v řadě se stejným botem dostanete tip a možnost hrát o úroveň snadněji.',
+          'První krok lekce ukazuje, které tečky jsou vaše.',
+          'V prvních 3 hrách nejsou žádné reklamy.',
+          'Už žádné prázdné reklamní okno.',
+          'Trenér má vlastní vzhled a lekce se lépe čte: větší „+N“ a konečné skóre, ruka už nezakrývá tečku.',
+          'V úplně první hře není tlačítko Vzdát se.',
+        ],
+      },
       'Alpha 0.4.22.1': {
         changes: [
           'Obrazovky hledání soupeře mají malovaný rámeček a hlavní tlačítko už nemá šedý obdélník.',

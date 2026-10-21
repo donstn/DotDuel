@@ -30,6 +30,44 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.23.0',
+    date: '2026-10-20',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Unclaimed lines show as one dashed line against Beginner, Easy and Medium bots; against Hard and Impossible you have to spot them yourself. The on/off switch is gone.',
+      },
+      {
+        kind: 'changed',
+        text: 'Older lines fade so the newest stand out.',
+      },
+      {
+        kind: 'added',
+        text: 'After 3 losses in a row against the same bot, you get a tip and an option to play one level lower.',
+      },
+      {
+        kind: 'changed',
+        text: 'The first lesson step shows which dots are yours.',
+      },
+      {
+        kind: 'changed',
+        text: 'No ads in your first 3 games.',
+      },
+      {
+        kind: 'fixed',
+        text: 'No more empty ad box.',
+      },
+      {
+        kind: 'changed',
+        text: 'The Coach has its own look, and the lesson is easier to read (bigger "+N" label and final score, the hand no longer covers the dot).',
+      },
+      {
+        kind: 'changed',
+        text: 'No Resign button in your very first game.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.22.1',
     date: '2026-10-19',
     changes: [

@@ -142,8 +142,6 @@ export const es: Messages = {
     dailyTime: 'Tu tiempo para este intento',
     claimPhaseHint: "Todos los puntos colocados: toca una línea sin reclamar.",
     nothingToClaim: 'Ninguna línea sin reclamar pasa por ese punto.',
-    seeUnclaimed: 'Ver líneas sin reclamar',
-    seeUnclaimedTitle: (on: boolean) => `Ver líneas sin reclamar: ${on ? 'activado' : 'desactivado'}`,
     rules: 'Cómo jugar',
     showRules: 'Mostrar reglas',
     resign: 'Rendirse',
@@ -197,7 +195,7 @@ export const es: Messages = {
     catchP:
       'Si tu punto completa varias líneas a la vez, solo puntúas la más larga. Las demás líneas terminadas quedan sin reclamar: cualquiera puede llevárselas en un turno posterior.',
     watchH: 'Observa el tablero',
-    watchP: "Contra el bot en el Triángulo (salvo en Imposible), las líneas sin reclamar llevan un anillo amarillo (puedes desactivarlo). En el resto de partidas nada las marca: busca una línea totalmente coloreada que no esté tachada y toca cualquiera de sus puntos para reclamarla. Puntos gratis por estar atento.",
+    watchP: "Contra el bot en el Triángulo (salvo en Imposible), las líneas sin reclamar se marcan con una línea discontinua (puedes desactivarla). En el resto de partidas nada las marca: busca una línea totalmente coloreada que no esté tachada y toca cualquiera de sus puntos para reclamarla. Puntos gratis por estar atento.",
     endH: 'Fin de la partida',
     endP:
       'Cuando todos los puntos están coloreados y todas las líneas terminadas han sido reclamadas. Gana quien tenga más puntos; si hay igualdad, es empate.',
@@ -287,6 +285,18 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.23.0': {
+        changes: [
+          'Las líneas sin reclamar se muestran como una línea discontinua contra los bots Principiante, Fácil y Medio; contra Difícil e Imposible tienes que encontrarlas tú. El interruptor ya no está.',
+          'Las líneas más antiguas se atenúan para que destaquen las nuevas.',
+          'Tras 3 derrotas seguidas contra el mismo bot, recibes un consejo y la opción de jugar un nivel más fácil.',
+          'El primer paso de la lección muestra cuáles son tus puntos.',
+          'Sin anuncios en tus 3 primeras partidas.',
+          'Se acabó el recuadro de anuncio vacío.',
+          'El Entrenador tiene su propio aspecto y la lección se lee mejor: «+N» y puntuación final más grandes, y la mano ya no tapa el punto.',
+          'Sin botón Rendirse en tu primerísima partida.',
+        ],
+      },
       'Alpha 0.4.22.1': {
         changes: [
           'Las pantallas de búsqueda de rival usan el marco pintado y el botón principal ya no tiene el recuadro gris.',
@@ -1137,6 +1147,9 @@ export const es: Messages = {
     levelUnlockedHeadline: (level: string) => `${level} desbloqueado.`,
     levelUnlockedBody: 'La IA acaba de volverse más lista. ¿Lista para enfrentarte a ella?',
     tryLevel: (level: string) => `Probar ${level}`,
+    lossRunHeadline: "Bot duro, ¿eh?",
+    lossRunTip: "Consejo: antes de colorear un punto, comprueba que no dejas una línea a falta de un punto. El bot las completa.",
+    stepDown: (level: string) => `Jugar en ${level}`,
     niceOne: 'Bien hecho.',
     niceOneBody: 'Ya superaste esto. ¿Quieres un combate más difícil?',
   },
@@ -1581,6 +1594,7 @@ export const es: Messages = {
   },
   coach: {
     name: "Entrenador",
+    yourDots: "Tus puntos",
     skip: "Saltar",
     welcomeTitle: "Te damos la bienvenida a DotDuel",
     welcomeBody: "Los jugadores colocan puntos por turnos. Completa una línea recta y suma tantos puntos como su longitud. Gana quien sume más.",

@@ -1666,89 +1666,6 @@ html[data-art~="menu-button"] .menu-share-link {
   }
 }
 
-/* Phase 1b — "See unclaimed lines" labeled toggle pill.
-   Lives inside .topbar-center, below the pending indicator, only when
-   vs-AI L1-L4 (gated by showRingsToggle). iOS-style switch on the right;
-   tap anywhere on the pill toggles state. Discoverable + explicit
-   compared to the original 18px eye icon. */
-.btn-claim-toggle {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 3px 8px 3px 10px;
-  border-radius: 14px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--text);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  white-space: nowrap;
-  user-select: none;
-  transition: background 160ms ease, border-color 160ms ease;
-}
-
-.btn-claim-toggle:hover {
-  background: var(--glass-bg-strong);
-  border-color: var(--glass-border-strong);
-}
-
-.btn-claim-toggle.off {
-  color: rgba(255, 255, 255, 0.65);
-}
-
-.claim-toggle-switch {
-  display: inline-block;
-  position: relative;
-  width: 26px;
-  height: 14px;
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.18);
-  transition: background 160ms ease;
-  flex: 0 0 auto;
-}
-
-.btn-claim-toggle.on .claim-toggle-switch {
-  background: var(--accent);
-}
-
-.claim-toggle-knob {
-  position: absolute;
-  top: 1px;
-  left: 1px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-  transition: transform 160ms ease;
-}
-
-.btn-claim-toggle.on .claim-toggle-knob {
-  transform: translateX(12px);
-}
-
-@media (max-width: 720px) {
-  .btn-claim-toggle {
-    font-size: 0.75rem;
-    padding: 2px 6px 2px 9px;
-    gap: 6px;
-  }
-  .claim-toggle-switch {
-    width: 22px;
-    height: 12px;
-  }
-  .claim-toggle-knob {
-    width: 10px;
-    height: 10px;
-  }
-  .btn-claim-toggle.on .claim-toggle-knob {
-    transform: translateX(10px);
-  }
-}
-
 .btn-rules {
   width: 40px;
   height: 40px;
@@ -2863,12 +2780,14 @@ h1, h2, h3,
   to { opacity: 1; }
 }
 
-/* Static yellow ring on colored dots that belong to a pending line.
-   Shown only during the learning-hint window for new players. No
-   animation — kept calm so a busy board never strobes. */
-.dot-hint-ring {
-  stroke: #ffd680;
-  stroke-width: 0.08;
+/* Unclaimed (pending) line: one static dashed stroke, shown during the
+   learning window and in the lesson. Not gold — gold means "tap here". */
+.waiting-line {
+  stroke: #fffbea;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9));
+}
+.strike-old {
   opacity: 0.55;
 }
 
@@ -3806,6 +3725,18 @@ h1, h2, h3,
 }
 .ad-slot .adsbygoogle {
   max-height: 90px;
+}
+/* No empty box: keep the space while AdSense loads (no layout jump), drop
+   the frame until it fills, and collapse the slot if it comes back unfilled. */
+.ad-slot:has(ins.adsbygoogle):not(:has(ins[data-ad-status="filled"])) {
+  background: transparent;
+  border-color: transparent;
+}
+.ad-slot:has(ins.adsbygoogle):not(:has(ins[data-ad-status="filled"]))::before {
+  content: none;
+}
+.ad-slot:has(ins[data-ad-status="unfilled"]) {
+  display: none;
 }
 .ad-slot::before {
   content: "Ad";
@@ -7403,8 +7334,7 @@ body.has-native-banner #root {
   stroke: var(--accent);
   opacity: 0.28;
 }
-.coach-gap-ring,
-.coach-waiting {
+.coach-gap-ring {
   stroke: #ffd680;
 }
 .coach-label {
@@ -7486,11 +7416,35 @@ body.has-native-banner #root {
 }
 .coach-bubble-name {
   flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   color: var(--accent);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+/* First step only: which colour is "you" (themes differ, so a swatch, not a word). */
+.coach-you {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text);
+  letter-spacing: normal;
+  text-transform: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.coach-you-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--p1-bright), var(--p1) 70%);
+  box-shadow: 0 0 0 1.5px var(--p1-glow);
 }
 .coach-bubble-text {
   flex: 1 1 200px;
@@ -7549,8 +7503,9 @@ body.has-native-banner #root {
   padding: 8px 12px;
   font-size: 0.9rem;
 }
-.coach-end-score {
-  font-size: 1.6rem;
+.coach-end-card .coach-end-score {
+  font-size: 2.4rem;
+  line-height: 1.1;
   font-weight: 800;
   color: var(--text) !important;
   margin: 2px 0 8px !important;

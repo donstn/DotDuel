@@ -152,8 +152,6 @@ export const cs: Messages = {
     dailyTime: 'Tvůj čas na tento pokus',
     claimPhaseHint: "Všechny tečky jsou položené — klepni na nezabranou linii.",
     nothingToClaim: 'Touto tečkou nevede žádná nezabraná linie.',
-    seeUnclaimed: 'Zobrazit nezabrané linie',
-    seeUnclaimedTitle: (on: boolean) => `Zobrazit nezabrané linie: ${on ? 'zap.' : 'vyp.'}`,
     rules: 'Jak hrát',
     showRules: 'Zobrazit pravidla',
     resign: 'Vzdát se',
@@ -207,7 +205,7 @@ export const cs: Messages = {
     catchP:
       'Pokud tvá tečka dokončí několik linií najednou, boduješ jen tu nejdelší. Ostatní dokončené linie se stanou nezabranými — kdokoli je může získat v pozdějším tahu.',
     watchH: 'Sleduj desku',
-    watchP: "Ve hře s botem na trojúhelníku (kromě úrovně Nemožná) mají nezabrané linie žlutý kroužek (lze ho vypnout). Jinde je nic neoznačuje: najdi úplně vybarvenou linii, která ještě není přeškrtnutá, a klepni na kteroukoli její tečku. Body zdarma za pozornost.",
+    watchP: "Ve hře s botem na trojúhelníku (kromě úrovně Nemožná) jsou nezabrané linie vyznačené přerušovanou čarou (lze ji vypnout). Jinde je nic neoznačuje: najdi úplně vybarvenou linii, která ještě není přeškrtnutá, a klepni na kteroukoli její tečku. Body zdarma za pozornost.",
     endH: 'Konec hry',
     endP:
       'Když jsou všechny tečky vybarvené a všechny dokončené linie zabrané. Vyhrává nejvyšší skóre; shodné skóre znamená remízu.',
@@ -297,6 +295,18 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.23.0': {
+        changes: [
+          'Nezabrané linie se zobrazují jako jedna čárkovaná čára na úrovních Začátečnická, Snadná a Střední; na úrovních Těžká a Nemožná je musíte najít sami. Přepínač zmizel.',
+          'Starší linie blednou, aby vynikly ty nejnovější.',
+          'Po 3 prohrách v řadě se stejným botem dostanete tip a možnost hrát o úroveň snadněji.',
+          'První krok lekce ukazuje, které tečky jsou vaše.',
+          'V prvních 3 hrách nejsou žádné reklamy.',
+          'Už žádné prázdné reklamní okno.',
+          'Trenér má vlastní vzhled a lekce se lépe čte: větší „+N“ a konečné skóre, ruka už nezakrývá tečku.',
+          'V úplně první hře není tlačítko Vzdát se.',
+        ],
+      },
       'Alpha 0.4.22.1': {
         changes: [
           'Obrazovky hledání soupeře mají malovaný rámeček a hlavní tlačítko už nemá šedý obdélník.',
@@ -1147,6 +1157,9 @@ export const cs: Messages = {
     levelUnlockedHeadline: (level: string) => `${level} odemčena.`,
     levelUnlockedBody: 'AI právě zchytřela. Připraven jí čelit?',
     tryLevel: (level: string) => `Zkusit ${level}`,
+    lossRunHeadline: "Těžký bot, co?",
+    lossRunTip: "Tip: než vybarvíš tečku, zkontroluj, že nenecháváš linii, které chybí jediná tečka. Bot takové dokončí.",
+    stepDown: (level: string) => `Hrát: ${level}`,
     niceOne: 'Pěkné.',
     niceOneBody: 'Tohle už máš za sebou. Chceš tvrdší boj?',
   },
@@ -1592,6 +1605,7 @@ export const cs: Messages = {
   },
   coach: {
     name: "Trenér",
+    yourDots: "Tvoje tečky",
     skip: "Přeskočit",
     welcomeTitle: "Vítej v DotDuelu",
     welcomeBody: "Hráči se střídají v pokládání teček. Dokonči rovnou linii a získáš bod za každou její tečku. Vyhrává víc bodů.",

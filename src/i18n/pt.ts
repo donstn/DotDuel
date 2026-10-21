@@ -142,9 +142,6 @@ export const pt: Messages = {
     dailyTime: 'Seu tempo para esta tentativa',
     claimPhaseHint: "Todos os pontos colocados — toque em uma linha não marcada.",
     nothingToClaim: 'Nenhuma linha não marcada passa por esse ponto.',
-    seeUnclaimed: 'Ver linhas não marcadas',
-    seeUnclaimedTitle: (on: boolean) =>
-      `Ver linhas não marcadas: ${on ? 'ativado' : 'desativado'}`,
     rules: 'Como jogar',
     showRules: 'Mostrar regras',
     resign: 'Desistir',
@@ -198,7 +195,7 @@ export const pt: Messages = {
     catchP:
       'Se o seu ponto concluir várias linhas de uma vez, você pontua apenas a mais longa. As outras linhas concluídas ficam não marcadas: qualquer um pode marcá-las em um turno posterior.',
     watchH: 'Fique de olho no tabuleiro',
-    watchP: "Contra o bot no Triângulo (exceto no Impossível), linhas não marcadas ganham um anel amarelo (dá para desligar). Nos outros jogos nada as indica: procure uma linha toda colorida que ainda não foi riscada e toque em qualquer ponto dela para marcá-la. Pontos grátis por prestar atenção.",
+    watchP: "Contra o bot no Triângulo (exceto no Impossível), linhas não marcadas aparecem com uma linha tracejada (dá para desligar). Nos outros jogos nada as indica: procure uma linha toda colorida que ainda não foi riscada e toque em qualquer ponto dela para marcá-la. Pontos grátis por prestar atenção.",
     endH: 'Fim da partida',
     endP:
       'Quando todos os pontos estão coloridos e todas as linhas concluídas foram marcadas. Vence quem tiver mais pontos; em caso de igualdade, é empate.',
@@ -288,6 +285,18 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.23.0': {
+        changes: [
+          'Linhas não marcadas aparecem como uma linha tracejada contra os bots Iniciante, Fácil e Médio; contra Difícil e Impossível tens de as encontrar sozinho. O interruptor desapareceu.',
+          'Linhas mais antigas esbatem-se para que as mais recentes se destaquem.',
+          'Após 3 derrotas seguidas contra o mesmo bot, recebes uma dica e a opção de jogar um nível abaixo.',
+          'O primeiro passo da lição mostra quais são os teus pontos.',
+          'Sem anúncios nos teus 3 primeiros jogos.',
+          'Acabou a caixa de anúncio vazia.',
+          'O Treinador tem o seu próprio visual e a lição lê-se melhor: «+N» e resultado final maiores, e a mão já não tapa o ponto.',
+          'Sem botão Desistir no teu primeiro jogo.',
+        ],
+      },
       'Alpha 0.4.22.1': {
         changes: [
           'As telas de busca de adversário usam a moldura pintada e o botão principal perdeu a caixa cinza.',
@@ -1218,6 +1227,9 @@ export const pt: Messages = {
     levelUnlockedHeadline: (level: string) => `${level} desbloqueado.`,
     levelUnlockedBody: 'A IA acabou de ficar mais esperta. Pronto para encará-la?',
     tryLevel: (level: string) => `Experimentar ${level}`,
+    lossRunHeadline: "Bot difícil, né?",
+    lossRunTip: "Dica: antes de colorir um ponto, veja se não deixa uma linha faltando só um ponto. O bot completa essas.",
+    stepDown: (level: string) => `Jogar no ${level}`,
     niceOne: 'Mandou bem.',
     niceOneBody: 'Você já venceu isto. Quer um desafio mais difícil?',
   },
@@ -1583,6 +1595,7 @@ export const pt: Messages = {
   },
   coach: {
     name: "Treinador",
+    yourDots: "Seus pontos",
     skip: "Pular",
     welcomeTitle: "Boas-vindas ao DotDuel",
     welcomeBody: "Os jogadores colocam pontos alternadamente. Complete uma linha reta e ganhe tantos pontos quanto o comprimento dela. Vence quem fizer mais pontos.",

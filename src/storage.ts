@@ -133,11 +133,11 @@ export interface Settings {
   pendingTipSeen: boolean;
   gamesPlayed: number;
   claimsMade: number;
-  showClaimableLines: boolean;
-  showClaimableLinesL4: boolean;
   lastPlayedAt: number;
   sfxEnabled: boolean;
   musicEnabled: boolean;
+  /** Losses in a row vs one bot (`shape:difficulty`); a win or draw resets it. */
+  aiLossRun: { key: string; n: number };
 }
 
 function defaultSettings(): Settings {
@@ -149,11 +149,10 @@ function defaultSettings(): Settings {
     pendingTipSeen: false,
     gamesPlayed: 0,
     claimsMade: 0,
-    showClaimableLines: true,
-    showClaimableLinesL4: false,
     lastPlayedAt: 0,
     sfxEnabled: true,
     musicEnabled: true,
+    aiLossRun: { key: '', n: 0 },
   };
 }
 

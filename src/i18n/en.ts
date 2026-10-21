@@ -169,8 +169,6 @@ export const en = {
     dailyTime: 'Your time for this attempt',
     claimPhaseHint: "All dots placed — tap an unclaimed line to claim it.",
     nothingToClaim: 'No unclaimed line through that dot.',
-    seeUnclaimed: 'See unclaimed lines',
-    seeUnclaimedTitle: (on: boolean) => `See unclaimed lines: ${on ? 'on' : 'off'}`,
     rules: 'How to play',
     showRules: 'Show rules',
     resign: 'Resign',
@@ -228,7 +226,7 @@ export const en = {
     catchP:
       'If your dot finishes several lines at once, you score only the longest. The other finished lines become unclaimed — anyone can grab them on a later turn.',
     watchH: 'Watch the board',
-    watchP: "Against the bot on Triangle (except Impossible), unclaimed lines get a yellow ring (you can switch it off). Everywhere else nothing marks them: spot a fully coloured line that hasn’t been crossed off, then tap any of its dots to claim it. Free points for paying attention.",
+    watchP: "Against the bot on Triangle (except Impossible), unclaimed lines are drawn as a dashed line (you can switch it off). Everywhere else nothing marks them: spot a fully coloured line that hasn’t been crossed off, then tap any of its dots to claim it. Free points for paying attention.",
     endH: 'Game end',
     endP:
       'When every dot is colored and every finished line has been claimed. Highest score wins; equal scores draw.',
@@ -687,6 +685,9 @@ export const en = {
     levelUnlockedHeadline: (level: string) => `${level} unlocked.`,
     levelUnlockedBody: 'The AI just got smarter. Ready to face it?',
     tryLevel: (level: string) => `Try ${level}`,
+    lossRunHeadline: "Tough bot, huh?",
+    lossRunTip: "Tip: before you colour a dot, check it doesn’t leave a line one dot short. The bot finishes those.",
+    stepDown: (level: string) => `Play ${level}`,
     niceOne: 'Nice one.',
     niceOneBody: 'Already cleared this. Want a tougher fight?',
   },
@@ -999,6 +1000,7 @@ export const en = {
   },
   coach: {
     name: "Coach",
+    yourDots: "Your dots",
     skip: "Skip",
     welcomeTitle: "Welcome to DotDuel",
     welcomeBody: "Take turns placing dots. Finish a straight line and it scores a point for every dot in it. Most points wins.",

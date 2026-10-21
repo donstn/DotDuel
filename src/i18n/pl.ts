@@ -154,8 +154,6 @@ export const pl: Messages = {
     dailyTime: 'Twój czas na tę próbę',
     claimPhaseHint: "Wszystkie kropki postawione — dotknij niezajętej linii.",
     nothingToClaim: 'Przez tę kropkę nie biegnie żadna niezajęta linia.',
-    seeUnclaimed: 'Pokaż niezajęte linie',
-    seeUnclaimedTitle: (on: boolean) => `Pokaż niezajęte linie: ${on ? 'wł.' : 'wył.'}`,
     rules: 'Jak grać',
     showRules: 'Pokaż zasady',
     resign: 'Poddaj się',
@@ -209,7 +207,7 @@ export const pl: Messages = {
     catchP:
       'Jeśli Twoja kropka ukończy kilka linii naraz, punktujesz tylko najdłuższą. Pozostałe ukończone linie stają się niezajęte — każdy może je zająć w późniejszej turze.',
     watchH: 'Obserwuj planszę',
-    watchP: "W grze z botem na trójkącie (poza poziomem Niemożliwy) niezajęte linie mają żółty pierścień (można go wyłączyć). W pozostałych grach nic ich nie oznacza: wypatrz w pełni pokolorowaną, jeszcze nieprzekreśloną linię i dotknij dowolnej jej kropki, aby ją zająć. Darmowe punkty za uważność.",
+    watchP: "W grze z botem na trójkącie (poza poziomem Niemożliwy) niezajęte linie są zaznaczone linią przerywaną (można ją wyłączyć). W pozostałych grach nic ich nie oznacza: wypatrz w pełni pokolorowaną, jeszcze nieprzekreśloną linię i dotknij dowolnej jej kropki, aby ją zająć. Darmowe punkty za uważność.",
     endH: 'Koniec gry',
     endP:
       'Gdy wszystkie kropki są pokolorowane i wszystkie ukończone linie zostały zajęte. Wygrywa najwyższy wynik; równy wynik to remis.',
@@ -299,6 +297,18 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.23.0': {
+        changes: [
+          'Niezajęte linie są pokazywane jako jedna przerywana linia w grze z botami Początkujący, Łatwy i Średni; z Trudnym i Niemożliwym musisz je wypatrzyć sam. Przełącznik zniknął.',
+          'Starsze linie blakną, by wyróżniały się najnowsze.',
+          'Po 3 porażkach z rzędu z tym samym botem dostajesz wskazówkę i opcję gry o poziom łatwiej.',
+          'Pierwszy krok lekcji pokazuje, które kropki są twoje.',
+          'Brak reklam w pierwszych 3 grach.',
+          'Koniec z pustym polem reklamy.',
+          'Trener ma własny wygląd, a lekcję łatwiej czytać: większe „+N” i wynik końcowy, ręka nie zasłania już kropki.',
+          'Brak przycisku Poddaj się w twojej pierwszej grze.',
+        ],
+      },
       'Alpha 0.4.22.1': {
         changes: [
           'Ekrany szukania przeciwnika mają malowaną ramkę, a główny przycisk nie ma już szarego prostokąta.',
@@ -1149,6 +1159,9 @@ export const pl: Messages = {
     levelUnlockedHeadline: (level: string) => `Poziom ${level} odblokowany.`,
     levelUnlockedBody: 'AI właśnie zmądrzało. Gotów, by się z nim zmierzyć?',
     tryLevel: (level: string) => `Wypróbuj poziom ${level}`,
+    lossRunHeadline: "Trudny bot, co?",
+    lossRunTip: "Wskazówka: zanim pokolorujesz kropkę, sprawdź, czy nie zostawiasz linii, której brakuje jednej kropki. Bot takie kończy.",
+    stepDown: (level: string) => `Zagraj: ${level}`,
     niceOne: 'Nieźle.',
     niceOneBody: 'To masz już za sobą. Chcesz trudniejszej walki?',
   },
@@ -1594,6 +1607,7 @@ export const pl: Messages = {
   },
   coach: {
     name: "Trener",
+    yourDots: "Twoje kropki",
     skip: "Pomiń",
     welcomeTitle: "Witaj w DotDuel",
     welcomeBody: "Gracze na zmianę stawiają kropki. Dokończ prostą linię, a dostaniesz punkt za każdą jej kropkę. Wygrywa ten, kto ma więcej punktów.",

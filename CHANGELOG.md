@@ -3,6 +3,34 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.23.0] - 2026-10-20
+
+Onboarding review, batch 2.
+
+### Added
+
+- **Losing-streak help** — after 3 losses in a row against the same bot
+  (shape × level, `settings.aiLossRun`), the game-over card shows a tip and a
+  button to play one level lower. The bot itself does not change.
+
+### Changed
+
+- **Unclaimed lines** — one dashed stroke, shown only vs Beginner/Easy/Medium
+  bots on Triangle, hardcoded in `effectiveShowRings`; Hard and Impossible
+  never show them. The in-game "See unclaimed lines" switch and the
+  `showClaimableLines`/`showClaimableLinesL4` settings are removed.
+- **Older strikes fade** — all but the last two fade until the game ends.
+- **Lesson polish** — "Your dots" swatch on the first step; the Coach has its
+  own gold avatar (was the Beginner bot's); "+N" label 1.6× dot radius; end-card
+  score 2.4rem (was overridden by `.confirm-card p`); tap-hand fingertip rests
+  on the dot's rim; "pts left" hidden; shorter Lithuanian claim copy.
+- **No ads in a new player's first 3 games.**
+- **No Resign button in a new player's first game** (back arrow still leaves).
+
+### Fixed
+
+- **Empty ad box** — no placeholder box when no ad is served.
+
 ## [0.4.22.1] - 2026-10-19
 
 ### Fixed

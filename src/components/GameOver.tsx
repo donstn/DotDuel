@@ -24,6 +24,8 @@ interface Props {
   mode: GameMode;
   shape: ShapeId;
   difficulty?: Difficulty;
+  /** Losses in a row vs this bot on this shape, this game included. */
+  lossRun?: number;
   p1Name: string;
   p2Name: string;
   unlock: UnlockResult;
@@ -174,6 +176,7 @@ export function GameOver({
   mode,
   shape,
   difficulty,
+  lossRun,
   p1Name,
   p2Name,
   unlock,
@@ -308,6 +311,7 @@ export function GameOver({
     mode,
     shape,
     difficulty,
+    lossRun,
     unlock,
     humanWon,
     beatImpossible,
@@ -462,10 +466,14 @@ export function GameOver({
   );
 }
 
+// After this many losses in a row to one bot, the card offers a tip and an easier level.
+const LOSS_RUN_HELP = 3;
+
 function buildSuggestion({
   mode,
   shape,
   difficulty,
+  lossRun,
   unlock,
   humanWon,
   beatImpossible,
@@ -478,6 +486,7 @@ function buildSuggestion({
   mode: GameMode;
   shape: ShapeId;
   difficulty?: Difficulty;
+  lossRun?: number;
   unlock: UnlockResult;
   humanWon: boolean;
   beatImpossible: boolean;
@@ -487,7 +496,24 @@ function buildSuggestion({
   t: Messages;
 }) {
   if (mode !== 'ai') return null;
-  if (!humanWon) return null;
+  if (!humanWon) {
+    if (!difficulty || (lossRun ?? 0) < LOSS_RUN_HELP) return null;
+    const easier = difficulty > 1 ? ((difficulty - 1) as Difficulty) : null;
+    return (
+      <div className="go-suggestion go-suggestion-level">
+        <div className="go-suggestion-headline">{t.gameOver.lossRunHeadline}</div>
+        <p className="go-suggestion-body">{t.gameOver.lossRunTip}</p>
+        {easier && (
+          <button
+            className="go-cta go-cta-secondary"
+            onClick={() => onStartShape(shape, easier)}
+          >
+            {t.gameOver.stepDown(t.difficulty[easier])}
+          </button>
+        )}
+      </div>
+    );
+  }
 
   // D) Full completion — Rhombus on Impossible
   if (beatImpossible && isFinalShape) {

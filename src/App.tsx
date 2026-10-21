@@ -166,6 +166,7 @@ interface SessionConfig {
   difficulty?: Difficulty;
 }
 
+const AD_FREE_FIRST_GAMES = 3;
 const AI_DELAY_MS = 250;
 
 // A saved game only resumes if every dot / line it mentions exists on its board.
@@ -198,42 +199,15 @@ function takeResumableGame(): ActiveGame | null {
 }
 const RESUMED_GAME = takeResumableGame();
 
-// Effective "show pending-claim rings" rule (Phase 1b — replaces the old
-// universal gamesPlayed/claimsMade learning window). Tiered by mode AND
-// shape:
-//   vs AI L1/L2/L3 on triangle — respects settings.showClaimableLines (default ON)
-//   vs AI L4 on triangle       — respects settings.showClaimableLinesL4 (default OFF)
-//   vs AI L5 on triangle       — never
-//   square / rectangle         — never (learning aid is Triangle-only; the
-//                                  old flicker was mix-blend-mode, see bugs.md)
-//   hot-seat / MP / daily      — never (perception is part of the game)
+// Unclaimed lines are drawn only vs Beginner/Easy/Medium bots on Triangle.
+// Hardcoded, no toggle: from Expert up (and on other shapes, hot-seat, MP,
+// daily) spotting them is part of the game.
 function effectiveShowRings(
-  settings: Settings,
   mode: GameMode | undefined,
   difficulty: Difficulty | undefined,
   shape: ShapeId | undefined,
 ): boolean {
-  if (mode !== 'ai') return false;
-  if (shape !== 'triangle') return false;
-  if (!difficulty) return false;
-  if (difficulty === 5) return false;
-  if (difficulty === 4) return settings.showClaimableLinesL4;
-  return settings.showClaimableLines;
-}
-
-// Whether the eye-toggle button should be rendered for the current mode.
-// Triangle-only, matching effectiveShowRings.
-function ringToggleAvailable(
-  mode: GameMode | undefined,
-  difficulty: Difficulty | undefined,
-  shape: ShapeId | undefined,
-): boolean {
-  return (
-    mode === 'ai' &&
-    shape === 'triangle' &&
-    difficulty !== undefined &&
-    difficulty <= 4
-  );
+  return mode === 'ai' && shape === 'triangle' && difficulty !== undefined && difficulty <= 3;
 }
 
 // Shown on any mp-flow screen when the Supabase realtime server has been
@@ -506,9 +480,7 @@ export default function App() {
   };
 
   // Keep audio.ts's enabled-flags in sync with Settings, from whichever path
-  // changed them (updateSettings above, or the direct setSettings/saveSettings
-  // call in onToggleRings further down — neither of which touch these two
-  // fields, but this effect is correct regardless of which path fired).
+  // changed them.
   useEffect(() => {
     setSfxEnabled(settings.sfxEnabled);
     setMusicEnabled(settings.musicEnabled);
@@ -853,10 +825,17 @@ export default function App() {
     if (!state || !state.finished || !config) return;
     if (gameEndCounted.current) return;
     gameEndCounted.current = true;
+    const runKey = `${config.shape}:${config.difficulty}`;
+    const lostToBot = config.mode === 'ai' && state.winner === 2;
+    const prevRun = settings.aiLossRun.key === runKey ? settings.aiLossRun.n : 0;
     updateSettings({
       ...settings,
       gamesPlayed: settings.gamesPlayed + 1,
       claimsMade: settings.claimsMade + claimsInGame.current,
+      aiLossRun:
+        config.mode === 'ai'
+          ? { key: runKey, n: lostToBot ? prevRun + 1 : 0 }
+          : settings.aiLossRun,
     });
 
     // Record W/D/L for the human player(s), tagged by shape (always)
@@ -1074,6 +1053,9 @@ export default function App() {
     }
   }, [user?.uid, cloudProfile?.displayName]);
 
+  // No ads until a new player has finished a few games (the lesson does not count).
+  const adsWarm = settings.gamesPlayed >= AD_FREE_FIRST_GAMES;
+
   // Native app (Capacitor/AdMob): initialize ads + UMP consent once at boot.
   // No-op on web (web uses AdSense via AdBanner). Respects the same ads gates.
   useEffect(() => {
@@ -1105,12 +1087,12 @@ export default function App() {
   // mpgame). No-op on web.
   useEffect(() => {
     if (!isNativeApp()) return;
-    if (screen === 'matchFound' || screen === 'mpgame') {
+    if (!adsWarm || screen === 'matchFound' || screen === 'mpgame') {
       void hideNativeBanner();
     } else {
       void showNativeBanner();
     }
-  }, [screen]);
+  }, [screen, adsWarm]);
 
   // 2b-v2 — subscribe to today's per-user daily-puzzle attempt doc so the
   // menu card can render the right state (not started / N/3 / 3/3 done)
@@ -2368,17 +2350,7 @@ export default function App() {
     return getBoard(config.shape).lines.reduce((sum, l) => sum + l.length, 0);
   }, [config]);
 
-  const ringsVisible = effectiveShowRings(settings, config?.mode, config?.difficulty, config?.shape);
-  const showRingsToggle = ringToggleAvailable(config?.mode, config?.difficulty, config?.shape);
-
-  const onToggleRings = () => {
-    const next: Settings =
-      config?.difficulty === 4
-        ? { ...settings, showClaimableLinesL4: !settings.showClaimableLinesL4 }
-        : { ...settings, showClaimableLines: !settings.showClaimableLines };
-    setSettings(next);
-    saveSettings(next);
-  };
+  const ringsVisible = effectiveShowRings(config?.mode, config?.difficulty, config?.shape);
 
   const onProgressResetWiped = () => {
     setProgress(resetProgress());
@@ -2868,7 +2840,7 @@ export default function App() {
     return (
       <>
         {mainContent}
-        {(screen === 'menu' || screen === 'lobby' || screen === 'matchmaking') && (
+        {adsWarm && (screen === 'menu' || screen === 'lobby' || screen === 'matchmaking') && (
           <AdBanner placement="menu" />
         )}
         <AppFooter
@@ -3153,7 +3125,9 @@ export default function App() {
   const p1Stats = getPlayerRow(p1Name);
   const p2StatsRow = config.mode === 'hotseat' ? getPlayerRow(p2Name) : null;
 
-  const aiResignAvailable = (config.mode === 'ai' || config.mode === 'daily') && !state.finished;
+  // No red Resign in a new player's very first game (the back arrow still leaves).
+  const aiResignAvailable =
+    (config.mode === 'ai' || config.mode === 'daily') && !state.finished && settings.gamesPlayed > 0;
   const backHandler =
     config.mode === 'ai' || config.mode === 'daily' ? onAiBackPressed : onHotseatBackPressed;
 
@@ -3189,20 +3163,6 @@ export default function App() {
                 isRunning={dailyClock.running}
               />
             </div>
-          )}
-          {showRingsToggle && (
-            <button
-              type="button"
-              className={`btn-claim-toggle${ringsVisible ? ' on' : ' off'}`}
-              onClick={onToggleRings}
-              aria-pressed={ringsVisible}
-              title={t.game.seeUnclaimedTitle(ringsVisible)}
-            >
-              <span className="claim-toggle-label">{t.game.seeUnclaimed}</span>
-              <span className="claim-toggle-switch" aria-hidden="true">
-                <span className="claim-toggle-knob" />
-              </span>
-            </button>
           )}
         </div>
         <button
@@ -3277,7 +3237,7 @@ export default function App() {
           </button>
         </div>
       )}
-      <AdBanner placement="ingame" />
+      {adsWarm && <AdBanner placement="ingame" />}
       {pendingTipOpen && !showOver && (
         <div className="coach-bubble coach-bubble-tip coach-bubble-floating" role="status" aria-live="polite">
           <span className="coach-bubble-text">{t.coach.pendingTip}</span>
@@ -3292,6 +3252,11 @@ export default function App() {
           mode={config.mode}
           shape={config.shape}
           difficulty={config.difficulty}
+          lossRun={
+            settings.aiLossRun.key === `${config.shape}:${config.difficulty}`
+              ? settings.aiLossRun.n
+              : 0
+          }
           finishedReason={offlineResigned ? 'resign' : undefined}
           p1Name={p1Label}
           p2Name={p2Label}

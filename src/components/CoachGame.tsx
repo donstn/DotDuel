@@ -288,7 +288,7 @@ export function CoachGame({
   const p2 = {
     name: t.coach.name,
     score: state.scores[2],
-    avatar: { kind: 'ai' as const, level: 1 as const },
+    avatar: 'coach' as const,
     thinking: !state.finished && state.current === 2,
   };
 
@@ -296,7 +296,15 @@ export function CoachGame({
     <div className="coach-slot">
       {shownMsg && (
         <div className="coach-bubble" role="status" aria-live="polite">
-          <span className="coach-bubble-name">{t.coach.name}</span>
+          <span className="coach-bubble-name">
+            {t.coach.name}
+            {stage === 'corner' && (
+              <span className="coach-you">
+                <span className="coach-you-dot" aria-hidden="true" />
+                {t.coach.yourDots}
+              </span>
+            )}
+          </span>
           <span className="coach-bubble-text">{shownMsg}</span>
         </div>
       )}
@@ -310,7 +318,8 @@ export function CoachGame({
           ‹
         </button>
         <div className="topbar-center">
-          <div className="remaining-points">
+          {/* Kept for layout, hidden: one number too many while learning. */}
+          <div className="remaining-points" style={{ visibility: 'hidden' }} aria-hidden="true">
             <span className="remaining-value">{remaining}</span>
             <span className="remaining-label">{t.game.ptsLeft}</span>
           </div>

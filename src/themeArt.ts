@@ -47,6 +47,21 @@ export interface ThemeArt {
   titleBanner?: StretchArt;
   /** Popovers, confirm dialogs, game-over card, language list. */
   cardFrame?: NineArt;
+  /** Round plate with an empty centre: back / ? / close (glyph is code). */
+  iconButton?: string;
+  /** Destructive pill: resign, reset, delete. */
+  dangerPill?: StretchArt;
+  /** Segmented tabs (inactive doubles as the toggle track) + top tabs. */
+  tabOff?: StretchArt;
+  tabOn?: StretchArt;
+  tabTopOff?: StretchArt;
+  tabTopOn?: StretchArt;
+  inputField?: StretchArt;
+  toggleKnob?: string;
+  /** Small selection tiles (lobby time controls). */
+  choiceTile?: NineArt;
+  /** Coach / tip bubble, tail painted in its bottom-left corner. */
+  speechBubble?: NineArt;
   shapeIcons?: Record<ShapeId, string>;
   /** Painted board: felt texture, dot sprites, line-stroke sprites (length 2–9). */
   board?: {
@@ -111,6 +126,70 @@ const ART: Partial<Record<ThemeId, ThemeArt>> = {
       capTop: 33,
       capBottom: 36,
     },
+    // UI renewal sheet (docs/art/sheet-ui-renewal.md). Pill caps cover the
+    // whole rounded end (≈ height / 2) so the curve never stretches.
+    iconButton: '/art/forest-pearl/icon-button.webp',
+    dangerPill: {
+      url: '/art/forest-pearl/danger-pill.webp',
+      width: 215,
+      height: 81,
+      capLeft: 54,
+      capRight: 55,
+    },
+    tabOff: {
+      url: '/art/forest-pearl/tab-off.webp',
+      width: 230,
+      height: 112,
+      capLeft: 58,
+      capRight: 58,
+    },
+    tabOn: {
+      url: '/art/forest-pearl/tab-on.webp',
+      width: 275,
+      height: 113,
+      capLeft: 64,
+      capRight: 64,
+    },
+    tabTopOff: {
+      url: '/art/forest-pearl/tab-top-off.webp',
+      width: 231,
+      height: 118,
+      capLeft: 58,
+      capRight: 58,
+    },
+    tabTopOn: {
+      url: '/art/forest-pearl/tab-top-on.webp',
+      width: 279,
+      height: 122,
+      capLeft: 64,
+      capRight: 64,
+    },
+    inputField: {
+      url: '/art/forest-pearl/input-field.webp',
+      width: 387,
+      height: 73,
+      capLeft: 25,
+      capRight: 26,
+    },
+    toggleKnob: '/art/forest-pearl/toggle-knob.webp',
+    choiceTile: {
+      url: '/art/forest-pearl/choice-tile.webp',
+      width: 207,
+      height: 209,
+      capLeft: 65,
+      capRight: 65,
+      capTop: 57,
+      capBottom: 53,
+    },
+    speechBubble: {
+      url: '/art/forest-pearl/speech-bubble.webp',
+      width: 247,
+      height: 229,
+      capLeft: 91,
+      capRight: 77,
+      capTop: 51,
+      capBottom: 89,
+    },
     board: {
       felt: '/art/forest-pearl/felt-base.webp',
       dot: (c) => `/art/forest-pearl/dot-p${c}.webp`,
@@ -161,6 +240,16 @@ function stretchVars(prefix: string, a: StretchArt): Record<string, string> {
   };
 }
 
+/** Nine-slice frame vars; `scale` = rendered px per painted px. */
+function nineVars(prefix: string, f: NineArt, scale: number): Record<string, string> {
+  const px = (v: number) => `${Math.round(v * scale)}px`;
+  return {
+    [`--${prefix}-img`]: `url("${f.url}")`,
+    [`--${prefix}-slice`]: `${f.capTop} ${f.capRight} ${f.capBottom} ${f.capLeft} fill`,
+    [`--${prefix}-width`]: `${px(f.capTop)} ${px(f.capRight)} ${px(f.capBottom)} ${px(f.capLeft)}`,
+  };
+}
+
 function themeArtVars(art: ThemeArt): { vars: Record<string, string>; slots: string[] } {
   const vars: Record<string, string> = {};
   const slots: string[] = [];
@@ -181,15 +270,38 @@ function themeArtVars(art: ThemeArt): { vars: Record<string, string>; slots: str
     slots.push('title-banner');
   }
   if (art.cardFrame) {
-    const f = art.cardFrame;
     // Rendered at 80% of the painted pixels (crisp on 2–3× screens).
-    const px = (v: number) => `${Math.round(v * 0.8)}px`;
-    Object.assign(vars, {
-      '--card-frame-img': `url("${f.url}")`,
-      '--card-frame-slice': `${f.capTop} ${f.capRight} ${f.capBottom} ${f.capLeft} fill`,
-      '--card-frame-width': `${px(f.capTop)} ${px(f.capRight)} ${px(f.capBottom)} ${px(f.capLeft)}`,
-    });
+    Object.assign(vars, nineVars('card-frame', art.cardFrame, 0.8));
     slots.push('card-frame');
+  }
+  const stretches: [string, StretchArt | undefined][] = [
+    ['danger-pill', art.dangerPill],
+    ['tab-off', art.tabOff],
+    ['tab-on', art.tabOn],
+    ['tab-top-off', art.tabTopOff],
+    ['tab-top-on', art.tabTopOn],
+    ['input-field', art.inputField],
+  ];
+  for (const [slot, a] of stretches) {
+    if (!a) continue;
+    Object.assign(vars, stretchVars(slot, a));
+    slots.push(slot);
+  }
+  if (art.choiceTile) {
+    Object.assign(vars, nineVars('choice-tile', art.choiceTile, 0.45));
+    slots.push('choice-tile');
+  }
+  if (art.speechBubble) {
+    Object.assign(vars, nineVars('speech-bubble', art.speechBubble, 0.42));
+    slots.push('speech-bubble');
+  }
+  if (art.iconButton) {
+    vars['--icon-btn-img'] = `url("${art.iconButton}")`;
+    slots.push('icon-button');
+  }
+  if (art.toggleKnob) {
+    vars['--toggle-knob-img'] = `url("${art.toggleKnob}")`;
+    slots.push('toggle-knob');
   }
   if (art.background) {
     vars['--bg-art-portrait'] = `url("${art.background.portrait}")`;

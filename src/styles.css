@@ -2787,9 +2787,6 @@ h1, h2, h3,
   opacity: 0.9;
   filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9));
 }
-.strike-old {
-  opacity: 0.55;
-}
 
 @keyframes pop {
   0% {

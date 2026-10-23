@@ -342,15 +342,8 @@ export async function drawPaintedCard(
   ctx.drawImage(art.img.sign, signX, signY, signW, signH);
   ctx.restore();
 
-  // Verdict — Win / Loss / Draw from the sharer's side; solo (daily) keeps its
-  // own headline since Win/Loss is meaningless there.
-  const verdict = share.b
-    ? share.outcome === 'win'
-      ? 'Win'
-      : share.outcome === 'loss'
-        ? 'Loss'
-        : 'Draw'
-    : share.headline;
+  // Verdict — Win / Loss / Draw from the sharer's side (daily: its headline).
+  const verdict = share.verdict;
   const tb = art.sign.text;
   const plank = {
     x: signX + signW * tb.left,
@@ -400,15 +393,29 @@ export async function drawPaintedCard(
     // any digit count (3-digit Square/Rectangle scores included).
     const aCX = colCX - box.w / 4;
     const bCX = colCX + box.w / 4;
+    // "pts" beside each number so the card says the game is won on points.
+    // 3-digit scores shrink the number until score + label fit their half.
+    const ptsFont = `700 26px ${FONT_DISPLAY}`;
+    ctx.font = ptsFont;
+    const ptsW = ctx.measureText(ptsLabel).width + 8;
+    const maxNum = Math.max(share.a.score, share.b.score);
+    const numSize = fitFont(ctx, String(maxNum), box.w / 2 - 84 - ptsW, 76, (s) => `700 ${s}px ${FONT_DISPLAY}`);
     const drawScore = (score: number, player: Player, lit: boolean, atCX: number) => {
       ctx.save();
-      ctx.font = scoreFont;
+      ctx.font = `700 ${numSize}px ${FONT_DISPLAY}`;
+      const nW = ctx.measureText(String(score)).width;
+      const x0 = atCX - (nW + ptsW) / 2;
+      ctx.textAlign = 'left';
       if (lit) {
         ctx.shadowColor = theme.dot[player].bright;
         ctx.shadowBlur = 22 * SCALE;
       }
       ctx.fillStyle = lit ? theme.dot[player].bright : theme.textDim;
-      ctx.fillText(String(score), atCX, scoreBase);
+      ctx.fillText(String(score), x0, scoreBase);
+      ctx.shadowBlur = 0;
+      ctx.font = ptsFont;
+      ctx.fillStyle = theme.textDim;
+      ctx.fillText(ptsLabel, x0 + nW + 8, scoreBase);
       ctx.restore();
     };
     drawScore(share.a.score, share.a.player, share.outcome !== 'loss', aCX);

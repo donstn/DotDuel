@@ -1257,6 +1257,9 @@ export const lt: Messages = {
     result: {
       genericBot: 'Botas',
       ptsLabel: 'tšk.',
+      verdictWin: 'Pergalė',
+      verdictLoss: 'Pralaimėjimas',
+      verdictDraw: 'Lygiosios',
       scanCaption: 'Nuskaitykite ir žaiskite dabar!',
       ctaWin: 'Ar pralenksite mane?',
       ctaLoss: 'Manote, kad galite geriau?',

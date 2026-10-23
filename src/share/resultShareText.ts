@@ -30,6 +30,8 @@ export interface ResultShare {
   /** Short uppercase context chip for the card, e.g. "VS AI · TRIANGLE". */
   tag: string;
   headline: string;
+  /** One-word result for the card's sign (Win / Loss / Draw), or the headline when solo. */
+  verdict: string;
   /** Sharer-side score first. `b` is null for solo results (daily). */
   a: { name: string; score: number; player: Player };
   b: { name: string; score: number; player: Player } | null;
@@ -55,12 +57,18 @@ export function buildResultShare(d: ShareResultData, t: Messages): ResultShare {
     loss: r.ctaLoss,
     draw: r.ctaDraw,
   };
+  const verdict: Record<ShareOutcome, string> = {
+    win: r.verdictWin,
+    loss: r.verdictLoss,
+    draw: r.verdictDraw,
+  };
 
   if (d.mode === 'daily') {
     const score = d.dailyScore ?? d.scores[1];
     return {
       tag: r.tagDaily,
       headline: r.dailyHeadline,
+      verdict: r.dailyHeadline,
       a: { name: d.p1Name, score, player: 1 },
       b: null,
       cta: r.dailyCta,
@@ -90,6 +98,7 @@ export function buildResultShare(d: ShareResultData, t: Messages): ResultShare {
     return {
       tag: r.tagVsBot(shapeLabel),
       headline,
+      verdict: verdict[outcome],
       a: { name: d.p1Name, score: s1, player: 1 },
       b: { name: d.p2Name, score: s2, player: 2 },
       cta: cta[outcome],
@@ -126,6 +135,7 @@ export function buildResultShare(d: ShareResultData, t: Messages): ResultShare {
     return {
       tag: r.tagRanked(shapeLabel),
       headline,
+      verdict: verdict[outcome],
       a: { name: myName, score: myScore, player: me },
       b: { name: oppName, score: oppScore, player: opp },
       cta: cta[outcome],
@@ -146,6 +156,7 @@ export function buildResultShare(d: ShareResultData, t: Messages): ResultShare {
     return {
       tag: r.tagHotseat(shapeLabel),
       headline: r.hotseatHeadlineWin(winnerName),
+      verdict: verdict.win,
       a: { name: winnerName, score: d.scores[w], player: w },
       b: { name: loserName, score: d.scores[l], player: l },
       cta: cta.win,
@@ -157,6 +168,7 @@ export function buildResultShare(d: ShareResultData, t: Messages): ResultShare {
   return {
     tag: r.tagHotseat(shapeLabel),
     headline: r.hotseatHeadlineDraw,
+    verdict: verdict.draw,
     a: { name: d.p1Name, score: s1, player: 1 },
     b: { name: d.p2Name, score: s2, player: 2 },
     cta: cta.draw,

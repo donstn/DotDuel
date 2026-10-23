@@ -366,16 +366,9 @@ function drawGlassCard(
   ctx.fillText('DotDuel', colCX, 110);
   drawGlowDot(ctx, colCX + wmW / 2 + 33, 96, 15, theme, 2);
 
-  // Verdict — just Win / Loss / Draw, from the sharer's perspective. Coloured by
-  // outcome: a win glows accent, a loss is muted, a draw is neutral. Solo/daily
-  // (no opponent) keeps its own headline since Win/Loss is meaningless there.
-  const verdict = share.b
-    ? share.outcome === 'win'
-      ? 'Win'
-      : share.outcome === 'loss'
-        ? 'Loss'
-        : 'Draw'
-    : share.headline;
+  // Verdict — Win / Loss / Draw from the sharer's side (daily: its headline).
+  // Coloured by outcome: a win glows accent, a loss is muted, a draw is neutral.
+  const verdict = share.verdict;
   ctx.font = `700 76px ${FONT_DISPLAY}`;
   const vLine = wrapText(ctx, verdict, colW)[0] ?? verdict;
   ctx.save();

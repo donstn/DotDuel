@@ -81,7 +81,7 @@ function colorIndex(player: Player, swap: boolean): 1 | 2 {
 // consistent core thickness regardless of how each source image happened
 // to come out. Length 1 has no entry — corners reuse length 2's art (see
 // below) and never index this table.
-const LINE_THICKNESS_MULT: Record<1 | 2, Record<number, number>> = {
+export const LINE_THICKNESS_MULT: Record<1 | 2, Record<number, number>> = {
   1: { 2: 0.808, 3: 0.874, 4: 0.954, 5: 1.027, 6: 1.1, 7: 1.178, 8: 1.265, 9: 1.348 },
   2: { 2: 0.824, 3: 1.04, 4: 1.065, 5: 1.022, 6: 0.978, 7: 0.979, 8: 0.898, 9: 0.859 },
 };

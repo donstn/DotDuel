@@ -475,7 +475,7 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
                     : t.rankings.emptyLocalShape(t.shapes[shape as ShapeId])}
                 </p>
               ) : (
-                <div className="rankings-table-wrap">
+                <div className="rankings-table-wrap is-narrow">
                   <table className="rankings-table">
                     <thead>
                       <tr>
@@ -720,7 +720,7 @@ function GlobalLeaderboard({
     // Skeleton rows instead of a bare text line: the table appears at its
     // final size immediately, so content doesn't jump in on slow networks.
     return (
-      <div className="rankings-table-wrap" aria-busy="true">
+      <div className="rankings-table-wrap is-narrow" aria-busy="true">
         <table className="rankings-table">
           <thead>
             <tr>
@@ -748,7 +748,7 @@ function GlobalLeaderboard({
     return <p className="rankings-empty">{t.rankings.emptyGlobal}</p>;
   }
   return (
-    <div className="rankings-table-wrap">
+    <div className="rankings-table-wrap is-narrow">
       <table className="rankings-table">
         <thead>
           <tr>

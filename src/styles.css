@@ -3844,6 +3844,7 @@ h1, h2, h3,
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
@@ -3857,6 +3858,7 @@ h1, h2, h3,
 .rankings-pills {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
 }
 
@@ -4041,16 +4043,19 @@ h1, h2, h3,
   white-space: nowrap;
 }
 
+/* Number columns hug their content; the name column takes the rest, so
+   wide screens don't spread the spare width between the numbers. */
 .rankings-table th.col-num,
 .rankings-table td.col-num {
+  width: 1%;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
 .rankings-table th.col-rank,
 .rankings-table td.col-rank {
+  width: 1%;
   text-align: center;
-  width: 36px;
   color: var(--text-mute);
 }
 
@@ -4094,9 +4099,17 @@ h1, h2, h3,
 }
 
 .rankings-table td.col-name {
-  max-width: 220px;
+  max-width: 0;
+  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* The leaderboards have few columns: keep them compact, centred lists
+   (head-to-head, with eight columns, keeps the full width). */
+.rankings-table-wrap.is-narrow {
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .rankings-name-link {
@@ -4221,13 +4234,6 @@ h1, h2, h3,
   .rankings-table thead th,
   .rankings-table tbody td {
     padding: 8px 4px;
-  }
-  .rankings-table td.col-name {
-    max-width: 0;
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
   .rankings-table .col-extra {
     display: none;

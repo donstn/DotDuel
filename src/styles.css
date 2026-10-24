@@ -2787,9 +2787,6 @@ h1, h2, h3,
   opacity: 0.9;
   filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9));
 }
-.strike-old {
-  opacity: 0.55;
-}
 
 @keyframes pop {
   0% {
@@ -7540,4 +7537,450 @@ body.has-native-banner #root {
   min-height: 86px;
   padding-left: 0;
   padding-right: 0;
+}
+
+/* ---- Painted UI renewal (themeArt: iconButton, dangerPill, tabs,
+   inputField, toggleKnob, choiceTile, speechBubble — docs/art/sheet-ui-renewal.md).
+   Stretch plates size their caps from the rendered height (--h), like the
+   menu plaques above. Selectors repeat the base rules' :hover / :not() chains
+   where those would otherwise out-rank these. */
+
+/* Round icon plates: game back / ?, popover close. The glyph stays text. */
+html[data-art~="icon-button"] .btn-back,
+html[data-art~="icon-button"] .btn-rules,
+html[data-art~="icon-button"] .rules-close,
+html[data-art~="icon-button"] .share-dialog-close,
+html[data-art~="icon-button"] .share-dialog-close:hover,
+html[data-art~="icon-button"] .btn-back:hover,
+html[data-art~="icon-button"] .btn-rules:hover,
+html[data-art~="icon-button"] .rules-close:hover {
+  border: 0;
+  border-radius: 50%;
+  background: var(--icon-btn-img) center / contain no-repeat;
+  color: var(--p2-glow);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+html[data-art~="icon-button"] .btn-back:hover,
+html[data-art~="icon-button"] .btn-rules:hover,
+html[data-art~="icon-button"] .rules-close:hover {
+  color: var(--accent);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5)) brightness(1.12);
+}
+html[data-art~="icon-button"] .btn-back,
+html[data-art~="icon-button"] .btn-rules {
+  width: 42px;
+  height: 42px;
+}
+html[data-art~="icon-button"] .share-dialog-close {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+/* Game topbar: the scenery shows through; "pts left" sits on the banner. */
+html[data-art~="title-banner"] .game-topbar {
+  background: none;
+  border-bottom: 0;
+}
+html[data-art~="title-banner"] .remaining-points {
+  --h: 40px;
+  box-sizing: border-box;
+  height: var(--h);
+  max-width: 100%;
+  padding: 0 calc(var(--h) * var(--title-banner-cap-r) * 0.9) calc(var(--h) * 0.14)
+    calc(var(--h) * var(--title-banner-cap-l) * 0.9);
+  border: 0;
+  border-image-source: var(--title-banner-img);
+  border-image-slice: var(--title-banner-slice);
+  border-image-width: 0 calc(var(--h) * var(--title-banner-cap-r)) 0
+    calc(var(--h) * var(--title-banner-cap-l));
+  border-image-repeat: stretch;
+  align-items: center;
+  white-space: nowrap;
+}
+html[data-art~="title-banner"] .remaining-label {
+  color: var(--p2-glow);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+}
+
+/* Side panels (desktop) and the phone score strip: the card frame. */
+html[data-art~="card-frame"] .side-panel {
+  background: none;
+  border: 0;
+  border-image-source: var(--card-frame-img);
+  border-image-slice: var(--card-frame-slice);
+  border-image-width: var(--card-frame-width);
+  border-image-repeat: stretch;
+  padding: 18px 14px;
+}
+html[data-art~="card-frame"] .score-strip {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  border-image-source: var(--card-frame-img);
+  border-image-slice: var(--card-frame-slice);
+  border-image-width: 16px;
+  border-image-repeat: stretch;
+  padding: 8px 10px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+}
+
+/* Destructive actions: the garnet pill. */
+html[data-art~="danger-pill"] .btn-resign-inline,
+html[data-art~="danger-pill"] .btn-resign-inline:hover,
+html[data-art~="danger-pill"] .settings-danger-btn,
+html[data-art~="danger-pill"] .settings-danger-btn:hover,
+html[data-art~="danger-pill"] .confirm-actions button.danger,
+html[data-art~="danger-pill"] .confirm-actions button.danger:hover {
+  --h: 36px;
+  box-sizing: border-box;
+  height: var(--h);
+  padding: 0 calc(var(--h) * var(--danger-pill-cap-r) * 0.95) 0
+    calc(var(--h) * var(--danger-pill-cap-l) * 0.95);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  border-image-source: var(--danger-pill-img);
+  border-image-slice: var(--danger-pill-slice);
+  border-image-width: 0 calc(var(--h) * var(--danger-pill-cap-r)) 0
+    calc(var(--h) * var(--danger-pill-cap-l));
+  border-image-repeat: stretch;
+  color: #ffd9d4;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+html[data-art~="danger-pill"] .btn-resign-inline,
+html[data-art~="danger-pill"] .btn-resign-inline:hover {
+  --h: 32px;
+  font-size: 0.78rem;
+}
+html[data-art~="danger-pill"] .confirm-actions button.danger,
+html[data-art~="danger-pill"] .confirm-actions button.danger:hover {
+  --h: 42px;
+}
+html[data-art~="danger-pill"] .btn-resign-inline:hover,
+html[data-art~="danger-pill"] .settings-danger-btn:hover,
+html[data-art~="danger-pill"] .confirm-actions button.danger:hover {
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45)) brightness(1.12);
+}
+
+/* The confirm dialogs' other button + the coach "Got it": the wooden pill. */
+html[data-art~="pill-button"] .confirm-actions button:not(.danger),
+html[data-art~="pill-button"] .confirm-actions button:not(.danger):hover,
+html[data-art~="pill-button"] .coach-bubble-btn,
+html[data-art~="pill-button"] .btn-coach-skip,
+html[data-art~="pill-button"] .btn-coach-skip:hover,
+html[data-art~="pill-button"] .share-action:not(.primary),
+html[data-art~="pill-button"] .share-action:not(.primary):hover {
+  --h: 42px;
+  box-sizing: border-box;
+  height: var(--h);
+  padding: 0 calc(var(--h) * var(--pill-btn-cap-r) * 0.85) 0
+    calc(var(--h) * var(--pill-btn-cap-l) * 0.85);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  border-image-source: var(--pill-btn-img);
+  border-image-slice: var(--pill-btn-slice);
+  border-image-width: 0 calc(var(--h) * var(--pill-btn-cap-r)) 0
+    calc(var(--h) * var(--pill-btn-cap-l));
+  border-image-repeat: stretch;
+  color: var(--p2-glow);
+  font-weight: 600;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+html[data-art~="pill-button"] .coach-bubble-btn {
+  --h: 36px;
+  color: var(--accent);
+}
+html[data-art~="pill-button"] .share-action:not(.primary) {
+  --h: 38px;
+  font-size: 0.85rem;
+}
+html[data-art~="pill-button"] .confirm-actions button:not(.danger):hover,
+html[data-art~="pill-button"] .btn-coach-skip:hover,
+html[data-art~="pill-button"] .share-action:not(.primary):hover {
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45)) brightness(1.12);
+}
+
+/* Main popover actions: the primary plate. */
+html[data-art~="primary-button"] .rules-got-it,
+html[data-art~="primary-button"] .rules-got-it:hover,
+html[data-art~="primary-button"] .friends-add-btn,
+html[data-art~="primary-button"] .share-action.primary,
+html[data-art~="primary-button"] .share-action.primary:hover {
+  --h: 42px;
+  box-sizing: border-box;
+  height: var(--h);
+  padding: 0 calc(var(--h) * var(--primary-btn-cap-r) * 0.85) 0
+    calc(var(--h) * var(--primary-btn-cap-l) * 0.85);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-image-source: var(--primary-btn-img);
+  border-image-slice: var(--primary-btn-slice);
+  border-image-width: 0 calc(var(--h) * var(--primary-btn-cap-r)) 0
+    calc(var(--h) * var(--primary-btn-cap-l));
+  border-image-repeat: stretch;
+  color: var(--on-accent);
+  font-weight: 700;
+  white-space: nowrap;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+}
+html[data-art~="primary-button"] .rules-got-it:hover,
+html[data-art~="primary-button"] .friends-add-btn:hover:not(:disabled),
+html[data-art~="primary-button"] .share-action.primary:hover {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5)) brightness(1.06);
+}
+
+/* Popover headings: the title banner. */
+html[data-art~="title-banner"] .rules-header h2 {
+  --h: 46px;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--h);
+  max-width: calc(100% - 44px);
+  padding: 0 calc(var(--h) * var(--title-banner-cap-r) * 0.95) calc(var(--h) * 0.16)
+    calc(var(--h) * var(--title-banner-cap-l) * 0.95);
+  border: 0;
+  border-image-source: var(--title-banner-img);
+  border-image-slice: var(--title-banner-slice);
+  border-image-width: 0 calc(var(--h) * var(--title-banner-cap-r)) 0
+    calc(var(--h) * var(--title-banner-cap-l));
+  border-image-repeat: stretch;
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  color: var(--p2-glow);
+  font-size: clamp(1rem, 4.4vw, 1.2rem);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Segmented tabs (How to play) and top tabs (Friends). */
+html[data-art~="tab-off"] .howto-tabs {
+  gap: 2px;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+html[data-art~="tab-off"] .howto-tab {
+  --h: 36px;
+  height: var(--h);
+  padding: 0 calc(var(--h) * var(--tab-off-cap-r) * 0.7) 0
+    calc(var(--h) * var(--tab-off-cap-l) * 0.7);
+  border-radius: 0;
+  background: none;
+  border-image-source: var(--tab-off-img);
+  border-image-slice: var(--tab-off-slice);
+  border-image-width: 0 calc(var(--h) * var(--tab-off-cap-r)) 0
+    calc(var(--h) * var(--tab-off-cap-l));
+  border-image-repeat: stretch;
+  color: var(--p2-glow);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+}
+html[data-art~="tab-on"] .howto-tab.is-active {
+  background: none;
+  border-image-source: var(--tab-on-img);
+  border-image-slice: var(--tab-on-slice);
+  border-image-width: 0 calc(var(--h) * var(--tab-on-cap-r)) 0
+    calc(var(--h) * var(--tab-on-cap-l));
+  color: var(--on-accent);
+  text-shadow: none;
+}
+html[data-art~="tab-top-off"] .friends-tabs {
+  gap: 2px;
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+html[data-art~="tab-top-off"] .friends-tab {
+  --h: 36px;
+  height: var(--h);
+  padding: 0 calc(var(--h) * var(--tab-top-off-cap-r) * 0.6) 0
+    calc(var(--h) * var(--tab-top-off-cap-l) * 0.6);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  border-image-source: var(--tab-top-off-img);
+  border-image-slice: var(--tab-top-off-slice);
+  border-image-width: 0 calc(var(--h) * var(--tab-top-off-cap-r)) 0
+    calc(var(--h) * var(--tab-top-off-cap-l));
+  border-image-repeat: stretch;
+  color: var(--p2-glow);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-art~="tab-top-on"] .friends-tab.is-active {
+  background: none;
+  border-image-source: var(--tab-top-on-img);
+  border-image-slice: var(--tab-top-on-slice);
+  border-image-width: 0 calc(var(--h) * var(--tab-top-on-cap-r)) 0
+    calc(var(--h) * var(--tab-top-on-cap-l));
+  color: var(--on-accent);
+  text-shadow: none;
+}
+
+/* Multiplayer lobby time controls: small painted tiles. */
+html[data-art~="choice-tile"] .menu-card,
+html[data-art~="choice-tile"] .menu-card:hover:not(.disabled):not(:disabled),
+html[data-art~="choice-tile"] .menu-card:active:not(.disabled):not(:disabled) {
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  border-image-source: var(--choice-tile-img);
+  border-image-slice: var(--choice-tile-slice);
+  border-image-width: var(--choice-tile-width);
+  border-image-repeat: stretch;
+  padding: 20px 18px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+}
+html[data-art~="choice-tile"] .menu-card::before {
+  display: none;
+}
+html[data-art~="choice-tile"] .menu-card:hover:not(.disabled):not(:disabled) {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) brightness(1.1);
+}
+html[data-art~="choice-tile"] .menu-card-selected,
+html[data-art~="choice-tile"] .menu-card-selected:hover:not(.disabled):not(:disabled) {
+  filter: drop-shadow(0 0 10px rgba(var(--accent-rgb), 0.75)) brightness(1.15);
+}
+
+/* Coach bubble + the unclaimed-lines tip: the speech bubble (its tail is
+   painted in the bottom-left corner). */
+html[data-art~="speech-bubble"] .coach-bubble {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  border-image-source: var(--speech-bubble-img);
+  border-image-slice: var(--speech-bubble-slice);
+  border-image-width: var(--speech-bubble-width);
+  border-image-repeat: round;
+  padding: 18px 22px 34px 26px;
+  color: var(--text-bright);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+}
+html[data-art~="speech-bubble"] .coach-bubble-floating {
+  box-shadow: none;
+}
+
+/* Share dialog + achievement / invite toasts: the card frame. */
+html[data-art~="card-frame"] .share-dialog-card,
+html[data-art~="card-frame"] .ach-toast,
+html[data-art~="card-frame"] .invite-toast {
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-image-source: var(--card-frame-img);
+  border-image-slice: var(--card-frame-slice);
+  border-image-width: var(--card-frame-width);
+  border-image-repeat: stretch;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.55));
+}
+html[data-art~="card-frame"] .share-dialog-card {
+  padding: 26px 28px;
+}
+html[data-art~="card-frame"] .ach-toast,
+html[data-art~="card-frame"] .invite-toast {
+  padding: 22px 26px;
+}
+
+/* One-line surfaces: move-failed toast, daily loading — the title banner. */
+html[data-art~="title-banner"] .move-failed-toast,
+html[data-art~="title-banner"] .daily-loading-card {
+  --h: 52px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-height: var(--h);
+  padding: 0 calc(var(--h) * var(--title-banner-cap-r) * 0.95) calc(var(--h) * 0.16)
+    calc(var(--h) * var(--title-banner-cap-l) * 0.95);
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-image-source: var(--title-banner-img);
+  border-image-slice: var(--title-banner-slice);
+  border-image-width: 0 calc(var(--h) * var(--title-banner-cap-r)) 0
+    calc(var(--h) * var(--title-banner-cap-l));
+  border-image-repeat: stretch;
+  color: var(--p2-glow);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  white-space: nowrap;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+/* Settings / hot-seat fields and switches. */
+html[data-art~="input-field"] .settings-input,
+html[data-art~="input-field"] .settings-input:focus {
+  --h: 42px;
+  box-sizing: border-box;
+  height: var(--h);
+  padding: 0 calc(var(--h) * var(--input-field-cap-r) + 6px) 0
+    calc(var(--h) * var(--input-field-cap-l) + 6px);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  border-image-source: var(--input-field-img);
+  border-image-slice: var(--input-field-slice);
+  border-image-width: 0 calc(var(--h) * var(--input-field-cap-r)) 0
+    calc(var(--h) * var(--input-field-cap-l));
+  border-image-repeat: stretch;
+  color: var(--text-bright);
+}
+html[data-art~="input-field"] .settings-input:focus {
+  filter: drop-shadow(0 0 5px rgba(var(--accent-rgb), 0.6));
+}
+html[data-art~="toggle-knob"] .settings-toggle input[type="checkbox"] {
+  --h: 26px;
+  width: 50px;
+  height: var(--h);
+  border-radius: 0;
+  background: none;
+  border-image-source: var(--tab-off-img);
+  border-image-slice: var(--tab-off-slice);
+  border-image-width: 0 calc(var(--h) * var(--tab-off-cap-r)) 0
+    calc(var(--h) * var(--tab-off-cap-l));
+  border-image-repeat: stretch;
+}
+html[data-art~="toggle-knob"] .settings-toggle input[type="checkbox"]:checked {
+  background: none;
+  border-image-source: var(--tab-on-img);
+  border-image-slice: var(--tab-on-slice);
+  border-image-width: 0 calc(var(--h) * var(--tab-on-cap-r)) 0
+    calc(var(--h) * var(--tab-on-cap-l));
+}
+html[data-art~="toggle-knob"] .settings-toggle input[type="checkbox"]::after {
+  top: 1px;
+  left: 1px;
+  width: 24px;
+  height: 24px;
+  background: var(--toggle-knob-img) center / contain no-repeat;
+  box-shadow: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+html[data-art~="toggle-knob"] .settings-toggle input[type="checkbox"]:checked::after {
+  transform: translateX(24px);
 }

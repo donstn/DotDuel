@@ -1256,6 +1256,9 @@ export const cs: Messages = {
     result: {
       genericBot: 'Bot',
       ptsLabel: 'b.',
+      verdictWin: 'Výhra',
+      verdictLoss: 'Prohra',
+      verdictDraw: 'Remíza',
       scanCaption: 'Naskenuj a hraj hned!',
       ctaWin: 'Troufneš si mě porazit?',
       ctaLoss: 'Myslíš, že bys to zvládl líp?',

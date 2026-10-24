@@ -794,6 +794,9 @@ export const en = {
     result: {
       genericBot: 'Bot',
       ptsLabel: 'pts',
+      verdictWin: 'Win',
+      verdictLoss: 'Loss',
+      verdictDraw: 'Draw',
       scanCaption: 'Scan to play now!',
       ctaWin: 'Can you beat me?',
       ctaLoss: 'Think you can do better?',

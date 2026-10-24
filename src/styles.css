@@ -4016,40 +4016,10 @@ h1, h2, h3,
   scrollbar-color: var(--glass-border-strong) transparent;
 }
 
-/* Phones: fit the standard tables without sideways scrolling — drop the
-   desktop min-width, tighten cells, and let the player name ellipsize. */
-@media (max-width: 420px) {
-  .rankings-table:not(.h2h-table) {
-    min-width: 0;
-    font-size: 0.74rem;
-  }
-  .rankings-table:not(.h2h-table) thead th {
-    font-size: 0.66rem;
-    letter-spacing: 0.02em;
-  }
-  .rankings-table:not(.h2h-table) th,
-  .rankings-table:not(.h2h-table) td {
-    padding-left: 4px;
-    padding-right: 4px;
-  }
-  .rankings-table:not(.h2h-table) td.col-name {
-    max-width: 0;
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
 .rankings-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
-  min-width: 460px;
-}
-
-.rankings-table.h2h-table {
-  min-width: 580px;
 }
 
 .rankings-table thead th {
@@ -4227,19 +4197,46 @@ h1, h2, h3,
   background: linear-gradient(180deg, rgba(217, 117, 101, 0.32), rgba(217, 117, 101, 0.18));
 }
 
-@media (max-width: 560px) {
+/* Phones: every table fits without sideways scrolling — drop the desktop
+   min-width, tighten cells, let the name ellipsize, and hide head-to-head's
+   loss/draw % (the L and D counts beside them say the same). */
+@media (max-width: 640px) {
+  .rules-overlay:has(> .rankings-card) {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
   .rankings-body {
-    padding: 8px 12px 12px;
-  }
-  .rankings-table {
-    font-size: 0.82rem;
-  }
-  .rankings-table thead th,
-  .rankings-table tbody td {
-    padding: 8px 7px;
+    padding: 8px 8px 12px;
   }
   .rankings-confirm-body {
     padding: 0 16px 8px;
+  }
+  .rankings-table {
+    font-size: 0.76rem;
+  }
+  .rankings-table thead th {
+    font-size: 0.62rem;
+    letter-spacing: 0.02em;
+  }
+  .rankings-table thead th,
+  .rankings-table tbody td {
+    padding: 8px 4px;
+  }
+  .rankings-table td.col-name {
+    max-width: 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .rankings-table .col-extra {
+    display: none;
+  }
+  .rankings-table th .sort-glyph {
+    margin-left: 1px;
+  }
+  .rankings-table th.sortable:not(.active) .sort-glyph {
+    display: none;
   }
 }
 

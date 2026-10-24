@@ -585,13 +585,13 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
                           {t.rankings.colWinPctShort} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'winPct', h2hSort.dir)}</span>
                         </th>
                         <th
-                          className={`col-num sortable ${h2hSort.key === 'lossPct' ? 'active' : ''}`}
+                          className={`col-num col-extra sortable ${h2hSort.key === 'lossPct' ? 'active' : ''}`}
                           onClick={() => toggleH2HSort('lossPct')}
                         >
                           {t.rankings.colLossPctShort} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'lossPct', h2hSort.dir)}</span>
                         </th>
                         <th
-                          className={`col-num sortable ${h2hSort.key === 'drawPct' ? 'active' : ''}`}
+                          className={`col-num col-extra sortable ${h2hSort.key === 'drawPct' ? 'active' : ''}`}
                           onClick={() => toggleH2HSort('drawPct')}
                         >
                           {t.rankings.colDrawPctShort} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'drawPct', h2hSort.dir)}</span>
@@ -620,8 +620,8 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
                           <td className="col-num">{r.losses}</td>
                           <td className="col-num">{r.draws}</td>
                           <td className="col-num">{pctLabel(r.wins, r.games)}</td>
-                          <td className="col-num">{pctLabel(r.losses, r.games)}</td>
-                          <td className="col-num">{pctLabel(r.draws, r.games)}</td>
+                          <td className="col-num col-extra">{pctLabel(r.losses, r.games)}</td>
+                          <td className="col-num col-extra">{pctLabel(r.draws, r.games)}</td>
                         </tr>
                       ))}
                     </tbody>

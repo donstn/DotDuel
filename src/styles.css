@@ -7541,3 +7541,8 @@ body.has-native-banner #root {
   padding-left: 0;
   padding-right: 0;
 }
+
+/* Painted achievement medals: the frame carries the tier, so no accent glow. */
+html[data-art~='ach'] .ach-badge.is-earned svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+}

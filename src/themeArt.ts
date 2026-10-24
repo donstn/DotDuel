@@ -57,11 +57,30 @@ export interface ThemeArt {
   avatars?: { human: string; bot: (level: Difficulty) => string };
   /** Win-celebration sprites. */
   particles?: string[];
+  /** Achievement badges: a medal frame per tier (1–5) and painted glyphs. */
+  achievements?: { frames: MedalFrame[]; icon: (key: string) => string | undefined };
   /** Full-screen scenery behind the vignette. */
   background?: { portrait: string; landscape: string };
   /** Menu ambience loops (played when music is on). */
   ambience?: { wind: string; stream: string; birds: string };
 }
+
+/** A painted medal; `disc` is its empty centre as fractions of the image. */
+export interface MedalFrame {
+  url: string;
+  width: number;
+  height: number;
+  disc: { cx: number; cy: number; d: number };
+  /** Draw size relative to the badge box (>1 when a glow pads the image). */
+  scale: number;
+}
+
+const FP_ACH_ICONS = new Set([
+  'spark', 'trophy-s', 'claim', 'map', 'crown', 'skull', 'nightmare', 'medal', 'corner', 'longline',
+  'sword', 'sword-win', 'chevron', 'clock', 'upset', 'rematch', 'friend', 'refer', 'share', 'palette',
+  'fire', 'flame-day', 'fire-bot', 'couch', 'calendar', 'calendar-streak', 'calendar-dots', 'three',
+  'crown-daily',
+]);
 
 const ART: Partial<Record<ThemeId, ThemeArt>> = {
   'forest-pearl': {
@@ -119,6 +138,17 @@ const ART: Partial<Record<ThemeId, ThemeArt>> = {
     avatars: {
       human: '/art/forest-pearl/avatar-human.webp',
       bot: (level) => `/art/forest-pearl/avatar-l${level}.webp`,
+    },
+    achievements: {
+      frames: [
+        { url: '/art/forest-pearl/ach-frame-1.webp', width: 183, height: 187, disc: { cx: 0.497, cy: 0.5, d: 0.65 }, scale: 1 },
+        { url: '/art/forest-pearl/ach-frame-2.webp', width: 183, height: 187, disc: { cx: 0.495, cy: 0.497, d: 0.6 }, scale: 1 },
+        { url: '/art/forest-pearl/ach-frame-3.webp', width: 183, height: 187, disc: { cx: 0.5, cy: 0.497, d: 0.546 }, scale: 1 },
+        { url: '/art/forest-pearl/ach-frame-4.webp', width: 184, height: 187, disc: { cx: 0.5, cy: 0.497, d: 0.538 }, scale: 1 },
+        { url: '/art/forest-pearl/ach-frame-5.webp', width: 198, height: 206, disc: { cx: 0.492, cy: 0.505, d: 0.465 }, scale: 1.1 },
+      ],
+      icon: (key) =>
+        FP_ACH_ICONS.has(key) ? `/art/forest-pearl/ach-${key === 'trophy-s' ? 'trophy' : key}.webp` : undefined,
     },
     particles: [
       '/art/forest-pearl/particle-spark.webp',
@@ -191,6 +221,7 @@ function themeArtVars(art: ThemeArt): { vars: Record<string, string>; slots: str
     });
     slots.push('card-frame');
   }
+  if (art.achievements) slots.push('ach');
   if (art.background) {
     vars['--bg-art-portrait'] = `url("${art.background.portrait}")`;
     vars['--bg-art-landscape'] = `url("${art.background.landscape}")`;

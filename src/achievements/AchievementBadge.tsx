@@ -8,6 +8,8 @@
  * ring. The full glyph set keeps to 38 keys; tiered families share a glyph.
  */
 import type { ReactNode } from 'react';
+import { themeArt, type MedalFrame } from '../themeArt';
+import type { ThemeId } from '../theme';
 
 const P1 = 'var(--p1-bright, #62cf90)';
 const P1D = 'var(--p1-glow, #1c7a3d)';
@@ -290,6 +292,60 @@ const GLYPHS: Record<string, ReactNode> = {
 
 const FRAME_PTS = '34,7 66,7 93,34 93,66 66,93 34,93 7,66 7,34';
 
+// Per-shape crown / skull badges reuse one painted picture with the code's
+// mini shape dots under it.
+const SHAPE_SUFFIX: Record<string, 'tri' | 'sq' | 'rect'> = {
+  triangle: 'tri',
+  square: 'sq',
+  rectangle: 'rect',
+};
+
+function PaintedMedal({
+  frame,
+  iconUrl,
+  icon,
+  glyph,
+}: {
+  frame: MedalFrame;
+  iconUrl: (key: string) => string | undefined;
+  icon: string;
+  glyph: ReactNode;
+}) {
+  const k = Math.max(frame.width, frame.height);
+  const fw = (100 * frame.scale * frame.width) / k;
+  const fh = (100 * frame.scale * frame.height) / k;
+  const fx = 50 - fw / 2;
+  const fy = 50 - fh / 2;
+  const cx = fx + frame.disc.cx * fw;
+  const cy = fy + frame.disc.cy * fh;
+  const d = frame.disc.d * fw;
+  const [base, suffix] = (/^(crown|skull)-(\w+)$/.exec(icon) ?? []).slice(1);
+  const shape = suffix ? SHAPE_SUFFIX[suffix] : undefined;
+  const url = iconUrl(shape ? base : icon);
+  const g = d * 0.78;
+  const glyphBox = (child: ReactNode) => (
+    <g transform={`translate(${cx - g / 2} ${cy - g / 2}) scale(${g / 48})`}>{child}</g>
+  );
+  let inner: ReactNode = glyphBox(glyph);
+  if (url && shape) {
+    const s = g * 0.72;
+    inner = (
+      <>
+        <image href={url} x={cx - s / 2} y={cy - g / 2} width={s} height={s} />
+        {glyphBox(miniShape(shape))}
+      </>
+    );
+  } else if (url) {
+    inner = <image href={url} x={cx - g / 2} y={cy - g / 2} width={g} height={g} />;
+  }
+  return (
+    <>
+      <image href={frame.url} x={fx} y={fy} width={fw} height={fh} />
+      {inner}
+    </>
+  );
+}
+
 export function AchievementBadge({
   icon,
   tier = 1,
@@ -308,6 +364,8 @@ export function AchievementBadge({
   const glyph = GLYPHS[icon] ?? GLYPHS.medal;
   const t = Math.max(1, Math.min(5, tier));
   const pipW = (t - 1) * 8;
+  const art = themeArt(document.documentElement.dataset.theme as ThemeId | undefined).achievements;
+  const frame = art?.frames[t - 1];
   return (
     <span
       className={`ach-badge tier-${t} ${earned ? 'is-earned' : 'is-locked'}`}
@@ -317,14 +375,20 @@ export function AchievementBadge({
       role={onClick ? 'button' : undefined}
     >
       <svg viewBox="0 0 100 100" aria-hidden="true">
-        <polygon className="ach-frame" points={FRAME_PTS} />
-        <g transform="translate(26 22)">{glyph}</g>
-        {t > 1 && (
-          <g className="ach-pips">
-            {Array.from({ length: t }, (_, i) => (
-              <circle key={i} cx={50 - pipW / 2 + i * 8} cy="86" r="2.4" />
-            ))}
-          </g>
+        {art && frame ? (
+          <PaintedMedal frame={frame} iconUrl={art.icon} icon={icon} glyph={glyph} />
+        ) : (
+          <>
+            <polygon className="ach-frame" points={FRAME_PTS} />
+            <g transform="translate(26 22)">{glyph}</g>
+            {t > 1 && (
+              <g className="ach-pips">
+                {Array.from({ length: t }, (_, i) => (
+                  <circle key={i} cx={50 - pipW / 2 + i * 8} cy="86" r="2.4" />
+                ))}
+              </g>
+            )}
+          </>
         )}
       </svg>
     </span>

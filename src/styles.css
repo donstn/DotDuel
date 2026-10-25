@@ -3841,6 +3841,7 @@ h1, h2, h3,
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
@@ -3854,6 +3855,7 @@ h1, h2, h3,
 .rankings-pills {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
 }
 
@@ -4013,40 +4015,10 @@ h1, h2, h3,
   scrollbar-color: var(--glass-border-strong) transparent;
 }
 
-/* Phones: fit the standard tables without sideways scrolling — drop the
-   desktop min-width, tighten cells, and let the player name ellipsize. */
-@media (max-width: 420px) {
-  .rankings-table:not(.h2h-table) {
-    min-width: 0;
-    font-size: 0.74rem;
-  }
-  .rankings-table:not(.h2h-table) thead th {
-    font-size: 0.66rem;
-    letter-spacing: 0.02em;
-  }
-  .rankings-table:not(.h2h-table) th,
-  .rankings-table:not(.h2h-table) td {
-    padding-left: 4px;
-    padding-right: 4px;
-  }
-  .rankings-table:not(.h2h-table) td.col-name {
-    max-width: 0;
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
 .rankings-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
-  min-width: 460px;
-}
-
-.rankings-table.h2h-table {
-  min-width: 580px;
 }
 
 .rankings-table thead th {
@@ -4068,16 +4040,19 @@ h1, h2, h3,
   white-space: nowrap;
 }
 
+/* Number columns hug their content; the name column takes the rest, so
+   wide screens don't spread the spare width between the numbers. */
 .rankings-table th.col-num,
 .rankings-table td.col-num {
+  width: 1%;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
 .rankings-table th.col-rank,
 .rankings-table td.col-rank {
+  width: 1%;
   text-align: center;
-  width: 36px;
   color: var(--text-mute);
 }
 
@@ -4121,9 +4096,17 @@ h1, h2, h3,
 }
 
 .rankings-table td.col-name {
-  max-width: 220px;
+  max-width: 0;
+  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* The leaderboards have few columns: keep them compact, centred lists
+   (head-to-head, with eight columns, keeps the full width). */
+.rankings-table-wrap.is-narrow {
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .rankings-name-link {
@@ -4224,19 +4207,39 @@ h1, h2, h3,
   background: linear-gradient(180deg, rgba(217, 117, 101, 0.32), rgba(217, 117, 101, 0.18));
 }
 
-@media (max-width: 560px) {
+/* Phones: every table fits without sideways scrolling — drop the desktop
+   min-width, tighten cells, let the name ellipsize, and hide head-to-head's
+   loss/draw % (the L and D counts beside them say the same). */
+@media (max-width: 640px) {
+  .rules-overlay:has(> .rankings-card) {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
   .rankings-body {
-    padding: 8px 12px 12px;
-  }
-  .rankings-table {
-    font-size: 0.82rem;
-  }
-  .rankings-table thead th,
-  .rankings-table tbody td {
-    padding: 8px 7px;
+    padding: 8px 8px 12px;
   }
   .rankings-confirm-body {
     padding: 0 16px 8px;
+  }
+  .rankings-table {
+    font-size: 0.76rem;
+  }
+  .rankings-table thead th {
+    font-size: 0.62rem;
+    letter-spacing: 0.02em;
+  }
+  .rankings-table thead th,
+  .rankings-table tbody td {
+    padding: 8px 4px;
+  }
+  .rankings-table .col-extra {
+    display: none;
+  }
+  .rankings-table th .sort-glyph {
+    margin-left: 1px;
+  }
+  .rankings-table th.sortable:not(.active) .sort-glyph {
+    display: none;
   }
 }
 
@@ -7983,4 +7986,9 @@ html[data-art~="toggle-knob"] .settings-toggle input[type="checkbox"]::after {
 }
 html[data-art~="toggle-knob"] .settings-toggle input[type="checkbox"]:checked::after {
   transform: translateX(24px);
+}
+
+/* Painted achievement medals: the frame carries the tier, so no accent glow. */
+html[data-art~='ach'] .ach-badge.is-earned svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
 }

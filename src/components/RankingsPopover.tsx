@@ -475,7 +475,7 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
                     : t.rankings.emptyLocalShape(t.shapes[shape as ShapeId])}
                 </p>
               ) : (
-                <div className="rankings-table-wrap">
+                <div className="rankings-table-wrap is-narrow">
                   <table className="rankings-table">
                     <thead>
                       <tr>
@@ -585,13 +585,13 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
                           {t.rankings.colWinPctShort} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'winPct', h2hSort.dir)}</span>
                         </th>
                         <th
-                          className={`col-num sortable ${h2hSort.key === 'lossPct' ? 'active' : ''}`}
+                          className={`col-num col-extra sortable ${h2hSort.key === 'lossPct' ? 'active' : ''}`}
                           onClick={() => toggleH2HSort('lossPct')}
                         >
                           {t.rankings.colLossPctShort} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'lossPct', h2hSort.dir)}</span>
                         </th>
                         <th
-                          className={`col-num sortable ${h2hSort.key === 'drawPct' ? 'active' : ''}`}
+                          className={`col-num col-extra sortable ${h2hSort.key === 'drawPct' ? 'active' : ''}`}
                           onClick={() => toggleH2HSort('drawPct')}
                         >
                           {t.rankings.colDrawPctShort} <span className="sort-glyph">{sortGlyph(h2hSort.key === 'drawPct', h2hSort.dir)}</span>
@@ -620,8 +620,8 @@ export function RankingsPopover({ onClose, user, onOpenSignIn, initialView }: Pr
                           <td className="col-num">{r.losses}</td>
                           <td className="col-num">{r.draws}</td>
                           <td className="col-num">{pctLabel(r.wins, r.games)}</td>
-                          <td className="col-num">{pctLabel(r.losses, r.games)}</td>
-                          <td className="col-num">{pctLabel(r.draws, r.games)}</td>
+                          <td className="col-num col-extra">{pctLabel(r.losses, r.games)}</td>
+                          <td className="col-num col-extra">{pctLabel(r.draws, r.games)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -720,7 +720,7 @@ function GlobalLeaderboard({
     // Skeleton rows instead of a bare text line: the table appears at its
     // final size immediately, so content doesn't jump in on slow networks.
     return (
-      <div className="rankings-table-wrap" aria-busy="true">
+      <div className="rankings-table-wrap is-narrow" aria-busy="true">
         <table className="rankings-table">
           <thead>
             <tr>
@@ -748,7 +748,7 @@ function GlobalLeaderboard({
     return <p className="rankings-empty">{t.rankings.emptyGlobal}</p>;
   }
   return (
-    <div className="rankings-table-wrap">
+    <div className="rankings-table-wrap is-narrow">
       <table className="rankings-table">
         <thead>
           <tr>

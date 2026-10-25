@@ -1119,6 +1119,9 @@ export const pt: Messages = {
     result: {
       genericBot: 'Bot',
       ptsLabel: 'pts',
+      verdictWin: 'Vitória',
+      verdictLoss: 'Derrota',
+      verdictDraw: 'Empate',
       scanCaption: 'Escaneie para jogar agora!',
       ctaWin: 'Consegue me vencer?',
       ctaLoss: 'Acha que consegue fazer melhor?',

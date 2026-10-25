@@ -22,8 +22,6 @@ interface FloatingScore {
 const SCORE_FLOAT_DURATION_MS = 1050;
 const INPUT_GUARD_MS = 350;
 const BOARD_HINT_MS = 3200;
-// Strikes older than the last few fade back so the newest ones read first.
-const RECENT_STRIKES = 2;
 
 /** Tutorial guidance (first-game Coach only; real games never pass it). */
 export interface CoachMarks {
@@ -81,7 +79,7 @@ function colorIndex(player: Player, swap: boolean): 1 | 2 {
 // consistent core thickness regardless of how each source image happened
 // to come out. Length 1 has no entry — corners reuse length 2's art (see
 // below) and never index this table.
-const LINE_THICKNESS_MULT: Record<1 | 2, Record<number, number>> = {
+export const LINE_THICKNESS_MULT: Record<1 | 2, Record<number, number>> = {
   1: { 2: 0.808, 3: 0.874, 4: 0.954, 5: 1.027, 6: 1.1, 7: 1.178, 8: 1.265, 9: 1.348 },
   2: { 2: 0.824, 3: 1.04, 4: 1.065, 5: 1.022, 6: 0.978, 7: 0.979, 8: 0.898, 9: 0.859 },
 };
@@ -829,10 +827,9 @@ export function Board({
           );
         })}
 
-        {state.completed.map((c, i) => {
+        {state.completed.map((c) => {
           const line = linesById.get(c.lineId);
           if (!line) return null;
-          const old = !state.finished && i < state.completed.length - RECENT_STRIKES;
           const { x1, y1, x2, y2 } = lineEndpoints(board, line, overshoot);
           const outer = strokeWidth * 0.575;
           const innerHighlight = strokeWidth * 0.22;
@@ -882,7 +879,7 @@ export function Board({
             return (
               <g
                 key={c.lineId}
-                className={[keep, old && 'strike-old'].filter(Boolean).join(' ') || undefined}
+                className={keep}
                 transform={`translate(${midX} ${midY}) rotate(${groupRotate})`}
                 style={{ pointerEvents: 'none' }}
               >
@@ -901,7 +898,7 @@ export function Board({
           return (
             <g
               key={c.lineId}
-              className={`crossline-group crossline-group-p${cIdx}${keep ? ' coach-keep' : ''}${old ? ' strike-old' : ''}`}
+              className={`crossline-group crossline-group-p${cIdx}${keep ? ' coach-keep' : ''}`}
               style={{ pointerEvents: 'none' }}
             >
               <line

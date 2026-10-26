@@ -23,7 +23,7 @@ export function WelcomeCard({ onPlay, onSkip }: Props) {
         <p className="welcome-intro">{t.coach.welcomeIntro}</p>
         <ol className="welcome-steps">
           {t.coach.welcomeSteps.map((s, i) => (
-            <li key={s.title} className={`welcome-step welcome-step-p${(i % 2) + 1}`}>
+            <li key={s.title} className="welcome-step">
               <span className="welcome-step-dot" aria-hidden="true">{i + 1}</span>
               <span>
                 <strong>{s.title}</strong> {s.body}

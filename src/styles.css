@@ -7525,15 +7525,10 @@ body.has-native-banner #root {
   place-items: center;
   font-size: 0.75rem;
   font-weight: 800;
-}
-.welcome-step-p1 .welcome-step-dot {
   background: radial-gradient(circle at 35% 30%, var(--p1-bright), var(--p1) 70%);
   color: var(--p2);
 }
-.welcome-step-p2 .welcome-step-dot {
-  background: radial-gradient(circle at 35% 30%, #fff, var(--p2) 70%);
-  color: var(--p1);
-}
+
 .welcome-guide {
   margin-top: 2px;
   font-size: 0.82rem;

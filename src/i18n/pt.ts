@@ -1603,10 +1603,10 @@ export const pt: Messages = {
     welcomeTitle: "Boas-vindas ao DotDuel",
     welcomeIntro: "Um jogo de estratégia para dois: pinte pontos, complete linhas e supere seu rival.",
     welcomeSteps: [
-      { title: "Pinte", body: "um ponto vazio por turno, alternando com seu rival." },
+      { title: "Pinte", body: "um ponto vazio por turno, revezando com seu rival." },
       { title: "Complete", body: "uma linha reta e ganhe o comprimento dela em pontos." },
-      { title: "Feche", body: "várias linhas de uma vez e só a mais longa pontua; qualquer jogador pode marcar as outras depois." },
-      { title: "Marque", body: "uma linha pendente em vez de um ponto: isso gasta o turno, mas vale todo o comprimento dela." },
+      { title: "Feche", body: "várias linhas de uma vez e só a mais longa pontua; as outras ficam pendentes e qualquer jogador pode marcá-las depois." },
+      { title: "Marque", body: "uma linha pendente em vez de pintar: isso gasta seu turno, mas vale o comprimento inteiro dela." },
     ],
     welcomePlay: "Aprenda jogando",
     welcomeTime: "Cerca de 1 minuto",

@@ -1603,9 +1603,9 @@ export const es: Messages = {
     welcomeIntro: "Un juego de estrategia para dos: colorea puntos, completa líneas y supera a tu rival.",
     welcomeSteps: [
       { title: "Colorea", body: "un punto vacío en cada turno, alternando con tu rival." },
-      { title: "Completa", body: "una línea recta para sumar su longitud." },
-      { title: "Termina", body: "varias líneas a la vez y solo puntúa la más larga; cualquiera puede reclamar las demás después." },
-      { title: "Reclama", body: "una línea pendiente en lugar de un punto: gastas el turno, pero sumas toda su longitud." },
+      { title: "Completa", body: "una línea recta y suma tantos puntos como su longitud." },
+      { title: "Termina", body: "varias líneas a la vez y solo puntúa la más larga; las demás quedan pendientes y cualquiera puede reclamarlas después." },
+      { title: "Reclama", body: "una línea pendiente en lugar de colorear: gastas el turno, pero sumas su longitud completa." },
     ],
     welcomePlay: "Aprende jugando",
     welcomeTime: "Alrededor de 1 minuto",

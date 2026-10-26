@@ -16,6 +16,7 @@ import { Menu } from './components/Menu';
 import { PrivacyPopover } from './components/PrivacyPopover';
 import { ProfilePopover } from './components/ProfilePopover';
 import { RankingsPopover } from './components/RankingsPopover';
+import { WelcomeCard } from './components/WelcomeCard';
 import { AchievementsPopover } from './achievements/AchievementsPopover';
 import { AchievementToast } from './achievements/AchievementToast';
 import {
@@ -1136,12 +1137,15 @@ export default function App() {
     document.documentElement.style.setProperty('--rotate-msg', css);
   }, [t]);
 
-  // Before paint, so plaque buttons never flash their CSS fallback.
-  useLayoutEffect(() => applyThemeArt(theme), [theme]);
-
-  // Apply colour theme to <html data-theme>, persist, and count "themes tried".
-  useEffect(() => {
+  // Before paint, so plaque buttons and theme colours never flash their
+  // CSS fallback on the first frame.
+  useLayoutEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    applyThemeArt(theme);
+  }, [theme]);
+
+  // Persist the theme and count "themes tried".
+  useEffect(() => {
     saveTheme(theme);
     fireAch(recordTheme(theme, achEnv()));
     setAmbianceTheme(theme);
@@ -2862,28 +2866,7 @@ export default function App() {
           />
         )}
         {welcomeOpen && screen === 'menu' && (
-          <div
-            className="confirm-overlay welcome-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="welcome-title"
-          >
-            <div className="confirm-card welcome-card">
-              <h3 id="welcome-title">{t.coach.welcomeTitle}</h3>
-              <p>{t.coach.welcomeBody}</p>
-              <button type="button" className="hotseat-start" onClick={openCoach}>
-                {t.coach.welcomePlay}
-              </button>
-              <span className="welcome-time">{t.coach.welcomeTime}</span>
-              <button
-                type="button"
-                className="link-btn welcome-skip"
-                onClick={declineWelcome}
-              >
-                {t.coach.welcomeSkip}
-              </button>
-            </div>
-          </div>
+          <WelcomeCard onPlay={openCoach} onSkip={declineWelcome} />
         )}
         {privacyOpen && (
           <PrivacyPopover

@@ -7492,6 +7492,53 @@ body.has-native-banner #root {
   max-width: 280px;
   margin: 0;
 }
+.welcome-card .welcome-intro {
+  margin-bottom: 10px;
+}
+.welcome-steps {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  width: 100%;
+  max-width: 340px;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+.welcome-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.welcome-step strong {
+  color: var(--text);
+}
+.welcome-step-dot {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.welcome-step-p1 .welcome-step-dot {
+  background: radial-gradient(circle at 35% 30%, var(--p1-bright), var(--p1) 70%);
+  color: var(--p2);
+}
+.welcome-step-p2 .welcome-step-dot {
+  background: radial-gradient(circle at 35% 30%, #fff, var(--p2) 70%);
+  color: var(--p1);
+}
+.welcome-guide {
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
 .welcome-time {
   color: var(--text-dim);
   font-size: 0.8rem;

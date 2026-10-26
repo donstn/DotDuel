@@ -1613,7 +1613,12 @@ export const pl: Messages = {
     yourDots: "Twoje kropki",
     skip: "Pomiń",
     welcomeTitle: "Witaj w DotDuel",
-    welcomeBody: "Gracze na zmianę stawiają kropki. Dokończ prostą linię, a dostaniesz punkt za każdą jej kropkę. Wygrywa ten, kto ma więcej punktów.",
+    welcomeIntro: "Strategiczna gra dla dwojga: koloruj kropki, kończ linie i zdobądź więcej punktów niż rywal.",
+    welcomeSteps: [
+      { title: "Stawiaj", body: "Na zmianę kolorujcie po jednej pustej kropce." },
+      { title: "Punktuj", body: "Pokoloruj ostatnią kropkę prostej linii i zdobądź tyle punktów, ile ma kropek." },
+      { title: "Zajmuj", body: "Gdy kończysz kilka linii naraz, liczy się tylko najdłuższa. Reszta czeka i każdy gracz może je zająć." },
+    ],
     welcomePlay: "Ucz się, grając",
     welcomeTime: "Około 1 minuty",
     welcomeSkip: "Umiem grać",

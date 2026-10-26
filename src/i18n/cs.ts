@@ -1611,7 +1611,12 @@ export const cs: Messages = {
     yourDots: "Tvoje tečky",
     skip: "Přeskočit",
     welcomeTitle: "Vítej v DotDuelu",
-    welcomeBody: "Hráči se střídají v pokládání teček. Dokonči rovnou linii a získáš bod za každou její tečku. Vyhrává víc bodů.",
+    welcomeIntro: "Strategická hra pro dva: barvi tečky, dokončuj linie a získej víc bodů než soupeř.",
+    welcomeSteps: [
+      { title: "Pokládej", body: "Střídejte se v obarvení jedné prázdné tečky." },
+      { title: "Boduj", body: "Obarvi poslední tečku rovné linie a získáš tolik bodů, kolik je dlouhá." },
+      { title: "Zabírej", body: "Když dokončíš víc linií naráz, počítá se jen nejdelší. Ostatní čekají a může si je zabrat kterýkoli hráč." },
+    ],
     welcomePlay: "Uč se hraním",
     welcomeTime: "Asi 1 minuta",
     welcomeSkip: "Umím hrát",

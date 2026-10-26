@@ -20,6 +20,14 @@
     <link rel="preload" as="font" type="font/woff2" href="/fonts/outfit-var.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/chakra-petch-600.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/chakra-petch-700.woff2" crossorigin />
+    <!-- The default theme's painted scenery: fetch it now, not after React
+         sets data-art, so it doesn't pop in late. Crops match styles.css. -->
+    <link rel="preload" as="image" type="image/webp" href="/art/forest-pearl/background-portrait.webp" media="(max-aspect-ratio: 4/5)" />
+    <link rel="preload" as="image" type="image/webp" href="/art/forest-pearl/background-landscape.webp" media="(min-aspect-ratio: 4/5)" />
+    <!-- The crawler intro in #root is never shown to players: the game draws
+         over it as soon as it loads, and the first-visit welcome card carries
+         the same summary. -->
+    <style>.crawler-intro { visibility: hidden; }</style>
 
     <!--
       Content Security Policy. Defense-in-depth against a future XSS
@@ -166,11 +174,11 @@
     </script>
   </head>
   <body>
-    <!-- Readable intro inside #root: shown while the game loads (React
-         replaces it on mount) and readable by crawlers that don't run JS.
+    <!-- Intro inside #root for crawlers that don't run JS (hidden from
+         players by the <style> in <head>; React replaces it on mount).
          The full guide lives on the static pages built by scripts/build-pages.ts. -->
     <div id="root">
-      <main style="max-width:640px;margin:0 auto;padding:32px 16px;color:#e8f3ea;font-family:system-ui,sans-serif;line-height:1.6">
+      <main class="crawler-intro" style="max-width:640px;margin:0 auto;padding:32px 16px;color:#e8f3ea;font-family:system-ui,sans-serif;line-height:1.6">
         <h1 style="font-size:1.6rem;margin:0 0 8px">DotDuel: a free two-player dot strategy game</h1>
         <p>Take turns colouring dots on a Triangle, Square or Rectangle board. Place the last dot of a line and you score its length. When one move completes several lines at once, only the longest scores; the others wait, and either player can claim them on a later turn. Most points when every dot is coloured and every line claimed wins.</p>
         <p>Play five bots from Beginner to Impossible, a friend on the same device, or sign in for ranked online games on a chess clock with a global Elo leaderboard, friends and a daily puzzle. Free in your browser, also on Android.</p>

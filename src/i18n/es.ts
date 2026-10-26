@@ -285,6 +285,16 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.24.0': {
+        changes: [
+          "Las tarjetas de resultado tienen el estilo pintado de Forest & Pearl, están en tu idioma y muestran los puntos junto al marcador.",
+          "Las líneas reclamadas vuelven a verse sólidas, así que se ve quién se llevó cada línea.",
+          "Las insignias de logros tienen marcos de medalla e imágenes pintados en Forest & Pearl.",
+          "Las clasificaciones caben en la pantalla del móvil sin desplazarse de lado.",
+          "Quien juega por primera vez ve una tarjeta de bienvenida que explica el juego en cuatro pasos breves.",
+          "Ya no aparece un destello de texto mientras carga el juego.",
+        ],
+      },
       'Alpha 0.4.23.0': {
         changes: [
           'Las líneas sin reclamar se muestran como una línea discontinua contra los bots Principiante, Fácil y Medio; contra Difícil e Imposible tienes que encontrarlas tú. El interruptor ya no está.',

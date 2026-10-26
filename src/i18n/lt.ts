@@ -296,6 +296,16 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.24.0': {
+        changes: [
+          "Rezultatų kortelės nupieštos Forest & Pearl stiliumi ir jūsų kalba, šalia rezultato rodomi taškai.",
+          "Paimtos linijos vėl ryškios, todėl matyti, kas kurią liniją paėmė.",
+          "Pasiekimų ženkleliai Forest & Pearl tema turi nupieštus medalių rėmelius ir paveikslėlius.",
+          "Reitingai telpa telefono ekrane – nebereikia slinkti į šonus.",
+          "Pirmą kartą žaidžiantiems rodoma pasveikinimo kortelė, kuri keturiais trumpais žingsniais paaiškina žaidimą.",
+          "Kraunantis žaidimui nebešmėkšteli tekstas.",
+        ],
+      },
       'Alpha 0.4.23.0': {
         changes: [
           'Nepaimtos linijos rodomos viena brūkšnine linija žaidžiant su Naujoku, Lengvu ir Vidutiniu botais; su Sunkiu ir Neįmanomu jas reikia pastebėti patiems. Jungiklio nebeliko.',

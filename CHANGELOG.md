@@ -3,6 +3,34 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.24.0] - 2026-10-26
+
+Painted Forest & Pearl renewal, achievement medals, rankings, first-visit
+welcome card (PRs #30-#32). Android 1.5 (versionCode 6).
+
+### Added
+
+- **First-visit welcome card** (`WelcomeCard.tsx`) - intro sentence, four
+  steps (colour, finish, complete several, claim), lesson / skip buttons and a
+  guide link; "I know how to play" fades in after 3 s; all 6 languages.
+
+### Changed
+
+- **Result share card** - painted Forest & Pearl style, verdict translated,
+  points label next to each score.
+- **Claimed lines solid again** - the 0.4.23.0 fade of older strikes is
+  removed; the painted line art is denser.
+- **Achievement medals** - painted frame per tier and painted glyphs in
+  Forest & Pearl (other themes keep the drawn badges).
+
+### Fixed
+
+- **Rankings** - no sideways scrolling on phones; number columns hug their
+  content and the leaderboards are compact on desktop.
+- **Text flash on load** - the crawler intro in `index.html` is hidden from
+  players; `data-theme` is set before first paint; the default background is
+  preloaded.
+
 ## [0.4.23.0] - 2026-10-20
 
 Onboarding review, batch 2.

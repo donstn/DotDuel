@@ -7529,6 +7529,47 @@ body.has-native-banner #root {
   color: var(--p2);
 }
 
+/* Short phones (iPhone SE): four steps plus the buttons only fit tightened;
+   the card scrolls as a last resort instead of running off the screen. */
+.welcome-card {
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+}
+@media (max-height: 640px) {
+  html[data-art~="card-frame"] .welcome-card,
+  .welcome-card {
+    padding-top: 16px;
+    padding-bottom: 24px;
+  }
+  .welcome-card h3 {
+    font-size: 1.05rem;
+    margin-bottom: 2px;
+  }
+  .welcome-card .welcome-intro {
+    font-size: 0.84rem;
+    line-height: 1.3;
+    margin-bottom: 8px;
+  }
+  .welcome-steps {
+    font-size: 0.82rem;
+    line-height: 1.28;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  .welcome-step-dot {
+    width: 20px;
+    height: 20px;
+    font-size: 0.68rem;
+  }
+  .welcome-card .welcome-time {
+    margin: 0 0 2px;
+  }
+  .welcome-card .welcome-skip {
+    margin-top: 0;
+    padding: 4px 12px;
+  }
+}
+
 /* Space is reserved from the start so nothing shifts when it appears. */
 .welcome-skip {
   opacity: 0;

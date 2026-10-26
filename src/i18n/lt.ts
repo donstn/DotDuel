@@ -1612,9 +1612,10 @@ export const lt: Messages = {
     welcomeTitle: "Sveiki atvykę į DotDuel",
     welcomeIntro: "Strateginis žaidimas dviem: spalvinkite taškus, užbaikite linijas ir surinkite daugiau taškų nei varžovas.",
     welcomeSteps: [
-      { title: "Nuspalvinkite", body: "po vieną tuščią tašką per ėjimą arba vietoj to paimkite nepaimtą liniją." },
+      { title: "Nuspalvinkite", body: "po vieną tuščią tašką, paeiliui su varžovu." },
       { title: "Užbaikite", body: "tiesią liniją ir gausite tiek taškų, kokio ji ilgio." },
       { title: "Užbaigę", body: "kelias linijas iš karto, gausite taškų tik už ilgiausią – kitas vėliau gali paimti bet kuris žaidėjas." },
+      { title: "Paimkite", body: "nepaimtą liniją vietoj taško – tai užims visą ėjimą, bet gausite visus jos taškus." },
     ],
     welcomePlay: "Mokytis žaidžiant",
     welcomeTime: "Apie 1 minutę",

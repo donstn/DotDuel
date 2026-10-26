@@ -1,5 +1,9 @@
+import { useEffect, useState } from 'react';
 import { useLang, useT } from '../i18n';
 import { guideLinkProps } from '../guideLinks';
+
+// The skip appears after a short read; the lesson button works at once.
+const SKIP_DELAY_MS = 3000;
 
 interface Props {
   onPlay: () => void;
@@ -7,10 +11,16 @@ interface Props {
 }
 
 /** First-visit title card: what the game is, the three rules, then the
- *  lesson or a skip. Shown once, before the first game. */
+ *  lesson or a skip (which fades in after SKIP_DELAY_MS). Shown once,
+ *  before the first game. */
 export function WelcomeCard({ onPlay, onSkip }: Props) {
   const t = useT();
   const { lang } = useLang();
+  const [skipReady, setSkipReady] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => setSkipReady(true), SKIP_DELAY_MS);
+    return () => window.clearTimeout(id);
+  }, []);
   return (
     <div
       className="confirm-overlay welcome-overlay"
@@ -35,7 +45,13 @@ export function WelcomeCard({ onPlay, onSkip }: Props) {
           {t.coach.welcomePlay}
         </button>
         <span className="welcome-time">{t.coach.welcomeTime}</span>
-        <button type="button" className="link-btn welcome-skip" onClick={onSkip}>
+        <button
+          type="button"
+          className={`link-btn welcome-skip${skipReady ? ' is-ready' : ''}`}
+          onClick={onSkip}
+          disabled={!skipReady}
+          aria-hidden={!skipReady}
+        >
           {t.coach.welcomeSkip}
         </button>
         <a className="welcome-guide" {...guideLinkProps(lang, 'guide')}>

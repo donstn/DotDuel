@@ -7529,6 +7529,16 @@ body.has-native-banner #root {
   color: var(--p2);
 }
 
+/* Space is reserved from the start so nothing shifts when it appears. */
+.welcome-skip {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 400ms ease;
+}
+.welcome-skip.is-ready {
+  opacity: 1;
+  visibility: visible;
+}
 .welcome-guide {
   margin-top: 2px;
   font-size: 0.82rem;

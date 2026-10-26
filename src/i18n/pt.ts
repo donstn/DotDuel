@@ -285,6 +285,16 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.24.0': {
+        changes: [
+          "Os cartões de resultado têm o estilo pintado de Forest & Pearl, estão no seu idioma e mostram os pontos ao lado do placar.",
+          "As linhas marcadas voltaram a ser sólidas, então dá para ver quem marcou cada linha.",
+          "As insígnias de conquistas têm molduras de medalha e imagens pintadas em Forest & Pearl.",
+          "Os rankings cabem na tela do celular sem rolar para os lados.",
+          "Quem joga pela primeira vez vê um cartão de boas-vindas que explica o jogo em quatro passos curtos.",
+          "Não aparece mais um texto piscando enquanto o jogo carrega.",
+        ],
+      },
       'Alpha 0.4.23.0': {
         changes: [
           'Linhas não marcadas aparecem como uma linha tracejada contra os bots Iniciante, Fácil e Médio; contra Difícil e Impossível tens de as encontrar sozinho. O interruptor desapareceu.',

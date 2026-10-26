@@ -297,6 +297,16 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.24.0': {
+        changes: [
+          "Karty wyników mają malowany styl Forest & Pearl, są w twoim języku i pokazują punkty obok wyniku.",
+          "Zajęte linie znów są pełne, więc widać, kto zajął którą linię.",
+          "Odznaki osiągnięć mają w Forest & Pearl malowane ramki medali i obrazki.",
+          "Rankingi mieszczą się na ekranie telefonu bez przewijania na boki.",
+          "Nowi gracze widzą kartę powitalną, która w czterech krótkich krokach wyjaśnia grę.",
+          "Podczas ładowania gry nie miga już tekst.",
+        ],
+      },
       'Alpha 0.4.23.0': {
         changes: [
           'Niezajęte linie są pokazywane jako jedna przerywana linia w grze z botami Początkujący, Łatwy i Średni; z Trudnym i Niemożliwym musisz je wypatrzyć sam. Przełącznik zniknął.',

@@ -30,6 +30,36 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.24.0',
+    date: '2026-10-26',
+    changes: [
+      {
+        kind: 'changed',
+        text: "Result cards are in the painted Forest & Pearl style and in your language, with points next to the score.",
+      },
+      {
+        kind: 'changed',
+        text: "Claimed lines are solid again, so you can see who took which line.",
+      },
+      {
+        kind: 'changed',
+        text: "Achievement badges have painted medal frames and pictures in Forest & Pearl.",
+      },
+      {
+        kind: 'fixed',
+        text: "Rankings fit phone screens without scrolling sideways.",
+      },
+      {
+        kind: 'added',
+        text: "First-time players get a welcome card that explains the game in four short steps.",
+      },
+      {
+        kind: 'fixed',
+        text: "No more flash of text while the game loads.",
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.23.0',
     date: '2026-10-20',
     changes: [

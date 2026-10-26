@@ -295,6 +295,16 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.24.0': {
+        changes: [
+          "Karty výsledků mají malovaný styl Forest & Pearl, jsou ve tvém jazyce a u skóre ukazují body.",
+          "Zabrané linie jsou zase plné, takže je vidět, kdo kterou linii zabral.",
+          "Odznaky úspěchů mají ve Forest & Pearl malované rámečky medailí a obrázky.",
+          "Žebříčky se vejdou na obrazovku telefonu bez posouvání do stran.",
+          "Noví hráči uvidí uvítací kartu, která hru vysvětlí ve čtyřech krátkých krocích.",
+          "Při načítání hry už neproblikne text.",
+        ],
+      },
       'Alpha 0.4.23.0': {
         changes: [
           'Nezabrané linie se zobrazují jako jedna čárkovaná čára na úrovních Začátečnická, Snadná a Střední; na úrovních Těžká a Nemožná je musíte najít sami. Přepínač zmizel.',

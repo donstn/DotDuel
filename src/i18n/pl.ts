@@ -1615,7 +1615,7 @@ export const pl: Messages = {
     welcomeTitle: "Witaj w DotDuel",
     welcomeIntro: "Strategiczna gra dla dwojga: koloruj kropki, kończ linie i zdobądź więcej punktów niż rywal.",
     welcomeSteps: [
-      { title: "Koloruj", body: "jedną pustą kropkę na turę, na zmianę z rywalem." },
+      { title: "Koloruj", body: "jedną pustą kropkę na turę albo zamiast tego zajmij niezajętą linię." },
       { title: "Dokończ", body: "prostą linię, by zdobyć tyle punktów, ile ma kropek." },
       { title: "Zamknij", body: "kilka linii naraz, a punktuje tylko najdłuższa; resztę każdy gracz może później zająć." },
     ],

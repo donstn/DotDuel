@@ -1613,7 +1613,7 @@ export const cs: Messages = {
     welcomeTitle: "Vítej v DotDuelu",
     welcomeIntro: "Strategická hra pro dva: barvi tečky, dokončuj linie a získej víc bodů než soupeř.",
     welcomeSteps: [
-      { title: "Obarvi", body: "jednu prázdnou tečku za tah, střídavě se soupeřem." },
+      { title: "Obarvi", body: "jednu prázdnou tečku za tah, nebo místo toho zaber nezabranou linii." },
       { title: "Dokonči", body: "rovnou linii a získáš tolik bodů, kolik je dlouhá." },
       { title: "Uzavři", body: "víc linií naráz a boduje jen nejdelší; ostatní si později může zabrat kterýkoli hráč." },
     ],

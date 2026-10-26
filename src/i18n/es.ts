@@ -1602,7 +1602,7 @@ export const es: Messages = {
     welcomeTitle: "Te damos la bienvenida a DotDuel",
     welcomeIntro: "Un juego de estrategia para dos: colorea puntos, completa líneas y supera a tu rival.",
     welcomeSteps: [
-      { title: "Colorea", body: "un punto vacío en cada turno, alternando con tu rival." },
+      { title: "Colorea", body: "un punto vacío en cada turno, o reclama una línea pendiente." },
       { title: "Completa", body: "una línea recta para sumar su longitud." },
       { title: "Termina", body: "varias líneas a la vez y solo puntúa la más larga; cualquiera puede reclamar las demás después." },
     ],

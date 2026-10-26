@@ -1008,7 +1008,7 @@ export const en = {
     welcomeTitle: "Welcome to DotDuel",
     welcomeIntro: "A strategy game for two: colour dots, finish lines, outscore your rival.",
     welcomeSteps: [
-      { title: "Colour", body: "one empty dot each turn, taking turns with your rival." },
+      { title: "Colour", body: "one empty dot each turn, or claim an unclaimed line instead." },
       { title: "Finish", body: "a straight line to score its length." },
       { title: "Complete", body: "several lines at once and only the longest scores; either player can claim the rest later." },
     ],

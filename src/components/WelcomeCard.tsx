@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLang, useT } from '../i18n';
+import { LANGS, useLang, useT } from '../i18n';
 import { guideLinkProps } from '../guideLinks';
 
 // The skip appears after a short read; the lesson button works at once.
@@ -15,7 +15,7 @@ interface Props {
  *  before the first game. */
 export function WelcomeCard({ onPlay, onSkip }: Props) {
   const t = useT();
-  const { lang } = useLang();
+  const { lang, setLang } = useLang();
   const [skipReady, setSkipReady] = useState(false);
   useEffect(() => {
     const id = window.setTimeout(() => setSkipReady(true), SKIP_DELAY_MS);
@@ -29,6 +29,24 @@ export function WelcomeCard({ onPlay, onSkip }: Props) {
       aria-labelledby="welcome-title"
     >
       <div className="confirm-card welcome-card">
+        {/* The footer's language picker sits under this overlay, so a
+            first-time visitor needs one here. */}
+        <div className="welcome-langs" role="group" aria-label={t.lang.label}>
+          {LANGS.map((l) => (
+            <button
+              key={l.code}
+              type="button"
+              lang={l.code}
+              title={l.label}
+              aria-label={l.label}
+              aria-pressed={l.code === lang}
+              className={`welcome-lang${l.code === lang ? ' is-on' : ''}`}
+              onClick={() => setLang(l.code)}
+            >
+              {l.code.toUpperCase()}
+            </button>
+          ))}
+        </div>
         <h3 id="welcome-title">{t.coach.welcomeTitle}</h3>
         <p className="welcome-intro">{t.coach.welcomeIntro}</p>
         <ol className="welcome-steps">

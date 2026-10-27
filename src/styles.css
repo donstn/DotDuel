@@ -7495,6 +7495,32 @@ body.has-native-banner #root {
 .welcome-card .welcome-intro {
   margin-bottom: 10px;
 }
+.welcome-langs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  max-width: 100%;
+  margin-bottom: 8px;
+}
+.welcome-lang {
+  flex-shrink: 0;
+  min-width: 0;
+  padding: 3px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.18));
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+.welcome-lang.is-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b1f12;
+}
 .welcome-steps {
   list-style: none;
   margin: 0 0 14px;

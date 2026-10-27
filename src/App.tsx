@@ -169,6 +169,8 @@ interface SessionConfig {
 
 const AD_FREE_FIRST_GAMES = 3;
 const AI_DELAY_MS = 250;
+// Timeout claims 1.5s apart: ~30s of retrying covers any phone-clock drift.
+const TIMEOUT_CLAIM_RETRIES = 20;
 
 // A saved game only resumes if every dot / line it mentions exists on its board.
 function activeGameFitsBoard(g: ActiveGame): boolean {
@@ -2018,7 +2020,11 @@ export default function App() {
 
   // Schedule an automatic timeout claim at the moment the current player's
   // clock will hit 0. Both clients run this; whichever fires first wins, the
-  // other becomes a no-op (server rejects once status='finished').
+  // other becomes a no-op (server rejects once status='finished'). Expiry is
+  // measured in SERVER time: a phone clock running ahead fired the claim early,
+  // the server answered NOT_EXPIRED and nothing retried, so a game vs a bot
+  // sat at 0:00. Keep retrying until the game row changes; the
+  // clock_timeout_sweep cron is the backstop when no client is present.
   useEffect(() => {
     if (
       screen !== 'mpgame' ||
@@ -2035,16 +2041,20 @@ export default function App() {
       current === 1 ? clock.p1RemainingMs : clock.p2RemainingMs;
     if (typeof baseMs !== 'number') return;
     const expiryAt = clock.turnStartedAt + baseMs;
-    const msToExpire = expiryAt - Date.now();
-    if (msToExpire <= 0) {
-      void claimTimeout(onlineGameId, user.uid);
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      void claimTimeout(onlineGameId!, user.uid);
-    }, msToExpire + 500);
+    const msToExpire = expiryAt - (Date.now() + serverSkewMs);
+    const gameId = onlineGameId;
+    const uid = user.uid;
+    let timer = 0;
+    let attempts = 0;
+    const claim = () => {
+      attempts += 1;
+      claimTimeout(gameId, uid).catch(() => {
+        if (attempts < TIMEOUT_CLAIM_RETRIES) timer = window.setTimeout(claim, 1500);
+      });
+    };
+    timer = window.setTimeout(claim, Math.max(0, msToExpire + 500));
     return () => window.clearTimeout(timer);
-  }, [screen, onlineGame, onlineGameId, user]);
+  }, [screen, onlineGame, onlineGameId, user, serverSkewMs]);
 
   // First-move abort timer. While a multiplayer game is still on someone's
   // FIRST move, schedule a claim 10s after that turn began. Both clients run
@@ -2712,6 +2722,16 @@ export default function App() {
         )}
         {changelogOpen && (
           <ChangelogPopover onClose={() => setChangelogOpen(false)} />
+        )}
+        {settingsOpen && (
+          <SettingsPopover
+            settings={settings}
+            cloudDisplayName={effectiveGameName}
+            onChange={updateSettings}
+            onResetProgress={onProgressResetWiped}
+            onClose={() => setSettingsOpen(false)}
+            onOpenThemes={() => setThemeOpen(true)}
+          />
         )}
         {themeOpen && (
           <ThemePopover

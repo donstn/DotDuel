@@ -3,6 +3,25 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.25.0] - 2026-10-27
+
+Tester bug fixes. Android 1.6 (versionCode 7).
+
+### Added
+
+- **Language picker on the first-visit welcome card** - the footer picker sits
+  under the card's overlay, so first-time visitors had no way to switch.
+
+### Fixed
+
+- **Clock timeouts** - the timeout claim uses server-corrected time and
+  retries; a tap at 0:00 claims the timeout instead of drawing a dot; new
+  `clock_timeout_sweep` pg_cron job (every 20 s) ends expired games when no
+  client is around (applied to prod 2026-10-27).
+- **Settings in online games** - the popover now renders on the multiplayer
+  game screen.
+- **Post-game "Add as friend"** - names the opponent, not you, when you are P2.
+
 ## [0.4.24.0] - 2026-10-26
 
 Painted Forest & Pearl renewal, achievement medals, rankings, first-visit

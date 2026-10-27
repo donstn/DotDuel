@@ -285,6 +285,14 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.25.0': {
+        changes: [
+          "Las partidas clasificatorias terminan en cuanto se acaba el tiempo, también contra bots.",
+          "Elige tu idioma en la pantalla de bienvenida.",
+          "Los ajustes se abren durante las partidas en línea.",
+          "Al terminar una partida, «Añadir como amigo» muestra el nombre de tu rival.",
+        ],
+      },
       'Alpha 0.4.24.0': {
         changes: [
           "Las tarjetas de resultado tienen el estilo pintado de Forest & Pearl, están en tu idioma y muestran los puntos junto al marcador.",

@@ -297,6 +297,14 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.25.0': {
+        changes: [
+          "Gry rankingowe kończą się od razu, gdy skończy się czas, także z botami.",
+          "Wybierz język na ekranie powitalnym.",
+          "Ustawienia otwierają się podczas gier online.",
+          "Po grze przycisk „Dodaj do znajomych” pokazuje imię przeciwnika.",
+        ],
+      },
       'Alpha 0.4.24.0': {
         changes: [
           "Karty wyników mają malowany styl Forest & Pearl, są w twoim języku i pokazują punkty obok wyniku.",

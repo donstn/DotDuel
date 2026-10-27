@@ -285,6 +285,14 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.25.0': {
+        changes: [
+          "As partidas ranqueadas terminam assim que o tempo acaba, também contra bots.",
+          "Escolha o seu idioma na tela de boas-vindas.",
+          "As configurações abrem durante as partidas online.",
+          "Depois da partida, \"Adicionar como amigo\" mostra o nome do adversário.",
+        ],
+      },
       'Alpha 0.4.24.0': {
         changes: [
           "Os cartões de resultado têm o estilo pintado de Forest & Pearl, estão no seu idioma e mostram os pontos ao lado do placar.",

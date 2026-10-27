@@ -30,6 +30,28 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.25.0',
+    date: '2026-10-27',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Ranked games now end as soon as a clock runs out, including against bots.',
+      },
+      {
+        kind: 'added',
+        text: 'Choose your language on the welcome screen.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Settings open during online games.',
+      },
+      {
+        kind: 'fixed',
+        text: 'After a game, "Add as friend" shows your opponent\'s name.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.24.0',
     date: '2026-10-26',
     changes: [

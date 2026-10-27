@@ -421,7 +421,7 @@ export function GameOver({
                     className="go-add-friend-btn"
                     onClick={onAddFriendClick}
                   >
-                    {t.gameOver.addAsFriend(p2Name === t.common.you ? p1Name : p2Name)}
+                    {t.gameOver.addAsFriend(myPlayer === 2 ? p1Name : p2Name)}
                   </button>
                 )}
                 {addFriendState === 'sending' && (

@@ -296,6 +296,14 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.25.0': {
+        changes: [
+          "Reitinguojami žaidimai baigiasi iškart, kai baigiasi laikas, taip pat ir prieš botus.",
+          "Kalbą galite pasirinkti pasisveikinimo lange.",
+          "Nustatymai atsidaro ir žaidžiant internetu.",
+          "Po žaidimo mygtukas „Pridėti į draugus“ rodo varžovo vardą.",
+        ],
+      },
       'Alpha 0.4.24.0': {
         changes: [
           "Rezultatų kortelės nupieštos Forest & Pearl stiliumi ir jūsų kalba, šalia rezultato rodomi taškai.",

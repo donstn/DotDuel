@@ -295,6 +295,14 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.25.0': {
+        changes: [
+          "Hodnocené hry skončí hned, jak dojde čas, i proti botům.",
+          "Jazyk si můžeš vybrat na uvítací obrazovce.",
+          "Nastavení se otevře i během online her.",
+          "Po hře tlačítko „Přidat jako přítele“ ukazuje jméno soupeře.",
+        ],
+      },
       'Alpha 0.4.24.0': {
         changes: [
           "Karty výsledků mají malovaný styl Forest & Pearl, jsou ve tvém jazyce a u skóre ukazují body.",

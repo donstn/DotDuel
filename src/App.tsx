@@ -2221,6 +2221,18 @@ export default function App() {
     };
   };
 
+  // At 0:00 a tap must not draw a dot: the server would reject it as a
+  // timeout anyway, so claim the timeout instead of showing a move that
+  // never counts.
+  const myClockExpired = (myNum: 1 | 2, sentAt: number): boolean => {
+    const clock = onlineGame?.clock;
+    if (!clock || clock.turnStartedAt <= 0 || clock.current !== myNum) return false;
+    const remaining = myNum === 1 ? clock.p1RemainingMs : clock.p2RemainingMs;
+    if (sentAt - clock.turnStartedAt < remaining) return false;
+    if (onlineGameId && user) void claimTimeout(onlineGameId, user.uid).catch(() => {});
+    return true;
+  };
+
   const handleMpDotClick = async (dotId: number) => {
     if (!user || !onlineGameId || !onlineGame) return;
     const myNum = playerNumFor(onlineGame, user.uid);
@@ -2229,10 +2241,11 @@ export default function App() {
     if (baseState.current !== myNum) return;
     if (moveInFlight) return;
     if (baseState.colored[dotId]) return;
-    setMoveInFlight(true);
     // One send-time (in server time) shared by the optimistic clock and sendMove
     // so the optimistic and authoritative turn-starts reference the same instant.
     const sentAt = Date.now() + serverSkewMs;
+    if (myClockExpired(myNum, sentAt)) return;
+    setMoveInFlight(true);
     // Note: we do NOT setLastDot here. The "last move" highlight is
     // reserved for the OPPONENT's most recent placement, picked up by
     // the state-diff effect below.
@@ -2276,8 +2289,9 @@ export default function App() {
     if (baseState.current !== myNum) return;
     if (moveInFlight) return;
     if (!baseState.pending.includes(lineId)) return;
-    setMoveInFlight(true);
     const sentAt = Date.now() + serverSkewMs;
+    if (myClockExpired(myNum, sentAt)) return;
+    setMoveInFlight(true);
     try {
       const result = applyClaim(baseState, lineId);
       playSfx('claim', { player: myNum, lineLength: result.pointsGained });

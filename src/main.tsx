@@ -10,6 +10,7 @@ import { NativeAdDivider } from './components/NativeAdDivider';
 import { isDiagMode } from './diag';
 import { getFirstLoadMs } from './ads';
 import { bootSession } from './telemetry';
+import { startFitText } from './fitText';
 import './styles.css';
 
 // Service worker: register on WEB only (auto-update for installed PWAs). In the
@@ -43,6 +44,8 @@ bootSession();
 void getFirstLoadMs();
 
 console.log(`%cDotDuel ${APP_VERSION} loaded`, 'color:#6fcf8a;font-weight:bold;font-size:13px');
+
+startFitText();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

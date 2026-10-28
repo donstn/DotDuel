@@ -3231,10 +3231,12 @@ h1, h2, h3,
 /* Reset progress / Reset stats sit side by side to save vertical space. */
 .settings-danger-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 .settings-danger-row .settings-danger-btn {
-  flex: 1;
+  /* Stack on narrow phones: two painted pills can't share ~250px. */
+  flex: 1 1 140px;
   text-align: center;
 }
 

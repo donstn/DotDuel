@@ -7315,8 +7315,53 @@ html[data-art~="pill-button"] .go-share-row {
 /* Native (Capacitor/AdMob) bottom banner overlays the webview; reserve room at
    the bottom so it doesn't cover the footer. Toggled by nativeAds.ts. */
 body.has-native-banner #root {
-  padding-bottom: 56px;
+  padding-bottom: calc(var(--native-banner-h, 56px) + 16px);
   box-sizing: border-box;
+}
+/* The ad tray already separates the footer from the bottom edge. */
+body.has-native-banner .app-footer {
+  padding-bottom: 2px;
+}
+
+/* Tray above the banner: a darker strip with a themed hairline and a small
+   "Advertisement" label, so the ad never reads as part of the app. */
+.native-ad-divider {
+  display: none;
+}
+body.has-native-banner .native-ad-divider {
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--native-banner-h, 56px) + 12px);
+  background: rgba(0, 0, 0, 0.38);
+  pointer-events: none;
+  z-index: 4;
+}
+body.has-native-banner .native-ad-divider::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.55;
+}
+.native-ad-label {
+  position: relative;
+  top: -0.5em;
+  height: 1em;
+  padding: 0 8px;
+  font-size: 0.6rem;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  background: var(--bg-edge);
+  border-radius: 6px;
 }
 
 /* ---------------- First-game tutorial (Coach) ---------------- */

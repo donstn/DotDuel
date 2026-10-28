@@ -13,6 +13,7 @@ import { Capacitor } from '@capacitor/core';
 import {
   AdMob,
   AdmobConsentStatus,
+  BannerAdPluginEvents,
   BannerAdPosition,
   BannerAdSize,
   type BannerAdOptions,
@@ -68,6 +69,14 @@ export function initNativeAds(): Promise<void> {
       try {
         await AdMob.initialize();
         initDone = true;
+        // Adaptive banners are 50–90dp tall depending on the phone; reserve
+        // the real height (dp = CSS px in the WebView). Hide reports 0 — keep
+        // the last height then, the body class already drops the reserve.
+        void AdMob.addListener(BannerAdPluginEvents.SizeChanged, ({ height }) => {
+          if (height > 0) {
+            document.documentElement.style.setProperty('--native-banner-h', `${height}px`);
+          }
+        });
       } catch (e) {
         console.warn('AdMob initialize failed:', e);
       }

@@ -6,6 +6,7 @@ import App from './App';
 import { LanguageProvider } from './i18n';
 import { APP_VERSION } from './version';
 import { DiagOverlay } from './components/DiagOverlay';
+import { NativeAdDivider } from './components/NativeAdDivider';
 import { isDiagMode } from './diag';
 import { getFirstLoadMs } from './ads';
 import { bootSession } from './telemetry';
@@ -47,6 +48,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <LanguageProvider>
       <App />
+      {Capacitor.isNativePlatform() && <NativeAdDivider />}
       {isDiagMode() && <DiagOverlay />}
     </LanguageProvider>
   </React.StrictMode>

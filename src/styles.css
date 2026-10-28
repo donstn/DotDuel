@@ -7315,7 +7315,7 @@ html[data-art~="pill-button"] .go-share-row {
 /* Native (Capacitor/AdMob) bottom banner overlays the webview; reserve room at
    the bottom so it doesn't cover the footer. Toggled by nativeAds.ts. */
 body.has-native-banner #root {
-  padding-bottom: calc(var(--native-banner-h, 56px) + 16px);
+  padding-bottom: calc(var(--native-banner-h, 56px) + 14px);
   box-sizing: border-box;
 }
 /* The ad tray already separates the footer from the bottom edge. */

@@ -11,12 +11,9 @@ import { isDiagMode } from './diag';
 import { getFirstLoadMs } from './ads';
 import { bootSession } from './telemetry';
 import { startFitText } from './fitText';
+import { startDialogFocus } from './dialogFocus';
 import './styles.css';
 
-// Service worker: register on WEB only (auto-update for installed PWAs). In the
-// native Capacitor app, assets are bundled in the APK and a SW only causes
-// stale-asset bugs (serving a previous build's cache over the WebView), so we
-// skip registration AND tear down any SW/caches a prior build may have left.
 // Android system font size, handed over by FontScalePlugin (the WebView's own
 // text zoom is off), applied as the root size so every rem grows with it.
 const nativeFontScale = (
@@ -34,6 +31,10 @@ if (nativeFontScale && nativeFontScale !== 1) {
   if (scale >= 1.15) document.documentElement.dataset.textLarge = '';
 }
 
+// Service worker: register on WEB only (auto-update for installed PWAs). In the
+// native Capacitor app, assets are bundled in the APK and a SW only causes
+// stale-asset bugs (serving a previous build's cache over the WebView), so we
+// skip registration AND tear down any SW/caches a prior build may have left.
 if (Capacitor.isNativePlatform()) {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker
@@ -63,6 +64,7 @@ void getFirstLoadMs();
 console.log(`%cDotDuel ${APP_VERSION} loaded`, 'color:#6fcf8a;font-weight:bold;font-size:13px');
 
 startFitText();
+startDialogFocus();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

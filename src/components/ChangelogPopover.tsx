@@ -53,7 +53,7 @@ export function ChangelogPopover({ onClose }: Props) {
           <p className="rules-tagline">{t.changelog.tagline}</p>
         </header>
 
-        <div className="rules-body changelog-body">
+        <div className="rules-body changelog-body" tabIndex={0}>
           {CHANGELOG.length === 0 && (
             <p className="rankings-empty">{t.changelog.empty}</p>
           )}

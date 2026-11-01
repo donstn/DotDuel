@@ -673,12 +673,33 @@ body::before {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.7 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
+/* Pinch zoom stays available (WCAG 1.4.4); only double-tap zoom is off, so
+   quick taps on dots and buttons never zoom the page. */
+* {
+  touch-action: manipulation;
+}
+
+/* Form controls don't inherit font-size; the browser's 13.33px default is
+   fixed and ignores enlarged text. Same size, in rem, so it scales. */
+button,
+input,
+select,
+textarea {
+  font-size: 0.8333rem;
+}
+
 button {
   font-family: inherit;
   cursor: pointer;
   border: none;
   background: none;
   color: inherit;
+}
+
+/* dialogFocus.ts focuses the window itself on open (so a screen reader reads
+   its title); the whole card doesn't need a ring for that. */
+[role="dialog"][tabindex="-1"]:focus {
+  outline: none;
 }
 
 /* Keyboard focus visibility (WCAG 2.4.7). Only shown for keyboard/programmatic

@@ -5,7 +5,8 @@ export function RulesContent() {
   const t = useT();
 
   return (
-    <div className="rules-body">
+    // tabIndex: the text scrolls, and keyboard users must be able to scroll it.
+    <div className="rules-body" tabIndex={0}>
       <section>
         <h3>{t.rules.goalH}</h3>
         <p>{t.rules.goalP}</p>

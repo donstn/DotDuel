@@ -151,6 +151,7 @@ export function watchProfile(
       void supabase.removeChannel(channel);
       channel = null;
     }
+    void emit(sid);
     channel = supabase
       .channel(`profile:${sid}`)
       .on(

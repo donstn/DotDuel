@@ -16,6 +16,8 @@ function fit(el: HTMLElement): void {
     el.style.fontSize = '';
     delete el.dataset.fit;
   }
+  // Enlarged text (accessibility) wraps instead of shrinking back down.
+  if (document.documentElement.hasAttribute('data-text-large')) return;
   if (el.scrollWidth <= el.clientWidth + 1) return;
   const cs = getComputedStyle(el);
   const pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
@@ -51,7 +53,7 @@ export function startFitText(): void {
   // Theme art and language switches change cap widths and label lengths.
   new MutationObserver(schedule).observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ['data-art', 'data-theme', 'lang'],
+    attributeFilter: ['data-art', 'data-theme', 'lang', 'data-text-large'],
   });
   window.addEventListener('resize', schedule);
   void document.fonts?.ready.then(schedule);

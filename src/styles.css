@@ -8163,3 +8163,185 @@ html[data-art~="toggle-knob"] .settings-toggle input[type="checkbox"]:checked::a
 html[data-art~='ach'] .ach-badge.is-earned svg {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
 }
+
+/* ---------------- Enlarged text (EU Accessibility Act / WCAG 1.4.4) -------
+   main.tsx sets data-text-large when the player turned text up (browser font
+   size, or Android system font size via FontScalePlugin). Text must reach
+   200% with nothing cut or overlapping, so here art grows to fit the text
+   instead of the text shrinking to fit the art; screens may scroll
+   vertically. At normal size none of this applies. */
+html[data-text-large] #root {
+  overflow-y: auto;
+}
+html[data-text-large] .menu {
+  flex: 1 0 auto;
+  min-height: auto;
+  overflow: visible;
+}
+
+/* Painted plaques / banners / pills: height follows the text (the end caps
+   keep their normal-size width and stretch a little vertically); labels wrap. */
+html[data-text-large][data-art~="menu-button"] .menu-shelf {
+  height: auto;
+  min-height: var(--plaque-h);
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+html[data-text-large][data-art~="menu-button"] .menu-shelf-body strong,
+html[data-text-large][data-art~="menu-button"] .menu-shelf-sub {
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+html[data-text-large][data-art~="menu-button"] .menu-shelf-inner:has(.menu-shelf-ic) {
+  width: 100%;
+  justify-content: center;
+}
+/* Picker icons repeat what the name says; the name needs the width. */
+html[data-text-large][data-art~="menu-button"] .menu-shelf-ic {
+  display: none;
+}
+html[data-text-large][data-art~="menu-button"] .menu-shelf-ic + .menu-shelf-body {
+  align-items: center;
+  text-align: center;
+}
+html[data-text-large][data-art~="title-banner"] .menu > h2 {
+  height: auto;
+  white-space: normal;
+  overflow: visible;
+  text-align: center;
+  overflow-wrap: anywhere;
+  min-height: var(--banner-h);
+  padding-top: 6px;
+  padding-bottom: calc(var(--banner-h) * 0.16 + 6px);
+}
+/* "pts left": the ribbon art only has a thin band for text, so enlarged text
+   gets a plain dark pill that can wrap. */
+html[data-text-large][data-art~="title-banner"] .remaining-points {
+  height: auto;
+  min-height: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 0.3em;
+  padding: 2px 12px;
+  border-image: none;
+  border-radius: 14px;
+  background: rgba(6, 16, 11, 0.72);
+  white-space: normal;
+  text-align: center;
+}
+html[data-text-large][data-art~="pill-button"] .menu-auth-btn,
+html[data-text-large][data-art~="pill-button"] .menu-auth-btn-cta,
+html[data-text-large][data-art~="pill-button"] .go-share-btn,
+html[data-text-large][data-art~="pill-button"] .go-add-friend-btn,
+html[data-text-large][data-art~="pill-button"] .confirm-actions button:not(.danger),
+html[data-text-large][data-art~="pill-button"] .coach-bubble-btn,
+html[data-text-large][data-art~="pill-button"] .btn-coach-skip,
+html[data-text-large][data-art~="pill-button"] .share-action:not(.primary),
+html[data-text-large][data-art~="primary-button"] .hotseat-start,
+html[data-text-large][data-art~="primary-button"] .game-over-buttons .primary,
+html[data-text-large][data-art~="primary-button"] .go-cta-primary,
+html[data-text-large][data-art~="primary-button"] .rules-got-it,
+html[data-text-large][data-art~="primary-button"] .friends-add-btn,
+html[data-text-large][data-art~="primary-button"] .share-action.primary,
+html[data-text-large][data-art~="danger-pill"] .btn-resign-inline,
+html[data-text-large][data-art~="danger-pill"] .settings-danger-btn,
+html[data-text-large][data-art~="danger-pill"] .confirm-actions button.danger,
+html[data-text-large][data-art~="tab-off"] .howto-tab,
+html[data-text-large][data-art~="tab-top-off"] .friends-tab,
+html[data-text-large][data-art~="title-banner"] .rules-header h2,
+html[data-text-large][data-art~="title-banner"] .move-failed-toast,
+html[data-text-large][data-art~="title-banner"] .daily-loading-card,
+html[data-text-large][data-art~="input-field"] .settings-input {
+  height: auto;
+  min-height: var(--h, var(--pill-h, var(--btn-h)));
+  padding-top: 5px;
+  padding-bottom: 5px;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+/* Game screen: the board keeps its full width and the screen scrolls,
+   instead of the board shrinking to fit around the enlarged text. */
+html[data-text-large] .game-screen,
+html[data-text-large] .game-body {
+  flex: 1 0 auto;
+  min-height: auto;
+  overflow: visible;
+}
+html[data-text-large] .board-wrap {
+  flex: none;
+  min-height: auto;
+}
+html[data-text-large] .board {
+  max-height: none;
+}
+
+/* Phone score strip: both names on top (half the width each, wrapping
+   between words), the score centred below. The strip only exists in the
+   phone layout. */
+html[data-text-large] .score-strip {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "left right"
+    "center center";
+}
+html[data-text-large] .ss-left { grid-area: left; }
+html[data-text-large] .ss-right { grid-area: right; }
+html[data-text-large] .ss-center { grid-area: center; }
+html[data-text-large] .ss-side,
+html[data-text-large] .ss-right {
+  flex-direction: column;
+  justify-content: flex-start;
+  text-align: center;
+}
+html[data-text-large] .ss-who,
+html[data-text-large] .ss-right .ss-who {
+  align-items: center;
+  max-width: 100%;
+}
+html[data-text-large] .ss-name {
+  display: block;
+  -webkit-line-clamp: none;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+html[data-text-large] .ss-name.ss-name-one {
+  white-space: normal;
+}
+
+/* Side-by-side dialog buttons stack, so each label gets the full width. */
+html[data-text-large] .confirm-actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+html[data-text-large] .confirm-actions button {
+  max-width: none;
+}
+
+/* Game over: one column of scores, long names/titles wrap inside the card. */
+html[data-text-large] .game-over-card {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+html[data-text-large] .final-scores {
+  grid-template-columns: minmax(0, 1fr);
+}
+html[data-text-large] .final-score {
+  min-width: 0;
+}
+/* The headline is already large; doubled it broke names mid-word. It still
+   grows (×1.5 at 200%), just not all the way. */
+html[data-text-large] .game-over-card h2 {
+  font-size: 1.35rem;
+}
+/* The game screen grows taller than the viewport here, so pin the overlay to
+   the viewport instead of the screen; it scrolls on its own. Less side
+   padding gives the card more width. */
+html[data-text-large] .game-over {
+  position: fixed;
+  padding: 12px;
+}

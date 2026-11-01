@@ -17,6 +17,23 @@ import './styles.css';
 // native Capacitor app, assets are bundled in the APK and a SW only causes
 // stale-asset bugs (serving a previous build's cache over the WebView), so we
 // skip registration AND tear down any SW/caches a prior build may have left.
+// Android system font size, handed over by FontScalePlugin (the WebView's own
+// text zoom is off), applied as the root size so every rem grows with it.
+const nativeFontScale = (
+  window as { DotDuelNative?: { fontScale?: () => number } }
+).DotDuelNative?.fontScale?.();
+if (nativeFontScale && nativeFontScale !== 1) {
+  document.documentElement.style.fontSize = `${nativeFontScale * 100}%`;
+}
+// How much the player enlarged text (browser or system setting), for layouts
+// built from fixed-size art: --text-scale grows them, and data-text-large lets
+// labels wrap instead of fitting one line.
+{
+  const scale = parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
+  document.documentElement.style.setProperty('--text-scale', String(Math.max(1, scale)));
+  if (scale >= 1.15) document.documentElement.dataset.textLarge = '';
+}
+
 if (Capacitor.isNativePlatform()) {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker

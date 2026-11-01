@@ -2784,8 +2784,10 @@ h1, h2, h3,
    learning window and in the lesson. Not gold — gold means "tap here". */
 .waiting-line {
   stroke: #fffbea;
+}
+.waiting-line-edge {
+  stroke: #06120b;
   opacity: 0.9;
-  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9));
 }
 
 @keyframes pop {
@@ -4405,7 +4407,10 @@ h1, h2, h3,
   .ss-right .ss-who { align-items: flex-end; }
 
   /* Full name, smaller, wrapping to two lines instead of truncating. */
+  /* max-width: on the right side .ss-who aligns flex-end, so without a cap
+     the name sizes to its longest word and spills left over the score. */
   .ss-name {
+    max-width: 100%;
     font-size: 0.76rem;
     font-weight: 600;
     line-height: 1.15;

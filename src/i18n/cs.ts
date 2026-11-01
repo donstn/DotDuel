@@ -33,7 +33,6 @@ export const cs: Messages = {
     ok: 'OK',
     done: 'Hotovo',
     advertisement: 'Reklama',
-    rotateToPortrait: 'Otočte telefon na výšku, abyste mohli hrát DotDuel',
   },
 
   lang: {

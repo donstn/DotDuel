@@ -35,7 +35,6 @@ export const pl: Messages = {
     ok: 'OK',
     done: 'Gotowe',
     advertisement: 'Reklama',
-    rotateToPortrait: 'Obróć telefon pionowo, aby grać w DotDuel',
   },
 
   lang: {

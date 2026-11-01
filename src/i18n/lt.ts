@@ -35,7 +35,6 @@ export const lt: Messages = {
     ok: 'Gerai',
     done: 'Atlikta',
     advertisement: 'Reklama',
-    rotateToPortrait: 'Pasukite telefoną vertikaliai, kad galėtumėte žaisti DotDuel',
   },
 
   lang: {

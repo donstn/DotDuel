@@ -24,7 +24,6 @@ export const pt: Messages = {
     ok: 'OK',
     done: 'Concluído',
     advertisement: 'Publicidade',
-    rotateToPortrait: 'Gire o celular na vertical para jogar DotDuel',
   },
 
   lang: {

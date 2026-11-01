@@ -1417,6 +1417,9 @@ html[data-art~="menu-button"] .menu-share-link {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  /* Keep cards clear of the status / navigation bars (edge-to-edge app). */
+  padding-top: max(20px, env(safe-area-inset-top));
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
 }
 
 .confirm-card {
@@ -1947,6 +1950,9 @@ html[data-art~="menu-button"] .menu-share-link {
   transition: width 450ms ease;
 }
 .ach-detail {
+  /* Sits in the scrolling achievements column: don't get squeezed below the
+     hint's height (long translations, enlarged text). */
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2869,6 +2875,7 @@ h1, h2, h3,
   align-items: center;
   justify-content: center;
   padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
   padding-bottom: max(16px, env(safe-area-inset-bottom));
   z-index: 100;
   animation: fadeIn 220ms ease-out;
@@ -4509,14 +4516,17 @@ h1, h2, h3,
 @media (max-width: 720px) {
   .rules-overlay {
     padding: 10px;
+    padding-top: max(10px, env(safe-area-inset-top));
     padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
 
   .rules-card {
     /* On mobile we want every available pixel — use 95% but capped
-       by the smallest viewport so it never exceeds visible area. */
+       by the smallest viewport so it never exceeds visible area, and
+       clear of the status / navigation bars in the edge-to-edge app. */
     max-height: 95vh;
-    max-height: min(95vh, 95dvh, 95svh);
+    max-height: min(95vh, 95dvh, 95svh,
+      calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
     border-radius: var(--radius);
   }
 
@@ -4721,6 +4731,8 @@ h1, h2, h3,
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* Same inset as .rules-body, so the swatches stay inside the card frame. */
+  padding: 4px 22px 12px;
 }
 
 .theme-grid {
@@ -7610,7 +7622,7 @@ body.has-native-banner .native-ad-divider::before {
 /* Short phones (iPhone SE): four steps plus the buttons only fit tightened;
    the card scrolls as a last resort instead of running off the screen. */
 .welcome-card {
-  max-height: calc(100dvh - 16px);
+  max-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   overflow-y: auto;
 }
 @media (max-height: 640px) {
@@ -8184,6 +8196,7 @@ html[data-text-large] .menu {
 html[data-text-large][data-art~="menu-button"] .menu-shelf {
   height: auto;
   min-height: var(--plaque-h);
+  flex-shrink: 0;
   padding-top: 8px;
   padding-bottom: 8px;
 }
@@ -8255,6 +8268,9 @@ html[data-text-large][data-art~="title-banner"] .daily-loading-card,
 html[data-text-large][data-art~="input-field"] .settings-input {
   height: auto;
   min-height: var(--h, var(--pill-h, var(--btn-h)));
+  /* In a scrolling flex column (welcome card) it would shrink to min-height
+     and the wrapped label would spill out. */
+  flex-shrink: 0;
   padding-top: 5px;
   padding-bottom: 5px;
   white-space: normal;

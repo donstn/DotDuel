@@ -1290,12 +1290,12 @@ html[data-art~="menu-button"] .menu-share-link {
 }
 
 /* Slim top bar with back button + remaining points + pending.
-   Right column uses minmax(40px, auto) so the topbar-side-cluster (eye
-   toggle + ?) can grow past 40px when both icons are rendered, while
-   the single-button MP topbar still sits at the 40px floor. */
+   The two outer columns are equal 1fr (never narrower than their button),
+   so "pts left" is centred on the screen even when the buttons differ in
+   width (painted 42px icons, the lesson's wider Skip button). */
 .game-topbar {
   display: grid;
-  grid-template-columns: 40px 1fr minmax(40px, auto);
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
@@ -1305,6 +1305,8 @@ html[data-art~="menu-button"] .menu-share-link {
   background: var(--glass-bg-strong);
   border-bottom: 1px solid var(--glass-border);
 }
+.game-topbar > :first-child { justify-self: start; }
+.game-topbar > :last-child { justify-self: end; }
 
 .player-below-avatar {
   display: flex;
@@ -1773,7 +1775,9 @@ html[data-art~="menu-button"] .menu-share-link {
 
 /* Side panels with avatar, name, rating, score */
 .side-panel {
-  width: clamp(86px, 22vw, 150px);
+  /* 184px max: a Lithuanian stats row ("BOTAS L1 · 1P 0L 0Pr · 100%")
+     needs ~146px of text; at 150px its counts were cut mid-letter. */
+  width: clamp(86px, 22vw, 184px);
   flex-shrink: 0;
   padding: 10px 8px;
   display: flex;
@@ -2480,11 +2484,15 @@ html[data-art~="menu-button"] .menu-share-link {
 }
 
 /* Featured badge beside the player name in-game */
+/* max-width: the panel centres this row, so without a cap a long name sizes
+   it past the panel and the ellipsis on .player-name never kicks in. */
 .player-name-row {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  max-width: 100%;
+  min-width: 0;
 }
 .player-name-row .ach-badge {
   flex: 0 0 auto;
@@ -2571,6 +2579,10 @@ html[data-art~="menu-button"] .menu-share-link {
   font-size: 0.75rem;
   letter-spacing: 0.01em;
   flex-shrink: 0;
+}
+
+.stats-line-empty {
+  justify-content: center;
 }
 
 .stats-empty {
@@ -3702,7 +3714,6 @@ h1, h2, h3,
 @media (orientation: landscape) and (max-height: 500px) {
   .game-topbar {
     padding: 5px 10px;
-    grid-template-columns: 34px 1fr minmax(34px, auto);
   }
   .btn-back,
   .btn-rules {
@@ -4377,7 +4388,10 @@ h1, h2, h3,
     min-width: 0;
     padding: 4px 5px;
     border-radius: calc(var(--radius) - 4px);
-    border: 1px solid transparent;
+    /* Both cards keep a visible frame, so the waiting player's card reads as
+       the same size as the active one instead of melting into the strip. */
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
     position: relative;
     transition: background 220ms, border-color 220ms, box-shadow 220ms;
   }
@@ -8166,12 +8180,18 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
    game puts a player card on each side of the board with the score above it,
    and menus split into two columns, so everything fits without scrolling. */
 @media (orientation: landscape) and (max-height: 500px) {
+  /* The cards share the middle auto row, so both stretch to the taller
+     card's height (a 2-line name or a clock no longer makes one card
+     bigger than the other) and stay vertically centred on the board. */
   .game-body {
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
-    grid-template-areas: "left board right";
+    grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-areas:
+      ". board ."
+      "left board right"
+      ". board .";
     column-gap: 8px;
-    row-gap: 2px;
+    row-gap: 0;
   }
   /* The strip's three parts become cells of the game grid. */
   .score-strip,
@@ -8204,7 +8224,7 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
   .ss-right {
     flex-direction: column;
     justify-content: center;
-    align-self: center;
+    align-self: stretch;
     justify-self: center;
     width: 100%;
     max-width: 200px;
@@ -8228,14 +8248,48 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
     width: auto;
     height: 100%;
   }
+  /* Enlarged text (the screen scrolls): size the board from the width. Sized
+     from the row height, the board's width depended on the cards' height,
+     which depends on the column width, and a card with a long wrapped name
+     spilled over the footer. */
+  html[data-text-large] .board-wrap {
+    width: 40vw;
+  }
+  html[data-text-large] .board {
+    width: 100%;
+    height: auto;
+  }
   /* Height is the scarce dimension: "pts left" and the unclaimed-lines badge
      share one row, and Resign sits in the free bottom-left corner. */
-  .topbar-center {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+  /* "pts left" sits in a centre column flanked by two equal columns, so it
+     is centred on the screen whether or not the badge (right) or the daily
+     clock (left) is showing. Enlarged text has no room for three columns
+     and keeps the stacked column. */
+  html:not([data-text-large]) .topbar-center {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
+    align-items: center;
     column-gap: 8px;
     min-height: 0;
+  }
+  html:not([data-text-large]) .topbar-center > .remaining-points { grid-column: 2; grid-row: 1; }
+  html:not([data-text-large]) .topbar-center > .pending-indicator {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: start;
+    max-width: 100%;
+    border-radius: 14px;
+  }
+  /* The lesson hides "pts left", so its badge takes the centre cell. */
+  html:not([data-text-large]) .coach-screen .topbar-center > .pending-indicator {
+    grid-column: 2;
+    justify-self: center;
+  }
+  html:not([data-text-large]) .topbar-center > .daily-clock-wrap {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
+    margin-top: 0;
   }
   .game-screen {
     position: relative;
@@ -8357,8 +8411,14 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
     align-self: start;
     min-height: 0;
   }
+  .coach-screen .ss-left {
+    align-self: center;
+  }
+  /* Its column is 1.4fr (room for the bubble); 1/1.4 of it matches the left
+     card's width. */
   .coach-screen .ss-right {
     align-self: end;
+    max-width: min(200px, calc(100% / 1.4));
   }
   /* The shelf column is narrower than in portrait; give names its width. */
   html[data-art~="menu-button"] .menu-shelf-inner:has(.menu-shelf-ic) {
@@ -8469,20 +8529,24 @@ html[data-text-large][data-art~="input-field"] .settings-input {
   text-align: center;
 }
 
-/* Game screen: the board keeps its full width and the screen scrolls,
-   instead of the board shrinking to fit around the enlarged text. */
-html[data-text-large] .game-screen,
-html[data-text-large] .game-body {
-  flex: 1 0 auto;
-  min-height: auto;
-  overflow: visible;
-}
-html[data-text-large] .board-wrap {
-  flex: none;
-  min-height: auto;
-}
-html[data-text-large] .board {
-  max-height: none;
+/* Phone game screen: the board keeps its full width and the screen scrolls,
+   instead of the board shrinking to fit around the enlarged text. Phone
+   layouts only: the desktop row (panel · board · panel) has room, and there
+   these rules shoved the board left over the panel or made it overflow. */
+@media (max-width: 720px), (orientation: landscape) and (max-height: 500px) {
+  html[data-text-large] .game-screen,
+  html[data-text-large] .game-body {
+    flex: 1 0 auto;
+    min-height: auto;
+    overflow: visible;
+  }
+  html[data-text-large] .board-wrap {
+    flex: none;
+    min-height: auto;
+  }
+  html[data-text-large] .board {
+    max-height: none;
+  }
 }
 
 /* Phone score strip: both names on top (half the width each, wrapping
@@ -8517,6 +8581,22 @@ html[data-text-large] .ss-name {
 html[data-text-large] .ss-name.ss-name-one {
   white-space: normal;
 }
+/* Desktop player cards: enlarged names and "no games yet" wrap instead of
+   being cut. */
+html[data-text-large] .player-name,
+html[data-text-large] .stats-line-empty {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+html[data-text-large] .stats-line {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+html[data-text-large] .stats-counts {
+  flex: 1 0 auto;
+  overflow: visible;
+}
 
 /* Side-by-side dialog buttons stack, so each label gets the full width. */
 html[data-text-large] .confirm-actions {
@@ -8532,6 +8612,12 @@ html[data-text-large] .game-over-card {
   min-width: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
+}
+/* Desktop: grow with the text instead of spanning the whole window. */
+@media (min-width: 721px) and (min-height: 501px) {
+  html[data-text-large] .game-over-card {
+    max-width: min(100%, calc(380px * var(--text-scale, 2)));
+  }
 }
 html[data-text-large] .final-scores {
   grid-template-columns: minmax(0, 1fr);

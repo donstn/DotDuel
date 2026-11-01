@@ -8193,6 +8193,10 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
     column-gap: 8px;
     row-gap: 0;
   }
+  /* Keep the cards clear of Resign, which sits in the bottom-left corner. */
+  html:not([data-text-large]) .game-body {
+    grid-template-rows: minmax(0, 1fr) auto minmax(44px, 1fr);
+  }
   /* The strip's three parts become cells of the game grid. */
   .score-strip,
   html[data-art~="card-frame"] .score-strip {
@@ -8259,35 +8263,27 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
     width: 100%;
     height: auto;
   }
-  /* Height is the scarce dimension: "pts left" and the unclaimed-lines badge
-     share one row, and Resign sits in the free bottom-left corner. */
-  /* "pts left" sits in a centre column flanked by two equal columns, so it
-     is centred on the screen whether or not the badge (right) or the daily
-     clock (left) is showing. Enlarged text has no room for three columns
-     and keeps the stacked column. */
+  /* "pts left" with the unclaimed-lines badge under it, in the centre
+     column of three equal-flanked ones, so it stays centred on the screen;
+     the daily clock sits in the left column. Resign sits in the free
+     bottom-left corner. Enlarged text keeps the plain stacked column. */
   html:not([data-text-large]) .topbar-center {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
     align-items: center;
+    justify-items: center;
     column-gap: 8px;
+    row-gap: 2px;
     min-height: 0;
   }
   html:not([data-text-large]) .topbar-center > .remaining-points { grid-column: 2; grid-row: 1; }
-  html:not([data-text-large]) .topbar-center > .pending-indicator {
-    grid-column: 3;
-    grid-row: 1;
-    justify-self: start;
-    max-width: 100%;
-    border-radius: 14px;
-  }
-  /* The lesson hides "pts left", so its badge takes the centre cell. */
-  html:not([data-text-large]) .coach-screen .topbar-center > .pending-indicator {
-    grid-column: 2;
-    justify-self: center;
-  }
+  html:not([data-text-large]) .topbar-center > .pending-indicator { grid-column: 2; grid-row: 2; }
+  /* The lesson hides "pts left": its badge takes that cell, keeping the
+     topbar one row high so the coach's bubble fits. */
+  html:not([data-text-large]) .coach-screen .topbar-center > .pending-indicator { grid-row: 1; }
   html:not([data-text-large]) .topbar-center > .daily-clock-wrap {
     grid-column: 1;
-    grid-row: 1;
+    grid-row: 1 / span 2;
     justify-self: end;
     margin-top: 0;
   }
@@ -8393,14 +8389,17 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
   .game-over {
     padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
   }
-  /* Lesson: board in the middle, the coach's bubble under the right card. */
+  /* Lesson: both (compact) cards stacked on the left, board in the middle,
+     and the whole right column for the coach's bubble, so even the longest
+     message fits a 320px-high screen. */
   .coach-screen .game-body:has(> .score-strip) {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.4fr);
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.5fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
-      "left board right"
-      "left board coach";
+      "left board coach"
+      "right board coach";
+    row-gap: 8px;
   }
   .coach-screen .game-body:has(> .score-strip) .board-wrap {
     height: auto;
@@ -8408,17 +8407,46 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
   }
   .coach-screen .game-body:has(> .score-strip) .coach-slot {
     grid-area: coach;
-    align-self: start;
+    align-self: center;
     min-height: 0;
   }
-  .coach-screen .ss-left {
-    align-self: center;
+  .coach-screen .coach-bubble {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    line-height: 1.3;
   }
-  /* Its column is 1.4fr (room for the bubble); 1/1.4 of it matches the left
-     card's width. */
-  .coach-screen .ss-right {
+  .coach-screen .ss-left {
     align-self: end;
-    max-width: min(200px, calc(100% / 1.4));
+  }
+  .coach-screen .ss-right {
+    align-self: start;
+  }
+  /* Enlarged text: a wrapped name makes one card taller; both rows are
+     equal, so stretching keeps the two cards the same size. */
+  html[data-text-large] .coach-screen .ss-left,
+  html[data-text-large] .coach-screen .ss-right {
+    align-self: stretch;
+  }
+  /* Compact lesson cards (name on top, a small avatar beside the score): a
+     full card plus the bubble under it is taller than a 320px-high screen. */
+  html:not([data-text-large]) .coach-screen .ss-side {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-areas: "who who" "av score";
+    justify-content: center;
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 2px;
+    padding: 6px;
+  }
+  html:not([data-text-large]) .coach-screen .ss-avatar { grid-area: av; }
+  html:not([data-text-large]) .coach-screen .ss-avatar .avatar-frame {
+    width: 30px;
+  }
+  html:not([data-text-large]) .coach-screen .ss-who { grid-area: who; }
+  html:not([data-text-large]) .coach-screen .ss-side-score {
+    grid-area: score;
+    margin-top: 0;
   }
   /* The shelf column is narrower than in portrait; give names its width. */
   html[data-art~="menu-button"] .menu-shelf-inner:has(.menu-shelf-ic) {

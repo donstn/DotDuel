@@ -294,6 +294,16 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.26.0': {
+        changes: [
+          "Otoč telefon naležato: všechny obrazovky se vejdou a ve hře je deska uprostřed s hráčem na každé straně.",
+          "Text zůstane čitelný, i když ho zvětšíš v nastavení telefonu nebo prohlížeče, až na 200 %.",
+          "Žebříček se načítá rychleji a obrazovku můžeš přiblížit dvěma prsty.",
+          "V aplikaci jsou reklamy ve vlastním označeném pruhu a nikdy nezakryjí menu.",
+          "Popisky tlačítek se zmenší, aby se vešly, místo aby byly useknuté.",
+          "Obě karty hráčů mají stejnou velikost a čárky nezabraných čar jsou výraznější.",
+        ],
+      },
       'Alpha 0.4.25.0': {
         changes: [
           "Hodnocené hry skončí hned, jak dojde čas, i proti botům.",

@@ -296,6 +296,16 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.26.0': {
+        changes: [
+          "Obróć telefon poziomo: wszystkie ekrany się mieszczą, a w grze plansza zajmuje środek ekranu z graczem po każdej stronie.",
+          "Tekst pozostaje czytelny, gdy powiększysz go w ustawieniach telefonu lub przeglądarki, do 200%.",
+          "Ranking ładuje się szybciej, a ekran możesz powiększyć dwoma palcami.",
+          "W aplikacji reklamy mają własny, oznaczony pasek i nigdy nie zasłaniają menu.",
+          "Napisy na przyciskach zmniejszają się, by się zmieścić, zamiast być ucinane.",
+          "Obie karty graczy mają ten sam rozmiar, a kreski niezajętych linii są wyraźniejsze.",
+        ],
+      },
       'Alpha 0.4.25.0': {
         changes: [
           "Gry rankingowe kończą się od razu, gdy skończy się czas, także z botami.",

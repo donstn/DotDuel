@@ -284,6 +284,16 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.26.0': {
+        changes: [
+          "Gire o celular: todas as telas cabem na horizontal e, na partida, o tabuleiro fica no meio da tela com um jogador de cada lado.",
+          "O texto continua legível quando você o aumenta nas configurações do celular ou do navegador, até 200%.",
+          "O ranking carrega mais rápido e você pode ampliar com dois dedos.",
+          "No app, os anúncios ficam em uma faixa própria e marcada e nunca cobrem o menu.",
+          "Os textos dos botões diminuem para caber em vez de serem cortados.",
+          "Os dois cartões de jogador têm o mesmo tamanho e os traços das linhas não reivindicadas estão mais fortes.",
+        ],
+      },
       'Alpha 0.4.25.0': {
         changes: [
           "As partidas ranqueadas terminam assim que o tempo acaba, também contra bots.",

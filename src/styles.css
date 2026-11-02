@@ -1249,6 +1249,10 @@ html[data-art~="menu-button"] .menu-share-link {
   white-space: nowrap;
 }
 
+.app-footer-group {
+  display: contents;
+}
+
 .app-footer-brand {
   color: var(--text-mute);
   font-weight: 500;
@@ -7330,7 +7334,7 @@ html[data-art~="pill-button"] .go-share-row {
 /* Native (Capacitor/AdMob) bottom banner overlays the webview; reserve room at
    the bottom so it doesn't cover the footer. Toggled by nativeAds.ts. */
 body.has-native-banner #root {
-  padding-bottom: calc(var(--native-banner-h, 56px) + 14px);
+  padding-bottom: calc(var(--native-banner-h, 56px) + 14px + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 /* The ad tray already separates the footer from the bottom edge. */
@@ -7350,7 +7354,7 @@ body.has-native-banner .native-ad-divider {
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(var(--native-banner-h, 56px) + 12px);
+  height: calc(var(--native-banner-h, 56px) + 12px + env(safe-area-inset-bottom));
   background: rgba(0, 0, 0, 0.38);
   pointer-events: none;
   z-index: 4;
@@ -8297,6 +8301,162 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
     bottom: calc(44px + env(safe-area-inset-bottom));
     margin: 0;
     z-index: 3;
+  }
+}
+
+/* Sideways, a camera cutout pads one side only; pad both sides alike so
+   the board and menus stay centred on the screen, over the centred ad. */
+@media (orientation: landscape) and (max-height: 500px) {
+  #root {
+    padding-left: max(env(safe-area-inset-left), env(safe-area-inset-right));
+    padding-right: max(env(safe-area-inset-left), env(safe-area-inset-right));
+  }
+}
+
+/* Sideways game, normal text: "pts left" at the top centre with the board
+   right under it, back and rules in the top corners, compact cards at the
+   top of each side with Resign under the left one — the height goes to the
+   board. The lesson keeps its own layout. */
+@media (orientation: landscape) and (max-height: 500px) {
+  html:not([data-text-large]) .game-screen:not(.coach-screen) {
+    --ls-bar: 36px;
+    --ls-card-w: 150px;
+    --ls-card-h: 124px;
+    --ls-side-pad: 12px;
+  }
+  html:not([data-text-large]) .game-screen:not(.coach-screen):has(.ss-side-clock) {
+    --ls-card-h: 148px;
+  }
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .game-topbar {
+    position: static;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    box-sizing: border-box;
+    height: var(--ls-bar);
+    /* The status bar keeps its icons at the sides; "pts left" may sit in
+       its empty middle. */
+    margin-top: calc(-1 * env(safe-area-inset-top));
+    padding: 0;
+  }
+  html[data-art~="title-banner"]:not([data-text-large]) .game-screen:not(.coach-screen) .remaining-points {
+    --h: 34px;
+  }
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .btn-back,
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .btn-rules {
+    position: absolute;
+    top: 6px;
+    z-index: 3;
+  }
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .btn-back {
+    left: var(--ls-side-pad);
+  }
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .btn-rules {
+    right: var(--ls-side-pad);
+  }
+  /* The unclaimed-lines badge sits right of "pts left" on the same row. */
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .topbar-center > .pending-indicator {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: start;
+  }
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .game-body {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "left board right";
+    padding: 0 var(--ls-side-pad) 4px;
+    column-gap: 12px;
+  }
+  /* Centred beside the board; both lifted by half of Resign's slot so the
+     left card and Resign under it read as one centred group. */
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .ss-side {
+    align-self: center;
+    justify-self: center;
+    box-sizing: border-box;
+    width: var(--ls-card-w);
+    height: var(--ls-card-h);
+    margin-bottom: 48px;
+    padding: 6px;
+    gap: 2px;
+  }
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .ss-left {
+    anchor-name: --ls-left-card;
+  }
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .ss-avatar .avatar-frame {
+    width: 32px;
+  }
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .ss-side-score {
+    margin-top: 0;
+    gap: 0;
+  }
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .ss-side-score .ss-n {
+    font-size: 1.6rem;
+    line-height: 1.1;
+  }
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .board-wrap {
+    padding: 0;
+  }
+  /* The board's viewBox keeps an empty margin round the frame (room for the
+     glow in portrait); sideways the frame grows into it. */
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .board {
+    transform: scale(1.15);
+  }
+  @supports (anchor-name: --a) {
+    html:not([data-text-large]) .game-screen:not(.coach-screen) .ingame-actions {
+      position-anchor: --ls-left-card;
+      top: calc(anchor(bottom) + 10px);
+      bottom: auto;
+      left: anchor(left);
+      width: anchor-size(width);
+      display: flex;
+      justify-content: center;
+    }
+  }
+}
+
+/* Sideways with the native banner: a standard 320x50 ad centred at the
+   bottom with "Advertisement" over it, and the footer split to its left and
+   right on the same band, so the ad costs as little height as possible. */
+@media (orientation: landscape) and (max-height: 500px) {
+  html:not([data-text-large]) body.has-native-banner #root {
+    padding-bottom: calc(var(--native-banner-h, 50px) + 14px + env(safe-area-inset-bottom));
+  }
+  html:not([data-text-large]) body.has-native-banner .app-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: env(safe-area-inset-bottom);
+    height: var(--native-banner-h, 50px);
+    display: flex;
+    align-items: center;
+    padding: 0 max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
+    box-sizing: border-box;
+    z-index: 5;
+  }
+  html:not([data-text-large]) body.has-native-banner .app-footer-inner {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+  html:not([data-text-large]) body.has-native-banner .app-footer-inner .sep {
+    display: none;
+  }
+  html:not([data-text-large]) body.has-native-banner .app-footer-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 12px;
+    max-width: calc(50% - var(--native-banner-w, 320px) / 2 - 16px);
+    white-space: normal;
+  }
+  html:not([data-text-large]) body.has-native-banner .app-footer-group-end {
+    justify-content: flex-end;
+    text-align: right;
   }
 }
 

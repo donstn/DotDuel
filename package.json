@@ -19,7 +19,7 @@
     "simulate:ladder": "tsx scripts/simulate-ladder.ts"
   },
   "dependencies": {
-    "@capacitor-community/admob": "^8.0.0",
+    "@capacitor-community/admob": "^8.3.0",
     "@capacitor/android": "^8.4.0",
     "@capacitor/app": "^8.1.0",
     "@capacitor/cli": "^8.4.0",

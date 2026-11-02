@@ -8469,7 +8469,9 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
   html[data-art~="menu-button"] .menu {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-content: center;
+    /* "safe": if the menu is still taller than the screen it starts at the
+       top and scrolls, instead of overflowing above it out of reach. */
+    align-content: safe center;
     justify-items: center;
     column-gap: 24px;
     row-gap: 0;
@@ -8492,8 +8494,17 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
   .menu > .back-link {
     justify-self: start;
   }
+  /* The shelves column holds up to five plaques (bot levels). Sized from the
+     height too, so all five fit when a mobile browser's bars leave ~260px. */
+  html[data-art~="menu-button"] .menu-shelf {
+    --plaque-h: clamp(34px, min(15cqw, (100dvh - 100px) / 5), 62px);
+  }
+  html[data-art~="menu-button"] .menu-shelves {
+    gap: clamp(4px, 1.6dvh, 8px);
+  }
+  /* Height-capped too: with a mobile browser's bars the screen can be ~260px. */
   html[data-art~="menu-button"] .header-sign {
-    width: min(100%, 300px);
+    width: min(100%, 300px, (100dvh - 148px) * 2.1);
   }
   /* Game over: result and scores on the left, tip and actions on the right,
      so the card fits the short screen instead of scrolling. */

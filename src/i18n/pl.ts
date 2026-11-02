@@ -296,6 +296,11 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.26.1': {
+        changes: [
+          "Przy telefonie w poziomie wszystkie poziomy botów mieszczą się na ekranie.",
+        ],
+      },
       'Alpha 0.4.26.0': {
         changes: [
           "Obróć telefon poziomo: wszystkie ekrany się mieszczą, a w grze plansza zajmuje środek ekranu z graczem po każdej stronie.",

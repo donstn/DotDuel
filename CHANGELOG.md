@@ -3,6 +3,16 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.26.1] - 2026-11-02
+
+### Fixed
+
+- **Sideways menus on short screens** - with a mobile browser's bars the
+  landscape viewport can be ~260px; the bot-level list (5 plaques) overflowed
+  above and below the screen and couldn't be scrolled. Plaques and the header
+  sign now also size from the height, and the menu centres with
+  `align-content: safe center` so anything taller still scrolls.
+
 ## [0.4.26.0] - 2026-11-02
 
 Accessibility, rotation and app ads (branch `android-v8`). Android 1.7

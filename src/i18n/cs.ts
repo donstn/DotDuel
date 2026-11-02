@@ -294,6 +294,11 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.26.1': {
+        changes: [
+          "Při telefonu naležato se všechny úrovně botů vejdou na obrazovku.",
+        ],
+      },
       'Alpha 0.4.26.0': {
         changes: [
           "Otoč telefon naležato: všechny obrazovky se vejdou a ve hře je deska uprostřed s hráčem na každé straně.",

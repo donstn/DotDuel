@@ -30,6 +30,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.26.1',
+    date: '2026-11-02',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'Held sideways, all bot levels fit on the screen.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.26.0',
     date: '2026-11-02',
     changes: [

@@ -295,6 +295,11 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.26.1': {
+        changes: [
+          "Laikant telefoną gulsčiai, visi botų lygiai telpa ekrane.",
+        ],
+      },
       'Alpha 0.4.26.0': {
         changes: [
           "Pasukite telefoną gulsčiai: visi ekranai telpa, o žaidime lenta užima ekrano vidurį, žaidėjai – iš abiejų pusių.",

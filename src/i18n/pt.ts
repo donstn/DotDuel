@@ -284,6 +284,11 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.26.1': {
+        changes: [
+          "Com o celular na horizontal, todos os níveis de bot cabem na tela.",
+        ],
+      },
       'Alpha 0.4.26.0': {
         changes: [
           "Gire o celular: todas as telas cabem na horizontal e, na partida, o tabuleiro fica no meio da tela com um jogador de cada lado.",

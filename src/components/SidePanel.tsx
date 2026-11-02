@@ -114,11 +114,13 @@ export function SidePanel({
           />
         )}
       </div>
-      {stats && <StatsPanel stats={stats} />}
       {(ratingSlot || rating) && (
         <div className="player-rating">{ratingSlot ?? rating}</div>
       )}
+      {/* Score before the stats: only one side may have stats (vs a bot), and
+          the two scores must sit at the same height. */}
       <div className={`player-score${scoreBump ? ' score-bump' : ''}`}>{score}</div>
+      {stats && <StatsPanel stats={stats} />}
       {stats && <PointsTotals stats={stats} />}
       {thinking && <div className="thinking-dots" aria-label={tr.game.thinking}>···</div>}
     </aside>

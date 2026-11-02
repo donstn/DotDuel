@@ -840,7 +840,7 @@ export function Board({
             const midY = (y1 + y2) / 2;
             const len = Math.hypot(x2 - x1, y2 - y1);
             const angleDeg = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
-            const lineImgH = strokeWidth * 3.4;
+            const lineImgH = strokeWidth * 2.6;
             // Art only exists for lengths 1-9 (every line on every current
             // board shape falls in that range); clamp defensively so a
             // future shape with a longer line can't 404 into an invisible
@@ -881,6 +881,7 @@ export function Board({
                 key={c.lineId}
                 className={keep}
                 transform={`translate(${midX} ${midY}) rotate(${groupRotate})`}
+                opacity={0.75}
                 style={{ pointerEvents: 'none' }}
               >
                 <image
@@ -926,16 +927,26 @@ export function Board({
           const line = linesById.get(id);
           if (!line) return null;
           const e = lineEndpoints(board, line, dotRadius * 0.9);
+          const dash = `${dotRadius * 0.6} ${dotRadius * 0.55}`;
+          // Dark underlay with the same dash pattern outlines each dash, so it
+          // reads over cream strands and cream dots alike.
           return (
-            <line
-              key={`wait-${id}`}
-              {...e}
-              className="waiting-line"
-              strokeWidth={dotRadius * 0.34}
-              strokeDasharray={`${dotRadius * 0.6} ${dotRadius * 0.45}`}
-              strokeLinecap="round"
-              style={{ pointerEvents: 'none' }}
-            />
+            <g key={`wait-${id}`} style={{ pointerEvents: 'none' }}>
+              <line
+                {...e}
+                className="waiting-line-edge"
+                strokeWidth={dotRadius * 0.7}
+                strokeDasharray={dash}
+                strokeLinecap="round"
+              />
+              <line
+                {...e}
+                className="waiting-line"
+                strokeWidth={dotRadius * 0.44}
+                strokeDasharray={dash}
+                strokeLinecap="round"
+              />
+            </g>
           );
         })}
         {gapDot && (

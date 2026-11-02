@@ -24,7 +24,6 @@ export const es: Messages = {
     ok: 'OK',
     done: 'Hecho',
     advertisement: 'Publicidad',
-    rotateToPortrait: 'Gira el teléfono en vertical para jugar a DotDuel',
   },
 
   lang: {
@@ -285,6 +284,16 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.26.0': {
+        changes: [
+          "Gira el móvil: todas las pantallas caben en horizontal, y en la partida el tablero ocupa el centro con un jugador a cada lado.",
+          "El texto sigue legible cuando lo agrandas en los ajustes del móvil o del navegador, hasta el 200 %.",
+          "La clasificación carga más rápido y puedes ampliar con dos dedos.",
+          "En la app, los anuncios van en su propia franja marcada y nunca tapan el menú.",
+          "Los textos de los botones se reducen para caber en lugar de cortarse.",
+          "Las dos tarjetas de jugador tienen el mismo tamaño y los guiones de las líneas sin reclamar se ven más.",
+        ],
+      },
       'Alpha 0.4.25.0': {
         changes: [
           "Las partidas clasificatorias terminan en cuanto se acaba el tiempo, también contra bots.",

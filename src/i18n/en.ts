@@ -33,7 +33,6 @@ export const en = {
     ok: 'OK',
     done: 'Done',
     advertisement: 'Advertisement',
-    rotateToPortrait: 'Please rotate your phone to portrait to play DotDuel',
   },
 
   // Language picker (footer, menu screens).

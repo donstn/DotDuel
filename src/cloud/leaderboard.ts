@@ -34,12 +34,18 @@ function shapeSupabase(d: Record<string, unknown>): LeaderboardEntry {
   };
 }
 
+// Last list fetched this session, so reopening Rankings shows it at once while
+// a fresh copy loads.
+let cachedTop: LeaderboardEntry[] | null = null;
+
 export function watchLeaderboard(
   onChange: (rows: LeaderboardEntry[]) => void,
   max: number = 50,
   onError?: () => void,
 ): () => void {
   let cancelled = false;
+  let refetchTimer: ReturnType<typeof setTimeout> | null = null;
+  if (cachedTop) onChange(cachedTop.slice(0, max));
   const fetchTop = async () => {
     const { data, error } = await supabase
       .from('leaderboard')
@@ -51,25 +57,34 @@ export function watchLeaderboard(
       console.warn('watchLeaderboard (supabase) error:', error);
       // Surface as an error, NOT an empty list — an empty list renders the
       // "no games yet" empty state, which lies about a network failure.
-      onError?.();
+      // A cached list is still worth showing, though.
+      if (!cachedTop) onError?.();
       return;
     }
-    onChange((data ?? []).map(shapeSupabase));
+    cachedTop = (data ?? []).map(shapeSupabase);
+    onChange(cachedTop);
   };
+  // Every finished ranked game changes rows; a burst becomes one refetch.
+  const scheduleRefetch = () => {
+    if (cancelled || refetchTimer) return;
+    refetchTimer = setTimeout(() => {
+      refetchTimer = null;
+      void fetchTop();
+    }, 800);
+  };
+  // Load right away: waiting for the Realtime handshake (the old trigger) kept
+  // the list empty for seconds on phones. The SUBSCRIBED refetch still catches
+  // anything that changed in between.
+  void fetchTop();
   const channel = supabase
     .channel('leaderboard')
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'leaderboard' },
-      () => {
-        if (!cancelled) void fetchTop();
-      },
-    )
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'leaderboard' }, scheduleRefetch)
     .subscribe((status) => {
-      if (status === 'SUBSCRIBED' && !cancelled) void fetchTop();
+      if (status === 'SUBSCRIBED') scheduleRefetch();
     });
   return () => {
     cancelled = true;
+    if (refetchTimer) clearTimeout(refetchTimer);
     void supabase.removeChannel(channel);
   };
 }

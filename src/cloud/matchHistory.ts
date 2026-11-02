@@ -95,6 +95,8 @@ export function watchMatch(
     }
     onChange(data ? shapeSupabase(data) : null);
   };
+  // Load now; the SUBSCRIBED refetch below covers the mount gap.
+  void fetchOne();
   const channel = supabase
     .channel(`match:${matchId}`)
     .on(
@@ -139,10 +141,12 @@ export function watchRecentMatches(
   const attach = (sid: string | null) => {
     if (cancelled || !sid || sid === attachedSid) return;
     attachedSid = sid;
+    // Load now (don't wait for the Realtime handshake); SUBSCRIBED refetches.
+    void fetchMine(sid);
     if (!channel) {
       // No array-contains filter in Realtime; subscribe broadly and re-run the
       // query (match volume is low). RLS still limits what the re-query reads.
-      // Subscribe FIRST, fetch on SUBSCRIBED (no event lost in the mount gap).
+      // The SUBSCRIBED refetch catches anything that changed in the mount gap.
       channel = supabase
         .channel('my-matches')
         .on(
@@ -155,9 +159,6 @@ export function watchRecentMatches(
         .subscribe((status) => {
           if (status === 'SUBSCRIBED' && !cancelled && attachedSid) void fetchMine(attachedSid);
         });
-    } else {
-      // Channel already live (sid changed on a later auth event) — refetch now.
-      void fetchMine(sid);
     }
   };
   void matchesSid().then(attach);

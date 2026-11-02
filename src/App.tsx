@@ -1132,13 +1132,6 @@ export default function App() {
     void pushUnlocks(fresh);
   };
 
-  // The landscape "rotate to portrait" prompt is CSS-generated (#root is hidden
-  // then), so hand it the translated text as a CSS string.
-  useEffect(() => {
-    const css = '"' + t.common.rotateToPortrait.replace(/["\\]/g, '\\$&') + '"';
-    document.documentElement.style.setProperty('--rotate-msg', css);
-  }, [t]);
-
   // Before paint, so plaque buttons and theme colours never flash their
   // CSS fallback on the first frame.
   useLayoutEffect(() => {

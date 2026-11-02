@@ -3,6 +3,30 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.26.0] - 2026-11-02
+
+Accessibility, rotation and app ads (branch `android-v8`). Android 1.7
+(versionCode 9).
+
+### Added
+
+- **Rotation** - orientation is no longer locked (WCAG 1.3.4). Short landscape
+  layouts for menus, game (board centred, cards beside it, Resign under the
+  left card), lesson and game-over.
+- **Enlarged text up to 200%** (EAA / WCAG 1.4.4) - browser and Android system
+  font size; screens scroll vertically only when text is enlarged.
+
+### Changed
+
+- **Accessibility batch 1** - faster rankings, focus kept inside dialogs, pinch
+  zoom allowed.
+- **App ads** - themed "Advertisement" strip above the AdMob banner; the
+  reserve includes the navigation-bar inset; sideways the banner is a centred
+  320x50 with the footer split around it, rebuilt on rotation.
+  `@capacitor-community/admob` 8.0.0 -> 8.3.0 (MIT).
+- **Fit-text buttons**, equal player cards, "pts left" centred on every screen,
+  bolder unclaimed-line dashes.
+
 ## [0.4.25.0] - 2026-10-27
 
 Tester bug fixes. Android 1.6 (versionCode 7).

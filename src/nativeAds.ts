@@ -13,6 +13,7 @@ import { Capacitor } from '@capacitor/core';
 import {
   AdMob,
   AdmobConsentStatus,
+  BannerAdPluginEvents,
   BannerAdPosition,
   BannerAdSize,
   type BannerAdOptions,
@@ -49,6 +50,32 @@ let initDone = false;
 let bannerCreated = false;
 let bannerVisible = false;
 
+// Sideways phones get the standard 320x50 banner, centred, with the footer
+// beside it (styles.css); portrait gets the full-width adaptive banner.
+const sideways = window.matchMedia('(orientation: landscape) and (max-height: 500px)');
+let bannerOp: Promise<void> = Promise.resolve();
+
+function serial(op: () => Promise<void>): Promise<void> {
+  bannerOp = bannerOp.then(op, op);
+  return bannerOp;
+}
+
+async function rebuildBanner(): Promise<void> {
+  await serial(async () => {
+    if (!bannerCreated) return;
+    try {
+      await AdMob.removeBanner();
+    } catch (e) {
+      console.warn('removeBanner failed:', e);
+    }
+    bannerCreated = false;
+    if (bannerVisible) {
+      bannerVisible = false;
+      await openBanner();
+    }
+  });
+}
+
 /** Initialize AdMob + gather GDPR consent (UMP). Native-only; runs once. */
 export function initNativeAds(): Promise<void> {
   if (!isNativeApp() || !isAdsAllowedForThisUser()) return Promise.resolve();
@@ -68,6 +95,18 @@ export function initNativeAds(): Promise<void> {
       try {
         await AdMob.initialize();
         initDone = true;
+        // Adaptive banners are 50–90dp tall depending on the phone; reserve
+        // the real height (dp = CSS px in the WebView). Hide reports 0 — keep
+        // the last height then, the body class already drops the reserve.
+        void AdMob.addListener(BannerAdPluginEvents.SizeChanged, ({ width, height }) => {
+          if (height > 0) {
+            document.documentElement.style.setProperty('--native-banner-h', `${height}px`);
+            document.documentElement.style.setProperty('--native-banner-w', `${width}px`);
+          }
+        });
+        // The plugin sizes and centres the banner once, when it is created,
+        // so after a rotation it is rebuilt for the new screen.
+        sideways.addEventListener('change', () => void rebuildBanner());
       } catch (e) {
         console.warn('AdMob initialize failed:', e);
       }
@@ -80,12 +119,16 @@ export function initNativeAds(): Promise<void> {
 export async function showNativeBanner(): Promise<void> {
   if (!isNativeApp() || !isAdsAllowedForThisUser()) return;
   await initNativeAds(); // await the shared init (no early-return race)
+  await serial(openBanner);
+}
+
+async function openBanner(): Promise<void> {
   if (!initDone || bannerVisible) return;
   try {
     if (!bannerCreated) {
       const opts: BannerAdOptions = {
         adId: BANNER_AD_ID,
-        adSize: BannerAdSize.ADAPTIVE_BANNER,
+        adSize: sideways.matches ? BannerAdSize.BANNER : BannerAdSize.ADAPTIVE_BANNER,
         position: BannerAdPosition.BOTTOM_CENTER,
         margin: 0,
         isTesting: ADMOB_TESTING,
@@ -104,12 +147,15 @@ export async function showNativeBanner(): Promise<void> {
 
 /** Hide the banner (e.g. entering a ranked game). Keeps it loaded for resume. */
 export async function hideNativeBanner(): Promise<void> {
-  if (!isNativeApp() || !bannerVisible) return;
-  try {
-    await AdMob.hideBanner();
-  } catch (e) {
-    console.warn('hideNativeBanner failed:', e);
-  }
-  bannerVisible = false;
-  document.body.classList.remove('has-native-banner');
+  if (!isNativeApp()) return;
+  await serial(async () => {
+    if (!bannerVisible) return;
+    try {
+      await AdMob.hideBanner();
+    } catch (e) {
+      console.warn('hideNativeBanner failed:', e);
+    }
+    bannerVisible = false;
+    document.body.classList.remove('has-native-banner');
+  });
 }

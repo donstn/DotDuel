@@ -126,6 +126,12 @@ function StripSide({
           </div>
         )}
       </div>
+      {/* Landscape only (CSS): each card carries its own score and clock, so
+          the board gets the row the centre score would take. */}
+      <div className="ss-side-score" aria-hidden="true">
+        <StripScore value={p.score} color={color} align="start" />
+        {p.clock && <span className="ss-side-clock">{p.clock}</span>}
+      </div>
     </div>
   );
 }

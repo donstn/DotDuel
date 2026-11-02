@@ -35,7 +35,6 @@ export const lt: Messages = {
     ok: 'Gerai',
     done: 'Atlikta',
     advertisement: 'Reklama',
-    rotateToPortrait: 'Pasukite telefoną vertikaliai, kad galėtumėte žaisti DotDuel',
   },
 
   lang: {
@@ -296,6 +295,16 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.26.0': {
+        changes: [
+          "Pasukite telefoną gulsčiai: visi ekranai telpa, o žaidime lenta užima ekrano vidurį, žaidėjai – iš abiejų pusių.",
+          "Tekstas lieka įskaitomas, kai jį padidinate telefono ar naršyklės nustatymuose – iki 200 %.",
+          "Reitingai įsikelia greičiau, o ekraną galima priartinti dviem pirštais.",
+          "Programėlėje reklama rodoma atskiroje pažymėtoje juostoje ir neuždengia meniu.",
+          "Mygtukų užrašai sumažėja, kad tilptų, užuot buvę nukirpti.",
+          "Abiejų žaidėjų kortelės vienodo dydžio, o nepaimtų linijų brūkšniai ryškesni.",
+        ],
+      },
       'Alpha 0.4.25.0': {
         changes: [
           "Reitinguojami žaidimai baigiasi iškart, kai baigiasi laikas, taip pat ir prieš botus.",

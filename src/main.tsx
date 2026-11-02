@@ -6,10 +6,30 @@ import App from './App';
 import { LanguageProvider } from './i18n';
 import { APP_VERSION } from './version';
 import { DiagOverlay } from './components/DiagOverlay';
+import { NativeAdDivider } from './components/NativeAdDivider';
 import { isDiagMode } from './diag';
 import { getFirstLoadMs } from './ads';
 import { bootSession } from './telemetry';
+import { startFitText } from './fitText';
+import { startDialogFocus } from './dialogFocus';
 import './styles.css';
+
+// Android system font size, handed over by FontScalePlugin (the WebView's own
+// text zoom is off), applied as the root size so every rem grows with it.
+const nativeFontScale = (
+  window as { DotDuelNative?: { fontScale?: () => number } }
+).DotDuelNative?.fontScale?.();
+if (nativeFontScale && nativeFontScale !== 1) {
+  document.documentElement.style.fontSize = `${nativeFontScale * 100}%`;
+}
+// How much the player enlarged text (browser or system setting), for layouts
+// built from fixed-size art: --text-scale grows them, and data-text-large lets
+// labels wrap instead of fitting one line.
+{
+  const scale = parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
+  document.documentElement.style.setProperty('--text-scale', String(Math.max(1, scale)));
+  if (scale >= 1.15) document.documentElement.dataset.textLarge = '';
+}
 
 // Service worker: register on WEB only (auto-update for installed PWAs). In the
 // native Capacitor app, assets are bundled in the APK and a SW only causes
@@ -43,10 +63,14 @@ void getFirstLoadMs();
 
 console.log(`%cDotDuel ${APP_VERSION} loaded`, 'color:#6fcf8a;font-weight:bold;font-size:13px');
 
+startFitText();
+startDialogFocus();
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <LanguageProvider>
       <App />
+      {Capacitor.isNativePlatform() && <NativeAdDivider />}
       {isDiagMode() && <DiagOverlay />}
     </LanguageProvider>
   </React.StrictMode>

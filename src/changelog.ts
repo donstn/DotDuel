@@ -30,6 +30,36 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.26.0',
+    date: '2026-11-02',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Turn your phone sideways: every screen fits, and in a game the board takes the middle of the screen with a player on each side.',
+      },
+      {
+        kind: 'added',
+        text: 'Text stays readable when you make it bigger in your phone or browser settings, up to 200%.',
+      },
+      {
+        kind: 'changed',
+        text: 'Rankings load faster, and you can pinch to zoom.',
+      },
+      {
+        kind: 'changed',
+        text: 'In the app, ads sit in their own marked strip and never cover the menu.',
+      },
+      {
+        kind: 'changed',
+        text: 'Button labels shrink to fit instead of being cut off.',
+      },
+      {
+        kind: 'changed',
+        text: 'Both player cards are the same size, and the dashes on unclaimed lines are bolder.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.25.0',
     date: '2026-10-27',
     changes: [

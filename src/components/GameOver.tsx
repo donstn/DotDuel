@@ -322,7 +322,7 @@ export function GameOver({
   });
 
   return (
-    <div className="game-over">
+    <div className="game-over" role="dialog" aria-modal="true">
       {celebrationLevel !== null && <WinCelebration level={celebrationLevel} />}
       <div className="game-over-card">
         <h2 className={titleClass}>{title}</h2>

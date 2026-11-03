@@ -3033,6 +3033,10 @@ h1, h2, h3,
   overscroll-behavior: contain;
 }
 
+.rules-body a {
+  overflow-wrap: anywhere;
+}
+
 .rules-body section {
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
@@ -3967,6 +3971,7 @@ h1, h2, h3,
 /* Global vs Local toggle pill row */
 .rankings-view-toggle {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
   margin: 4px 0 12px;
@@ -3974,6 +3979,8 @@ h1, h2, h3,
 
 .rankings-view-toggle .rankings-pill {
   min-width: 100px;
+  max-width: 100%;
+  overflow-wrap: break-word;
   font-size: 0.85rem;
   padding: 8px 16px;
 }

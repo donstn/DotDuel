@@ -3,6 +3,18 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.26.2] - 2026-11-03
+
+### Changed
+
+- **Centred popup headers** - every popover title (painted title banner and
+  the plain-theme heading) and its tagline are now centred. The header keeps
+  symmetric side gutters as wide as the close button, so a long or enlarged
+  title wraps instead of running under the X; a banner title that still
+  overflows shrinks to fit (like the painted buttons), and with enlarged text
+  on a narrow phone the title drops below the X to get the full card width.
+  The share dialog's title is centred the same way.
+
 ## [0.4.26.1] - 2026-11-02
 
 ### Fixed

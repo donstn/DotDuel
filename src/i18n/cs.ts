@@ -294,6 +294,11 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.26.2': {
+        changes: [
+          "Nadpisy vyskakovacích oken jsou nyní na středu.",
+        ],
+      },
       'Alpha 0.4.26.1': {
         changes: [
           "Při telefonu naležato se všechny úrovně botů vejdou na obrazovku.",

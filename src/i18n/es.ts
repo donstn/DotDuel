@@ -284,6 +284,11 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.26.2': {
+        changes: [
+          "Los títulos de las ventanas emergentes ahora están centrados.",
+        ],
+      },
       'Alpha 0.4.26.1': {
         changes: [
           "Con el móvil en horizontal, todos los niveles de bot caben en la pantalla.",

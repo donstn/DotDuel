@@ -62,6 +62,27 @@ Entries are dated and grouped by symptom domain. Most recent first within each s
 
 ## ⚙️ Layout / responsive
 
+### Side-panel stats row: text overlaps text on long (Lithuanian) locale strings (found 2026-08-16 on `amazing-visuals`; fix ported to `main`)
+
+**Symptom**
+- In the Lithuanian locale, a side-panel's per-difficulty stats row rendered with two/three labels visibly overlapping — e.g. "BOTAS L1" (bot short-label) overlapping the win/draw/loss counts and the win% ("1P 0D 0L 100%"), reported via screenshot from a live build. Not reproducible in English, where the equivalent strings ("BOT", "avg") are short enough to fit.
+
+**Root cause**
+- `.stats-line` (`src/styles.css`, ~line 2573) is a `display:flex; white-space:nowrap; overflow:hidden` row with three children: `.stats-mode` (bot/hot-seat short label), `.stats-counts` (W/D/L, `flex:1; min-width:0`), `.stats-pct` (win %). `.stats-mode` has `min-width: 28px` but **no `flex-shrink: 0`** and no per-child `overflow:hidden`/`text-overflow:ellipsis`.
+- `white-space: nowrap` only stops the text from *wrapping* — it does nothing to stop the text from rendering past its own (shrunk) box edge. When the flex row's total content exceeds the panel width (which is exactly what happens with the longer Lithuanian strings — "BOTAS" vs "BOT", "L1"/"L2" labels, etc.), `.stats-mode`'s box shrinks per the flex algorithm, but its nowrap text does not — it spills rightward, directly on top of `.stats-counts` and `.stats-pct`, which have no `overflow:hidden` of their own to be clipped by (only the parent row clips at the *outer* edge, not between siblings).
+- Same-family (lower risk, not yet confirmed broken) sibling: `.pt-row`/`.pt-avg` in the adjacent points-totals block — `.pt-arrow` and `.pt-value` are properly guarded (`flex-shrink:0` / `min-width`), but `.pt-avg` (`margin-left:auto`, no shrink guard) renders the Lithuanian "vid. 76.0" — worth checking under real overflow.
+
+**Fix — first applied on `amazing-visuals` 2026-08-16, now on `main` (`src/styles.css` `.stats-mode` / `.stats-counts` / `.stats-pct` / `.pt-avg`)**
+- `.stats-mode` gets `flex-shrink: 0` (always keeps its full content width — it's the shortest/most important label); `.stats-counts` (already `flex:1; min-width:0`) gets `overflow: hidden` to absorb the squeeze by clipping instead of spilling; `.stats-pct` also gets `flex-shrink: 0` (short, fixed content, no reason to ever compress).
+- Same-family fix applied to `.pt-avg` too: `min-width: 0; overflow: hidden; text-overflow: ellipsis;` (it's the flexible element in that row via `margin-left: auto`, and Lithuanian "vid. 76.0" runs longer than English "avg 76.0").
+- Verified via computed `getBoundingClientRect()` on the live DOM in Lithuanian with real multi-difficulty stats data: `.stats-mode` (21–77px), `.stats-counts` (81–119px), `.stats-pct` (123–145px) — clean gaps, zero overlap, at the narrowest side-panel width (`clamp(86px, 22vw, 150px)` caps at 150px for any viewport ≥720px, so this is the worst-case width already).
+- Ported to `main` (the `amazing-visuals` branch was abandoned); the side panel was later capped at max 184px on `android-v8` (2026-11-01).
+
+**Forward-looking notes**
+- General principle, added to `CLAUDE.md` UI rules as a hard rule: any multi-span flex row using `white-space:nowrap` on its children needs EITHER `flex-shrink:0` on the fixed-content labels OR its own `overflow:hidden; text-overflow:ellipsis` on the flexible one — never leave a nowrap span unguarded next to a sibling. Test overflow-prone rows in Lithuanian, the longest string in this app's locale set, not English.
+
+---
+
 ### Mobile player cards not actually mirrored — avatar/name/score land in different slots per card (Alpha 0.4.12.3 — 2026-08-01)
 
 **Symptom**

@@ -174,3 +174,13 @@ visual_bug.*
 
 # Generated status reports (working notes, not shipped).
 .status-reports/
+
+# Static HTML/CSS mockups for visual-design ideas — local preview only, not shipped.
+Visual_preview/
+
+# Downloaded dev-tool binaries (platform-specific, not source)
+scripts/bin/
+
+# Playwright CLI / MCP session logs and snapshots (local tooling output)
+.playwright-cli/
+.playwright-mcp/

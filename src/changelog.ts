@@ -30,6 +30,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.26.2',
+    date: '2026-11-03',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Popup titles are now centred.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.26.1',
     date: '2026-11-02',
     changes: [

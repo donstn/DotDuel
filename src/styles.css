@@ -2994,12 +2994,16 @@ h1, h2, h3,
 }
 
 .rules-header {
-  padding: 16px 22px 4px;
+  /* Centred; symmetric side gutters as wide as the ✕ (inset + width + gap),
+     so a long or enlarged title wraps instead of running under it. */
+  --rules-close-gutter: 54px;
+  padding: 16px var(--rules-close-gutter) 4px;
   flex-shrink: 0;
+  text-align: center;
 }
 
 .rules-header h2 {
-  margin: 0 36px 2px 0;
+  margin: 0 0 2px;
   font-size: 1.35rem;
   font-weight: 700;
   background: linear-gradient(180deg, #ffffff, #b9d6c4);
@@ -3011,8 +3015,7 @@ h1, h2, h3,
 }
 
 .rules-tagline {
-  /* Same right gutter as the title, so it never runs under the ✕. */
-  margin: 0 36px 0 0;
+  margin: 0;
   color: var(--text-dim);
   font-size: 0.85rem;
 }
@@ -3028,6 +3031,10 @@ h1, h2, h3,
   color: var(--text);
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+}
+
+.rules-body a {
+  overflow-wrap: anywhere;
 }
 
 .rules-body section {
@@ -3964,6 +3971,7 @@ h1, h2, h3,
 /* Global vs Local toggle pill row */
 .rankings-view-toggle {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
   margin: 4px 0 12px;
@@ -3971,6 +3979,8 @@ h1, h2, h3,
 
 .rankings-view-toggle .rankings-pill {
   min-width: 100px;
+  max-width: 100%;
+  overflow-wrap: break-word;
   font-size: 0.85rem;
   padding: 8px 16px;
 }
@@ -4579,16 +4589,11 @@ h1, h2, h3,
   }
 
   .rules-header {
-    padding: 14px 16px 4px;
+    padding-top: 14px;
   }
 
   .rules-header h2 {
-    /* leave room for the bigger close button */
-    margin-right: 48px;
     font-size: 1.05rem;
-  }
-  .rules-tagline {
-    margin-right: 48px;
   }
 
   .rules-body {
@@ -4611,6 +4616,15 @@ h1, h2, h3,
      left dangling at line ends. Spacing alone separates the items. */
   .app-footer-inner .sep {
     display: none;
+  }
+}
+
+/* Enlarged text on a narrow phone: the ✕ gutters would leave the title too
+   little width (words broke mid-way), so the title drops below the ✕ and
+   takes the full card width instead. */
+@media (max-width: 420px) {
+  html[data-text-large] .rules-header {
+    padding: 52px 16px 4px;
   }
 }
 
@@ -6169,10 +6183,6 @@ html[data-art~="pill-button"] .go-share-row {
 .pcal-day-detail .puzzle-lb-empty {
   padding: 0 12px;
 }
-/* Keep the tagline clear of the absolutely-positioned close button. */
-.puzzle-lb-card .rules-tagline {
-  padding-right: 32px;
-}
 .pcal-day-info {
   margin: 2px 12px 6px;
   font-size: 0.8rem;
@@ -7075,15 +7085,22 @@ html[data-art~="pill-button"] .go-share-row {
   gap: 10px;
 }
 .share-dialog-head {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 44px;
 }
 .share-dialog-head h3 {
   margin: 0;
   font-size: 1.05rem;
 }
 .share-dialog-close {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
   background: none;
   border: none;
   color: var(--text-dim);
@@ -7937,8 +7954,9 @@ html[data-art~="title-banner"] .rules-header h2 {
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
+  justify-content: center;
   height: var(--h);
-  max-width: calc(100% - 44px);
+  max-width: 100%;
   padding: 0 calc(var(--h) * var(--title-banner-cap-r) * 0.95) calc(var(--h) * 0.16)
     calc(var(--h) * var(--title-banner-cap-l) * 0.95);
   border: 0;

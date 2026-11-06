@@ -284,6 +284,11 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.26.2': {
+        changes: [
+          "Os títulos das janelas agora ficam centralizados.",
+        ],
+      },
       'Alpha 0.4.26.1': {
         changes: [
           "Com o celular na horizontal, todos os níveis de bot cabem na tela.",

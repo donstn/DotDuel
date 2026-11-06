@@ -1,11 +1,12 @@
 /**
  * Button labels shrink to fit instead of ellipsizing. Painted pill buttons
  * lose a lot of width to their end caps, and Lithuanian labels run long, so
- * on a narrow phone "Pasiduoti" became "Pasidu…". Any button (or .fit-text)
+ * on a narrow phone "Pasiduoti" became "Pasidu…". Any button, .fit-text or
+ * popover title banner (centred between the ✕ gutters, so narrower)
  * whose label overflows gets a smaller inline font-size, down to MIN_SCALE;
  * past that the CSS ellipsis still applies. Opt out with data-no-fit.
  */
-const SELECTOR = 'button, [role="button"], .fit-text';
+const SELECTOR = 'button, [role="button"], .fit-text, .rules-header h2';
 const MIN_SCALE = 0.65;
 
 function fit(el: HTMLElement): void {

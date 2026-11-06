@@ -36,7 +36,10 @@ import { Capacitor } from '@capacitor/core';
 // ----------------------------------------------------------------------
 
 /** Master kill switch. When false, NO AdSense code runs anywhere. */
-export const ADS_ENABLED: boolean = true;
+// Off since 2026-11-06: no ads anywhere (web + app) until the player base is
+// bigger. Turning ads back on also needs the AdSense loader restored in
+// public/consent-default.js.
+export const ADS_ENABLED: boolean = false;
 
 /**
  * Preview/dev only (monetization branch): when true, an AdBanner whose real

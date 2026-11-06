@@ -8,7 +8,7 @@ import { APP_VERSION } from './version';
 import { DiagOverlay } from './components/DiagOverlay';
 import { NativeAdDivider } from './components/NativeAdDivider';
 import { isDiagMode } from './diag';
-import { getFirstLoadMs } from './ads';
+import { ADS_ENABLED, getFirstLoadMs } from './ads';
 import { bootSession } from './telemetry';
 import { startFitText } from './fitText';
 import { startDialogFocus } from './dialogFocus';
@@ -70,7 +70,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <LanguageProvider>
       <App />
-      {Capacitor.isNativePlatform() && <NativeAdDivider />}
+      {Capacitor.isNativePlatform() && ADS_ENABLED && <NativeAdDivider />}
       {isDiagMode() && <DiagOverlay />}
     </LanguageProvider>
   </React.StrictMode>

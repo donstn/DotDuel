@@ -12,9 +12,15 @@ gtag('consent', 'default', {
   wait_for_update: 500,
 });
 
+// Ads are off (ADS_ENABLED = false in src/ads.ts since 2026-11-06), so the
+// AdSense script — and the Google ad-consent message it renders — is not
+// loaded. To bring ads back, flip ADS_ENABLED and set this to true.
+var DOTDUEL_ADS_ENABLED = false;
+
 // Load AdSense only on the real site. On localhost/dev it can never serve and
 // would just spam CSP + ad-verification (SODAR) iframe errors, so skip it.
 (function () {
+  if (!DOTDUEL_ADS_ENABLED) return;
   var h = location.hostname;
   if (h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h.endsWith('.local')) {
     return;

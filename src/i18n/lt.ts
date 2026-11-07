@@ -295,6 +295,11 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.26.3': {
+        changes: [
+          "Kol kas jokių reklamų.",
+        ],
+      },
       'Alpha 0.4.26.2': {
         changes: [
           "Iššokančių langų antraštės dabar centruotos.",

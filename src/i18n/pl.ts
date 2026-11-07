@@ -296,6 +296,11 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.26.3': {
+        changes: [
+          "Na razie bez reklam.",
+        ],
+      },
       'Alpha 0.4.26.2': {
         changes: [
           "Tytuły okienek są teraz wyśrodkowane.",

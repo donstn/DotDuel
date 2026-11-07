@@ -3,6 +3,17 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.26.3] - 2026-11-06
+
+### Changed
+
+- **Ads switched off** on the web and in the Android app until the player base
+  grows. `ADS_ENABLED = false` (`src/ads.ts`) removes the web ad boxes, the
+  AdMob banner, its "Advertisement" divider and the in-app ad-consent form;
+  `public/consent-default.js` no longer loads the AdSense script (and with it
+  Google's ad-consent message). The Privacy popover switches to its no-ads
+  wording automatically. Analytics consent is unchanged.
+
 ## [0.4.26.2] - 2026-11-03
 
 ### Changed

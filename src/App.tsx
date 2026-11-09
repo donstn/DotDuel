@@ -1246,20 +1246,17 @@ export default function App() {
     }
   };
 
-  // A new deploy waits (swUpdate.ts) until a moment where reloading loses
-  // nothing: the tab is backgrounded while on the menu, or the player just came
-  // back to the menu from a local game. Never during multiplayer — leaving a
-  // match fires cloud writes a reload would cut off.
-  const prevScreenRef = useRef(screen);
-  useEffect(() => {
-    const prev = prevScreenRef.current;
-    prevScreenRef.current = screen;
-    if (screen === 'menu' && (prev === 'game' || prev === 'coach')) applyUpdateIfReady();
-  }, [screen]);
+  // A new deploy waits (swUpdate.ts) until reloading loses nothing: the tab is
+  // backgrounded on the menu, and the menu has been up long enough for the
+  // cloud writes fired by the screen before it (daily-puzzle result, progress
+  // and achievement sync, leaving a match) to have landed.
   useEffect(() => {
     if (screen !== 'menu') return;
+    const settledAt = Date.now() + 10_000;
     const onVisibility = () => {
-      if (document.visibilityState === 'hidden') applyUpdateIfReady();
+      if (document.visibilityState === 'hidden' && Date.now() >= settledAt) {
+        applyUpdateIfReady();
+      }
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);

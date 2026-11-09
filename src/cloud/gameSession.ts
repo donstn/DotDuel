@@ -94,13 +94,23 @@ if (typeof window !== 'undefined') {
     }).catch(() => {});
   });
   // Restored from the back/forward cache: the page is still in multiplayer, so
-  // take the lock again.
+  // take the lock again — but only if nobody took it meanwhile. Another device
+  // that started playing must keep it; watchSession then locks this page out.
   window.addEventListener('pageshow', (e: PageTransitionEvent) => {
     if (!e.persisted || !releasedOnHide || !_sessionId) return;
     releasedOnHide = false;
-    void claimSession('', _sessionId).catch((err) =>
-      console.warn('claimSession after bfcache restore failed:', err),
-    );
+    const mine = _sessionId;
+    void (async () => {
+      const me = await sid();
+      if (!me) return;
+      const { data } = await supabase
+        .from('game_sessions')
+        .select('claimed_at')
+        .eq('uid', me)
+        .maybeSingle();
+      if (data && Date.now() - Number(data.claimed_at ?? 0) <= STALE_MS) return;
+      await claimSession('', mine);
+    })().catch((err) => console.warn('claimSession after bfcache restore failed:', err));
   });
 }
 
@@ -237,6 +247,10 @@ export function watchSession(
       .subscribe((status) => {
         if (status === 'SUBSCRIBED' && !cancelled) void emit(me);
       });
+    // Also report right away: with Realtime blocked (ad-blockers, strict DNS)
+    // SUBSCRIBED never comes, and the app waits for a first report before
+    // resuming a match.
+    void emit(me);
     // Passive staleness recovery: a closed/crashed holder stops heartbeating and
     // emits no Realtime events, so re-check on a timer too — otherwise another
     // tab would stay locked forever. Re-evaluates the stale cutoff every 15s, so

@@ -3,6 +3,18 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.26.4] - 2026-11-09
+
+### Fixed
+
+- **Surprise reload + "playing on another device" lockout.** After a deploy,
+  the web app reloaded itself a few seconds into the first visit - even mid
+  ranked game - and the reloaded page was then locked out of multiplayer for
+  up to 45 s while the match kept running. Updates now wait for a safe moment
+  (tab backgrounded on the menu, or back on the menu after a local game), and
+  a reloaded tab releases and reclaims its own one-device lock, resuming the
+  match. Details in `bugs.md`.
+
 ## [0.4.26.3] - 2026-11-06
 
 ### Changed

@@ -1,24 +1,117 @@
-import { supabase, currentSupabaseUid } from '../supabase';
+import { supabase, currentSupabaseUid, SUPABASE_URL, SUPABASE_ANON_KEY } from '../supabase';
+import { getDeviceId } from '../storage';
 
 export interface GameSession {
   sessionId: string;
   claimedAt: number;
 }
 
-// Per-page-load session id, generated ONCE in memory. Deliberately NOT
-// sessionStorage: a duplicated tab COPIES sessionStorage, so both tabs would
-// share the same id and the one-device lock couldn't tell them apart (the
-// takeover never registers as "different session"). An in-memory id is unique
-// per page load, so every tab — even a duplicated one — gets its own. A refresh
-// generates a new id and simply re-claims the lock for itself, which is harmless.
+// Per-page-load session id `<deviceId>.<random>`, generated ONCE in memory.
+// Deliberately NOT sessionStorage: a duplicated tab COPIES sessionStorage, so
+// both tabs would share the same id and the one-device lock couldn't tell them
+// apart. A reload therefore gets a NEW id — the device prefix plus the tab
+// liveness ping below is what lets a reloaded tab take its own lock back
+// instead of being shut out as "another device" (bugs.md, 2026-11-09).
 let _sessionId: string | null = null;
 export function getSessionId(): string {
   if (_sessionId) return _sessionId;
-  _sessionId =
+  const tab =
     typeof crypto !== 'undefined' && crypto.randomUUID
       ? crypto.randomUUID()
       : `s${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+  _sessionId = `${getDeviceId()}.${tab}`;
+  listenForPings();
   return _sessionId;
+}
+
+function isThisDevice(sessionId: string): boolean {
+  return sessionId.startsWith(`${getDeviceId()}.`);
+}
+
+// Tabs of this browser answer "are you <sessionId>?" so a lock left by a tab
+// that no longer exists (reloaded, closed, crashed) can be told apart from one
+// held by a second open tab, which must keep it.
+const PING_CHANNEL = 'dotduel:session-lock';
+const PING_WAIT_MS = 400;
+let pingChannel: BroadcastChannel | null = null;
+
+function listenForPings() {
+  if (pingChannel || typeof BroadcastChannel === 'undefined') return;
+  pingChannel = new BroadcastChannel(PING_CHANNEL);
+  pingChannel.onmessage = (e: MessageEvent) => {
+    const m = e.data as { type?: string; sessionId?: string } | null;
+    if (m?.type === 'ping' && m.sessionId === _sessionId) {
+      pingChannel?.postMessage({ type: 'pong', sessionId: m.sessionId });
+    }
+  };
+}
+
+function isTabAlive(sessionId: string): Promise<boolean> {
+  // Without BroadcastChannel we can't tell, so keep the old hard lock.
+  if (typeof BroadcastChannel === 'undefined') return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const ch = new BroadcastChannel(PING_CHANNEL);
+    const done = (alive: boolean) => {
+      window.clearTimeout(timer);
+      ch.close();
+      resolve(alive);
+    };
+    const timer = window.setTimeout(() => done(false), PING_WAIT_MS);
+    ch.onmessage = (e: MessageEvent) => {
+      const m = e.data as { type?: string; sessionId?: string } | null;
+      if (m?.type === 'pong' && m.sessionId === sessionId) done(true);
+    };
+    ch.postMessage({ type: 'ping', sessionId });
+  });
+}
+
+// Access token cached for the synchronous pagehide release below.
+let accessToken: string | null = null;
+void supabase.auth.getSession().then(({ data }) => {
+  accessToken = data.session?.access_token ?? null;
+});
+supabase.auth.onAuthStateChange((_e, session) => {
+  accessToken = session?.access_token ?? null;
+});
+
+// Release our lock when the page goes away (reload, close, navigation) so the
+// next page — here or on another device — isn't locked out for STALE_MS.
+// keepalive lets the request outlive the page. Filtered on our own session_id
+// so it can never delete a lock another tab has since taken. Backgrounding the
+// app does NOT fire pagehide, so a phone switching apps keeps its lock.
+let releasedOnHide = false;
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', () => {
+    const me = currentSupabaseUid();
+    if (heartbeatTimer === null || !me || !accessToken || !_sessionId) return;
+    stopHeartbeat();
+    releasedOnHide = true;
+    const q = `uid=eq.${me}&session_id=eq.${encodeURIComponent(_sessionId)}`;
+    fetch(`${SUPABASE_URL}/rest/v1/game_sessions?${q}`, {
+      method: 'DELETE',
+      keepalive: true,
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${accessToken}` },
+    }).catch(() => {});
+  });
+  // Restored from the back/forward cache: the page is still in multiplayer, so
+  // take the lock again — but only if nobody took it meanwhile. Another device
+  // that started playing must keep it; watchSession then locks this page out.
+  window.addEventListener('pageshow', (e: PageTransitionEvent) => {
+    if (!e.persisted || !releasedOnHide || !_sessionId) return;
+    releasedOnHide = false;
+    const mine = _sessionId;
+    void (async () => {
+      const me = await sid();
+      if (!me) return;
+      const { data } = await supabase
+        .from('game_sessions')
+        .select('claimed_at')
+        .eq('uid', me)
+        .maybeSingle();
+      if (data && Date.now() - Number(data.claimed_at ?? 0) <= STALE_MS) return;
+      await claimSession('', mine);
+    })().catch((err) => console.warn('claimSession after bfcache restore failed:', err));
+  });
 }
 
 // Stale-session threshold. A claim is abandoned (other devices may take over)
@@ -112,7 +205,25 @@ export function watchSession(
       onChange(null);
       return;
     }
-    onChange({ sessionId: String(data.session_id ?? ''), claimedAt });
+    const holder = String(data.session_id ?? '');
+    // A lock from THIS browser whose tab no longer answers was left by a reload
+    // or a closed tab whose pagehide release didn't land: clear it so this page
+    // isn't locked out of its own game. Other devices stay hard-locked.
+    if (holder !== _sessionId && isThisDevice(holder) && !(await isTabAlive(holder))) {
+      if (cancelled) return;
+      const { error: delError } = await supabase
+        .from('game_sessions')
+        .delete()
+        .eq('uid', me)
+        .eq('session_id', holder);
+      if (cancelled) return;
+      if (delError) console.warn('dead-tab lock release failed:', delError.message);
+      else {
+        onChange(null);
+        return;
+      }
+    }
+    onChange({ sessionId: holder, claimedAt });
   };
 
   const attach = (me: string | null) => {
@@ -136,6 +247,10 @@ export function watchSession(
       .subscribe((status) => {
         if (status === 'SUBSCRIBED' && !cancelled) void emit(me);
       });
+    // Also report right away: with Realtime blocked (ad-blockers, strict DNS)
+    // SUBSCRIBED never comes, and the app waits for a first report before
+    // resuming a match.
+    void emit(me);
     // Passive staleness recovery: a closed/crashed holder stops heartbeating and
     // emits no Realtime events, so re-check on a timer too — otherwise another
     // tab would stay locked forever. Re-evaluates the stale cutoff every 15s, so

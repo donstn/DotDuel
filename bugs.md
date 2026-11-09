@@ -235,6 +235,25 @@ Entries are dated and grouped by symptom domain. Most recent first within each s
 
 ## ☁️ Backend / sync
 
+### Page reloads itself mid ranked game, then "playing on another device" (Alpha 0.4.26.4 — 2026-11-09)
+
+**Symptom**
+- Web only. On the first visit after a deploy everything looks loaded; a few seconds later the page reloads by itself — even mid ranked game. Back on the menu, Multiplayer says the account is playing on another device, while the ranked game (and its clock) keeps running on the server.
+
+**Root cause — two bugs together**
+1. `vite-plugin-pwa` `registerType: 'autoUpdate'`: the generated `sw.js` called `skipWaiting()` + `clientsClaim()` unconditionally, and the plugin's register code reloads the page on `activated` (isUpdate). Sequence: old SW serves the cached old build instantly → new SW downloads the ~3.3 MB precache in the background → activates → `window.location.reload()`, whatever screen the player is on.
+2. The one-device lock (`game_sessions`) used an in-memory session id, so a reloaded page gets a new id, and nothing released the lock on unload. The heartbeat had refreshed `claimed_at` <15s before, so the hard lock in `openMultiplayer` treated the reloaded page as "another device" until `STALE_MS` (45s). The `mpLockedByOther` teardown also wiped the resumed pairing locally. (The old comment claiming "a refresh simply re-claims the lock" was wrong after the hard lock landed.) Manual refreshes hit bug 2 too.
+
+**Fix**
+- SW: `registerType: 'prompt'` — the new worker waits; `src/swUpdate.ts` applies it only when the tab is backgrounded on the menu after the menu has been up 10s (so cloud writes from the previous screen — daily-puzzle result, progress/achievement sync, leaving a match — have landed). Otherwise it takes over once all tabs close.
+- Lock: `session_id` is now `<deviceId>.<tabId>` (`getDeviceId()` in `storage.ts`, no schema change). `pagehide` releases our own row with a keepalive DELETE (filtered on our session_id; `pageshow` from bfcache re-claims only if no live lock exists — never steals from a device that started playing meanwhile). `watchSession` treats a lock from this browser whose tab doesn't answer a `BroadcastChannel` ping (400ms) as dead and deletes it — a second open tab still answers, so it keeps the lock. Other devices stay hard-locked.
+- Resume: the pairing → matchFound jump waits for the first lock report (`sessionChecked`) and skips when locked by another device; a new effect claims the free lock when a live (not finished) match resumes outside `openMultiplayer`.
+
+**Notes**
+- Players still on an older build keep their old autoUpdate register code; the new worker just waits, so the deploy carrying this fix doesn't reload anyone — they move over once their tabs close. A browser with no BroadcastChannel keeps the old hard lock (fails safe).
+- Locks written by older clients (plain UUID, no device prefix) are never treated as this device's.
+
+
 ### Multiplayer: placed dot silently reverts, forcing a re-place (FIXED — Alpha 0.4.12.4, 2026-08-04)
 
 **Status:** root cause identified by code inspection, confirmed by user report as a multiplayer-only symptom. Fixed same session — not yet reproduced live under controlled network throttling (would need a flaky-network repro on a real match to visually confirm), but the fix directly closes the code path identified below.

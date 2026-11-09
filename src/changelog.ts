@@ -30,6 +30,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.26.4',
+    date: '2026-11-09',
+    changes: [
+      {
+        kind: 'fixed',
+        text: 'The page no longer reloads by itself after an update, and reloading during an online game no longer locks you out with "playing on another device" — you go straight back into your match.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.26.3',
     date: '2026-11-06',
     changes: [

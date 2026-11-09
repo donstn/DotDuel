@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Capacitor } from '@capacitor/core';
-import { registerSW } from 'virtual:pwa-register';
 import App from './App';
 import { LanguageProvider } from './i18n';
 import { APP_VERSION } from './version';
@@ -12,6 +11,7 @@ import { ADS_ENABLED, getFirstLoadMs } from './ads';
 import { bootSession } from './telemetry';
 import { startFitText } from './fitText';
 import { startDialogFocus } from './dialogFocus';
+import { startServiceWorker } from './swUpdate';
 import './styles.css';
 
 // Android system font size, handed over by FontScalePlugin (the WebView's own
@@ -31,7 +31,8 @@ if (nativeFontScale && nativeFontScale !== 1) {
   if (scale >= 1.15) document.documentElement.dataset.textLarge = '';
 }
 
-// Service worker: register on WEB only (auto-update for installed PWAs). In the
+// Service worker: register on WEB only (updates applied at a safe moment, see
+// swUpdate.ts). In the
 // native Capacitor app, assets are bundled in the APK and a SW only causes
 // stale-asset bugs (serving a previous build's cache over the WebView), so we
 // skip registration AND tear down any SW/caches a prior build may have left.
@@ -46,7 +47,7 @@ if (Capacitor.isNativePlatform()) {
     caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
   }
 } else {
-  registerSW({ immediate: true });
+  startServiceWorker();
 }
 
 // Snapshot session-boot state for analytics BEFORE getFirstLoadMs writes

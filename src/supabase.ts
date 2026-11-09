@@ -14,11 +14,11 @@ import { createClient } from '@supabase/supabase-js';
 export const SUPABASE_URL =
   import.meta.env.VITE_SUPABASE_URL ?? 'https://ggyjxayazxbjvjbeecxa.supabase.co';
 const url = SUPABASE_URL;
-const anonKey =
+export const SUPABASE_ANON_KEY =
   import.meta.env.VITE_SUPABASE_ANON_KEY ??
   'sb_publishable_wV3b7zFPGVvPt6No3OnJRQ_S7tJA6iY';
 
-export const supabase = createClient(url, anonKey, {
+export const supabase = createClient(url, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,

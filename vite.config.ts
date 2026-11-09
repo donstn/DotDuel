@@ -18,11 +18,12 @@ export default defineConfig(() => ({
   build: { target: 'chrome87' },
   plugins: [
     react(),
-    // Auto-updating service worker so home-screen / installed instances pick up
-    // new deploys on their own (at most one launch behind) instead of getting
-    // stuck on a cached index.html — the GitHub-Pages caching problem.
+    // Service worker so home-screen / installed instances pick up new deploys
+    // instead of getting stuck on a cached index.html (the GitHub-Pages caching
+    // problem). 'prompt', not 'autoUpdate': autoUpdate reloaded the page on its
+    // own mid-game; src/swUpdate.ts applies the waiting update at a safe moment.
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       // Don't auto-inject the register script — we register manually in main.tsx
       // so we can register on web only and SKIP it in the native Capacitor app
       // (where a SW just serves stale cached assets over the APK's bundled ones).

@@ -156,6 +156,7 @@ import {
 } from './storage';
 import { BANNED_SHAPES, type Difficulty, type GameAction, type GameMode, type GameState, type Progress, type ShapeId } from './types';
 import { APP_VERSION } from './version';
+import { applyUpdateIfReady } from './swUpdate';
 import { CoachGame } from './components/CoachGame';
 import { bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './telemetry';
 
@@ -339,6 +340,9 @@ export default function App() {
   const mySessionIdRef = useRef<string>(getSessionId());
   const [activeGameSession, setActiveGameSession] =
     useState<GameSession | null>(null);
+  // True once watchSession has reported for the signed-in user, so a pairing
+  // surfacing on load isn't acted on before we know who holds the lock.
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [resignConfirmOpen, setResignConfirmOpen] = useState(false);
   const [hotseatLeaveOpen, setHotseatLeaveOpen] = useState(false);
   // Offline games have no server finish reason; remember a resign for GameOver.
@@ -1242,6 +1246,25 @@ export default function App() {
     }
   };
 
+  // A new deploy waits (swUpdate.ts) until a moment where reloading loses
+  // nothing: the tab is backgrounded while on the menu, or the player just came
+  // back to the menu from a local game. Never during multiplayer — leaving a
+  // match fires cloud writes a reload would cut off.
+  const prevScreenRef = useRef(screen);
+  useEffect(() => {
+    const prev = prevScreenRef.current;
+    prevScreenRef.current = screen;
+    if (screen === 'menu' && (prev === 'game' || prev === 'coach')) applyUpdateIfReady();
+  }, [screen]);
+  useEffect(() => {
+    if (screen !== 'menu') return;
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') applyUpdateIfReady();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [screen]);
+
   // Live subscription to pairings/{uid} — drives matchmaking → matchFound transition.
   useEffect(() => {
     if (!user) {
@@ -1268,11 +1291,15 @@ export default function App() {
   // device" lockout state. The lock auto-releases on disconnect (see
   // claimSession) so a closed phone tab doesn't strand the laptop forever.
   useEffect(() => {
+    setSessionChecked(false);
     if (!user) {
       setActiveGameSession(null);
       return;
     }
-    return watchSession(user.uid, setActiveGameSession);
+    return watchSession(user.uid, (s) => {
+      setActiveGameSession(s);
+      setSessionChecked(true);
+    });
   }, [user?.uid]);
 
   // --- Friends & invites subscriptions ---
@@ -1453,14 +1480,29 @@ export default function App() {
       });
   }, [user?.uid]);
 
+  const mySessionId = mySessionIdRef.current;
+  const mpLockedByOther =
+    !!activeGameSession && activeGameSession.sessionId !== mySessionId;
+
   // When a pairing arrives while waiting (or even while on the menu — handles
-  // reconnect mid-search), jump to matchFound.
+  // reconnect mid-search and a reload mid-game), jump to matchFound. Waits for
+  // the lock check so a match held by another device never flashes up here.
   useEffect(() => {
-    if (!pairing) return;
+    if (!pairing || !sessionChecked || mpLockedByOther) return;
     if (screen === 'matchmaking' || screen === 'menu' || screen === 'lobby') {
       setScreen('matchFound');
     }
-  }, [pairing, screen]);
+  }, [pairing, screen, sessionChecked, mpLockedByOther]);
+
+  // Resuming a live match without going through openMultiplayer (page reload,
+  // reconnect): take the free lock so another device can't start playing it.
+  useEffect(() => {
+    if (!user || !pairing || !sessionChecked || activeGameSession) return;
+    if (!onlineGame || onlineGame.status === 'finished') return;
+    void claimSession(user.uid, mySessionId).catch((e) =>
+      console.warn('claimSession on resume failed:', e),
+    );
+  }, [user?.uid, pairing?.matchId, sessionChecked, activeGameSession, onlineGame?.status]);
 
   // Stale-pairing guard. After a hard refresh on the GameOver screen,
   // watchPairing surfaces the prior pairing (Firestore never cleaned it up
@@ -1487,10 +1529,6 @@ export default function App() {
     setMoveFailedToast(null);
     setScreen('menu');
   }, [pairing, onlineGame, user, screen]);
-
-  const mySessionId = mySessionIdRef.current;
-  const mpLockedByOther =
-    !!activeGameSession && activeGameSession.sessionId !== mySessionId;
 
   // Defensive teardown for the simultaneous-claim race: if two tabs of the same
   // account claim at nearly the same instant, the loser sees the winner's

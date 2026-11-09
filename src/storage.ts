@@ -168,6 +168,26 @@ export function loadSettings(): Settings {
   }
 }
 
+// Random per-browser id (not tied to the account). The multiplayer one-device
+// lock uses it to recognise its own reloaded tab and let it back in.
+const DEVICE_KEY = 'dotduel:device:v1';
+let memDeviceId: string | null = null;
+export function getDeviceId(): string {
+  if (memDeviceId) return memDeviceId;
+  const fresh = () =>
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `d${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+  try {
+    const stored = localStorage.getItem(DEVICE_KEY);
+    memDeviceId = stored || fresh();
+    if (!stored) localStorage.setItem(DEVICE_KEY, memDeviceId);
+  } catch {
+    memDeviceId = memDeviceId ?? fresh();
+  }
+  return memDeviceId;
+}
+
 export function saveSettings(s: Settings): void {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));

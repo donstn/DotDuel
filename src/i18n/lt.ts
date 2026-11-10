@@ -35,6 +35,9 @@ export const lt: Messages = {
     ok: 'Gerai',
     done: 'Atlikta',
     advertisement: 'Reklama',
+    crashTitle: 'Kažkas nepavyko',
+    crashBody: 'Žaidime įvyko netikėta klaida. Įkelkite iš naujo ir žaiskite toliau.',
+    crashReload: 'Įkelti iš naujo',
   },
 
   lang: {

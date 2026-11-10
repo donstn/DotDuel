@@ -89,7 +89,7 @@ Rules popover opens from menu footer AND in-game `?`; `AppFooter.tsx` is the onl
 
 ## AI (`ai.ts`)
 
-AI plays P2; all levels shuffle candidates (non-deterministic); `AI_DELAY_MS = 450`.
+AI plays P2; all levels shuffle candidates (non-deterministic); `AI_DELAY_MS = 250`.
 
 | Level | Strategy |
 |---|---|

@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
       })
       .select('id')
       .single();
-    if (gErr) return json({ error: 'CREATE_FAILED', detail: gErr.message }, 500);
+    if (gErr) { console.error('request-bot-match CREATE_FAILED:', gErr.message); return json({ error: 'CREATE_FAILED' }, 500); }
 
     await admin.from('pairings').upsert({
       uid,
@@ -164,6 +164,7 @@ Deno.serve(async (req) => {
 
     return json({ matched: 'bot', matchId: game.id });
   } catch (e) {
-    return json({ error: 'INTERNAL', detail: String(e) }, 500);
+    console.error('request-bot-match INTERNAL:', e);
+    return json({ error: 'INTERNAL' }, 500);
   }
 });

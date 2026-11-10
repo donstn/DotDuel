@@ -24,6 +24,9 @@ export const pt: Messages = {
     ok: 'OK',
     done: 'Concluído',
     advertisement: 'Publicidade',
+    crashTitle: 'Algo correu mal',
+    crashBody: 'O jogo teve um erro inesperado. Recarrega para continuar a jogar.',
+    crashReload: 'Recarregar',
   },
 
   lang: {

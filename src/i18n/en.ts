@@ -33,6 +33,10 @@ export const en = {
     ok: 'OK',
     done: 'Done',
     advertisement: 'Advertisement',
+    // Full-screen fallback when the app crashes (ErrorBoundary).
+    crashTitle: 'Something went wrong',
+    crashBody: 'The game hit an unexpected error. Reload to keep playing.',
+    crashReload: 'Reload',
   },
 
   // Language picker (footer, menu screens).

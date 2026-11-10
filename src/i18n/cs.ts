@@ -33,6 +33,9 @@ export const cs: Messages = {
     ok: 'OK',
     done: 'Hotovo',
     advertisement: 'Reklama',
+    crashTitle: 'Něco se pokazilo',
+    crashBody: 'Ve hře nastala neočekávaná chyba. Načtěte ji znovu a hrajte dál.',
+    crashReload: 'Načíst znovu',
   },
 
   lang: {

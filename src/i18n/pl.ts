@@ -35,6 +35,9 @@ export const pl: Messages = {
     ok: 'OK',
     done: 'Gotowe',
     advertisement: 'Reklama',
+    crashTitle: 'Coś poszło nie tak',
+    crashBody: 'W grze wystąpił nieoczekiwany błąd. Wczytaj ponownie, aby grać dalej.',
+    crashReload: 'Wczytaj ponownie',
   },
 
   lang: {

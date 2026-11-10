@@ -74,12 +74,26 @@ Deno.serve(async (req) => {
 
     // ---- special actions ----
     if (action.kind === 'resign') {
-      await finish(admin, gameId, state, playerNum === 1 ? 2 : 1, 'resign', now);
+      // A move can land between our read and the finish write; re-read and try
+      // again so the resign is never silently dropped.
+      let current = state;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (await finish(admin, gameId, current, playerNum === 1 ? 2 : 1, 'resign', now)) break;
+        const { data: fresh } = await admin
+          .from('games')
+          .select('status, state')
+          .eq('id', gameId)
+          .single();
+        if (!fresh || fresh.status !== 'active') break;
+        current = fresh.state as GameState;
+      }
       return json({ ok: true });
     }
     if (action.kind === 'timeout') {
       if (clock[curKey] - elapsed > 0) return json({ error: 'NOT_EXPIRED' }, 409);
-      await finish(admin, gameId, state, state.current === 1 ? 2 : 1, 'timeout', now);
+      if (!(await finish(admin, gameId, state, state.current === 1 ? 2 : 1, 'timeout', now))) {
+        return json({ error: 'STALE_STATE' }, 409);
+      }
       return json({ ok: true });
     }
     if (action.kind === 'abort') {
@@ -89,7 +103,9 @@ Deno.serve(async (req) => {
         clock.turnStartedAt > 0 &&
         now - clock.turnStartedAt >= ABORT_FIRST_MOVE_MS;
       if (!ok) return json({ error: 'ABORT_NOT_ALLOWED' }, 409);
-      await finish(admin, gameId, state, null, 'aborted', now);
+      if (!(await finish(admin, gameId, state, null, 'aborted', now))) {
+        return json({ error: 'STALE_STATE' }, 409);
+      }
       return json({ ok: true });
     }
 
@@ -121,15 +137,17 @@ Deno.serve(async (req) => {
     const moveElapsed = Math.max(0, elapsed - transitCredit);
     const newRemaining = clock[curKey] - moveElapsed;
     if (newRemaining <= 0) {
-      await finish(admin, gameId, state, state.current === 1 ? 2 : 1, 'timeout', now);
+      if (!(await finish(admin, gameId, state, state.current === 1 ? 2 : 1, 'timeout', now))) {
+        return json({ error: 'STALE_STATE' }, 409);
+      }
       return json({ ok: true });
     }
 
     let newState: GameState;
     try {
       newState = applyAction(state, action);
-    } catch (e) {
-      return json({ error: 'INVALID_MOVE', detail: String(e) }, 422);
+    } catch {
+      return json({ error: 'INVALID_MOVE' }, 422);
     }
 
     const newClock = {
@@ -153,11 +171,21 @@ Deno.serve(async (req) => {
       updates.finished_reason = 'normal';
       updates.finished_at = new Date(now).toISOString();
     }
-    const { error: upErr } = await admin
+    // Write guard (same as doBotMove): only into a still-active game on the turn
+    // we validated against. A resign / timeout / duplicate submit that landed
+    // first wins; this move is rejected rather than overwriting it.
+    const { data: written, error: upErr } = await admin
       .from('games')
       .update(updates)
-      .eq('id', gameId);
-    if (upErr) return json({ error: 'WRITE_FAILED', detail: upErr.message }, 500);
+      .eq('id', gameId)
+      .eq('status', 'active')
+      .eq('state->>turn', String(state.turn))
+      .select('id');
+    if (upErr) {
+      console.error(`submit-move update failed for game ${gameId}:`, upErr);
+      return json({ error: 'WRITE_FAILED' }, 500);
+    }
+    if (!written || written.length === 0) return json({ error: 'STALE_STATE' }, 409);
 
     if (newState.finished) {
       await admin.rpc('finalize_game', { p_game_id: gameId });
@@ -173,6 +201,7 @@ Deno.serve(async (req) => {
     }
     return json({ ok: true });
   } catch (e) {
-    return json({ error: 'INTERNAL', detail: String(e) }, 500);
+    console.error('submit-move internal error:', e);
+    return json({ error: 'INTERNAL' }, 500);
   }
 });

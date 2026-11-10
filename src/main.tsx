@@ -5,6 +5,7 @@ import App from './App';
 import { LanguageProvider } from './i18n';
 import { APP_VERSION } from './version';
 import { DiagOverlay } from './components/DiagOverlay';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { NativeAdDivider } from './components/NativeAdDivider';
 import { isDiagMode } from './diag';
 import { ADS_ENABLED, getFirstLoadMs } from './ads';
@@ -70,7 +71,9 @@ startDialogFocus();
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <LanguageProvider>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
       {Capacitor.isNativePlatform() && ADS_ENABLED && <NativeAdDivider />}
       {isDiagMode() && <DiagOverlay />}
     </LanguageProvider>

@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
       })
       .select('id')
       .single();
-    if (gErr) return json({ error: 'CREATE_FAILED', detail: gErr.message }, 500);
+    if (gErr) { console.error('matchmake CREATE_FAILED:', gErr.message); return json({ error: 'CREATE_FAILED' }, 500); }
 
     const { data: profs } = await admin
       .from('profiles')
@@ -170,6 +170,7 @@ Deno.serve(async (req) => {
 
     return json({ matched: true, matchId: game.id });
   } catch (e) {
-    return json({ error: 'INTERNAL', detail: String(e) }, 500);
+    console.error('matchmake INTERNAL:', e);
+    return json({ error: 'INTERNAL' }, 500);
   }
 });

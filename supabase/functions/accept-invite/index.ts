@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
       .eq('id', inviteId)
       .eq('status', 'pending')
       .select('id');
-    if (claimErr) return json({ error: 'CLAIM_FAILED', detail: claimErr.message }, 500);
+    if (claimErr) { console.error('accept-invite CLAIM_FAILED:', claimErr.message); return json({ error: 'CLAIM_FAILED' }, 500); }
     if (!claimed || claimed.length === 0) return json({ error: 'ALREADY_HANDLED' }, 409);
 
     const { data: game, error: gErr } = await admin
@@ -117,7 +117,8 @@ Deno.serve(async (req) => {
     if (gErr) {
       // Roll the claim back so the invite can be retried.
       await admin.from('invites').update({ status: 'pending' }).eq('id', inviteId);
-      return json({ error: 'CREATE_FAILED', detail: gErr.message }, 500);
+      console.error('accept-invite CREATE_FAILED:', gErr.message);
+      return json({ error: 'CREATE_FAILED' }, 500);
     }
 
     // Record the match on the accepted invite; cancel siblings in the same group
@@ -162,6 +163,7 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, matchId: game.id });
   } catch (e) {
-    return json({ error: 'INTERNAL', detail: String(e) }, 500);
+    console.error('accept-invite INTERNAL:', e);
+    return json({ error: 'INTERNAL' }, 500);
   }
 });

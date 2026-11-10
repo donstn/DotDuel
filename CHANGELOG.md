@@ -3,6 +3,20 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.26.5] - Unreleased
+
+### Fixed
+
+- **Online game races.** A move, resign, timeout or abort now only lands on a
+  still-active game on the turn it was validated against (`submit-move`,
+  `_shared/bot.ts finish()`), so a late request can no longer overwrite a
+  finished game or flip its result. Resign re-reads and retries.
+  `finalize_game` takes a per-game advisory lock so Elo can't apply twice
+  (migration `20261110000000_finalize_game_lock.sql`, applied 2026-11-10).
+- **Blank screen on crash.** A React error boundary now shows a localized
+  "Something went wrong / Reload" screen and reports `app_crash` to analytics.
+- Edge Functions no longer return raw error text to clients (logged server-side).
+
 ## [0.4.26.4] - 2026-11-09
 
 ### Fixed

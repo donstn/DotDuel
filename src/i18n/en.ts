@@ -127,7 +127,10 @@ export const en = {
     chooseDifficulty: 'Choose difficulty',
     dots: (n: number) => `${n} dots`,
     level: (d: number) => `Level ${d}`,
-    shapeLockedTitle: 'Beat the previous shape on Hard to unlock',
+    unlockHint: (what: string, level: string, shape: string) =>
+      `To unlock ${what}, beat ${level} on ${shape}.`,
+    quickRanked: 'Quick ranked game',
+    quickRankedSub: '3 min · Triangle.',
 
     // Name-entry / setup screens.
     whosPlaying: "Who's playing?",
@@ -342,7 +345,7 @@ export const en = {
     collectP: "Only what's needed to make the game work and stay fair.",
     collectAccountLead: 'Account:',
     collectAccount:
-      'email, display name, sign-in provider (Google or password), account creation date. Source: you, via Supabase Auth at sign-up.',
+      'email, display name, sign-in provider (Google), account creation date. Source: you, via Supabase Auth at sign-up.',
     collectRatingLead: 'Multiplayer rating:',
     collectRating:
       'your current Elo, placement-games counter, and last-played timestamp. Source: computed server-side at the end of every ranked match.',

@@ -112,7 +112,10 @@ export const cs: Messages = {
     chooseDifficulty: 'Vyber obtížnost',
     dots: (n: number) => `${n} ${tecky(n)}`,
     level: (d: number) => `Úroveň ${d}`,
-    shapeLockedTitle: 'Poraz předchozí tvar na obtížnosti Těžká, abys odemkl další',
+    unlockHint: (what: string, level: string, shape: string) =>
+      `Pro odemčení „${what}“ vyhraj úroveň „${level}“ na desce „${shape}“.`,
+    quickRanked: 'Rychlá hodnocená hra',
+    quickRankedSub: '3 min · Trojúhelník.',
 
     whosPlaying: 'Kdo hraje?',
     vsBot: (shape: string, difficulty: string) => `${shape} · proti botovi · ${difficulty}`,
@@ -863,7 +866,7 @@ export const cs: Messages = {
     collectP: 'Jen to, co je potřeba, aby hra fungovala a zůstala férová.',
     collectAccountLead: 'Účet:',
     collectAccount:
-      'e-mailová adresa, zobrazované jméno, poskytovatel přihlášení (Google nebo heslo) a datum vytvoření účtu. Zdroj: ty, prostřednictvím Supabase Auth při registraci.',
+      'e-mailová adresa, zobrazované jméno, poskytovatel přihlášení (Google) a datum vytvoření účtu. Zdroj: ty, prostřednictvím Supabase Auth při registraci.',
     collectRatingLead: 'Hodnocení ve hře pro více hráčů:',
     collectRating:
       'tvé aktuální Elo, počítadlo kvalifikačních her a časové razítko poslední hry. Zdroj: vypočítáno na serveru na konci každé hodnocené hry.',

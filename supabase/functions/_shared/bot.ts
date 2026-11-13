@@ -49,8 +49,20 @@ export async function finish(
     return false;
   }
   if (!written || written.length === 0) return false;
-  await admin.rpc('finalize_game', { p_game_id: gameId });
+  await finalizeGame(admin, gameId);
   return true;
+}
+
+// Apply Elo + match history for a finished game. finalize_game is idempotent
+// (advisory lock + already-finalized guard), so one retry is safe. A failure
+// here used to pass silently, leaving a finished game with no rating change.
+export async function finalizeGame(admin: Admin, gameId: string): Promise<boolean> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { error } = await admin.rpc('finalize_game', { p_game_id: gameId });
+    if (!error) return true;
+    console.error(`finalize_game failed for game ${gameId} (attempt ${attempt + 1}):`, error);
+  }
+  return false;
 }
 
 // If the player whose turn it now is happens to be a bot, return its think
@@ -181,7 +193,7 @@ export async function doBotMove(
     return;
   }
   if (newState.finished) {
-    await admin.rpc('finalize_game', { p_game_id: gameId });
+    await finalizeGame(admin, gameId);
   }
 }
 

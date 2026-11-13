@@ -4,7 +4,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { applyAction } from '../_shared/engine/game.ts';
 import type { GameState } from '../_shared/engine/types.ts';
-import { botToMove, doBotMove, finish } from '../_shared/bot.ts';
+import { botToMove, doBotMove, finalizeGame, finish } from '../_shared/bot.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
     if (!written || written.length === 0) return json({ error: 'STALE_STATE' }, 409);
 
     if (newState.finished) {
-      await admin.rpc('finalize_game', { p_game_id: gameId });
+      await finalizeGame(admin, gameId);
     } else {
       // If it's now a bot's turn, schedule its (delayed) reply as a background
       // task so this response returns immediately and the human sees their own

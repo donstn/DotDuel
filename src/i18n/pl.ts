@@ -114,7 +114,10 @@ export const pl: Messages = {
     chooseDifficulty: 'Wybierz poziom trudności',
     dots: (n: number) => `${n} ${kropki(n)}`,
     level: (d: number) => `Poziom ${d}`,
-    shapeLockedTitle: 'Pokonaj poprzedni kształt na poziomie Trudnym, aby odblokować następny',
+    unlockHint: (what: string, level: string, shape: string) =>
+      `Aby odblokować „${what}”, wygraj poziom „${level}” na planszy „${shape}”.`,
+    quickRanked: 'Szybka gra rankingowa',
+    quickRankedSub: '3 min · Trójkąt.',
 
     whosPlaying: 'Kto gra?',
     vsBot: (shape: string, difficulty: string) => `${shape} · przeciw botowi · ${difficulty}`,
@@ -865,7 +868,7 @@ export const pl: Messages = {
     collectP: 'Tylko to, co potrzebne, aby gra działała i była uczciwa.',
     collectAccountLead: 'Konto:',
     collectAccount:
-      'adres e-mail, wyświetlana nazwa, dostawca logowania (Google lub hasło) i data utworzenia konta. Źródło: Ty, przez Supabase Auth podczas rejestracji.',
+      'adres e-mail, wyświetlana nazwa, dostawca logowania (Google) i data utworzenia konta. Źródło: Ty, przez Supabase Auth podczas rejestracji.',
     collectRatingLead: 'Ranking w grze wieloosobowej:',
     collectRating:
       'Twoje aktualne Elo, licznik gier kwalifikacyjnych i znacznik czasu ostatniej gry. Źródło: obliczane na serwerze na koniec każdej gry rankingowej.',

@@ -52,6 +52,8 @@ interface Props {
   onOpenProfile: () => void;
   onSignOut: () => void;
   onOpenMultiplayer: () => void;
+  /** Straight into the 3-minute Triangle ranked search, skipping the lobby. */
+  onQuickRanked: () => void;
   mpLockedByOther: boolean;
   mpUnreachable: boolean;
   /** Signed-in player's referral code — invite links carry ?ref=<CODE>. */
@@ -123,6 +125,7 @@ export function Menu({
   onOpenProfile,
   onSignOut,
   onOpenMultiplayer,
+  onQuickRanked,
   mpLockedByOther,
   mpUnreachable,
   refCode = null,
@@ -207,13 +210,17 @@ export function Menu({
   };
 
   // ---- Online-ranked shelf card (sign-in / network gated) ----
-  const onlineCard = () => {
+  const onlineCard = (
+    title: string = t.menu.onlineRanked,
+    sub: string = t.menu.onlineFindMatch,
+    onClick: () => void = onOpenMultiplayer,
+  ) => {
     if (!user) {
       return (
         <button className="menu-shelf disabled needs-signin" onClick={onOpenSignIn} title={t.menu.onlineSignInTitle}>
           <CardInner
             icon={onlineIcon}
-            title={t.menu.onlineRanked}
+            title={title}
             sub={t.common.signInToPlay}
           />
         </button>
@@ -228,7 +235,7 @@ export function Menu({
         >
           <CardInner
             icon={onlineIcon}
-            title={t.menu.onlineRanked}
+            title={title}
             sub={t.menu.onlineUnreachable}
           />
         </button>
@@ -239,18 +246,18 @@ export function Menu({
         <button className="menu-shelf disabled" disabled title={t.menu.onlineLockedTitle}>
           <CardInner
             icon={onlineIcon}
-            title={t.menu.onlineRanked}
+            title={title}
             sub={t.menu.onlineLocked}
           />
         </button>
       );
     }
     return (
-      <button className="menu-shelf" onClick={onOpenMultiplayer}>
+      <button className="menu-shelf" onClick={onClick}>
         <CardInner
           icon={onlineIcon}
-          title={t.menu.onlineRanked}
-          sub={desc(t.menu.onlineFindMatch)}
+          title={title}
+          sub={desc(sub)}
         />
       </button>
     );
@@ -258,6 +265,7 @@ export function Menu({
 
   // ---- Level 0: home (three category shelves) ----
   if (!mode && !category) {
+    const quickCard = onlineCard(t.menu.quickRanked, t.menu.quickRankedSub, onQuickRanked);
     const welcomeName = gameName ?? user?.email?.split('@')[0] ?? null;
     const greeting =
       user && welcomeName ? (
@@ -323,6 +331,7 @@ export function Menu({
           )}
         </div>
         <div className="menu-shelves">
+          {user && quickCard}
           <button className="menu-shelf" onClick={() => setCategory('single')}>
             <CardInner
               icon={plaque ? undefined : <BotSquadIcon />}
@@ -344,6 +353,7 @@ export function Menu({
               sub={desc(t.menu.rankingsSub)}
             />
           </button>
+          {!user && quickCard}
         </div>
         <div className="menu-share-row">
           {!user && <TellAFriendButton variant="share" className="menu-share-link" />}
@@ -506,6 +516,16 @@ export function Menu({
   }
 
   if (mode === 'ai' && !shape) {
+    // storage.recordWin: beating Easy (L2) or better opens the next shape.
+    const lockedAt = PLAYABLE_SHAPE_META.findIndex((s) => progress.unlocked[s.id] === 0);
+    const shapeHint =
+      lockedAt > 0
+        ? t.menu.unlockHint(
+            t.shapes[PLAYABLE_SHAPE_META[lockedAt].id],
+            t.difficulty[2],
+            t.shapes[PLAYABLE_SHAPE_META[lockedAt - 1].id],
+          )
+        : null;
     return (
       <div className="menu">
         <button className="link-btn back-link" onClick={() => setMode(null)}>‹ {t.common.back}</button>
@@ -520,7 +540,7 @@ export function Menu({
                 className={`menu-shelf ${unlockedAny ? '' : 'disabled'}`}
                 disabled={!unlockedAny}
                 onClick={() => setShape(s.id)}
-                title={unlockedAny ? '' : t.menu.shapeLockedTitle}
+                title={unlockedAny ? '' : shapeHint ?? ''}
               >
                 <CardInner
                   icon={
@@ -538,6 +558,7 @@ export function Menu({
             );
           })}
         </div>
+        {shapeHint && <p className="hint unlock-hint">{shapeHint}</p>}
       </div>
     );
   }
@@ -545,6 +566,15 @@ export function Menu({
   if (mode === 'ai' && shape && aiDifficulty === null) {
     const all: Difficulty[] = [1, 2, 3, 4, 5];
     const available = availableDifficulties(progress, shape);
+    const nextLocked = all.find((d) => !isUnlocked(progress, shape, d) && !available.includes(d));
+    const levelHint =
+      nextLocked && nextLocked > 1
+        ? t.menu.unlockHint(
+            t.difficulty[nextLocked],
+            t.difficulty[(nextLocked - 1) as Difficulty],
+            t.shapes[shape],
+          )
+        : null;
     return (
       <div className="menu">
         <button className="link-btn back-link" onClick={() => setShape(null)}>‹ {t.common.back}</button>
@@ -576,6 +606,7 @@ export function Menu({
             );
           })}
         </div>
+        {levelHint && <p className="hint unlock-hint">{levelHint}</p>}
       </div>
     );
   }

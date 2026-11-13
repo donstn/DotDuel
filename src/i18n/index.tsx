@@ -21,11 +21,6 @@ import { Device } from '@capacitor/device';
 import { en, type Messages } from './en';
 
 export type { Messages } from './en';
-import { lt } from './lt';
-import { es } from './es';
-import { pt } from './pt';
-import { pl } from './pl';
-import { cs } from './cs';
 
 export type Lang = 'en' | 'lt' | 'es' | 'pt' | 'pl' | 'cs';
 
@@ -39,7 +34,29 @@ export const LANGS: { code: Lang; label: string }[] = [
   { code: 'cs', label: 'Čeština' },
 ];
 
-const MESSAGES: Record<Lang, Messages> = { en, lt, es, pt, pl, cs };
+// English ships in the main bundle; every other language is its own chunk,
+// fetched only when it is the one in use (each is ~1,700 lines).
+const LOADERS: Record<Exclude<Lang, 'en'>, () => Promise<Messages>> = {
+  lt: () => import('./lt').then((m) => m.lt),
+  es: () => import('./es').then((m) => m.es),
+  pt: () => import('./pt').then((m) => m.pt),
+  pl: () => import('./pl').then((m) => m.pl),
+  cs: () => import('./cs').then((m) => m.cs),
+};
+const loaded: Partial<Record<Lang, Messages>> = { en };
+
+/** Messages for `l`; English if its chunk can't be fetched (offline, stale deploy). */
+async function loadMessages(l: Lang): Promise<Messages> {
+  const hit = loaded[l];
+  if (hit) return hit;
+  try {
+    const m = await LOADERS[l as Exclude<Lang, 'en'>]();
+    loaded[l] = m;
+    return m;
+  } catch {
+    return en;
+  }
+}
 
 const STORAGE_KEY = 'dotduel:lang:v1';
 
@@ -109,8 +126,18 @@ const Ctx = createContext<LangCtx | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(detectLang);
 
+  // null only on first load in a non-English language, until its chunk arrives.
+  const [t, setT] = useState<Messages | null>(() => loaded[lang] ?? null);
+
   useEffect(() => {
     document.documentElement.lang = lang;
+    let cancelled = false;
+    void loadMessages(lang).then((m) => {
+      if (!cancelled) setT(m);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [lang]);
 
   // Native app: the WebView's navigator.language often defaults to en-US
@@ -143,11 +170,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const value = useMemo<LangCtx>(
-    () => ({ lang, setLang, t: MESSAGES[lang] }),
-    [lang, setLang],
+  const value = useMemo<LangCtx | null>(
+    () => (t ? { lang, setLang, t } : null),
+    [lang, setLang, t],
   );
 
+  if (!value) return null;
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

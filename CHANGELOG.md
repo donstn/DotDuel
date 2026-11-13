@@ -3,6 +3,51 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.27.0] - Unreleased
+
+### Added
+
+- **Quick ranked game** shelf on the home menu: one tap claims the session and
+  joins the 3-minute Triangle queue (`quickRanked` in `App.tsx`), skipping the
+  lobby. Signed out it sits last and opens sign-in; signed in it sits first.
+- **Engine tests + PR check.** `npm test` (Vitest, MIT, dev-only) covers board
+  geometry, scoring, claims, full bot games and unlocks; `.github/workflows/ci.yml`
+  runs tests + build on every pull request.
+
+### Changed
+
+- **Locked shapes and levels say how to unlock** ("Beat Easy on Triangle",
+  "Beat Beginner to unlock") instead of "Locked". The old tooltip said "Hard";
+  the rule in `storage.recordWin` is Easy.
+- **Smaller first download.** Non-English languages and eight popovers are
+  separate chunks: main bundle 1,168 kB -> 694 kB (gzip 368 -> 206 kB).
+- Footer "How to play / Settings / Privacy" are real buttons, not `href="#"` links.
+- About / guide / privacy copy: no ads claim, Android "in testing", Google-only
+  sign-in, one "last updated" date, one wording for unclaimed lines, Impossible
+  bot "three moves ahead".
+
+### Fixed
+
+- **Silent rating-update failure.** `finalize_game` errors are logged and
+  retried once (`finalizeGame` in `_shared/bot.ts`). Needs a function deploy.
+- **Daily puzzle accepted any score.** Migration
+  `20261113000000_daily_score_guard.sql` rejects scores outside 0..board total
+  (stopgap; server-side replay is the full fix). NOT yet applied.
+
+## [0.4.26.5] - Unreleased
+
+### Fixed
+
+- **Online game races.** A move, resign, timeout or abort now only lands on a
+  still-active game on the turn it was validated against (`submit-move`,
+  `_shared/bot.ts finish()`), so a late request can no longer overwrite a
+  finished game or flip its result. Resign re-reads and retries.
+  `finalize_game` takes a per-game advisory lock so Elo can't apply twice
+  (migration `20261110000000_finalize_game_lock.sql`, applied 2026-11-10).
+- **Blank screen on crash.** A React error boundary now shows a localized
+  "Something went wrong / Reload" screen and reports `app_crash` to analytics.
+- Edge Functions no longer return raw error text to clients (logged server-side).
+
 ## [0.4.26.4] - 2026-11-09
 
 ### Fixed

@@ -175,6 +175,7 @@ Deno.serve(async (req) => {
       seedScores: row.seed_scores,
     });
   } catch (e) {
-    return json({ error: 'INTERNAL', detail: String(e) }, 500);
+    console.error('daily-puzzle INTERNAL:', e);
+    return json({ error: 'INTERNAL' }, 500);
   }
 });

@@ -78,10 +78,11 @@ Deno.serve(async (req) => {
     // (pairings, matchmaking_queue, presence, usernames, leaderboard,
     // friendships, invites, level_progress, level_leaderboard, game_sessions).
     const { error: dErr } = await admin.auth.admin.deleteUser(uid);
-    if (dErr) return json({ error: 'AUTH_DELETE_FAILED', detail: dErr.message }, 500);
+    if (dErr) { console.error('account-delete AUTH_DELETE_FAILED:', dErr.message); return json({ error: 'AUTH_DELETE_FAILED' }, 500); }
 
     return json({ ok: true, sentinel });
   } catch (e) {
-    return json({ error: 'INTERNAL', detail: String(e) }, 500);
+    console.error('account-delete INTERNAL:', e);
+    return json({ error: 'INTERNAL' }, 500);
   }
 });

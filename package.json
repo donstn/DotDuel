@@ -11,6 +11,7 @@
     "build:staging": "tsc -b && vite build --mode staging",
     "build:android-release": "tsc -b && vite build --mode androidrelease && tsx scripts/build-pages.ts --app",
     "preview": "vite preview",
+    "test": "vitest run",
     "simulate": "tsx scripts/simulate.ts",
     "simulate:l4": "tsx scripts/simulate-l4.ts",
     "simulate:f": "tsx scripts/simulate-variant-f.ts",
@@ -22,7 +23,6 @@
     "@capacitor-community/admob": "^8.3.0",
     "@capacitor/android": "^8.4.0",
     "@capacitor/app": "^8.1.0",
-    "@capacitor/cli": "^8.4.0",
     "@capacitor/core": "^8.4.0",
     "@capacitor/device": "^8.0.2",
     "@capacitor/filesystem": "^8.1.2",
@@ -34,6 +34,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.4.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
@@ -42,6 +43,7 @@
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "vite": "^5.4.10",
-    "vite-plugin-pwa": "^1.3.0"
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^2.1.9"
   }
 }

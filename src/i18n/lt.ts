@@ -35,6 +35,9 @@ export const lt: Messages = {
     ok: 'Gerai',
     done: 'Atlikta',
     advertisement: 'Reklama',
+    crashTitle: 'Kažkas nepavyko',
+    crashBody: 'Žaidime įvyko netikėta klaida. Įkelkite iš naujo ir žaiskite toliau.',
+    crashReload: 'Įkelti iš naujo',
   },
 
   lang: {
@@ -111,7 +114,10 @@ export const lt: Messages = {
     chooseDifficulty: 'Pasirinkite sudėtingumą',
     dots: (n: number) => pts(n),
     level: (d: number) => `Lygis ${d}`,
-    shapeLockedTitle: 'Įveikite ankstesnę figūrą Sunkiu lygiu, kad atrakintumėte',
+    unlockHint: (what: string, level: string, shape: string) =>
+      `Kad atrakintumėte „${what}“, įveikite lygį „${level}“ figūroje „${shape}“.`,
+    quickRanked: 'Greitas reitingo žaidimas',
+    quickRankedSub: '3 min · Trikampis.',
 
     whosPlaying: 'Kas žaidžia?',
     vsBot: (shape: string, difficulty: string) => `${shape} · prieš botą · ${difficulty}`,
@@ -861,7 +867,7 @@ export const lt: Messages = {
     collectP: 'Tik tai, ko reikia, kad žaidimas veiktų ir liktų sąžiningas.',
     collectAccountLead: 'Paskyra:',
     collectAccount:
-      'el. paštas, rodomas vardas, prisijungimo būdas (Google ar slaptažodis), paskyros sukūrimo data. Šaltinis: jūs, registruodamiesi per Supabase Auth.',
+      'el. paštas, rodomas vardas, prisijungimo būdas (Google), paskyros sukūrimo data. Šaltinis: jūs, registruodamiesi per Supabase Auth.',
     collectRatingLead: 'Kelių žaidėjų reitingas:',
     collectRating:
       'jūsų dabartinis Elo, vertinamųjų žaidimų skaitiklis ir paskutinio žaidimo laikas. Šaltinis: apskaičiuojama serveryje kiekvieno reitinguojamo žaidimo pabaigoje.',

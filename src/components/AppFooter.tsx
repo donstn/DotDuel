@@ -101,37 +101,19 @@ export function AppFooter({
             {t.footer.brand}
           </span>
           <span className="sep">·</span>
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenHowTo();
-            }}
-          >
+          <button type="button" className="app-footer-link" onClick={onOpenHowTo}>
             {t.footer.howToPlay}
-          </a>
+          </button>
           <span className="sep">·</span>
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenSettings();
-            }}
-          >
+          <button type="button" className="app-footer-link" onClick={onOpenSettings}>
             {t.footer.settings}
-          </a>
+          </button>
         </span>
         <span className="sep">·</span>
         <span className="app-footer-group app-footer-group-end">
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenPrivacy();
-            }}
-          >
+          <button type="button" className="app-footer-link" onClick={onOpenPrivacy}>
             {t.footer.privacy}
-          </a>
+          </button>
           <span className="sep">·</span>
           <button
             type="button"

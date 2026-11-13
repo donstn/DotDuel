@@ -24,6 +24,9 @@ export const es: Messages = {
     ok: 'OK',
     done: 'Hecho',
     advertisement: 'Publicidad',
+    crashTitle: 'Algo salió mal',
+    crashBody: 'El juego tuvo un error inesperado. Recarga para seguir jugando.',
+    crashReload: 'Recargar',
   },
 
   lang: {
@@ -100,7 +103,10 @@ export const es: Messages = {
     chooseDifficulty: 'Elige la dificultad',
     dots: (n: number) => pts(n),
     level: (d: number) => `Nivel ${d}`,
-    shapeLockedTitle: 'Gana la forma anterior en Difícil para desbloquearla',
+    unlockHint: (what: string, level: string, shape: string) =>
+      `Para desbloquear ${what}, gana en ${level} en ${shape}.`,
+    quickRanked: 'Partida clasificatoria rápida',
+    quickRankedSub: '3 min · Triángulo.',
 
     whosPlaying: '¿Quién juega?',
     vsBot: (shape: string, difficulty: string) => `${shape} · contra Bot · ${difficulty}`,
@@ -850,7 +856,7 @@ export const es: Messages = {
     collectP: 'Solo lo necesario para que el juego funcione y sea justo.',
     collectAccountLead: 'Cuenta:',
     collectAccount:
-      'correo electrónico, nombre visible, proveedor de inicio de sesión (Google o contraseña) y fecha de creación de la cuenta. Fuente: tú, a través de Supabase Auth al registrarte.',
+      'correo electrónico, nombre visible, proveedor de inicio de sesión (Google) y fecha de creación de la cuenta. Fuente: tú, a través de Supabase Auth al registrarte.',
     collectRatingLead: 'Clasificación multijugador:',
     collectRating:
       'tu Elo actual, el contador de partidas de posicionamiento y la marca de tiempo de la última partida. Fuente: se calcula en el servidor al final de cada partida clasificatoria.',

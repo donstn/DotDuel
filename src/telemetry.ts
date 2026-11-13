@@ -5,6 +5,8 @@
 // after the user consents (enableAnalyticsIfSupported), and gtag respects
 // Consent Mode for cookieless behaviour pre-consent.
 
+import { detectPlatform } from './clientPlatform';
+
 const MEASUREMENT_ID = 'G-9H8DXGC34Z';
 
 declare global {
@@ -108,6 +110,7 @@ export async function enableAnalyticsIfSupported(): Promise<void> {
     s.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
     document.head.appendChild(s);
     window.gtag('js', new Date());
+    window.gtag('set', 'user_properties', { app_platform: detectPlatform() });
     window.gtag('config', MEASUREMENT_ID, { send_page_view: true });
     analyticsEnabled = true;
     fireBootEvent();

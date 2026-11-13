@@ -10,14 +10,9 @@ import {
 } from './nativeAds';
 import { AppFooter } from './components/AppFooter';
 import { Board } from './components/Board';
-import { ChangelogPopover } from './components/ChangelogPopover';
 import { GameOver } from './components/GameOver';
 import { Menu } from './components/Menu';
-import { PrivacyPopover } from './components/PrivacyPopover';
-import { ProfilePopover } from './components/ProfilePopover';
-import { RankingsPopover } from './components/RankingsPopover';
 import { WelcomeCard } from './components/WelcomeCard';
-import { AchievementsPopover } from './achievements/AchievementsPopover';
 import { AchievementToast } from './achievements/AchievementToast';
 import {
   evaluate as evaluateAchievements,
@@ -31,7 +26,7 @@ import { pushUnlocks, syncAchievementsOnSignIn } from './achievements/cloudSync'
 import { getFeatured, onAchievementsChange } from './achievements/store';
 import { ACHIEVEMENT_BY_ID } from './achievements/catalog';
 import { achTitle } from './achievements/localize';
-import { HowToPlayPopover, type HowToTab } from './components/HowToPlayPopover';
+import type { HowToTab } from './components/HowToPlayPopover';
 import { SettingsPopover } from './components/SettingsPopover';
 import { SidePanel } from './components/SidePanel';
 import { SignInPopover } from './auth/SignInPopover';
@@ -91,10 +86,8 @@ import { MatchmakingWaiting } from './components/MatchmakingWaiting';
 import { MultiplayerLobby } from './components/MultiplayerLobby';
 import { ThemePopover } from './components/ThemePopover';
 import { UsernamePicker } from './components/UsernamePicker';
-import { FriendsPopover } from './components/FriendsPopover';
 import { SendInviteDialog } from './components/SendInviteDialog';
 import { IncomingInviteToast } from './components/IncomingInviteToast';
-import { PuzzleLeaderboardPopover } from './components/PuzzleLeaderboardPopover';
 import {
   watchMyDailyAttempt,
   type MyDailyAttempt,
@@ -159,6 +152,16 @@ import { APP_VERSION } from './version';
 import { applyUpdateIfReady } from './swUpdate';
 import { CoachGame } from './components/CoachGame';
 import { bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './telemetry';
+import { lazyPopover } from './lazyPopover';
+
+const ChangelogPopover = lazyPopover(() => import('./components/ChangelogPopover').then((m) => m.ChangelogPopover));
+const PrivacyPopover = lazyPopover(() => import('./components/PrivacyPopover').then((m) => m.PrivacyPopover));
+const RankingsPopover = lazyPopover(() => import('./components/RankingsPopover').then((m) => m.RankingsPopover));
+const PuzzleLeaderboardPopover = lazyPopover(() => import('./components/PuzzleLeaderboardPopover').then((m) => m.PuzzleLeaderboardPopover));
+const ProfilePopover = lazyPopover(() => import('./components/ProfilePopover').then((m) => m.ProfilePopover));
+const FriendsPopover = lazyPopover(() => import('./components/FriendsPopover').then((m) => m.FriendsPopover));
+const AchievementsPopover = lazyPopover(() => import('./achievements/AchievementsPopover').then((m) => m.AchievementsPopover));
+const HowToPlayPopover = lazyPopover(() => import('./components/HowToPlayPopover').then((m) => m.HowToPlayPopover));
 
 type Screen = 'menu' | 'game' | 'lobby' | 'matchmaking' | 'matchFound' | 'mpgame' | 'coach';
 
@@ -1587,6 +1590,17 @@ export default function App() {
     }
   };
 
+  const quickRanked = () => {
+    trackEvent('quick_ranked_clicked', {
+      session_locked: mpLockedByOther ? 'true' : 'false',
+    });
+    if (!user || mpLockedByOther) return;
+    void claimSession(user.uid, mySessionId).catch((e) =>
+      console.warn('claimSession failed:', e),
+    );
+    void onFindMatch('3min');
+  };
+
   const onCancelMatch = () => {
     if (user) {
       void cancelQueue(user.uid).catch((e) =>
@@ -2888,6 +2902,7 @@ export default function App() {
           onOpenProfile={() => setProfileOpen(true)}
           onSignOut={() => void onSignOutSafe()}
           onOpenMultiplayer={openMultiplayer}
+          onQuickRanked={quickRanked}
           mpLockedByOther={mpLockedByOther}
           mpUnreachable={mpUnreachable}
           refCode={cloudProfile?.referralCode ?? null}

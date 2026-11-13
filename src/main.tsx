@@ -5,6 +5,7 @@ import App from './App';
 import { LanguageProvider } from './i18n';
 import { APP_VERSION } from './version';
 import { DiagOverlay } from './components/DiagOverlay';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { NativeAdDivider } from './components/NativeAdDivider';
 import { isDiagMode } from './diag';
 import { ADS_ENABLED, getFirstLoadMs } from './ads';
@@ -12,6 +13,7 @@ import { bootSession } from './telemetry';
 import { startFitText } from './fitText';
 import { startDialogFocus } from './dialogFocus';
 import { startServiceWorker } from './swUpdate';
+import { startClientRecord } from './cloud/clientRecord';
 import './styles.css';
 
 // Android system font size, handed over by FontScalePlugin (the WebView's own
@@ -66,13 +68,27 @@ console.log(`%cDotDuel ${APP_VERSION} loaded`, 'color:#6fcf8a;font-weight:bold;f
 
 startFitText();
 startDialogFocus();
+startClientRecord();
+
+// Hidden admin dashboard (dotduel.com/#admin). Lazy so players never download
+// it; the data itself is gated server-side by admin_stats().
+const AdminPage = React.lazy(() => import('./admin/AdminPage'));
+const isAdminRoute = window.location.hash === '#admin';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <LanguageProvider>
-      <App />
-      {Capacitor.isNativePlatform() && ADS_ENABLED && <NativeAdDivider />}
-      {isDiagMode() && <DiagOverlay />}
-    </LanguageProvider>
-  </React.StrictMode>
+  isAdminRoute ? (
+    <React.Suspense fallback={null}>
+      <AdminPage />
+    </React.Suspense>
+  ) : (
+    <React.StrictMode>
+      <LanguageProvider>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+        {Capacitor.isNativePlatform() && ADS_ENABLED && <NativeAdDivider />}
+        {isDiagMode() && <DiagOverlay />}
+      </LanguageProvider>
+    </React.StrictMode>
+  ),
 );

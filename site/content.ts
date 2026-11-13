@@ -33,7 +33,7 @@ const howToPlay: Record<Lang, Content> = {
     </div>
 
     <h2>The twist: only the longest line scores</h2>
-    <p>One dot can finish two or three lines at the same time. When that happens, you score <strong>only the longest</strong> of them. The others don't disappear: they become <strong>unclaimed lines</strong> (also called unclaimed or pending lines).</p>
+    <p>One dot can finish two or three lines at the same time. When that happens, you score <strong>only the longest</strong> of them. The others don't disappear: they become <strong>unclaimed lines</strong>.</p>
     <p>Unclaimed lines belong to nobody yet. On any later turn, <strong>either player</strong> can spend their turn to claim one and score its full length. To claim a line, tap any coloured dot on it. If a dot sits on more than one unclaimed line, the longest one is claimed.</p>
     <div class="diagrams">
       ${diagrams.twoAtOnce('Green finishes a 3-dot row and a 2-dot diagonal with one dot. The row scores +3; the diagonal (dashed) is left unclaimed.')}
@@ -224,12 +224,12 @@ const about: Record<Lang, Content> = {
     lead: 'DotDuel is a free, quick, two-player strategy game about colouring dots and completing lines, made by an independent developer.',
     body: `
     <h2>What it is</h2>
-    <p>DotDuel takes the pen-and-paper feel of games like Dots and Boxes and tic-tac-toe and adds one rule that changes everything: when a move completes several lines at once, only the longest scores and the rest wait for whoever claims them first. Games last a few minutes, there's no luck involved, and the rules fit on one screen.</p>
-    <p>You can play in any modern browser at <a href="/">www.dotduel.com</a>, with no download, and an Android app is on its way to Google Play.</p>
+    <p>DotDuel takes the pen-and-paper feel of games like Dots and Boxes and tic-tac-toe and adds one rule that changes everything: when a move completes several lines at once, only the longest scores, and the rest become unclaimed lines that either player can claim on a later turn. Games last a few minutes, there's no luck involved, and the rules fit on one screen.</p>
+    <p>You can play in any modern browser at <a href="/">www.dotduel.com</a>, with no download. An Android app is in testing ahead of its Google Play release.</p>
 
     <h2>What you can do</h2>
     <ul>
-      <li>Learn against five bots, from a random-moving Beginner to an Impossible bot that looks two moves ahead.</li>
+      <li>Learn against five bots, from a random-moving Beginner to an Impossible bot that looks three moves ahead.</li>
       <li>Play a friend on the same phone or computer (hot-seat).</li>
       <li>Sign in with Google for ranked online games on a chess clock, a global Elo leaderboard, friends and challenges.</li>
       <li>Try the daily puzzle: the same part-played board for everyone, with a daily leaderboard.</li>
@@ -238,7 +238,7 @@ const about: Record<Lang, Content> = {
 
     <h2>Frequently asked questions</h2>
     <h3>Is DotDuel free?</h3>
-    <p>Yes. Every mode is free, with no purchases inside the game. The website and app show ads on menus and single-player screens to keep it free; ranked online games are ad-free.</p>
+    <p>Yes. Every mode is free, with no purchases inside the game.</p>
     <h3>Do I need an account?</h3>
     <p>No. Bots and hot-seat work without signing in, and your progress is saved on your device. You only need to sign in (with Google) for ranked online play, friends and the daily puzzle leaderboard.</p>
     <h3>How long does a game take?</h3>
@@ -261,12 +261,12 @@ const about: Record<Lang, Content> = {
     lead: 'DotDuel – nemokamas, greitas strateginis žaidimas dviem apie taškų spalvinimą ir linijų užbaigimą, sukurtas nepriklausomo kūrėjo.',
     body: `
     <h2>Kas tai</h2>
-    <p>DotDuel perima popierinių žaidimų, tokių kaip „Taškai ir langeliai“ ar kryžiukai-nuliukai, pojūtį ir prideda vieną viską keičiančią taisyklę: kai ėjimas užbaigia kelias linijas iš karto, taškai skiriami tik už ilgiausią, o kitos laukia to, kas jas paims pirmas. Žaidimas trunka kelias minutes, sėkmės jame nėra, o taisyklės telpa viename ekrane.</p>
-    <p>Žaisti galite bet kurioje šiuolaikinėje naršyklėje adresu <a href="/">www.dotduel.com</a> nieko nesisiuntę, o Android programėlė netrukus pasirodys Google Play.</p>
+    <p>DotDuel perima popierinių žaidimų, tokių kaip „Taškai ir langeliai“ ar kryžiukai-nuliukai, pojūtį ir prideda vieną viską keičiančią taisyklę: kai ėjimas užbaigia kelias linijas iš karto, taškai skiriami tik už ilgiausią, o kitos tampa nepaimtomis linijomis, kurias vėliau gali paimti bet kuris žaidėjas. Žaidimas trunka kelias minutes, sėkmės jame nėra, o taisyklės telpa viename ekrane.</p>
+    <p>Žaisti galite bet kurioje šiuolaikinėje naršyklėje adresu <a href="/">www.dotduel.com</a> nieko nesisiuntę. Android programėlė šiuo metu testuojama prieš pasirodant Google Play.</p>
 
     <h2>Ką galite veikti</h2>
     <ul>
-      <li>Mokytis su penkiais botais – nuo atsitiktinai žaidžiančio Naujoko iki Neįmanomo, kuris žiūri du ėjimus į priekį.</li>
+      <li>Mokytis su penkiais botais – nuo atsitiktinai žaidžiančio Naujoko iki Neįmanomo, kuris žiūri tris ėjimus į priekį.</li>
       <li>Žaisti su draugu tame pačiame telefone ar kompiuteryje.</li>
       <li>Prisijungus su Google žaisti reitingo žaidimus internetu su šachmatų laikrodžiu, kilti bendroje Elo lentelėje, turėti draugų ir juos kviesti.</li>
       <li>Spręsti dienos galvosūkį: ta pati pradėta lenta visiems ir dienos rezultatų lentelė.</li>
@@ -275,7 +275,7 @@ const about: Record<Lang, Content> = {
 
     <h2>Dažni klausimai</h2>
     <h3>Ar DotDuel nemokamas?</h3>
-    <p>Taip. Visi režimai nemokami, žaidime nėra jokių pirkinių. Svetainė ir programėlė rodo reklamas meniu ir vieno žaidėjo ekranuose, kad žaidimas liktų nemokamas; reitingo žaidimai internetu be reklamų.</p>
+    <p>Taip. Visi režimai nemokami, žaidime nėra jokių pirkinių.</p>
     <h3>Ar reikia paskyros?</h3>
     <p>Ne. Botai ir žaidimas dviese viename įrenginyje veikia neprisijungus, o pažanga išsaugoma jūsų įrenginyje. Prisijungti (su Google) reikia tik reitingo žaidimams internetu, draugams ir dienos galvosūkio lentelei.</p>
     <h3>Kiek trunka žaidimas?</h3>

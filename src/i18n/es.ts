@@ -290,6 +290,13 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.27.0': {
+        changes: [
+          "Nuevo botón «Partida clasificatoria rápida» en la pantalla de inicio: un toque inicia la búsqueda de una partida clasificatoria de 3 minutos.",
+          "Las figuras y los niveles bloqueados ahora indican cómo desbloquearlos.",
+          "El juego carga más rápido.",
+        ],
+      },
       'Alpha 0.4.26.3': {
         changes: [
           "Por ahora, sin anuncios.",

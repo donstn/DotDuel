@@ -30,6 +30,24 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.27.0',
+    date: '2026-11-14',
+    changes: [
+      {
+        kind: 'added',
+        text: 'New Quick ranked game button on the home screen: one tap starts a 3-minute ranked search.',
+      },
+      {
+        kind: 'changed',
+        text: 'Locked shapes and levels now tell you how to unlock them.',
+      },
+      {
+        kind: 'changed',
+        text: 'The game loads faster.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.26.4',
     date: '2026-11-09',
     changes: [

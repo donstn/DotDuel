@@ -290,6 +290,13 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.27.0': {
+        changes: [
+          "Novo botão «Partida ranqueada rápida» no ecrã inicial: um toque inicia a procura de uma partida ranqueada de 3 minutos.",
+          "As formas e os níveis bloqueados agora indicam como desbloqueá-los.",
+          "O jogo carrega mais depressa.",
+        ],
+      },
       'Alpha 0.4.26.3': {
         changes: [
           "Por enquanto, sem anúncios.",

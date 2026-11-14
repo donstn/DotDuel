@@ -301,6 +301,13 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.27.0': {
+        changes: [
+          "Naujas mygtukas „Greitas reitingo žaidimas“ pradžios ekrane: vienu paspaudimu pradedama 3 minučių reitingo žaidimo paieška.",
+          "Užrakintos figūros ir lygiai dabar parodo, kaip juos atrakinti.",
+          "Žaidimas įsikrauna greičiau.",
+        ],
+      },
       'Alpha 0.4.26.3': {
         changes: [
           "Kol kas jokių reklamų.",

@@ -300,6 +300,13 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.27.0': {
+        changes: [
+          "Nové tlačítko „Rychlá hodnocená hra“ na úvodní obrazovce: jedním klepnutím spustíte hledání 3minutové hodnocené hry.",
+          "Zamčené tvary a úrovně nyní ukazují, jak je odemknout.",
+          "Hra se načítá rychleji.",
+        ],
+      },
       'Alpha 0.4.26.3': {
         changes: [
           "Zatím žádné reklamy.",

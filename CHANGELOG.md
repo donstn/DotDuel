@@ -3,7 +3,7 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.4.27.0] - Unreleased
+## [0.4.27.0] - 2026-11-13
 
 ### Added
 
@@ -34,7 +34,7 @@ All notable changes to DotDuel will be documented in this file. Format follows
   `20261113000000_daily_score_guard.sql` rejects scores outside 0..board total
   (stopgap; server-side replay is the full fix). NOT yet applied.
 
-## [0.4.26.5] - Unreleased
+## [0.4.26.5] - 2026-11-13 (shipped with 0.4.27.0)
 
 ### Fixed
 

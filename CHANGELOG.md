@@ -3,6 +3,17 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] - next Android build (versionCode 12)
+
+### Added
+
+- **Android update prompt** - Google Play's in-app update dialog (flexible
+  flow) via `@capawesome/capacitor-app-update` 8.1.1 (MIT, $0). Checked at
+  launch (`src/appUpdate.ts`); the download runs in the background and the
+  install is finished only while the app is in the background or at the next
+  launch, never mid-game. A declined prompt stays quiet for 3 days. Play
+  installs only: on a sideloaded build the check fails and is ignored.
+
 ## [0.4.27.0] - 2026-11-13
 
 ### Added

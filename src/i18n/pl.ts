@@ -302,6 +302,12 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.27.1': {
+        changes: [
+          "Aplikacja na Androida informuje teraz, gdy w Google Play jest dostępna nowa wersja.",
+          "„Pobierz moje dane” działa teraz w aplikacji na Androida.",
+        ],
+      },
       'Alpha 0.4.27.0': {
         changes: [
           "Nowy przycisk „Szybka gra rankingowa” na ekranie głównym: jedno dotknięcie rozpoczyna szukanie 3-minutowej gry rankingowej.",

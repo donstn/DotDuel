@@ -290,6 +290,12 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.27.1': {
+        changes: [
+          "O app Android agora avisa quando há uma nova versão no Google Play.",
+          "“Baixar meus dados” agora funciona no app Android.",
+        ],
+      },
       'Alpha 0.4.27.0': {
         changes: [
           "Novo botão «Partida ranqueada rápida» no ecrã inicial: um toque inicia a procura de uma partida ranqueada de 3 minutos.",

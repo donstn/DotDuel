@@ -30,6 +30,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.27.1',
+    date: '2026-11-15',
+    changes: [
+      {
+        kind: 'added',
+        text: 'The Android app now tells you when a new version is available on Google Play.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Download my data now works in the Android app.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.27.0',
     date: '2026-11-14',
     changes: [

@@ -300,6 +300,12 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.27.1': {
+        changes: [
+          "Aplikace pro Android vás nyní upozorní, když je v Google Play nová verze.",
+          "„Stáhnout moje data“ nyní funguje v aplikaci pro Android.",
+        ],
+      },
       'Alpha 0.4.27.0': {
         changes: [
           "Nové tlačítko „Rychlá hodnocená hra“ na úvodní obrazovce: jedním klepnutím spustíte hledání 3minutové hodnocené hry.",

@@ -290,6 +290,12 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.27.1': {
+        changes: [
+          "La app de Android ahora te avisa cuando hay una nueva versión en Google Play.",
+          "«Descargar mis datos» ahora funciona en la app de Android.",
+        ],
+      },
       'Alpha 0.4.27.0': {
         changes: [
           "Nuevo botón «Partida clasificatoria rápida» en la pantalla de inicio: un toque inicia la búsqueda de una partida clasificatoria de 3 minutos.",

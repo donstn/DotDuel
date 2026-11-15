@@ -14,6 +14,15 @@ All notable changes to DotDuel will be documented in this file. Format follows
   launch, never mid-game. A declined prompt stays quiet for 3 days. Play
   installs only: on a sideloaded build the check fails and is ignored.
 
+### Fixed
+
+- **"Download my data" did nothing in the Android app** - an Android WebView
+  ignores a blob `<a download>` click. The app now writes the JSON to its
+  cache and opens the system share sheet (`downloadMyData`,
+  `src/cloud/account.ts`); the web download is unchanged.
+- The export now includes every `dotduel:` localStorage key instead of a
+  hand-kept list that had fallen behind (settings v2, achievements, language).
+
 ## [0.4.27.0] - 2026-11-13
 
 ### Added

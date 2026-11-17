@@ -631,3 +631,25 @@ export function clearResumeAttempt(): void {
     // ignore
   }
 }
+
+// Android "update available" dialog: after the player declines it, stay quiet
+// for a few days instead of asking on every launch.
+const APP_UPDATE_DECLINED_KEY = 'dotduel:appUpdateDeclined:v1';
+const APP_UPDATE_QUIET_MS = 3 * 24 * 60 * 60 * 1000;
+
+export function shouldOfferAppUpdate(): boolean {
+  try {
+    const at = Number(localStorage.getItem(APP_UPDATE_DECLINED_KEY));
+    return !at || Date.now() - at > APP_UPDATE_QUIET_MS;
+  } catch {
+    return true;
+  }
+}
+
+export function markAppUpdateDeclined(): void {
+  try {
+    localStorage.setItem(APP_UPDATE_DECLINED_KEY, String(Date.now()));
+  } catch {
+    // ignore
+  }
+}

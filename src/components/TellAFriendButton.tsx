@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { trackEvent } from '../telemetry';
 import { useT } from '../i18n';
+import { isNativeApp } from '../nativeAds';
 
 const APP_URL = 'https://www.dotduel.com/';
 
@@ -35,6 +36,22 @@ export function TellAFriendButton({ variant, refCode, className }: Props) {
   const onShare = async () => {
     setFeedback(null);
     trackEvent('tellafriend_clicked', { variant });
+
+    // An Android WebView has no navigator.share; without this the app fell
+    // through to the mailto branch and opened the email app.
+    if (isNativeApp()) {
+      try {
+        const { Share } = await import('@capacitor/share');
+        await Share.share({ title: t.share.title, text, url });
+        trackEvent('tellafriend_share_completed', { variant, share_method: 'native-app' });
+      } catch (e) {
+        if (!/cancel/i.test((e as Error)?.message ?? '')) {
+          setFeedback(t.share.couldNotShare);
+          window.setTimeout(() => setFeedback(null), 2500);
+        }
+      }
+      return;
+    }
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {

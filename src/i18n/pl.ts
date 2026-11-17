@@ -302,6 +302,27 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.27.2': {
+        changes: [
+          "Przycisk „Udostępnij DotDuel” w aplikacji na Androida otwiera teraz menu udostępniania telefonu.",
+          "Przy uruchamianiu aplikacja nie pokazuje już na moment starego ekranu meczu ani białego ekranu.",
+          "Jeśli „Pobierz moje dane” się nie powiedzie, zobaczysz teraz komunikat zamiast braku reakcji.",
+          "Aby zapobiec spamowi, możesz mieć najwyżej 10 zaproszeń do znajomych bez odpowiedzi i wysłać najwyżej 10 zaproszeń do gry w ciągu 5 minut.",
+        ],
+      },
+      'Alpha 0.4.27.1': {
+        changes: [
+          "Aplikacja na Androida informuje teraz, gdy w Google Play jest dostępna nowa wersja.",
+          "„Pobierz moje dane” działa teraz w aplikacji na Androida.",
+        ],
+      },
+      'Alpha 0.4.27.0': {
+        changes: [
+          "Nowy przycisk „Szybka gra rankingowa” na ekranie głównym: jedno dotknięcie rozpoczyna szukanie 3-minutowej gry rankingowej.",
+          "Zablokowane kształty i poziomy pokazują teraz, jak je odblokować.",
+          "Gra wczytuje się szybciej.",
+        ],
+      },
       'Alpha 0.4.26.3': {
         changes: [
           "Na razie bez reklam.",
@@ -868,7 +889,7 @@ export const pl: Messages = {
     collectP: 'Tylko to, co potrzebne, aby gra działała i była uczciwa.',
     collectAccountLead: 'Konto:',
     collectAccount:
-      'adres e-mail, wyświetlana nazwa, dostawca logowania (Google) i data utworzenia konta. Źródło: Ty, przez Supabase Auth podczas rejestracji.',
+      'adres e-mail, wyświetlana nazwa, dostawca logowania (Google) i data utworzenia konta. Źródło: Ty, przez Supabase Auth podczas rejestracji. Zapisujemy też, czy korzystasz ze strony, z aplikacji na Androida, czy z obu, oraz ostatnio używaną wersję aplikacji.',
     collectRatingLead: 'Ranking w grze wieloosobowej:',
     collectRating:
       'Twoje aktualne Elo, licznik gier kwalifikacyjnych i znacznik czasu ostatniej gry. Źródło: obliczane na serwerze na koniec każdej gry rankingowej.',
@@ -1006,6 +1027,7 @@ export const pl: Messages = {
     signOut: 'Wyloguj się',
     done: 'Gotowe',
     deleteFailed: 'Usunięcie nie powiodło się. Spróbuj ponownie.',
+    exportFailed: 'Nie udało się przygotować Twoich danych. Spróbuj ponownie.',
     deleteConfirmTitle: 'Usunąć konto?',
     deleteConfirmBody:
       'Trwale usuwa to Twoje konto, logowanie, wpis w tabeli wyników oraz usuwa Twoją nazwę z poprzednich gier. Przeciwnicy zachowują swoją historię rankingu. Jeśli jesteś w trwającej grze, zostanie ona oddana walkowerem. Tego nie można cofnąć.',
@@ -1091,6 +1113,7 @@ export const pl: Messages = {
     send: 'Wyślij',
     requestSent: 'Prośba wysłana.',
     requestFailed: 'Prośba nie powiodła się.',
+    tooManyPending: 'Masz 10 zaproszeń do znajomych bez odpowiedzi. Poczekaj na odpowiedź, zanim wyślesz kolejne.',
     removeConfirm: (name: string) => `Usunąć ${name} ze znajomych?`,
     blockConfirm: (name: string) =>
       `Zablokować ${name}? Ta osoba nie będzie mogła wysyłać Ci próśb o znajomość ani zaproszeń do gry.`,
@@ -1132,6 +1155,7 @@ export const pl: Messages = {
     send: 'Wyślij zaproszenie',
     sending: 'Wysyłanie…',
     inviteFailed: 'Zaproszenie nie powiodło się.',
+    tooManyPending: 'Za dużo zaproszeń w krótkim czasie. Spróbuj ponownie za kilka minut.',
     reasonOffline: 'jest offline',
     reasonSearching: 'szuka gry',
     reasonInGame: 'jest w grze',

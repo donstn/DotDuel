@@ -12,6 +12,7 @@
 //   node scripts/copy-engine-supabase.cjs
 // before deploying so _shared/engine matches the client.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { serverKey } from '../_shared/keys.ts';
 import { createGame, applyAction } from '../_shared/engine/game.ts';
 import { pickAIAction } from '../_shared/engine/ai.ts';
 import type {
@@ -22,7 +23,7 @@ import type {
 } from '../_shared/engine/types.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SERVICE_KEY = serverKey();
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',

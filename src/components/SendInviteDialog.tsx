@@ -99,7 +99,11 @@ export function SendInviteDialog({ friend, friendStatus, hasActivePairing, onClo
       setPhase('waiting');
     } catch (e) {
       console.warn('sendInvite failed:', e);
-      setError(t.invite.inviteFailed);
+      setError(
+        /TOO_MANY_PENDING/.test((e as Error)?.message ?? '')
+          ? t.invite.tooManyPending
+          : t.invite.inviteFailed,
+      );
       setPhase('form');
     }
   };

@@ -290,6 +290,27 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.27.2': {
+        changes: [
+          "Compartilhar DotDuel agora abre o menu de compartilhamento do seu celular no app Android.",
+          "O app não mostra mais por um instante uma tela de partida antiga ou uma tela branca ao abrir.",
+          "Se Baixar meus dados falhar, agora você vê uma mensagem em vez de nada acontecer.",
+          "Para evitar spam, você pode ter no máximo 10 pedidos de amizade sem resposta e enviar no máximo 10 convites para jogar em 5 minutos.",
+        ],
+      },
+      'Alpha 0.4.27.1': {
+        changes: [
+          "O app Android agora avisa quando há uma nova versão no Google Play.",
+          "“Baixar meus dados” agora funciona no app Android.",
+        ],
+      },
+      'Alpha 0.4.27.0': {
+        changes: [
+          "Novo botão «Partida ranqueada rápida» no ecrã inicial: um toque inicia a procura de uma partida ranqueada de 3 minutos.",
+          "As formas e os níveis bloqueados agora indicam como desbloqueá-los.",
+          "O jogo carrega mais depressa.",
+        ],
+      },
       'Alpha 0.4.26.3': {
         changes: [
           "Por enquanto, sem anúncios.",
@@ -856,7 +877,7 @@ export const pt: Messages = {
     collectP: 'Apenas o necessário para o jogo funcionar e ser justo.',
     collectAccountLead: 'Conta:',
     collectAccount:
-      'e-mail, nome de exibição, provedor de login (Google) e data de criação da conta. Fonte: você, pelo Supabase Auth ao se cadastrar.',
+      'e-mail, nome de exibição, provedor de login (Google) e data de criação da conta. Fonte: você, pelo Supabase Auth ao se cadastrar. Também registramos se você usa o site, o app Android ou ambos, e a última versão do app que você usou.',
     collectRatingLead: 'Classificação multijogador:',
     collectRating:
       'seu Elo atual, o contador de partidas de colocação e a data/hora da última partida. Fonte: calculada no servidor ao fim de cada partida ranqueada.',
@@ -994,6 +1015,7 @@ export const pt: Messages = {
     signOut: 'Sair',
     done: 'Concluído',
     deleteFailed: 'Falha na exclusão. Tente novamente.',
+    exportFailed: 'Não foi possível preparar seus dados. Tente novamente.',
     deleteConfirmTitle: 'Excluir sua conta?',
     deleteConfirmBody:
       'Isto remove permanentemente sua conta, seu login e sua entrada na tabela de classificação, e apaga seu nome das partidas passadas. Os oponentes mantêm o histórico de classificação deles. Se você estiver em uma partida ao vivo, ela será dada como perdida. Isto não pode ser desfeito.',
@@ -1079,6 +1101,7 @@ export const pt: Messages = {
     send: 'Enviar',
     requestSent: 'Pedido enviado.',
     requestFailed: 'Falha no pedido.',
+    tooManyPending: 'Você tem 10 pedidos de amizade sem resposta. Aguarde uma resposta antes de enviar mais.',
     removeConfirm: (name: string) => `Remover ${name} dos amigos?`,
     blockConfirm: (name: string) =>
       `Bloquear ${name}? Ele não poderá enviar pedidos de amizade nem convites para partidas.`,
@@ -1120,6 +1143,7 @@ export const pt: Messages = {
     send: 'Enviar convite',
     sending: 'Enviando…',
     inviteFailed: 'Falha no convite.',
+    tooManyPending: 'Muitos convites em pouco tempo. Tente novamente em alguns minutos.',
     reasonOffline: 'está offline',
     reasonSearching: 'está procurando partida',
     reasonInGame: 'está em uma partida',

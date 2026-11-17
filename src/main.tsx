@@ -14,6 +14,7 @@ import { startFitText } from './fitText';
 import { startDialogFocus } from './dialogFocus';
 import { startServiceWorker } from './swUpdate';
 import { startClientRecord } from './cloud/clientRecord';
+import { startAppUpdateCheck } from './appUpdate';
 import './styles.css';
 
 // Android system font size, handed over by FontScalePlugin (the WebView's own
@@ -69,6 +70,7 @@ console.log(`%cDotDuel ${APP_VERSION} loaded`, 'color:#6fcf8a;font-weight:bold;f
 startFitText();
 startDialogFocus();
 startClientRecord();
+startAppUpdateCheck();
 
 // Hidden admin dashboard (dotduel.com/#admin). Lazy so players never download
 // it; the data itself is gated server-side by admin_stats().

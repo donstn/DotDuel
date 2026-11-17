@@ -300,6 +300,27 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.27.2': {
+        changes: [
+          "Tlačítko „Sdílet DotDuel“ v aplikaci pro Android teď otevře nabídku sdílení v telefonu.",
+          "Při spuštění aplikace už neprobliká stará obrazovka zápasu ani bílá obrazovka.",
+          "Když se „Stáhnout moje data“ nepovede, uvidíš teď zprávu místo toho, aby se nic nestalo.",
+          "Proti spamu můžeš mít nejvýš 10 nezodpovězených žádostí o přátelství a poslat nejvýš 10 pozvánek ke hře za 5 minut.",
+        ],
+      },
+      'Alpha 0.4.27.1': {
+        changes: [
+          "Aplikace pro Android vás nyní upozorní, když je v Google Play nová verze.",
+          "„Stáhnout moje data“ nyní funguje v aplikaci pro Android.",
+        ],
+      },
+      'Alpha 0.4.27.0': {
+        changes: [
+          "Nové tlačítko „Rychlá hodnocená hra“ na úvodní obrazovce: jedním klepnutím spustíte hledání 3minutové hodnocené hry.",
+          "Zamčené tvary a úrovně nyní ukazují, jak je odemknout.",
+          "Hra se načítá rychleji.",
+        ],
+      },
       'Alpha 0.4.26.3': {
         changes: [
           "Zatím žádné reklamy.",
@@ -866,7 +887,7 @@ export const cs: Messages = {
     collectP: 'Jen to, co je potřeba, aby hra fungovala a zůstala férová.',
     collectAccountLead: 'Účet:',
     collectAccount:
-      'e-mailová adresa, zobrazované jméno, poskytovatel přihlášení (Google) a datum vytvoření účtu. Zdroj: ty, prostřednictvím Supabase Auth při registraci.',
+      'e-mailová adresa, zobrazované jméno, poskytovatel přihlášení (Google) a datum vytvoření účtu. Zdroj: ty, prostřednictvím Supabase Auth při registraci. Zaznamenáváme také, zda používáš web, aplikaci pro Android, nebo obojí, a naposledy použitou verzi aplikace.',
     collectRatingLead: 'Hodnocení ve hře pro více hráčů:',
     collectRating:
       'tvé aktuální Elo, počítadlo kvalifikačních her a časové razítko poslední hry. Zdroj: vypočítáno na serveru na konci každé hodnocené hry.',
@@ -1004,6 +1025,7 @@ export const cs: Messages = {
     signOut: 'Odhlásit se',
     done: 'Hotovo',
     deleteFailed: 'Smazání se nezdařilo. Zkus to prosím znovu.',
+    exportFailed: 'Nepodařilo se připravit tvoje data. Zkus to prosím znovu.',
     deleteConfirmTitle: 'Smazat tvůj účet?',
     deleteConfirmBody:
       'Tímto trvale odstraníš svůj účet, přihlášení a záznam v žebříčku a tvé jméno bude vymazáno z minulých her. Soupeři si ponechají svou historii hodnocení. Pokud jsi v živé hře, bude prohrána kontumačně. Toto nelze vrátit zpět.',
@@ -1089,6 +1111,7 @@ export const cs: Messages = {
     send: 'Odeslat',
     requestSent: 'Žádost odeslána.',
     requestFailed: 'Žádost se nezdařila.',
+    tooManyPending: 'Máš 10 žádostí o přátelství bez odpovědi. Než pošleš další, počkej na odpověď.',
     removeConfirm: (name: string) => `Odebrat ${name} z přátel?`,
     blockConfirm: (name: string) =>
       `Zablokovat ${name}? Nebude ti moci posílat žádosti o přátelství ani pozvánky do hry.`,
@@ -1130,6 +1153,7 @@ export const cs: Messages = {
     send: 'Odeslat pozvánku',
     sending: 'Odesílám…',
     inviteFailed: 'Pozvánka se nezdařila.',
+    tooManyPending: 'Příliš mnoho pozvánek za krátkou dobu. Zkus to znovu za pár minut.',
     reasonOffline: 'je offline',
     reasonSearching: 'hledá hru',
     reasonInGame: 'je ve hře',

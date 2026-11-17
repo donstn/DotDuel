@@ -5,9 +5,10 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { applyAction } from '../_shared/engine/game.ts';
 import type { GameState } from '../_shared/engine/types.ts';
 import { botToMove, doBotMove, finalizeGame, finish } from '../_shared/bot.ts';
+import { serverKey } from '../_shared/keys.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SERVICE_KEY = serverKey();
 const ABORT_FIRST_MOVE_MS = 10000;
 
 // Supabase Edge runtime: keep the instance alive for a fire-and-forget task

@@ -30,6 +30,60 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.27.2',
+    date: '2026-11-17',
+    changes: [
+      {
+        kind: 'fixed',
+        text: "Share DotDuel now opens your phone's share menu in the Android app.",
+      },
+      {
+        kind: 'fixed',
+        text: "The app no longer flashes an old match screen or a white screen when it starts.",
+      },
+      {
+        kind: 'fixed',
+        text: "If Download my data fails, you now see a message instead of nothing happening.",
+      },
+      {
+        kind: 'changed',
+        text: "To stop spam, you can have at most 10 unanswered friend requests and send at most 10 game invites in 5 minutes.",
+      },
+    ],
+  },
+  {
+    version: 'Alpha 0.4.27.1',
+    date: '2026-11-15',
+    changes: [
+      {
+        kind: 'added',
+        text: 'The Android app now tells you when a new version is available on Google Play.',
+      },
+      {
+        kind: 'fixed',
+        text: 'Download my data now works in the Android app.',
+      },
+    ],
+  },
+  {
+    version: 'Alpha 0.4.27.0',
+    date: '2026-11-14',
+    changes: [
+      {
+        kind: 'added',
+        text: 'New Quick ranked game button on the home screen: one tap starts a 3-minute ranked search.',
+      },
+      {
+        kind: 'changed',
+        text: 'Locked shapes and levels now tell you how to unlock them.',
+      },
+      {
+        kind: 'changed',
+        text: 'The game loads faster.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.26.4',
     date: '2026-11-09',
     changes: [

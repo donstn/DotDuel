@@ -3,7 +3,71 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.4.27.0] - Unreleased
+## [0.4.27.2] - 2026-11-17 (Android 1.12, versionCode 14; vc13 was built but superseded)
+
+### Changed
+
+- **Uppercase button labels** (`styles.css`): every button except names,
+  language/theme/brand names, inline text links and card descriptions.
+  Painted menu-button titles shrink to fit (`fitText.ts`) instead of ending
+  in an ellipsis. Not in the in-app changelog (user choice).
+
+### Security
+
+- **Edge Functions use the new secret key** (`_shared/keys.ts` reads
+  `SUPABASE_SECRET_KEYS`), so the legacy service_role JWT can be disabled.
+  `submit-move` now runs with `verify_jwt = false` (it checks the caller
+  itself); the keep-warm cron ping used to get a 401 from the gateway.
+
+### Fixed
+
+- **"Share DotDuel" / invite opened the email app in the Android app** - an
+  Android WebView has no `navigator.share`, so the button fell through to the
+  `mailto:` branch. In the app it now opens the system share sheet via
+  `@capacitor/share` (`TellAFriendButton.tsx`); the web flow is unchanged.
+- **"Opponent found" flashed at launch** - a pairing left over from a game
+  that ended while the app was closed sent the app to the match screen before
+  the game had loaded. From the menu/lobby the jump now waits until the game
+  is loaded and still running (`pairedGameLive` in `App.tsx`).
+- **White frame between the Android splash and the menu** - the WebView and
+  window background now use the splash colour (`capacitor.config.ts`,
+  `styles.xml`).
+- **Data export failed silently** - a failed cloud read now fails the export
+  (it used to produce a file missing the profile or matches) and the Profile
+  popover shows `profile.exportFailed`.
+
+### Added
+
+- **Caps on friend requests and invites** - migration
+  `20261117000000_social_pending_caps.sql`: at most 10 unanswered friend
+  requests and at most 10 invites per 5 minutes per player
+  (`TOO_MANY_PENDING`); the client shows `friends.tooManyPending` /
+  `invite.tooManyPending`. **Needs the migration applied in production.**
+- **Privacy policy** (`public/privacy.html` + in-app text, six languages):
+  states that we record whether the website, the Android app or both are
+  used, and the last app version.
+
+## [0.4.27.1] - 2026-11-15 (Android 1.10, versionCode 12)
+
+### Added
+
+- **Android update prompt** - Google Play's in-app update dialog (flexible
+  flow) via `@capawesome/capacitor-app-update` 8.1.1 (MIT, $0). Checked at
+  launch (`src/appUpdate.ts`); the download runs in the background and the
+  install is finished only while the app is in the background or at the next
+  launch, never mid-game. A declined prompt stays quiet for 3 days. Play
+  installs only: on a sideloaded build the check fails and is ignored.
+
+### Fixed
+
+- **"Download my data" did nothing in the Android app** - an Android WebView
+  ignores a blob `<a download>` click. The app now writes the JSON to its
+  cache and opens the system share sheet (`downloadMyData`,
+  `src/cloud/account.ts`); the web download is unchanged.
+- The export now includes every `dotduel:` localStorage key instead of a
+  hand-kept list that had fallen behind (settings v2, achievements, language).
+
+## [0.4.27.0] - 2026-11-13
 
 ### Added
 
@@ -34,7 +98,7 @@ All notable changes to DotDuel will be documented in this file. Format follows
   `20261113000000_daily_score_guard.sql` rejects scores outside 0..board total
   (stopgap; server-side replay is the full fix). NOT yet applied.
 
-## [0.4.26.5] - Unreleased
+## [0.4.26.5] - 2026-11-13 (shipped with 0.4.27.0)
 
 ### Fixed
 

@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { supabase, currentSupabaseUid } from '../supabase';
 
 /**
@@ -35,41 +36,29 @@ export async function exportMyData(_uid: string): Promise<Blob> {
 
   const me = await sid();
   if (me) {
-    try {
-      const { data } = await supabase.from('profiles').select('*').eq('id', me).maybeSingle();
-      if (data) payload.profile = data;
-    } catch (e) {
-      console.warn('exportMyData: profile read failed', e);
-    }
-    try {
-      const { data } = await supabase.from('leaderboard').select('*').eq('uid', me).maybeSingle();
-      if (data) payload.leaderboardEntry = data;
-    } catch (e) {
-      console.warn('exportMyData: leaderboard read failed', e);
-    }
-    try {
-      const { data } = await supabase
-        .from('matches')
-        .select('*')
-        .or(`p1_uid.eq.${me},p2_uid.eq.${me}`)
-        .order('finished_at', { ascending: false })
-        .limit(500);
-      payload.matches = (data ?? []) as Array<Record<string, unknown>>;
-    } catch (e) {
-      console.warn('exportMyData: matches read failed', e);
-    }
+    // A failed read fails the whole export: a file that silently lacks the
+    // profile or the matches would look complete to the user.
+    const profile = await supabase.from('profiles').select('*').eq('id', me).maybeSingle();
+    if (profile.error) throw new Error(`profile read failed: ${profile.error.message}`);
+    payload.profile = profile.data;
+    const lb = await supabase.from('leaderboard').select('*').eq('uid', me).maybeSingle();
+    if (lb.error) throw new Error(`leaderboard read failed: ${lb.error.message}`);
+    payload.leaderboardEntry = lb.data;
+    const matches = await supabase
+      .from('matches')
+      .select('*')
+      .or(`p1_uid.eq.${me},p2_uid.eq.${me}`)
+      .order('finished_at', { ascending: false })
+      .limit(500);
+    if (matches.error) throw new Error(`matches read failed: ${matches.error.message}`);
+    payload.matches = (matches.data ?? []) as Array<Record<string, unknown>>;
   }
 
   // Device-side data (also belongs to the user under GDPR).
   try {
-    for (const key of [
-      'dotduel:progress:v3',
-      'dotduel:settings:v1',
-      'dotduel:stats:v4',
-      'dotduel:theme:v1',
-      'dotduel:consent:v1',
-    ]) {
-      payload.localStorage[key] = localStorage.getItem(key);
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('dotduel:')) payload.localStorage[key] = localStorage.getItem(key);
     }
   } catch {
     // ignore
@@ -78,14 +67,37 @@ export async function exportMyData(_uid: string): Promise<Blob> {
   return new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
 }
 
-/** Trigger a browser download of the export. */
+/**
+ * Hand the export to the user: a browser download on the web; in the app the
+ * system share sheet (save to Files/Drive, email…), because an Android WebView
+ * silently ignores a blob download.
+ */
 export async function downloadMyData(uid: string): Promise<void> {
   const blob = await exportMyData(uid);
+  const stamp = new Date().toISOString().slice(0, 10);
+  const fileName = `dotduel-export-${stamp}.json`;
+  if (Capacitor.isNativePlatform()) {
+    const [{ Filesystem, Directory, Encoding }, { Share }] = await Promise.all([
+      import('@capacitor/filesystem'),
+      import('@capacitor/share'),
+    ]);
+    const written = await Filesystem.writeFile({
+      path: fileName,
+      data: await blob.text(),
+      directory: Directory.Cache,
+      encoding: Encoding.UTF8,
+    });
+    try {
+      await Share.share({ title: fileName, files: [written.uri] });
+    } catch (e) {
+      if (!/cancel/i.test((e as Error)?.message ?? '')) throw e;
+    }
+    return;
+  }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  const stamp = new Date().toISOString().slice(0, 10);
-  a.download = `dotduel-export-${stamp}.json`;
+  a.download = fileName;
   document.body.appendChild(a);
   a.click();
   a.remove();

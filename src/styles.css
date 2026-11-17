@@ -694,6 +694,33 @@ button {
   border: none;
   background: none;
   color: inherit;
+  text-transform: uppercase;
+}
+/* The guide link sits in the menu's pill row and looks like its neighbours. */
+a.menu-share-link {
+  text-transform: uppercase;
+}
+
+/* Button labels are uppercase; these keep their own case: player names,
+   language and theme names, brand names, inline text links, and the
+   sentence-length descriptions inside card-style buttons. */
+.rankings-name-link,
+.go-add-friend-btn,
+.menu-lang-opt,
+.app-footer-version-btn,
+.theme-swatch,
+.howto-board,
+.auth-google,
+.share-action,
+.link-btn,
+.rematch-cancel-link,
+.username-signout-link,
+.diag-btn,
+.diag-restore,
+.menu-shelf-sub,
+.menu-card > span,
+.ach-node {
+  text-transform: none;
 }
 
 /* dialogFocus.ts focuses the window itself on open (so a screen reader reads

@@ -290,6 +290,27 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.27.2': {
+        changes: [
+          "Compartir DotDuel ahora abre el menú para compartir de tu teléfono en la app de Android.",
+          "La app ya no muestra por un instante una pantalla de partida antigua ni una pantalla blanca al iniciarse.",
+          "Si Descargar mis datos falla, ahora ves un mensaje en lugar de que no pase nada.",
+          "Para evitar el spam, puedes tener como máximo 10 solicitudes de amistad sin responder y enviar como máximo 10 invitaciones a jugar en 5 minutos.",
+        ],
+      },
+      'Alpha 0.4.27.1': {
+        changes: [
+          "La app de Android ahora te avisa cuando hay una nueva versión en Google Play.",
+          "«Descargar mis datos» ahora funciona en la app de Android.",
+        ],
+      },
+      'Alpha 0.4.27.0': {
+        changes: [
+          "Nuevo botón «Partida clasificatoria rápida» en la pantalla de inicio: un toque inicia la búsqueda de una partida clasificatoria de 3 minutos.",
+          "Las figuras y los niveles bloqueados ahora indican cómo desbloquearlos.",
+          "El juego carga más rápido.",
+        ],
+      },
       'Alpha 0.4.26.3': {
         changes: [
           "Por ahora, sin anuncios.",
@@ -856,7 +877,7 @@ export const es: Messages = {
     collectP: 'Solo lo necesario para que el juego funcione y sea justo.',
     collectAccountLead: 'Cuenta:',
     collectAccount:
-      'correo electrónico, nombre visible, proveedor de inicio de sesión (Google) y fecha de creación de la cuenta. Fuente: tú, a través de Supabase Auth al registrarte.',
+      'correo electrónico, nombre visible, proveedor de inicio de sesión (Google) y fecha de creación de la cuenta. Fuente: tú, a través de Supabase Auth al registrarte. También registramos si usas el sitio web, la app de Android o ambos, y la última versión de la app que usaste.',
     collectRatingLead: 'Clasificación multijugador:',
     collectRating:
       'tu Elo actual, el contador de partidas de posicionamiento y la marca de tiempo de la última partida. Fuente: se calcula en el servidor al final de cada partida clasificatoria.',
@@ -994,6 +1015,7 @@ export const es: Messages = {
     signOut: 'Cerrar sesión',
     done: 'Hecho',
     deleteFailed: 'No se pudo eliminar. Inténtalo de nuevo.',
+    exportFailed: 'No se pudieron preparar tus datos. Inténtalo de nuevo.',
     deleteConfirmTitle: '¿Eliminar tu cuenta?',
     deleteConfirmBody:
       'Esto elimina de forma permanente tu cuenta, tu inicio de sesión y tu entrada en la tabla de clasificación, y borra tu nombre de las partidas pasadas. Los oponentes conservan su historial de clasificación. Si estás en una partida en directo, la perderás. Esto no se puede deshacer.',
@@ -1079,6 +1101,7 @@ export const es: Messages = {
     send: 'Enviar',
     requestSent: 'Solicitud enviada.',
     requestFailed: 'La solicitud falló.',
+    tooManyPending: 'Tienes 10 solicitudes de amistad sin responder. Espera una respuesta antes de enviar más.',
     removeConfirm: (name: string) => `¿Eliminar a ${name} de tus amigos?`,
     blockConfirm: (name: string) =>
       `¿Bloquear a ${name}? No podrá enviarte solicitudes de amistad ni invitaciones a partidas.`,
@@ -1120,6 +1143,7 @@ export const es: Messages = {
     send: 'Enviar invitación',
     sending: 'Enviando…',
     inviteFailed: 'La invitación falló.',
+    tooManyPending: 'Demasiadas invitaciones en poco tiempo. Inténtalo de nuevo en unos minutos.',
     reasonOffline: 'está desconectado',
     reasonSearching: 'está buscando partida',
     reasonInGame: 'está en una partida',

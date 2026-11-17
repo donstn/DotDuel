@@ -1487,12 +1487,24 @@ export default function App() {
   // When a pairing arrives while waiting (or even while on the menu — handles
   // reconnect mid-search and a reload mid-game), jump to matchFound. Waits for
   // the lock check so a match held by another device never flashes up here.
+  // Outside the search screen the pairing may be a leftover from a game that
+  // ended while the app was closed, so wait until the game has loaded and is
+  // still running; the stale-pairing guard below clears a finished one without
+  // "Opponent found" ever flashing up.
+  const pairedGameLive =
+    !!pairing &&
+    onlineGameId === pairing.matchId &&
+    !!onlineGame &&
+    onlineGame.status !== 'finished';
   useEffect(() => {
     if (!pairing || !sessionChecked || mpLockedByOther) return;
-    if (screen === 'matchmaking' || screen === 'menu' || screen === 'lobby') {
+    if (
+      screen === 'matchmaking' ||
+      ((screen === 'menu' || screen === 'lobby') && pairedGameLive)
+    ) {
       setScreen('matchFound');
     }
-  }, [pairing, screen, sessionChecked, mpLockedByOther]);
+  }, [pairing, screen, sessionChecked, mpLockedByOther, pairedGameLive]);
 
   // Resuming a live match without going through openMultiplayer (page reload,
   // reconnect): take the free lock so another device can't start playing it.

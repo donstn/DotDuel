@@ -46,6 +46,7 @@ export function ProfilePopover({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const cloudDisplayName = cloudProfile?.displayName ?? null;
   const [recentMatches, setRecentMatches] = useState<MatchRecord[]>([]);
 
@@ -206,10 +207,12 @@ export function ProfilePopover({
                 disabled={exporting}
                 onClick={async () => {
                   setExporting(true);
+                  setExportError(null);
                   try {
                     await downloadMyData(user.uid);
                   } catch (e) {
                     console.warn('export failed:', e);
+                    setExportError(t.profile.exportFailed);
                   } finally {
                     setExporting(false);
                   }
@@ -225,6 +228,9 @@ export function ProfilePopover({
                 {t.profile.deleteAccount}
               </button>
             </div>
+            {exportError && (
+              <p className="profile-delete-error" role="alert">{exportError}</p>
+            )}
             {deleteError && (
               <p className="profile-delete-error">{deleteError}</p>
             )}

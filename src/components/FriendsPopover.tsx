@@ -76,7 +76,11 @@ export function FriendsPopover({
       window.setTimeout(() => setAddSuccess(false), 2500);
     } catch (e) {
       console.warn('sendFriendRequest failed:', e);
-      setAddError(t.friends.requestFailed);
+      setAddError(
+        /TOO_MANY_PENDING/.test((e as Error)?.message ?? '')
+          ? t.friends.tooManyPending
+          : t.friends.requestFailed,
+      );
     } finally {
       setAddBusy(false);
     }

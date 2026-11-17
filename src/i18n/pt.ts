@@ -869,7 +869,7 @@ export const pt: Messages = {
     collectP: 'Apenas o necessário para o jogo funcionar e ser justo.',
     collectAccountLead: 'Conta:',
     collectAccount:
-      'e-mail, nome de exibição, provedor de login (Google) e data de criação da conta. Fonte: você, pelo Supabase Auth ao se cadastrar.',
+      'e-mail, nome de exibição, provedor de login (Google) e data de criação da conta. Fonte: você, pelo Supabase Auth ao se cadastrar. Também registramos se você usa o site, o app Android ou ambos, e a última versão do app que você usou.',
     collectRatingLead: 'Classificação multijogador:',
     collectRating:
       'seu Elo atual, o contador de partidas de colocação e a data/hora da última partida. Fonte: calculada no servidor ao fim de cada partida ranqueada.',
@@ -1007,6 +1007,7 @@ export const pt: Messages = {
     signOut: 'Sair',
     done: 'Concluído',
     deleteFailed: 'Falha na exclusão. Tente novamente.',
+    exportFailed: 'Não foi possível preparar seus dados. Tente novamente.',
     deleteConfirmTitle: 'Excluir sua conta?',
     deleteConfirmBody:
       'Isto remove permanentemente sua conta, seu login e sua entrada na tabela de classificação, e apaga seu nome das partidas passadas. Os oponentes mantêm o histórico de classificação deles. Se você estiver em uma partida ao vivo, ela será dada como perdida. Isto não pode ser desfeito.',
@@ -1092,6 +1093,7 @@ export const pt: Messages = {
     send: 'Enviar',
     requestSent: 'Pedido enviado.',
     requestFailed: 'Falha no pedido.',
+    tooManyPending: 'Você tem 10 pedidos de amizade sem resposta. Aguarde uma resposta antes de enviar mais.',
     removeConfirm: (name: string) => `Remover ${name} dos amigos?`,
     blockConfirm: (name: string) =>
       `Bloquear ${name}? Ele não poderá enviar pedidos de amizade nem convites para partidas.`,
@@ -1133,6 +1135,7 @@ export const pt: Messages = {
     send: 'Enviar convite',
     sending: 'Enviando…',
     inviteFailed: 'Falha no convite.',
+    tooManyPending: 'Muitos convites em pouco tempo. Tente novamente em alguns minutos.',
     reasonOffline: 'está offline',
     reasonSearching: 'está procurando partida',
     reasonInGame: 'está em uma partida',

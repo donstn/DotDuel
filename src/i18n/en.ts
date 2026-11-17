@@ -345,7 +345,7 @@ export const en = {
     collectP: "Only what's needed to make the game work and stay fair.",
     collectAccountLead: 'Account:',
     collectAccount:
-      'email, display name, sign-in provider (Google), account creation date. Source: you, via Supabase Auth at sign-up.',
+      'email, display name, sign-in provider (Google), account creation date. Source: you, via Supabase Auth at sign-up. We also record whether you use the website, the Android app or both, and the last app version you used.',
     collectRatingLead: 'Multiplayer rating:',
     collectRating:
       'your current Elo, placement-games counter, and last-played timestamp. Source: computed server-side at the end of every ranked match.',
@@ -483,6 +483,7 @@ export const en = {
     signOut: 'Sign out',
     done: 'Done',
     deleteFailed: 'Deletion failed. Please try again.',
+    exportFailed: 'Could not prepare your data. Please try again.',
     deleteConfirmTitle: 'Delete your account?',
     deleteConfirmBody:
       "This permanently removes your account, sign-in, leaderboard entry, and scrubs your name from past matches. Opponents keep their rating history. If you're in a live game it will forfeit. This cannot be undone.",
@@ -573,6 +574,7 @@ export const en = {
     send: 'Send',
     requestSent: 'Request sent.',
     requestFailed: 'Request failed.',
+    tooManyPending: 'You have 10 friend requests waiting for an answer. Wait for a reply before sending more.',
     removeConfirm: (name: string) => `Remove ${name} from friends?`,
     blockConfirm: (name: string) =>
       `Block ${name}? They won't be able to send you friend requests or game invites.`,
@@ -615,6 +617,7 @@ export const en = {
     send: 'Send invite',
     sending: 'Sending…',
     inviteFailed: 'Invite failed.',
+    tooManyPending: 'Too many invites in a short time. Try again in a few minutes.',
     reasonOffline: 'is offline',
     reasonSearching: 'is searching for a match',
     reasonInGame: 'is in a game',

@@ -880,7 +880,7 @@ export const lt: Messages = {
     collectP: 'Tik tai, ko reikia, kad žaidimas veiktų ir liktų sąžiningas.',
     collectAccountLead: 'Paskyra:',
     collectAccount:
-      'el. paštas, rodomas vardas, prisijungimo būdas (Google), paskyros sukūrimo data. Šaltinis: jūs, registruodamiesi per Supabase Auth.',
+      'el. paštas, rodomas vardas, prisijungimo būdas (Google), paskyros sukūrimo data. Šaltinis: jūs, registruodamiesi per Supabase Auth. Taip pat įrašome, ar naudojatės svetaine, „Android“ programėle, ar abiem, ir paskutinę naudotą programėlės versiją.',
     collectRatingLead: 'Kelių žaidėjų reitingas:',
     collectRating:
       'jūsų dabartinis Elo, vertinamųjų žaidimų skaitiklis ir paskutinio žaidimo laikas. Šaltinis: apskaičiuojama serveryje kiekvieno reitinguojamo žaidimo pabaigoje.',
@@ -1018,6 +1018,7 @@ export const lt: Messages = {
     signOut: 'Atsijungti',
     done: 'Atlikta',
     deleteFailed: 'Ištrinti nepavyko. Bandykite dar kartą.',
+    exportFailed: 'Nepavyko paruošti jūsų duomenų. Bandykite dar kartą.',
     deleteConfirmTitle: 'Ištrinti jūsų paskyrą?',
     deleteConfirmBody:
       'Tai visam laikui pašalina jūsų paskyrą, prisijungimą, lyderių lentelės įrašą ir ištrina jūsų vardą iš praėjusių žaidimų. Varžovai išlaiko savo reitingo istoriją. Jei žaidžiate tiesioginį žaidimą, jis bus pralaimėtas. Šio veiksmo atšaukti negalima.',
@@ -1103,6 +1104,7 @@ export const lt: Messages = {
     send: 'Siųsti',
     requestSent: 'Prašymas išsiųstas.',
     requestFailed: 'Prašymo išsiųsti nepavyko.',
+    tooManyPending: 'Turite 10 neatsakytų draugystės prašymų. Palaukite atsakymo prieš siųsdami daugiau.',
     removeConfirm: (name: string) => `Pašalinti ${name} iš draugų?`,
     blockConfirm: (name: string) =>
       `Užblokuoti ${name}? Šis žaidėjas negalės siųsti jums draugystės prašymų ar žaidimo kvietimų.`,
@@ -1144,6 +1146,7 @@ export const lt: Messages = {
     send: 'Siųsti kvietimą',
     sending: 'Siunčiama…',
     inviteFailed: 'Kvietimo išsiųsti nepavyko.',
+    tooManyPending: 'Per daug kvietimų per trumpą laiką. Pabandykite po kelių minučių.',
     reasonOffline: 'yra neprisijungęs',
     reasonSearching: 'ieško varžovo',
     reasonInGame: 'jau žaidžia',

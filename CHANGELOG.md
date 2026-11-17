@@ -11,6 +11,27 @@ All notable changes to DotDuel will be documented in this file. Format follows
   Android WebView has no `navigator.share`, so the button fell through to the
   `mailto:` branch. In the app it now opens the system share sheet via
   `@capacitor/share` (`TellAFriendButton.tsx`); the web flow is unchanged.
+- **"Opponent found" flashed at launch** - a pairing left over from a game
+  that ended while the app was closed sent the app to the match screen before
+  the game had loaded. From the menu/lobby the jump now waits until the game
+  is loaded and still running (`pairedGameLive` in `App.tsx`).
+- **White frame between the Android splash and the menu** - the WebView and
+  window background now use the splash colour (`capacitor.config.ts`,
+  `styles.xml`).
+- **Data export failed silently** - a failed cloud read now fails the export
+  (it used to produce a file missing the profile or matches) and the Profile
+  popover shows `profile.exportFailed`.
+
+### Added
+
+- **Caps on friend requests and invites** - migration
+  `20261117000000_social_pending_caps.sql`: at most 10 unanswered friend
+  requests and at most 10 invites per 5 minutes per player
+  (`TOO_MANY_PENDING`); the client shows `friends.tooManyPending` /
+  `invite.tooManyPending`. **Needs the migration applied in production.**
+- **Privacy policy** (`public/privacy.html` + in-app text, six languages):
+  states that we record whether the website, the Android app or both are
+  used, and the last app version.
 
 ## [0.4.27.1] - 2026-11-15 (Android 1.10, versionCode 12)
 

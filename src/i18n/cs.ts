@@ -879,7 +879,7 @@ export const cs: Messages = {
     collectP: 'Jen to, co je potřeba, aby hra fungovala a zůstala férová.',
     collectAccountLead: 'Účet:',
     collectAccount:
-      'e-mailová adresa, zobrazované jméno, poskytovatel přihlášení (Google) a datum vytvoření účtu. Zdroj: ty, prostřednictvím Supabase Auth při registraci.',
+      'e-mailová adresa, zobrazované jméno, poskytovatel přihlášení (Google) a datum vytvoření účtu. Zdroj: ty, prostřednictvím Supabase Auth při registraci. Zaznamenáváme také, zda používáš web, aplikaci pro Android, nebo obojí, a naposledy použitou verzi aplikace.',
     collectRatingLead: 'Hodnocení ve hře pro více hráčů:',
     collectRating:
       'tvé aktuální Elo, počítadlo kvalifikačních her a časové razítko poslední hry. Zdroj: vypočítáno na serveru na konci každé hodnocené hry.',
@@ -1017,6 +1017,7 @@ export const cs: Messages = {
     signOut: 'Odhlásit se',
     done: 'Hotovo',
     deleteFailed: 'Smazání se nezdařilo. Zkus to prosím znovu.',
+    exportFailed: 'Nepodařilo se připravit tvoje data. Zkus to prosím znovu.',
     deleteConfirmTitle: 'Smazat tvůj účet?',
     deleteConfirmBody:
       'Tímto trvale odstraníš svůj účet, přihlášení a záznam v žebříčku a tvé jméno bude vymazáno z minulých her. Soupeři si ponechají svou historii hodnocení. Pokud jsi v živé hře, bude prohrána kontumačně. Toto nelze vrátit zpět.',
@@ -1102,6 +1103,7 @@ export const cs: Messages = {
     send: 'Odeslat',
     requestSent: 'Žádost odeslána.',
     requestFailed: 'Žádost se nezdařila.',
+    tooManyPending: 'Máš 10 žádostí o přátelství bez odpovědi. Než pošleš další, počkej na odpověď.',
     removeConfirm: (name: string) => `Odebrat ${name} z přátel?`,
     blockConfirm: (name: string) =>
       `Zablokovat ${name}? Nebude ti moci posílat žádosti o přátelství ani pozvánky do hry.`,
@@ -1143,6 +1145,7 @@ export const cs: Messages = {
     send: 'Odeslat pozvánku',
     sending: 'Odesílám…',
     inviteFailed: 'Pozvánka se nezdařila.',
+    tooManyPending: 'Příliš mnoho pozvánek za krátkou dobu. Zkus to znovu za pár minut.',
     reasonOffline: 'je offline',
     reasonSearching: 'hledá hru',
     reasonInGame: 'je ve hře',

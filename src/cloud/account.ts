@@ -36,29 +36,22 @@ export async function exportMyData(_uid: string): Promise<Blob> {
 
   const me = await sid();
   if (me) {
-    try {
-      const { data } = await supabase.from('profiles').select('*').eq('id', me).maybeSingle();
-      if (data) payload.profile = data;
-    } catch (e) {
-      console.warn('exportMyData: profile read failed', e);
-    }
-    try {
-      const { data } = await supabase.from('leaderboard').select('*').eq('uid', me).maybeSingle();
-      if (data) payload.leaderboardEntry = data;
-    } catch (e) {
-      console.warn('exportMyData: leaderboard read failed', e);
-    }
-    try {
-      const { data } = await supabase
-        .from('matches')
-        .select('*')
-        .or(`p1_uid.eq.${me},p2_uid.eq.${me}`)
-        .order('finished_at', { ascending: false })
-        .limit(500);
-      payload.matches = (data ?? []) as Array<Record<string, unknown>>;
-    } catch (e) {
-      console.warn('exportMyData: matches read failed', e);
-    }
+    // A failed read fails the whole export: a file that silently lacks the
+    // profile or the matches would look complete to the user.
+    const profile = await supabase.from('profiles').select('*').eq('id', me).maybeSingle();
+    if (profile.error) throw new Error(`profile read failed: ${profile.error.message}`);
+    payload.profile = profile.data;
+    const lb = await supabase.from('leaderboard').select('*').eq('uid', me).maybeSingle();
+    if (lb.error) throw new Error(`leaderboard read failed: ${lb.error.message}`);
+    payload.leaderboardEntry = lb.data;
+    const matches = await supabase
+      .from('matches')
+      .select('*')
+      .or(`p1_uid.eq.${me},p2_uid.eq.${me}`)
+      .order('finished_at', { ascending: false })
+      .limit(500);
+    if (matches.error) throw new Error(`matches read failed: ${matches.error.message}`);
+    payload.matches = (matches.data ?? []) as Array<Record<string, unknown>>;
   }
 
   // Device-side data (also belongs to the user under GDPR).

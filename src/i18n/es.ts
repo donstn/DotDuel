@@ -869,7 +869,7 @@ export const es: Messages = {
     collectP: 'Solo lo necesario para que el juego funcione y sea justo.',
     collectAccountLead: 'Cuenta:',
     collectAccount:
-      'correo electrónico, nombre visible, proveedor de inicio de sesión (Google) y fecha de creación de la cuenta. Fuente: tú, a través de Supabase Auth al registrarte.',
+      'correo electrónico, nombre visible, proveedor de inicio de sesión (Google) y fecha de creación de la cuenta. Fuente: tú, a través de Supabase Auth al registrarte. También registramos si usas el sitio web, la app de Android o ambos, y la última versión de la app que usaste.',
     collectRatingLead: 'Clasificación multijugador:',
     collectRating:
       'tu Elo actual, el contador de partidas de posicionamiento y la marca de tiempo de la última partida. Fuente: se calcula en el servidor al final de cada partida clasificatoria.',
@@ -1007,6 +1007,7 @@ export const es: Messages = {
     signOut: 'Cerrar sesión',
     done: 'Hecho',
     deleteFailed: 'No se pudo eliminar. Inténtalo de nuevo.',
+    exportFailed: 'No se pudieron preparar tus datos. Inténtalo de nuevo.',
     deleteConfirmTitle: '¿Eliminar tu cuenta?',
     deleteConfirmBody:
       'Esto elimina de forma permanente tu cuenta, tu inicio de sesión y tu entrada en la tabla de clasificación, y borra tu nombre de las partidas pasadas. Los oponentes conservan su historial de clasificación. Si estás en una partida en directo, la perderás. Esto no se puede deshacer.',
@@ -1092,6 +1093,7 @@ export const es: Messages = {
     send: 'Enviar',
     requestSent: 'Solicitud enviada.',
     requestFailed: 'La solicitud falló.',
+    tooManyPending: 'Tienes 10 solicitudes de amistad sin responder. Espera una respuesta antes de enviar más.',
     removeConfirm: (name: string) => `¿Eliminar a ${name} de tus amigos?`,
     blockConfirm: (name: string) =>
       `¿Bloquear a ${name}? No podrá enviarte solicitudes de amistad ni invitaciones a partidas.`,
@@ -1133,6 +1135,7 @@ export const es: Messages = {
     send: 'Enviar invitación',
     sending: 'Enviando…',
     inviteFailed: 'La invitación falló.',
+    tooManyPending: 'Demasiadas invitaciones en poco tiempo. Inténtalo de nuevo en unos minutos.',
     reasonOffline: 'está desconectado',
     reasonSearching: 'está buscando partida',
     reasonInGame: 'está en una partida',

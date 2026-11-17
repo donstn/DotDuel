@@ -1,6 +1,6 @@
 import { LINE_THICKNESS_MULT } from '../components/Board';
 import { getBoards } from '../geometry';
-import type { NineArt, PanelArt, ThemeArt } from '../themeArt';
+import { frameSlices, type NineArt, type PanelArt, type ThemeArt } from '../themeArt';
 import type { GameState, Player, ShapeId } from '../types';
 import {
   FONT_BODY,
@@ -33,6 +33,8 @@ interface CardArt {
   dotScale: number;
   lineGlow?: Partial<Record<Player, string>>;
   frame: NineArt;
+  /** Christmas Square/Rectangle board wreath. */
+  wreath?: NineArt;
   img: {
     background: HTMLImageElement;
     sign: HTMLImageElement;
@@ -43,6 +45,7 @@ interface CardArt {
     line: Map<string, HTMLImageElement>;
     /** Christmas Triangle board tree, when the theme has one. */
     tree?: HTMLImageElement;
+    wreath?: HTMLImageElement;
   };
 }
 
@@ -70,7 +73,8 @@ async function loadCardArt(art: ThemeArt, state: GameState, shape: ShapeId): Pro
   }
   try {
     const treeUrl = shape === 'triangle' && art.treeTriangle ? board.tree?.url : undefined;
-    const [bg, sign, frame, felt, d1, d2, tree, ...strands] = await Promise.all([
+    const wreathArt = shape !== 'triangle' ? board.frame : undefined;
+    const [bg, sign, frame, felt, d1, d2, tree, wreath, ...strands] = await Promise.all([
       loadImage(background.landscape),
       loadImage(headerSign.url),
       loadImage(cardFrame.url),
@@ -78,6 +82,7 @@ async function loadCardArt(art: ThemeArt, state: GameState, shape: ShapeId): Pro
       loadImage(board.dot(1)),
       loadImage(board.dot(2)),
       treeUrl ? loadImage(treeUrl) : Promise.resolve(undefined),
+      wreathArt ? loadImage(wreathArt.url) : Promise.resolve(undefined),
       ...[...lens].map((k) => {
         const [len, p] = k.split('-').map(Number);
         return loadImage(board.line(len, p as Player));
@@ -90,7 +95,8 @@ async function loadCardArt(art: ThemeArt, state: GameState, shape: ShapeId): Pro
       dotScale: board.dotScale ?? 1,
       lineGlow: board.lineGlow,
       frame: cardFrame,
-      img: { background: bg, sign, frame, felt, dot: { 1: d1, 2: d2 }, line, tree },
+      wreath: wreathArt,
+      img: { background: bg, sign, frame, felt, dot: { 1: d1, 2: d2 }, line, tree, wreath },
     };
   } catch {
     return null;
@@ -222,9 +228,11 @@ function drawPaintedBoard(
     rim.addColorStop(0, theme.rimHi);
     rim.addColorStop(0.5, theme.felt1);
     rim.addColorStop(1, theme.rimLo);
-    fillSilhouette(ctx, hull, feltGap + rimW, rim);
+    const wreath = l.wreath && art.wreath && art.img.wreath ? l.wreath : undefined;
+    // With a wreath, the shadow is cast by the felt alone; the wreath covers its edge.
+    fillSilhouette(ctx, hull, wreath ? feltGap : feltGap + rimW, rim);
     ctx.restore();
-    fillSilhouette(ctx, hull, feltGap + rimW * 0.36, theme.rimLo);
+    if (!wreath) fillSilhouette(ctx, hull, feltGap + rimW * 0.36, theme.rimLo);
 
     // Moss felt: the silhouette on an offscreen layer, the felt art composited
     // into it, then darkened toward the edge so it reads as recessed.
@@ -252,6 +260,11 @@ function drawPaintedBoard(
       lc.fillStyle = shade;
       lc.fillRect(left, top, right - left, bot - top);
       ctx.drawImage(layer, 0, 0, W, H);
+    }
+    if (wreath && art.wreath && art.img.wreath) {
+      for (const s of frameSlices(art.wreath, wreath, wreath.band)) {
+        ctx.drawImage(art.img.wreath, s.sx, s.sy, s.sw, s.sh, s.dx, s.dy, s.dw, s.dh);
+      }
     }
   }
 

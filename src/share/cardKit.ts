@@ -155,6 +155,8 @@ export interface BoardLayout {
   rimW: number;
   /** Christmas Triangle: the painted tree that is the board, in canvas space. */
   tree?: { url: string; x: number; y: number; w: number; h: number };
+  /** Christmas Square/Rectangle: the painted wreath's outer box + thickness. */
+  wreath?: { x: number; y: number; w: number; h: number; band: number };
 }
 
 export function layoutBoard(
@@ -184,10 +186,14 @@ export function layoutBoard(
   // Two-pass fit: the felt + rim extend past the dots by a dot-radius-derived
   // margin, so size the dot layout once, derive the margin, then refit.
   let scale = Math.min(rect.w / vb.w, rect.h / vb.h);
+  // Same wreath geometry as Board.tsx: band 2.2 r, inner edge at 0.95 feltGap.
+  const wreathArt = shape !== 'triangle' ? art.board?.frame : undefined;
   let margin = 0;
   for (let pass = 0; pass < 2; pass++) {
     scale = Math.min((rect.w - margin * 2) / vb.w, (rect.h - margin * 2) / vb.h);
-    margin = scale * 0.31 * (1.64 + 0.55) + 6; // feltGap + rim + breathing room
+    margin = wreathArt
+      ? scale * 0.31 * (1.64 * 0.95 + 2.2) + 2
+      : scale * 0.31 * (1.64 + 0.55) + 6; // feltGap + rim + breathing room
   }
   const ox = rect.x + (rect.w - vb.w * scale) / 2 - vb.x * scale;
   const oy = rect.y + (rect.h - vb.h * scale) / 2 - vb.y * scale;
@@ -207,7 +213,16 @@ export function layoutBoard(
   if (!Number.isFinite(minD)) minD = 1;
   const r = minD * 0.31 * scale;
   const hull = convexHull(board.dots.map((d) => ({ x: px(d.x), y: py(d.y) })));
-  return { board, px, py, scale, r, hull, feltGap: r * 1.64, rimW: r * 0.5 };
+  const out: BoardLayout = { board, px, py, scale, r, hull, feltGap: r * 1.64, rimW: r * 0.5 };
+  if (wreathArt) {
+    const pad = r * (1.64 * 0.95 + 2.2);
+    const xs = hull.map((p) => p.x);
+    const ys = hull.map((p) => p.y);
+    const x0 = Math.min(...xs) - pad;
+    const y0 = Math.min(...ys) - pad;
+    out.wreath = { x: x0, y: y0, w: Math.max(...xs) + pad - x0, h: Math.max(...ys) + pad - y0, band: r * 2.2 };
+  }
+  return out;
 }
 
 /**

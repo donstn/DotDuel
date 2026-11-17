@@ -85,6 +85,8 @@ export interface ThemeArt {
       topDotY: number;
       bottomRowY: number;
     };
+    /** Square / Rectangle: a painted frame (nine-slice) replacing the rim. */
+    frame?: NineArt;
   };
   avatars?: { human: string; bot: (level: Difficulty) => string };
   /** Win-celebration sprites. */
@@ -301,6 +303,15 @@ ART.christmas = {
       topDotY: 220,
       bottomRowY: 745,
     },
+    frame: {
+      url: '/art/christmas/wreath-frame.webp',
+      width: 987,
+      height: 991,
+      capLeft: 207,
+      capRight: 205,
+      capTop: 203,
+      capBottom: 207,
+    },
   },
   particles: [
     '/art/christmas/particle-snow-1.webp',
@@ -315,6 +326,59 @@ ART.christmas = {
     landscape: '/art/christmas/background-landscape.webp',
   },
 };
+
+/** One piece of a nine-slice frame: source rect in the sprite, destination
+ *  rect in the caller's units. */
+export interface FrameSlice {
+  sx: number;
+  sy: number;
+  sw: number;
+  sh: number;
+  dx: number;
+  dy: number;
+  dw: number;
+  dh: number;
+}
+
+/** Cuts a painted frame to fit `dest`. Corners keep their painted shape
+ *  (scaled so the caps are `band` thick); each side's middle is repeated a
+ *  whole number of times, so a garland is never smeared by a long stretch. */
+export function frameSlices(
+  f: NineArt,
+  dest: { x: number; y: number; w: number; h: number },
+  band: number,
+): FrameSlice[] {
+  const s = band / ((f.capLeft + f.capRight + f.capTop + f.capBottom) / 4);
+  const L = f.capLeft * s, R = f.capRight * s, T = f.capTop * s, B = f.capBottom * s;
+  const midW = f.width - f.capLeft - f.capRight;
+  const midH = f.height - f.capTop - f.capBottom;
+  const out: FrameSlice[] = [];
+  const add = (sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number) =>
+    out.push({ sx, sy, sw, sh, dx, dy, dw, dh });
+  const xs = [0, f.capLeft, f.width - f.capRight, f.width];
+  const ys = [0, f.capTop, f.height - f.capBottom, f.height];
+  const dxs = [dest.x, dest.x + L, dest.x + dest.w - R, dest.x + dest.w];
+  const dys = [dest.y, dest.y + T, dest.y + dest.h - B, dest.y + dest.h];
+  // Top + bottom sides.
+  const spanW = dxs[2] - dxs[1];
+  const nW = Math.max(1, Math.round(spanW / (midW * s)));
+  for (let k = 0; k < nW; k++) {
+    const dx = dxs[1] + (spanW * k) / nW;
+    for (const j of [0, 2]) add(f.capLeft, ys[j], midW, ys[j + 1] - ys[j], dx, dys[j], spanW / nW, dys[j + 1] - dys[j]);
+  }
+  // Left + right sides.
+  const spanH = dys[2] - dys[1];
+  const nH = Math.max(1, Math.round(spanH / (midH * s)));
+  for (let k = 0; k < nH; k++) {
+    const dy = dys[1] + (spanH * k) / nH;
+    for (const i of [0, 2]) add(xs[i], f.capTop, xs[i + 1] - xs[i], midH, dxs[i], dy, dxs[i + 1] - dxs[i], spanH / nH);
+  }
+  // Corners last: their pine cones and holly sit over the sides' ends.
+  for (const i of [0, 2]) for (const j of [0, 2]) {
+    add(xs[i], ys[j], xs[i + 1] - xs[i], ys[j + 1] - ys[j], dxs[i], dys[j], dxs[i + 1] - dxs[i], dys[j + 1] - dys[j]);
+  }
+  return out;
+}
 
 /** Where the board tree sprite goes, in board units, so its top dot and
  *  bottom row land on the dots' first and last rows. */

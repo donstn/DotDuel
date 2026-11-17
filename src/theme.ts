@@ -49,9 +49,6 @@ export const THEMES: ThemeMeta[] = [
     tagline: 'Red and gold baubles on the tree.',
     swatch: { p1: '#a3162b', p2: '#f2c94c', bg: '#0b1f16' },
     season: { from: [12, 1], to: [1, 6] },
-    // Unlock when the painted art is in public/art/christmas/ (until then
-    // only the ?theme-preview=christmas preview can select it).
-    locked: true,
   },
   {
     id: 'royal-court',

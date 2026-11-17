@@ -30,6 +30,7 @@ import type { ResultShare } from './resultShareText';
 
 interface CardArt {
   sign: PanelArt;
+  dotScale: number;
   frame: NineArt;
   img: {
     background: HTMLImageElement;
@@ -81,6 +82,7 @@ async function loadCardArt(art: ThemeArt, state: GameState, shape: ShapeId): Pro
     [...lens].forEach((k, i) => line.set(k, strands[i]));
     return {
       sign: headerSign,
+      dotScale: board.dotScale ?? 1,
       frame: cardFrame,
       img: { background: bg, sign, frame, felt, dot: { 1: d1, 2: d2 }, line },
     };
@@ -247,7 +249,8 @@ function drawPaintedBoard(
     const x = px(d.x);
     const y = py(d.y);
     if (cd) {
-      ctx.drawImage(art.img.dot[cd.player], x - r, y - r, r * 2, r * 2);
+      const rr = r * art.dotScale;
+      ctx.drawImage(art.img.dot[cd.player], x - rr, y - rr, rr * 2, rr * 2);
     } else {
       const g = ctx.createRadialGradient(x - r * 0.2, y - r * 0.3, r * 0.05, x, y, r * 0.78);
       g.addColorStop(0, '#2a3a30');

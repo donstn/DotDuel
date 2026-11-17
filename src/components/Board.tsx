@@ -275,6 +275,7 @@ export function Board({
 }: Props) {
   const t = useT();
   const boardArt = themeArt(theme).board;
+  const dotScale = boardArt?.dotScale ?? 1;
   const paintedBoard = Boolean(boardArt);
   const board = displayBoard(state.shape, Boolean(themeArt(theme).treeTriangle));
   const vb = board.viewBox;
@@ -752,10 +753,10 @@ export function Board({
               {boardArt && ownerColor && (
                 <image
                   href={boardArt.dot(ownerColor)}
-                  x={d.x - dotRadius}
-                  y={d.y - dotRadius}
-                  width={dotRadius * 2}
-                  height={dotRadius * 2}
+                  x={d.x - dotRadius * dotScale}
+                  y={d.y - dotRadius * dotScale}
+                  width={dotRadius * 2 * dotScale}
+                  height={dotRadius * 2 * dotScale}
                   className={isLast ? 'dot-art-last' : undefined}
                   style={{ pointerEvents: 'none' }}
                   aria-hidden="true"

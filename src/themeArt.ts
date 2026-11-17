@@ -68,6 +68,9 @@ export interface ThemeArt {
     felt: string;
     dot: (color: 1 | 2) => string;
     line: (len: number, color: 1 | 2) => string;
+    /** Dot sprite size relative to the dot. Above 1 when the sprite is padded
+     *  square around something taller than the ball (a bauble's hanger cap). */
+    dotScale?: number;
   };
   avatars?: { human: string; bot: (level: Difficulty) => string };
   /** Win-celebration sprites. */
@@ -274,6 +277,7 @@ ART.christmas = {
     felt: '/art/christmas/felt-base.webp',
     dot: (c) => `/art/christmas/dot-p${c}.webp`,
     line: (len, c) => `/art/christmas/line-${len}-p${c}.webp`,
+    dotScale: 1.31,
   },
   particles: [
     '/art/christmas/particle-snow-1.webp',

@@ -16,7 +16,6 @@ import {
   setLetterSpacing,
   strikeEnds,
   themedQrSkin,
-  toPngBlob,
   truncate,
   wrapText,
   type Pt,
@@ -246,7 +245,9 @@ export interface VictoryCardInput {
   scanCaption: string;
 }
 
-export async function renderVictoryCard(input: VictoryCardInput): Promise<Blob> {
+/** Draws the card; the caller encodes it (JPEG to share, PNG only for the
+ *  clipboard, which accepts nothing else). */
+export async function renderVictoryCard(input: VictoryCardInput): Promise<HTMLCanvasElement> {
   // Make sure the display fonts are usable on canvas before measuring text.
   try {
     await Promise.all([
@@ -269,7 +270,7 @@ export async function renderVictoryCard(input: VictoryCardInput): Promise<Blob> 
   // Art loads before anything is drawn; if any of it fails the card falls back
   // to Glass Orb — a shared image with a missing sign or felt looks broken.
   if (!(await drawPaintedCard(ctx, input, art, readTheme()))) drawGlassCard(ctx, input);
-  return toPngBlob(canvas);
+  return canvas;
 }
 
 function drawGlassCard(

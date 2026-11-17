@@ -302,6 +302,12 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Beta 0.5.0.0': {
+        highlight: "DotDuel dabar – beta versija!",
+        changes: [
+          "Ačiū visiems, žaidusiems alfa versiją. Dar keli patobulinimai, ir DotDuel ateis į „Google Play“ visiems.",
+        ],
+      },
       'Alpha 0.4.28.0': {
         changes: [
           "Kalėdų tema (iki sausio 15 d.): raudoni ir auksiniai žaisliukai ant Kalėdų eglutės, blizgučių linijos ir sniegas, kai laimite.",

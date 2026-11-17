@@ -8503,7 +8503,7 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
   }
   /* The board's viewBox keeps an empty margin round the frame (room for the
      glow in portrait); sideways the frame grows into it. */
-  html:not([data-text-large]) .game-screen:not(.coach-screen) .board {
+  html:not([data-text-large]) .game-screen:not(.coach-screen) .board:not(.board-full-bleed) {
     transform: scale(1.15);
   }
   @supports (anchor-name: --a) {

@@ -3,7 +3,7 @@ import { displayBoard } from '../geometry';
 import { useT } from '../i18n';
 import type { BoardShape, GameState, Line, Player } from '../types';
 import type { ThemeId } from '../theme';
-import { themeArt, treeBox } from '../themeArt';
+import { frameSlices, themeArt, treeBox } from '../themeArt';
 
 interface ScoreEvent {
   dotId: number;
@@ -288,7 +288,20 @@ export function Board({
   const litWidth = dotRadius * 0.22; // lit inner-facet stroke width
   const recessBlur = feltMin * 0.013;
   const recessOff = feltMin * 0.0065;
+  // Christmas Square/Rectangle: a painted wreath replaces the bevel rim.
+  const wreath = state.shape !== 'triangle' ? boardArt?.frame : undefined;
+  const wreathBand = dotRadius * 2.2;
   const framePad = feltGap + dotRadius * 0.25; // outer arc stays inside vbExp
+  // The wreath hugs the dots (the board viewBox has its own margin).
+  const wreathRect = useMemo(() => {
+    if (!wreath) return null;
+    const xs = board.dots.map((d) => d.x);
+    const ys = board.dots.map((d) => d.y);
+    const pad = feltGap * 0.95 + wreathBand;
+    const x = Math.min(...xs) - pad;
+    const y = Math.min(...ys) - pad;
+    return { x, y, w: Math.max(...xs) + pad - x, h: Math.max(...ys) + pad - y };
+  }, [board, wreath, feltGap, wreathBand]);
   // Christmas: the painted tree is the board (no felt, no rim); the view
   // grows to hold its star and tub.
   const tree =
@@ -301,7 +314,7 @@ export function Board({
         w: Math.max(treeRect.x + treeRect.w, vb.x + vb.w) - Math.min(treeRect.x, vb.x),
         h: treeRect.h,
       }
-    : {
+    : wreathRect ?? {
         x: vb.x - framePad,
         y: vb.y - framePad,
         w: vb.w + framePad * 2,
@@ -528,7 +541,14 @@ export function Board({
   return (
     <div className="board-wrap">
       <svg
-        className={spot ? 'board board-spotlight' : 'board'}
+        className={[
+          'board',
+          spot && 'board-spotlight',
+          // Painted tree / wreath fill the viewBox edge to edge (no margin).
+          (treeRect || wreathRect) && 'board-full-bleed',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         role="group"
         aria-label={t.game.boardAriaLabel(t.shapes[state.shape])}
         viewBox={`${vbExp.x} ${vbExp.y} ${vbExp.w} ${vbExp.h}`}
@@ -653,6 +673,25 @@ export function Board({
             pointerEvents="none"
             filter="url(#felt-recess)"
           />
+          {wreath ? (
+            frameSlices(wreath, wreathRect ?? vbExp, wreathBand).map((sl, i) => (
+              <svg
+                key={`wreath-${i}`}
+                x={sl.dx}
+                y={sl.dy}
+                width={sl.dw}
+                height={sl.dh}
+                viewBox={`${sl.sx} ${sl.sy} ${sl.sw} ${sl.sh}`}
+                preserveAspectRatio="none"
+                overflow="hidden"
+                pointerEvents="none"
+                aria-hidden="true"
+              >
+                <image href={wreath.url} width={wreath.width} height={wreath.height} />
+              </svg>
+            ))
+          ) : (
+          <>
           {/* 3. Dark contact band — the evenodd annulus between the two offset
               paths: the recessed valley where the bevel meets the felt. */}
           <path
@@ -670,6 +709,8 @@ export function Board({
             strokeWidth={litWidth}
             pointerEvents="none"
           />
+          </>
+          )}
           </>
         )}
 

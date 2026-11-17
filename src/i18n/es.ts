@@ -291,6 +291,12 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Beta 0.5.0.0': {
+        highlight: "¡DotDuel ya está en beta!",
+        changes: [
+          "Gracias a todos los que jugaron la alfa. Unas pocas mejoras más y DotDuel llegará a Google Play para todos.",
+        ],
+      },
       'Alpha 0.4.28.0': {
         changes: [
           "Tema de Navidad (hasta el 15 de enero): bolas rojas y doradas en un árbol de Navidad, líneas de espumillón y nieve cuando ganas.",

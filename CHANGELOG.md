@@ -3,7 +3,32 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.4.28.0] - 2026-11-17
+## [0.5.0.0] - 2026-11-17 (Android 1.14, versionCode 16)
+
+### Added
+
+- **Christmas wreath** around the Square and Rectangle boards (game + share
+  card): a painted nine-slice frame (`board.frame`, `frameSlices()` in
+  `src/themeArt.ts`); corners as painted, sides repeated a whole number of
+  times. Landscape no longer zooms full-bleed boards (tree, wreath) past
+  their box (`.board-full-bleed`).
+
+### Changed
+
+- **Alpha → Beta.** The version label is now `Beta 0.5.0.0` (`src/version.ts`);
+  nothing parses the prefix (footer, console log, `record_client` app version).
+  First step toward opening Google Play production.
+- **New app logo** (two glossy spheres joined by a light line): Play icon,
+  Android launcher (adaptive + themed + legacy + round), splash, PWA icon,
+  favicon, apple-touch icon, all built by `scripts/build-icons.mjs` from
+  `art-src/store/icon-master.png` + `icon-spheres.png` (replaces
+  `build-android-icons.mjs`).
+- **New link preview** (`public/og-card.png`): the carved forest sign with
+  the name on it. Source art + composer in `art-src/store/`.
+- **Store screenshots** for Beta in `play-store/screenshots-beta/` (phone,
+  7" and 10" tablet; 3 Christmas shots to swap out after 15 Jan).
+
+## [0.4.28.0] - 2026-11-17 (Android 1.13, versionCode 15)
 
 ### Added
 

@@ -301,6 +301,12 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Beta 0.5.0.0': {
+        highlight: "DotDuel je teď v betě!",
+        changes: [
+          "Díky všem, kdo hráli alfa verzi. Ještě pár vylepšení a DotDuel přijde na Google Play pro všechny.",
+        ],
+      },
       'Alpha 0.4.28.0': {
         changes: [
           "Vánoční motiv (do 15. ledna): červené a zlaté baňky na vánočním stromku, čáry z lamet a sníh, když vyhraješ.",

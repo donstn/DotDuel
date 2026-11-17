@@ -3,6 +3,15 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] - next Android build (versionCode 13)
+
+### Fixed
+
+- **"Share DotDuel" / invite opened the email app in the Android app** - an
+  Android WebView has no `navigator.share`, so the button fell through to the
+  `mailto:` branch. In the app it now opens the system share sheet via
+  `@capacitor/share` (`TellAFriendButton.tsx`); the web flow is unchanged.
+
 ## [0.4.27.1] - 2026-11-15 (Android 1.10, versionCode 12)
 
 ### Added

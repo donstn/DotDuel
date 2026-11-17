@@ -6,7 +6,10 @@
  * whose label overflows gets a smaller inline font-size, down to MIN_SCALE;
  * past that the CSS ellipsis still applies. Opt out with data-no-fit.
  */
-const SELECTOR = 'button, [role="button"], .fit-text, .rules-header h2';
+// Painted menu buttons clip their title on its own line (the button itself
+// never overflows), so the title is fitted directly.
+const SELECTOR =
+  'button, [role="button"], .fit-text, .rules-header h2, .menu-shelf-body strong';
 const MIN_SCALE = 0.65;
 
 function fit(el: HTMLElement): void {

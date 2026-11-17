@@ -903,6 +903,7 @@ export function Board({
             const imgW = lineImgH * LINE_THICKNESS_MULT[cIdx][artLen];
             const imgH = len;
             const groupRotate = angleDeg - 90;
+            const glow = boardArt.lineGlow?.[cIdx];
             return (
               <g
                 key={c.lineId}
@@ -911,6 +912,23 @@ export function Board({
                 opacity={0.75}
                 style={{ pointerEvents: 'none' }}
               >
+                {glow &&
+                  // Halo as two soft pills (no blur filter: GPU cost).
+                  [
+                    [1.7, 0.16],
+                    [1.25, 0.3],
+                  ].map(([k, o]) => (
+                    <rect
+                      key={k}
+                      x={(-imgW * k) / 2}
+                      y={-imgH / 2}
+                      width={imgW * k}
+                      height={imgH}
+                      rx={(imgW * k) / 2}
+                      fill={glow}
+                      opacity={o}
+                    />
+                  ))}
                 <image
                   href={boardArt.line(artLen, cIdx)}
                   x={-imgW / 2}

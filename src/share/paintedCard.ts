@@ -31,6 +31,7 @@ import type { ResultShare } from './resultShareText';
 interface CardArt {
   sign: PanelArt;
   dotScale: number;
+  lineGlow?: Partial<Record<Player, string>>;
   frame: NineArt;
   img: {
     background: HTMLImageElement;
@@ -87,6 +88,7 @@ async function loadCardArt(art: ThemeArt, state: GameState, shape: ShapeId): Pro
     return {
       sign: headerSign,
       dotScale: board.dotScale ?? 1,
+      lineGlow: board.lineGlow,
       frame: cardFrame,
       img: { background: bg, sign, frame, felt, dot: { 1: d1, 2: d2 }, line, tree },
     };
@@ -288,6 +290,19 @@ function drawPaintedBoard(
     ctx.save();
     ctx.translate((x1 + x2) / 2, (y1 + y2) / 2);
     ctx.rotate(Math.atan2(y2 - y1, x2 - x1) - Math.PI / 2);
+    const glow = art.lineGlow?.[c.player];
+    if (glow) {
+      // Same halo as the game board: two soft pills behind the strand.
+      ctx.fillStyle = glow;
+      for (const [k, o] of [[1.7, 0.16], [1.25, 0.3]]) {
+        const w = imgW * k;
+        ctx.globalAlpha = o;
+        ctx.beginPath();
+        ctx.roundRect(-w / 2, -len / 2, w, len, w / 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
     ctx.drawImage(img, -imgW / 2, -len / 2, imgW, len);
     ctx.restore();
   }

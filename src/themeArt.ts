@@ -71,6 +71,9 @@ export interface ThemeArt {
     /** Dot sprite size relative to the dot. Above 1 when the sprite is padded
      *  square around something taller than the ball (a bauble's hanger cap). */
     dotScale?: number;
+    /** Soft halo behind one player's line sprites, when they'd vanish on
+     *  their own dots (Christmas: red tinsel on red baubles). */
+    lineGlow?: Partial<Record<1 | 2, string>>;
     /** Triangle only: a painted tree that IS the board (replaces felt + rim).
      *  Pixel geometry in the sprite: the column of the tree's axis, and where
      *  the top dot's and bottom row's centres sit. */
@@ -289,6 +292,7 @@ ART.christmas = {
     dot: (c) => `/art/christmas/dot-p${c}.webp`,
     line: (len, c) => `/art/christmas/line-${len}-p${c}.webp`,
     dotScale: 1.31,
+    lineGlow: { 1: '#ffffff' },
     tree: {
       url: '/art/christmas/tree-board.webp',
       width: 904,

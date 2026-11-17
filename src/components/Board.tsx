@@ -3,7 +3,7 @@ import { displayBoard } from '../geometry';
 import { useT } from '../i18n';
 import type { BoardShape, GameState, Line, Player } from '../types';
 import type { ThemeId } from '../theme';
-import { themeArt } from '../themeArt';
+import { themeArt, treeBox } from '../themeArt';
 
 interface ScoreEvent {
   dotId: number;
@@ -289,12 +289,24 @@ export function Board({
   const recessBlur = feltMin * 0.013;
   const recessOff = feltMin * 0.0065;
   const framePad = feltGap + dotRadius * 0.25; // outer arc stays inside vbExp
-  const vbExp = {
-    x: vb.x - framePad,
-    y: vb.y - framePad,
-    w: vb.w + framePad * 2,
-    h: vb.h + framePad * 2,
-  };
+  // Christmas: the painted tree is the board (no felt, no rim); the view
+  // grows to hold its star and tub.
+  const tree =
+    state.shape === 'triangle' && themeArt(theme).treeTriangle ? boardArt?.tree : undefined;
+  const treeRect = useMemo(() => (tree ? treeBox(board.dots, tree) : null), [board, tree]);
+  const vbExp = treeRect
+    ? {
+        x: Math.min(treeRect.x, vb.x),
+        y: treeRect.y,
+        w: Math.max(treeRect.x + treeRect.w, vb.x + vb.w) - Math.min(treeRect.x, vb.x),
+        h: treeRect.h,
+      }
+    : {
+        x: vb.x - framePad,
+        y: vb.y - framePad,
+        w: vb.w + framePad * 2,
+        h: vb.h + framePad * 2,
+      };
   // Minkowski round-offset frame: constant gap + constant-radius arc corners, so
   // every shape (triangle apex included) frames with an even margin and identical
   // corner rounding. Two gaps -> a uniform-width annulus = the bevel facet.
@@ -615,37 +627,51 @@ export function Board({
           </filter>
         </defs>
 
-        {/* 1. Drop shadow — floats the board above the vignette. */}
-        <path
-          d={feltPathOuter}
-          fill={paintedBoard ? 'url(#board-felt-image)' : 'url(#board-felt)'}
-          pointerEvents="none"
-          style={{ filter: 'var(--rim-drop)' }}
-        />
-        {/* 2. Felt fill + recessed inner shadow (shape-matched, no blend modes). */}
-        <path
-          d={feltPathOuter}
-          fill={paintedBoard ? 'url(#board-felt-image)' : 'url(#board-felt)'}
-          pointerEvents="none"
-          filter="url(#felt-recess)"
-        />
-        {/* 3. Dark contact band — the evenodd annulus between the two offset
-            paths: the recessed valley where the bevel meets the felt. */}
-        <path
-          d={`${feltPathOuter} ${feltPathInner}`}
-          fillRule="evenodd"
-          fill="var(--rim-contact)"
-          pointerEvents="none"
-        />
-        {/* 4. Lit inner facet (raised bevel lip) — top-lit gradient stroke on the
-            inner path, inboard of the dark band, outboard of every dot. */}
-        <path
-          d={feltPathInner}
-          fill="none"
-          stroke="url(#board-rim)"
-          strokeWidth={litWidth}
-          pointerEvents="none"
-        />
+        {treeRect && tree ? (
+          <image
+            href={tree.url}
+            x={treeRect.x}
+            y={treeRect.y}
+            width={treeRect.w}
+            height={treeRect.h}
+            pointerEvents="none"
+            aria-hidden="true"
+          />
+        ) : (
+          <>
+          {/* 1. Drop shadow — floats the board above the vignette. */}
+          <path
+            d={feltPathOuter}
+            fill={paintedBoard ? 'url(#board-felt-image)' : 'url(#board-felt)'}
+            pointerEvents="none"
+            style={{ filter: 'var(--rim-drop)' }}
+          />
+          {/* 2. Felt fill + recessed inner shadow (shape-matched, no blend modes). */}
+          <path
+            d={feltPathOuter}
+            fill={paintedBoard ? 'url(#board-felt-image)' : 'url(#board-felt)'}
+            pointerEvents="none"
+            filter="url(#felt-recess)"
+          />
+          {/* 3. Dark contact band — the evenodd annulus between the two offset
+              paths: the recessed valley where the bevel meets the felt. */}
+          <path
+            d={`${feltPathOuter} ${feltPathInner}`}
+            fillRule="evenodd"
+            fill="var(--rim-contact)"
+            pointerEvents="none"
+          />
+          {/* 4. Lit inner facet (raised bevel lip) — top-lit gradient stroke on the
+              inner path, inboard of the dark band, outboard of every dot. */}
+          <path
+            d={feltPathInner}
+            fill="none"
+            stroke="url(#board-rim)"
+            strokeWidth={litWidth}
+            pointerEvents="none"
+          />
+          </>
+        )}
 
         {coach?.bands?.map((id) => {
           const line = linesById.get(id);

@@ -1,6 +1,6 @@
 import qrcode from 'qrcode-generator';
 import { displayBoard, getBoards } from '../geometry';
-import { themeArt } from '../themeArt';
+import { themeArt, treeBox } from '../themeArt';
 import type { ThemeId } from '../theme';
 import type { Player, ShapeId } from '../types';
 
@@ -153,6 +153,8 @@ export interface BoardLayout {
   hull: Pt[];
   feltGap: number;
   rimW: number;
+  /** Christmas Triangle: the painted tree that is the board, in canvas space. */
+  tree?: { url: string; x: number; y: number; w: number; h: number };
 }
 
 export function layoutBoard(
@@ -160,8 +162,24 @@ export function layoutBoard(
   rect: { x: number; y: number; w: number; h: number },
 ): BoardLayout {
   // Same orientation as the game board (the Christmas tree triangle).
-  const tree = themeArt(document.documentElement.dataset.theme as ThemeId | undefined).treeTriangle;
-  const board = displayBoard(shape, Boolean(tree));
+  const art = themeArt(document.documentElement.dataset.theme as ThemeId | undefined);
+  const board = displayBoard(shape, Boolean(art.treeTriangle));
+  const treeArt = shape === 'triangle' && art.treeTriangle ? art.board?.tree : undefined;
+  if (treeArt) {
+    // The tree (star to tub) is what has to fit; no felt margin.
+    const tb = treeBox(board.dots, treeArt);
+    const scale = Math.min(rect.w / tb.w, rect.h / tb.h);
+    const ox = rect.x + (rect.w - tb.w * scale) / 2 - tb.x * scale;
+    const oy = rect.y + (rect.h - tb.h * scale) / 2 - tb.y * scale;
+    const px = (x: number) => ox + x * scale;
+    const py = (y: number) => oy + y * scale;
+    const r = 0.31 * scale;
+    const hull = convexHull(board.dots.map((d) => ({ x: px(d.x), y: py(d.y) })));
+    return {
+      board, px, py, scale, r, hull, feltGap: r * 1.64, rimW: r * 0.5,
+      tree: { url: treeArt.url, x: px(tb.x), y: py(tb.y), w: tb.w * scale, h: tb.h * scale },
+    };
+  }
   const vb = board.viewBox;
   // Two-pass fit: the felt + rim extend past the dots by a dot-radius-derived
   // margin, so size the dot layout once, derive the margin, then refit.

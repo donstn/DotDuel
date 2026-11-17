@@ -71,6 +71,17 @@ export interface ThemeArt {
     /** Dot sprite size relative to the dot. Above 1 when the sprite is padded
      *  square around something taller than the ball (a bauble's hanger cap). */
     dotScale?: number;
+    /** Triangle only: a painted tree that IS the board (replaces felt + rim).
+     *  Pixel geometry in the sprite: the column of the tree's axis, and where
+     *  the top dot's and bottom row's centres sit. */
+    tree?: {
+      url: string;
+      width: number;
+      height: number;
+      axisX: number;
+      topDotY: number;
+      bottomRowY: number;
+    };
   };
   avatars?: { human: string; bot: (level: Difficulty) => string };
   /** Win-celebration sprites. */
@@ -278,6 +289,14 @@ ART.christmas = {
     dot: (c) => `/art/christmas/dot-p${c}.webp`,
     line: (len, c) => `/art/christmas/line-${len}-p${c}.webp`,
     dotScale: 1.31,
+    tree: {
+      url: '/art/christmas/tree-board.webp',
+      width: 904,
+      height: 977,
+      axisX: 452,
+      topDotY: 223,
+      bottomRowY: 800,
+    },
   },
   particles: [
     '/art/christmas/particle-snow-1.webp',
@@ -292,6 +311,25 @@ ART.christmas = {
     landscape: '/art/christmas/background-landscape.webp',
   },
 };
+
+/** Where the board tree sprite goes, in board units, so its top dot and
+ *  bottom row land on the dots' first and last rows. */
+export function treeBox(
+  dots: readonly { x: number; y: number }[],
+  tree: NonNullable<NonNullable<ThemeArt['board']>['tree']>,
+): { x: number; y: number; w: number; h: number } {
+  const ys = dots.map((d) => d.y);
+  const xs = dots.map((d) => d.x);
+  const top = Math.min(...ys);
+  const s = (Math.max(...ys) - top) / (tree.bottomRowY - tree.topDotY);
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+  return {
+    x: cx - tree.axisX * s,
+    y: top - tree.topDotY * s,
+    w: tree.width * s,
+    h: tree.height * s,
+  };
+}
 
 export function themeArt(theme: ThemeId | undefined): ThemeArt {
   return (theme && ART[theme]) || {};

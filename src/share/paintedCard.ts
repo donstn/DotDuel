@@ -40,6 +40,8 @@ interface CardArt {
     dot: Record<Player, HTMLImageElement>;
     /** Strand sprites by `${len}-${player}`, lengths 2–9. */
     line: Map<string, HTMLImageElement>;
+    /** Christmas Triangle board tree, when the theme has one. */
+    tree?: HTMLImageElement;
   };
 }
 
@@ -66,13 +68,15 @@ async function loadCardArt(art: ThemeArt, state: GameState, shape: ShapeId): Pro
     if (len != null) lens.add(lineKey(strandLen(len), c.player));
   }
   try {
-    const [bg, sign, frame, felt, d1, d2, ...strands] = await Promise.all([
+    const treeUrl = shape === 'triangle' && art.treeTriangle ? board.tree?.url : undefined;
+    const [bg, sign, frame, felt, d1, d2, tree, ...strands] = await Promise.all([
       loadImage(background.landscape),
       loadImage(headerSign.url),
       loadImage(cardFrame.url),
       loadImage(board.felt),
       loadImage(board.dot(1)),
       loadImage(board.dot(2)),
+      treeUrl ? loadImage(treeUrl) : Promise.resolve(undefined),
       ...[...lens].map((k) => {
         const [len, p] = k.split('-').map(Number);
         return loadImage(board.line(len, p as Player));
@@ -84,7 +88,7 @@ async function loadCardArt(art: ThemeArt, state: GameState, shape: ShapeId): Pro
       sign: headerSign,
       dotScale: board.dotScale ?? 1,
       frame: cardFrame,
-      img: { background: bg, sign, frame, felt, dot: { 1: d1, 2: d2 }, line },
+      img: { background: bg, sign, frame, felt, dot: { 1: d1, 2: d2 }, line, tree },
     };
   } catch {
     return null;
@@ -203,45 +207,50 @@ function drawPaintedBoard(
   const left = Math.min(...hull.map((p) => p.x)) - feltGap - rimW;
   const right = Math.max(...hull.map((p) => p.x)) + feltGap + rimW;
 
-  // Bezel rim, top-lit, floated on a drop shadow; dark contact band inside.
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.6)';
-  ctx.shadowBlur = 30 * SCALE;
-  ctx.shadowOffsetY = 12 * SCALE;
-  const rim = ctx.createLinearGradient(0, top, 0, bot);
-  rim.addColorStop(0, theme.rimHi);
-  rim.addColorStop(0.5, theme.felt1);
-  rim.addColorStop(1, theme.rimLo);
-  fillSilhouette(ctx, hull, feltGap + rimW, rim);
-  ctx.restore();
-  fillSilhouette(ctx, hull, feltGap + rimW * 0.36, theme.rimLo);
+  if (l.tree && art.img.tree) {
+    // Christmas Triangle: the painted tree is the board.
+    ctx.drawImage(art.img.tree, l.tree.x, l.tree.y, l.tree.w, l.tree.h);
+  } else {
+    // Bezel rim, top-lit, floated on a drop shadow; dark contact band inside.
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = 30 * SCALE;
+    ctx.shadowOffsetY = 12 * SCALE;
+    const rim = ctx.createLinearGradient(0, top, 0, bot);
+    rim.addColorStop(0, theme.rimHi);
+    rim.addColorStop(0.5, theme.felt1);
+    rim.addColorStop(1, theme.rimLo);
+    fillSilhouette(ctx, hull, feltGap + rimW, rim);
+    ctx.restore();
+    fillSilhouette(ctx, hull, feltGap + rimW * 0.36, theme.rimLo);
 
-  // Moss felt: the silhouette on an offscreen layer, the felt art composited
-  // into it, then darkened toward the edge so it reads as recessed.
-  const layer = document.createElement('canvas');
-  layer.width = W * SCALE;
-  layer.height = H * SCALE;
-  const lc = layer.getContext('2d');
-  if (lc) {
-    lc.scale(SCALE, SCALE);
-    fillSilhouette(lc, hull, feltGap, '#000');
-    lc.globalCompositeOperation = 'source-in';
-    drawCover(lc, art.img.felt, left, top, right - left, bot - top);
-    lc.globalCompositeOperation = 'source-atop';
-    const span = Math.max(right - left, bot - top);
-    const shade = lc.createRadialGradient(
-      (left + right) / 2,
-      top + (bot - top) * 0.42,
-      span * 0.2,
-      (left + right) / 2,
-      (top + bot) / 2,
-      span * 0.62,
-    );
-    shade.addColorStop(0, 'rgba(0,0,0,0)');
-    shade.addColorStop(1, 'rgba(0,0,0,0.42)');
-    lc.fillStyle = shade;
-    lc.fillRect(left, top, right - left, bot - top);
-    ctx.drawImage(layer, 0, 0, W, H);
+    // Moss felt: the silhouette on an offscreen layer, the felt art composited
+    // into it, then darkened toward the edge so it reads as recessed.
+    const layer = document.createElement('canvas');
+    layer.width = W * SCALE;
+    layer.height = H * SCALE;
+    const lc = layer.getContext('2d');
+    if (lc) {
+      lc.scale(SCALE, SCALE);
+      fillSilhouette(lc, hull, feltGap, '#000');
+      lc.globalCompositeOperation = 'source-in';
+      drawCover(lc, art.img.felt, left, top, right - left, bot - top);
+      lc.globalCompositeOperation = 'source-atop';
+      const span = Math.max(right - left, bot - top);
+      const shade = lc.createRadialGradient(
+        (left + right) / 2,
+        top + (bot - top) * 0.42,
+        span * 0.2,
+        (left + right) / 2,
+        (top + bot) / 2,
+        span * 0.62,
+      );
+      shade.addColorStop(0, 'rgba(0,0,0,0)');
+      shade.addColorStop(1, 'rgba(0,0,0,0.42)');
+      lc.fillStyle = shade;
+      lc.fillRect(left, top, right - left, bot - top);
+      ctx.drawImage(layer, 0, 0, W, H);
+    }
   }
 
   for (const d of board.dots) {

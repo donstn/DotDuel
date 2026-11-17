@@ -1,5 +1,7 @@
 import qrcode from 'qrcode-generator';
-import { getBoards } from '../geometry';
+import { displayBoard, getBoards } from '../geometry';
+import { themeArt } from '../themeArt';
+import type { ThemeId } from '../theme';
 import type { Player, ShapeId } from '../types';
 
 /** Shared canvas plumbing for the share-card renderers (victoryCard.ts). */
@@ -157,7 +159,9 @@ export function layoutBoard(
   shape: ShapeId,
   rect: { x: number; y: number; w: number; h: number },
 ): BoardLayout {
-  const board = getBoards()[shape];
+  // Same orientation as the game board (the Christmas tree triangle).
+  const tree = themeArt(document.documentElement.dataset.theme as ThemeId | undefined).treeTriangle;
+  const board = displayBoard(shape, Boolean(tree));
   const vb = board.viewBox;
   // Two-pass fit: the felt + rim extend past the dots by a dot-radius-derived
   // margin, so size the dot layout once, derive the margin, then refit.

@@ -279,6 +279,7 @@ export const pl: Messages = {
     done: 'Gotowe',
     taglines: {
       'forest-pearl': 'Oryginał. Szmaragd na nefrytowej winiecie.',
+      christmas: 'Czerwone i złote bombki na choince.',
       'royal-court': 'Fioletowy aksamit kontra stare złoto.',
       'tempo-rivals': 'Wino kontra błękit nieba. Klasyka.',
       'sunset-catan': 'Terakotowe pustynie, pergaminowe pionki.',

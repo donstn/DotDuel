@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getBoard } from '../geometry';
+import { displayBoard } from '../geometry';
 import { useT } from '../i18n';
-import type { GameState, Line, Player } from '../types';
+import type { BoardShape, GameState, Line, Player } from '../types';
 import type { ThemeId } from '../theme';
 import { themeArt } from '../themeArt';
 
@@ -85,7 +85,7 @@ export const LINE_THICKNESS_MULT: Record<1 | 2, Record<number, number>> = {
 };
 
 function kindDirection(
-  board: ReturnType<typeof getBoard>,
+  board: BoardShape,
   kind: Line['kind']
 ): { ux: number; uy: number } {
   const sample = board.lines.find((l) => l.kind === kind && l.dotIds.length >= 2);
@@ -100,7 +100,7 @@ function kindDirection(
 }
 
 function lineEndpoints(
-  board: ReturnType<typeof getBoard>,
+  board: BoardShape,
   line: Line,
   overshoot: number
 ): { x1: number; y1: number; x2: number; y2: number } {
@@ -276,7 +276,7 @@ export function Board({
   const t = useT();
   const boardArt = themeArt(theme).board;
   const paintedBoard = Boolean(boardArt);
-  const board = getBoard(state.shape);
+  const board = displayBoard(state.shape, Boolean(themeArt(theme).treeTriangle));
   const vb = board.viewBox;
   const dotRadius = state.shape === 'triangle' ? 0.32 : 0.34;
   const strokeWidth = dotRadius * 0.42;

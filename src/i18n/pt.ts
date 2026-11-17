@@ -267,6 +267,7 @@ export const pt: Messages = {
     done: 'Concluído',
     taglines: {
       'forest-pearl': 'O original. Esmeralda sobre vinheta jade.',
+      christmas: 'Bolas vermelhas e douradas na árvore.',
       'royal-court': 'Veludo violeta contra ouro antigo.',
       'tempo-rivals': 'Vermelho-vinho contra azul-céu. Clássico.',
       'sunset-catan': 'Desertos de terracota, peças de pergaminho.',

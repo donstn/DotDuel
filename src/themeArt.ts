@@ -72,6 +72,12 @@ export interface ThemeArt {
   avatars?: { human: string; bot: (level: Difficulty) => string };
   /** Win-celebration sprites. */
   particles?: string[];
+  /** Win celebration style: fireworks + confetti (default) or a gentle
+   *  snowfall of the particle sprites only. */
+  celebration?: 'fireworks' | 'snow';
+  /** Draw the Triangle board pointing UP (a tree) instead of down. Pure
+   *  rendering: the same dots and lines, mirrored top to bottom. */
+  treeTriangle?: boolean;
   /** Achievement badges: a medal frame per tier (1–5) and painted glyphs. */
   achievements?: { frames: MedalFrame[]; icon: (key: string) => string | undefined };
   /** Full-screen scenery behind the vignette. */
@@ -250,6 +256,30 @@ const ART: Partial<Record<ThemeId, ThemeArt>> = {
       rectangle: '/art/forest-pearl/menu-icon-shape-rectangle.webp',
       rhombus: '/art/forest-pearl/menu-icon-shape-rhombus.webp',
     },
+  },
+};
+
+// Seasonal: Forest & Pearl's green chrome, buttons, frames and avatars, with
+// its own board (tree-shaped triangle, baubles, garlands), background and
+// snow. Prompts: docs/art/sheet-christmas.md.
+ART.christmas = {
+  ...ART['forest-pearl'],
+  board: {
+    felt: '/art/christmas/felt-base.webp',
+    dot: (c) => `/art/christmas/dot-p${c}.webp`,
+    line: (len, c) => `/art/christmas/line-${len}-p${c}.webp`,
+  },
+  particles: [
+    '/art/christmas/particle-snow-1.webp',
+    '/art/christmas/particle-snow-2.webp',
+    '/art/christmas/particle-snow-3.webp',
+    '/art/christmas/particle-snow-4.webp',
+  ],
+  celebration: 'snow',
+  treeTriangle: true,
+  background: {
+    portrait: '/art/christmas/background-portrait.webp',
+    landscape: '/art/christmas/background-landscape.webp',
   },
 };
 

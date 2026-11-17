@@ -277,6 +277,7 @@ export const cs: Messages = {
     done: 'Hotovo',
     taglines: {
       'forest-pearl': 'Originál. Smaragd na nefritové vinětě.',
+      christmas: 'Červené a zlaté ozdoby na stromku.',
       'royal-court': 'Fialový samet proti starému zlatu.',
       'tempo-rivals': 'Vínová červeň proti nebeské modři. Klasika.',
       'sunset-catan': 'Terakotové pouště, pergamenové figurky.',

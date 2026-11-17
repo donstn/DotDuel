@@ -657,9 +657,39 @@ html[data-art~="background"] body {
    Re-tint darker and more opaque specifically for this theme so text stays
    legible against the busy art, without changing the look of any of the
    other 7 themes (which never match these selectors). */
-html[data-theme="forest-pearl"] {
+html[data-theme="forest-pearl"],
+html[data-theme="christmas"] {
   --glass-bg: rgba(6, 16, 11, 0.55);
   --glass-bg-strong: rgba(6, 16, 11, 0.72);
+}
+
+/* ---------- Seasonal: Christmas (red vs gold baubles on the tree) ----------
+   Shares Forest & Pearl's green chrome and painted UI; only the two player
+   families change. Dark red vs bright gold keeps them apart by luminance
+   alone (CVD rule), so red-green colour blindness doesn't matter. */
+html[data-theme="christmas"] {
+  --p1: #7a0f1f;
+  --p1-glow: #a3162b;
+  --p1-bright: #e8475c;
+  --p1-deep: #2a0309;
+  --p1-rgb-bright: 232, 71, 92;
+  --p1-rgb-glow: 163, 22, 43;
+  --strike-p1-outer: #b3243a;
+  --strike-p1-inner: #ffc2cb;
+  --avatar-p1-fg: #ffd1d8;
+
+  --p2: #e0b23a;
+  --p2-glow: #f2c94c;
+  --p2-bright: #fff3c4;
+  --p2-deep: #6b4a08;
+  --p2-rgb-bright: 255, 243, 196;
+  --p2-rgb-glow: 242, 201, 76;
+  --strike-p2-outer: #d9a82e;
+  --strike-p2-inner: #fff8dc;
+  --avatar-p2-fg: #3a2805;
+
+  --bg-center: #0f2a1d;
+  --bg-edge: #020a06;
 }
 
 /* Subtle film-grain overlay across the whole app for organic depth */

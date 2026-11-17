@@ -8,6 +8,7 @@
 
 export type ThemeId =
   | 'forest-pearl'
+  | 'christmas'
   | 'royal-court'
   | 'tempo-rivals'
   | 'sunset-catan'
@@ -29,6 +30,10 @@ export interface ThemeMeta {
   // refuses to load one even from a pre-existing saved preference) until
   // each gets its own art pass. Flip to false per-theme as that happens.
   locked?: boolean;
+  /** Seasonal theme: only offered between these dates (month 1–12, day),
+   *  inclusive, wrapping over New Year. Out of season it is hidden from the
+   *  picker and a saved choice falls back to the default. */
+  season?: { from: [number, number]; to: [number, number] };
 }
 
 export const THEMES: ThemeMeta[] = [
@@ -37,6 +42,16 @@ export const THEMES: ThemeMeta[] = [
     label: 'Forest & Pearl',
     tagline: 'The original. Emerald on jade vignette.',
     swatch: { p1: '#1c7a3d', p2: '#f0fbcf', bg: '#15291e' },
+  },
+  {
+    id: 'christmas',
+    label: 'Christmas',
+    tagline: 'Red and gold baubles on the tree.',
+    swatch: { p1: '#a3162b', p2: '#f2c94c', bg: '#0b1f16' },
+    season: { from: [12, 1], to: [1, 6] },
+    // Unlock when the painted art is in public/art/christmas/ (until then
+    // only the ?theme-preview=christmas preview can select it).
+    locked: true,
   },
   {
     id: 'royal-court',
@@ -98,10 +113,45 @@ function isThemeId(s: unknown): s is ThemeId {
   return typeof s === 'string' && THEMES.some((t) => t.id === s);
 }
 
+/** Preview a seasonal theme out of season: open the site with
+ *  `?theme-preview=christmas` (remembered on this device until cleared with
+ *  `?theme-preview=off`). For checking art before the season starts. */
+const PREVIEW_KEY = 'dotduel:theme-preview:v1';
+function previewTheme(): string | null {
+  try {
+    const q = new URLSearchParams(window.location.search).get('theme-preview');
+    if (q === 'off') localStorage.removeItem(PREVIEW_KEY);
+    else if (q) localStorage.setItem(PREVIEW_KEY, q);
+    return localStorage.getItem(PREVIEW_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function inSeason(season: NonNullable<ThemeMeta['season']>, now: Date): boolean {
+  const md = (m: number, d: number) => m * 100 + d;
+  const today = md(now.getMonth() + 1, now.getDate());
+  const from = md(...season.from);
+  const to = md(...season.to);
+  return from <= to ? today >= from && today <= to : today >= from || today <= to;
+}
+
+/** Shown in the theme picker at all (seasonal themes only in season). */
+export function isThemeOffered(meta: ThemeMeta, now = new Date()): boolean {
+  if (!meta.season) return true;
+  return inSeason(meta.season, now) || previewTheme() === meta.id;
+}
+
+/** Selectable: offered and not locked. */
+export function isThemeSelectable(meta: ThemeMeta, now = new Date()): boolean {
+  if (previewTheme() === meta.id) return true;
+  return !meta.locked && isThemeOffered(meta, now);
+}
+
 export function loadTheme(): ThemeId {
   try {
     const raw = localStorage.getItem(KEY);
-    if (isThemeId(raw) && !getThemeMeta(raw).locked) return raw;
+    if (isThemeId(raw) && isThemeSelectable(getThemeMeta(raw))) return raw;
   } catch {
     // localStorage may throw in private mode — fall through to default.
   }

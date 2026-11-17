@@ -170,3 +170,20 @@ export function getBoards(): Record<ShapeId, BoardShape> {
 export function getBoard(id: ShapeId): BoardShape {
   return getBoards()[id];
 }
+
+const treeBoards = new Map<ShapeId, BoardShape>();
+/** The board as drawn. With `tree` (a theme's treeTriangle) the Triangle is
+ *  mirrored top to bottom so it points up; dot ids, lines and rules are the
+ *  same, only the y coordinates change. */
+export function displayBoard(id: ShapeId, tree: boolean): BoardShape {
+  const board = getBoard(id);
+  if (!tree || id !== 'triangle') return board;
+  let flipped = treeBoards.get(id);
+  if (!flipped) {
+    const ys = board.dots.map((d) => d.y);
+    const sum = Math.min(...ys) + Math.max(...ys);
+    flipped = { ...board, dots: board.dots.map((d) => ({ ...d, y: sum - d.y })) };
+    treeBoards.set(id, flipped);
+  }
+  return flipped;
+}

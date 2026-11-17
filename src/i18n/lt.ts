@@ -278,6 +278,7 @@ export const lt: Messages = {
     done: 'Atlikta',
     taglines: {
       'forest-pearl': 'Originalioji. Smaragdas ant žalsvo fono.',
+      christmas: 'Raudoni ir auksiniai žaisliukai ant eglutės.',
       'royal-court': 'Violetinis aksomas prieš senovinį auksą.',
       'tempo-rivals': 'Vyno raudonis prieš dangaus mėlyną. Klasika.',
       'sunset-catan': 'Terakotos dykumos, pergamento figūros.',

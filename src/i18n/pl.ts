@@ -302,6 +302,14 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.27.2': {
+        changes: [
+          "Przycisk „Udostępnij DotDuel” w aplikacji na Androida otwiera teraz menu udostępniania telefonu.",
+          "Przy uruchamianiu aplikacja nie pokazuje już na moment starego ekranu meczu ani białego ekranu.",
+          "Jeśli „Pobierz moje dane” się nie powiedzie, zobaczysz teraz komunikat zamiast braku reakcji.",
+          "Aby zapobiec spamowi, możesz mieć najwyżej 10 zaproszeń do znajomych bez odpowiedzi i wysłać najwyżej 10 zaproszeń do gry w ciągu 5 minut.",
+        ],
+      },
       'Alpha 0.4.27.1': {
         changes: [
           "Aplikacja na Androida informuje teraz, gdy w Google Play jest dostępna nowa wersja.",

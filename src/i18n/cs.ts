@@ -300,6 +300,14 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.27.2': {
+        changes: [
+          "Tlačítko „Sdílet DotDuel“ v aplikaci pro Android teď otevře nabídku sdílení v telefonu.",
+          "Při spuštění aplikace už neprobliká stará obrazovka zápasu ani bílá obrazovka.",
+          "Když se „Stáhnout moje data“ nepovede, uvidíš teď zprávu místo toho, aby se nic nestalo.",
+          "Proti spamu můžeš mít nejvýš 10 nezodpovězených žádostí o přátelství a poslat nejvýš 10 pozvánek ke hře za 5 minut.",
+        ],
+      },
       'Alpha 0.4.27.1': {
         changes: [
           "Aplikace pro Android vás nyní upozorní, když je v Google Play nová verze.",

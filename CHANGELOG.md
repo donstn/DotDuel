@@ -3,7 +3,14 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased] - next Android build (versionCode 13)
+## [0.4.27.2] - 2026-11-17 (Android 1.11, versionCode 13)
+
+### Security
+
+- **Edge Functions use the new secret key** (`_shared/keys.ts` reads
+  `SUPABASE_SECRET_KEYS`), so the legacy service_role JWT can be disabled.
+  `submit-move` now runs with `verify_jwt = false` (it checks the caller
+  itself); the keep-warm cron ping used to get a 401 from the gateway.
 
 ### Fixed
 

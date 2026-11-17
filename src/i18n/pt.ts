@@ -290,6 +290,14 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.27.2': {
+        changes: [
+          "Compartilhar DotDuel agora abre o menu de compartilhamento do seu celular no app Android.",
+          "O app não mostra mais por um instante uma tela de partida antiga ou uma tela branca ao abrir.",
+          "Se Baixar meus dados falhar, agora você vê uma mensagem em vez de nada acontecer.",
+          "Para evitar spam, você pode ter no máximo 10 pedidos de amizade sem resposta e enviar no máximo 10 convites para jogar em 5 minutos.",
+        ],
+      },
       'Alpha 0.4.27.1': {
         changes: [
           "O app Android agora avisa quando há uma nova versão no Google Play.",

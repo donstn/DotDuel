@@ -301,6 +301,14 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.27.2': {
+        changes: [
+          "„Pasidalinti DotDuel“ dabar „Android“ programėlėje atidaro telefono bendrinimo meniu.",
+          "Paleidžiant programėlę nebešmėkšteli senas žaidimo ekranas ar baltas ekranas.",
+          "Jei „Atsisiųsti mano duomenis“ nepavyksta, dabar matote pranešimą, o ne nieko.",
+          "Kad nebūtų šlamšto, galite turėti ne daugiau kaip 10 neatsakytų draugystės prašymų ir per 5 minutes išsiųsti ne daugiau kaip 10 kvietimų žaisti.",
+        ],
+      },
       'Alpha 0.4.27.1': {
         changes: [
           "„Android“ programėlė dabar praneša, kai „Google Play“ yra nauja versija.",

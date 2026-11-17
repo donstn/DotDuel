@@ -467,8 +467,14 @@ export function drawQrTile(
   ctx.restore();
 }
 
-export function toPngBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+/** Encodes the card. JPEG is ~15× faster to encode than PNG here and ~9×
+ *  smaller (the film grain defeats PNG compression: 4.5 MB vs 0.5 MB). */
+export function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  type: 'image/png' | 'image/jpeg',
+  quality?: number,
+): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), type, quality);
   });
 }

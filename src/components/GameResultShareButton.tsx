@@ -1,40 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createShareCardLink, withCardLink } from '../cloud/shareCards';
 import { isNativeApp } from '../nativeAds';
 import { buildResultShare } from '../share/resultShareText';
 import type { ResultShare, ShareResultData } from '../share/resultShareText';
+import { canvasToBlob } from '../share/cardKit';
 import { renderVictoryCard } from '../share/victoryCard';
 import { trackEvent } from '../telemetry';
 import type { GameState } from '../types';
 import { useT } from '../i18n';
 
-const FILE_NAME = 'dotduel-result.png';
 const SHARE_FILE_NAME = 'dotduel-result.jpg';
-
-// The 2× card PNG is ~6MB (film grain defeats PNG compression). For the OS
-// share sheet we send a full-res JPEG q0.9 (~0.5MB) instead — messengers
-// transcode to JPEG on send anyway, and the grain dithers away any banding.
-// Clipboard (PNG-only API), download, and the dialog preview keep the PNG.
-async function toShareJpeg(png: Blob): Promise<Blob> {
-  try {
-    const bmp = await createImageBitmap(png);
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = bmp.width;
-      canvas.height = bmp.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return png;
-      ctx.drawImage(bmp, 0, 0);
-      return await new Promise<Blob>((resolve) => {
-        canvas.toBlob((b) => resolve(b ?? png), 'image/jpeg', 0.9);
-      });
-    } finally {
-      bmp.close();
-    }
-  } catch {
-    return png;
-  }
-}
 
 interface Props {
   data: ShareResultData;
@@ -59,7 +34,7 @@ function isUserCancel(e: unknown): boolean {
  *  Level 2 (mobile browsers). Returns the method used, null when the user
  *  dismissed the sheet, or 'unsupported' when no sheet exists (desktop). */
 async function tryNativeShare(
-  blob: Blob,
+  jpeg: Blob,
   shareText: string,
   shareTitle: string,
 ): Promise<string | null> {
@@ -70,7 +45,7 @@ async function tryNativeShare(
     ]);
     const written = await Filesystem.writeFile({
       path: SHARE_FILE_NAME,
-      data: await blobToBase64(await toShareJpeg(blob)),
+      data: await blobToBase64(jpeg),
       directory: Directory.Cache,
     });
     try {
@@ -81,7 +56,7 @@ async function tryNativeShare(
       throw e;
     }
   }
-  const file = new File([await toShareJpeg(blob)], SHARE_FILE_NAME, {
+  const file = new File([jpeg], SHARE_FILE_NAME, {
     type: 'image/jpeg',
   });
   if (navigator.canShare?.({ files: [file] })) {
@@ -100,7 +75,7 @@ function downloadBlob(blob: Blob): void {
   const objUrl = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = objUrl;
-  a.download = FILE_NAME;
+  a.download = SHARE_FILE_NAME;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -126,9 +101,18 @@ function intentUrl(platform: string, share: ResultShare): string {
   }
 }
 
+/** The drawn card, ready to share: the canvas (for a PNG on demand) and the
+ *  JPEG that goes to the share sheet, download and preview. */
+interface Rendered {
+  share: ResultShare;
+  canvas: HTMLCanvasElement;
+  jpeg: Blob;
+}
+
 interface DialogState {
   share: ResultShare;
-  blob: Blob;
+  canvas: HTMLCanvasElement;
+  jpeg: Blob;
   previewUrl: string;
   /** True once share.url is the unfurling card link (image travels with it). */
   cardLink: boolean;
@@ -139,6 +123,43 @@ export function GameResultShareButton({ data, state }: Props) {
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogState | null>(null);
+  const rendered = useRef<Promise<Rendered> | null>(null);
+
+  const prepare = (): Promise<Rendered> => {
+    if (!rendered.current) {
+      const share = buildResultShare(data, t);
+      const job = renderVictoryCard({
+        share,
+        state,
+        shape: data.shape,
+        ptsLabel: t.share.result.ptsLabel,
+        scanCaption: t.share.result.scanCaption,
+      }).then(async (canvas) => ({
+        share,
+        canvas,
+        jpeg: await canvasToBlob(canvas, 'image/jpeg', 0.9),
+      }));
+      job.catch(() => {
+        if (rendered.current === job) rendered.current = null;
+      });
+      rendered.current = job;
+    }
+    return rendered.current;
+  };
+
+  // Draw the card while the player reads the result (after the win
+  // celebration has started, when the browser is idle), so a tap on Share
+  // opens the share sheet at once instead of waiting for the render.
+  useEffect(() => {
+    const warm = () => void prepare().catch(() => {});
+    const timer = window.setTimeout(() => {
+      if ('requestIdleCallback' in window) window.requestIdleCallback(warm, { timeout: 3000 });
+      else warm();
+    }, 2500);
+    return () => window.clearTimeout(timer);
+    // Once per Game Over card; the result doesn't change while it is open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Revoke on explicit close, NOT in the effect cleanup — StrictMode's dev
   // double-invoke would revoke the URL the remounted effect still renders.
@@ -173,37 +194,31 @@ export function GameResultShareButton({ data, state }: Props) {
 
   const onShare = async () => {
     if (busy) return;
-    const share = buildResultShare(data, t);
-    trackEvent('result_share_clicked', { mode: data.mode, outcome: share.outcome });
     setBusy(true);
     setFeedback(null);
     try {
-      const blob = await renderVictoryCard({
-        share,
-        state,
-        shape: data.shape,
-        ptsLabel: t.share.result.ptsLabel,
-        scanCaption: t.share.result.scanCaption,
-      });
+      const { share, canvas, jpeg } = await prepare();
+      trackEvent('result_share_clicked', { mode: data.mode, outcome: share.outcome });
       let outShare = share;
       if (isNativeApp()) {
         // The native plugin has no user-activation deadline — safe to upload
         // first so the shared text carries the unfurling card link.
-        const link = await createShareCardLink(share, blob);
+        const link = await createShareCardLink(share, jpeg);
         if (link) outShare = withCardLink(share, link);
       }
-      const method = await tryNativeShare(blob, outShare.shareText, t.share.title);
+      const method = await tryNativeShare(jpeg, outShare.shareText, t.share.title);
       if (method === 'unsupported') {
         setDialog({
           share: outShare,
-          blob,
-          previewUrl: URL.createObjectURL(blob),
+          canvas,
+          jpeg,
+          previewUrl: URL.createObjectURL(jpeg),
           cardLink: outShare !== share,
         });
         if (outShare === share) {
           // Upgrade the dialog's link in the background; window.open/copy get a
           // fresh activation per click, so the late swap is safe.
-          void createShareCardLink(share, blob).then((link) => {
+          void createShareCardLink(share, jpeg).then((link) => {
             if (!link) return;
             setDialog((d) =>
               d ? { ...d, share: withCardLink(d.share, link), cardLink: true } : d,
@@ -223,8 +238,10 @@ export function GameResultShareButton({ data, state }: Props) {
   const onCopyImage = async () => {
     if (!dialog) return;
     try {
+      // The clipboard takes PNG only; encoded on demand (a promise keeps the
+      // click's user activation while it encodes).
       await navigator.clipboard.write([
-        new ClipboardItem({ 'image/png': dialog.blob }),
+        new ClipboardItem({ 'image/png': canvasToBlob(dialog.canvas, 'image/png') }),
       ]);
       completed(dialog.share, 'copy-image');
       flash(t.share.imageCopied);
@@ -252,7 +269,7 @@ export function GameResultShareButton({ data, state }: Props) {
 
   const onDownload = () => {
     if (!dialog) return;
-    downloadBlob(dialog.blob);
+    downloadBlob(dialog.jpeg);
     completed(dialog.share, 'download');
     flash(t.share.imageSaved);
   };

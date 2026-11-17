@@ -295,11 +295,11 @@ ART.christmas = {
     lineGlow: { 1: '#ffffff' },
     tree: {
       url: '/art/christmas/tree-board.webp',
-      width: 904,
-      height: 977,
-      axisX: 452,
-      topDotY: 223,
-      bottomRowY: 800,
+      width: 806,
+      height: 984,
+      axisX: 403,
+      topDotY: 220,
+      bottomRowY: 745,
     },
   },
   particles: [

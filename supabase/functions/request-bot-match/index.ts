@@ -9,11 +9,12 @@
 // MVP shape: triangle, matching matchmake.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { openForBotWhenReady } from '../_shared/bot.ts';
+import { serverKey } from '../_shared/keys.ts';
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SERVICE_KEY = serverKey();
 
 const TIME_CONTROL_MS: Record<string, number> = {
   '1min': 60000,

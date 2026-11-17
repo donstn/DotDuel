@@ -417,3 +417,9 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # verification back on and every share link answers 401.
 [functions.r]
 verify_jwt = false
+
+# submit-move checks the caller itself (admin.auth.getUser) for every action
+# except the keep-warm ping, which pg_cron sends with no key. With the gateway
+# check on, that ping got a 401 and never warmed the function.
+[functions.submit-move]
+verify_jwt = false

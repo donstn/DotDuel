@@ -10,9 +10,10 @@
 // PUBLIC endpoint — deploy with `--no-verify-jwt` (crawlers carry no JWT).
 // Unknown/invalid ids redirect to the homepage, no error surface.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { serverKey } from '../_shared/keys.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SERVICE_KEY = serverKey();
 const HOME = 'https://www.dotduel.com/';
 
 function esc(s: string): string {

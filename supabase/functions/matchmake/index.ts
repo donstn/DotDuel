@@ -4,9 +4,10 @@
 // (Bots / fallback sweep / shape-unlock come later — MVP is human-vs-human on
 // triangle.)
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { serverKey } from '../_shared/keys.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SERVICE_KEY = serverKey();
 
 const TIME_CONTROL_MS: Record<string, number> = {
   '1min': 60000,

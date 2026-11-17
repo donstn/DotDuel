@@ -20,7 +20,7 @@ Two-player dot-coloring strategy game. Players alternate coloring dots on a geom
 - Apply SQL via the dashboard **SQL Editor** or `db query --linked` — NOT `db push` (CLI migration history intentionally out of sync).
 - Any `SECURITY DEFINER` RPC writing protected cols (rating/streak/presence) must `perform set_config('app.allow_protected_write','on',true)` first or the guard trigger reverts it.
 - `clock.turnStartedAt` is **epoch-ms**. Run `node scripts/copy-engine-supabase.cjs` before deploying engine-dependent Edge Functions.
-- Pending: retire the Firebase cloud project, rotate the Supabase access token + service-role key (both non-expiring, were pasted in chat).
+- Keys (2026-11-17): access token replaced, old secret key deleted, **legacy anon/service_role keys disabled**; Edge Functions use the new `sb_secret` key via `_shared/keys.ts` (`SUPABASE_SECRET_KEYS`). Never re-enable the legacy keys (that revives the leaked service_role key). Pending: revoke the legacy JWT secret (JWT Keys page, plan it so players are not signed out), delete the unused `keep-warm` function, retire the Firebase cloud project.
 
 ## Running it
 

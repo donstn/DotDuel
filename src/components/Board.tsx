@@ -927,26 +927,31 @@ export function Board({
         {(coach?.waiting ?? (showHints ? state.pending : [])).map((id) => {
           const line = linesById.get(id);
           if (!line) return null;
-          const e = lineEndpoints(board, line, dotRadius * 0.9);
-          const dash = `${dotRadius * 0.6} ${dotRadius * 0.55}`;
-          // Dark underlay with the same dash pattern outlines each dash, so it
-          // reads over cream strands and cream dots alike.
+          // A glowing rounded outline around the whole line (dots stay fully
+          // visible inside). The glow is stacked soft strokes, not a blur
+          // filter: filters are too costly on cheap phones (0.4.5.0 diet).
+          const e = lineEndpoints(board, line, dotRadius * 0.3);
+          const h = dotRadius * 2.9;
+          const w = Math.hypot(e.x2 - e.x1, e.y2 - e.y1) + h;
+          const angle = (Math.atan2(e.y2 - e.y1, e.x2 - e.x1) * 180) / Math.PI;
+          const capsule = {
+            x: -w / 2,
+            y: -h / 2,
+            width: w,
+            height: h,
+            rx: h / 2,
+            fill: 'none',
+          };
           return (
-            <g key={`wait-${id}`} style={{ pointerEvents: 'none' }}>
-              <line
-                {...e}
-                className="waiting-line-edge"
-                strokeWidth={dotRadius * 0.7}
-                strokeDasharray={dash}
-                strokeLinecap="round"
-              />
-              <line
-                {...e}
-                className="waiting-line"
-                strokeWidth={dotRadius * 0.44}
-                strokeDasharray={dash}
-                strokeLinecap="round"
-              />
+            <g
+              key={`wait-${id}`}
+              transform={`translate(${(e.x1 + e.x2) / 2} ${(e.y1 + e.y2) / 2}) rotate(${angle})`}
+              style={{ pointerEvents: 'none' }}
+            >
+              <rect {...capsule} className="waiting-glow" strokeWidth={dotRadius * 0.6} />
+              <rect {...capsule} className="waiting-glow-mid" strokeWidth={dotRadius * 0.32} />
+              <rect {...capsule} className="waiting-edge" strokeWidth={dotRadius * 0.2} />
+              <rect {...capsule} className="waiting-core" strokeWidth={dotRadius * 0.1} />
             </g>
           );
         })}

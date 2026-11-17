@@ -668,6 +668,9 @@ html[data-theme="christmas"] {
    families change. Dark red vs bright gold keeps them apart by luminance
    alone (CVD rule), so red-green colour blindness doesn't matter. */
 html[data-theme="christmas"] {
+  /* Frosty glow around unclaimed lines (gold is taken by the baubles). */
+  --waiting-core: #ffffff;
+  --waiting-glow: #9fd8ff;
   --p1: #7a0f1f;
   --p1-glow: #a3162b;
   --p1-bright: #e8475c;
@@ -2891,14 +2894,27 @@ h1, h2, h3,
   to { opacity: 1; }
 }
 
-/* Unclaimed (pending) line: one static dashed stroke, shown during the
-   learning window and in the lesson. Not gold — gold means "tap here". */
-.waiting-line {
-  stroke: #fffbea;
+/* Unclaimed (pending) line: a static glowing outline around the whole line,
+   shown vs the easy bots and in the lesson. Glow follows the theme
+   (--waiting-glow, default the accent); never gold — gold means "tap here". */
+:root {
+  --waiting-core: #fffbea;
+  --waiting-glow: var(--accent);
 }
-.waiting-line-edge {
+.waiting-glow {
+  stroke: var(--waiting-glow);
+  opacity: 0.3;
+}
+.waiting-glow-mid {
+  stroke: var(--waiting-glow);
+  opacity: 0.6;
+}
+.waiting-edge {
   stroke: #06120b;
-  opacity: 0.9;
+  opacity: 0.55;
+}
+.waiting-core {
+  stroke: var(--waiting-core);
 }
 
 @keyframes pop {
@@ -8921,4 +8937,10 @@ html[data-text-large] .game-over-card h2 {
 html[data-text-large] .game-over {
   position: fixed;
   padding: 12px;
+}
+
+/* Light (paper) themes: an ink outline, since a cream core vanishes on paper. */
+html[data-theme="monochrome-pro"],
+html[data-theme="vintage-press"] {
+  --waiting-core: var(--accent);
 }

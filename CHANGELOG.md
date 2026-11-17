@@ -3,7 +3,14 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.4.27.2] - 2026-11-17 (Android 1.11, versionCode 13)
+## [0.4.27.2] - 2026-11-17 (Android 1.12, versionCode 14; vc13 was built but superseded)
+
+### Changed
+
+- **Uppercase button labels** (`styles.css`): every button except names,
+  language/theme/brand names, inline text links and card descriptions.
+  Painted menu-button titles shrink to fit (`fitText.ts`) instead of ending
+  in an ellipsis. Not in the in-app changelog (user choice).
 
 ### Security
 

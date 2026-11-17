@@ -411,3 +411,9 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# The share-link redirect is opened by link previews and browsers with no
+# session. Without this entry a bare `supabase functions deploy` turns JWT
+# verification back on and every share link answers 401.
+[functions.r]
+verify_jwt = false

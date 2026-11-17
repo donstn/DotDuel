@@ -264,6 +264,12 @@ const ART: Partial<Record<ThemeId, ThemeArt>> = {
 // snow. Prompts: docs/art/sheet-christmas.md.
 ART.christmas = {
   ...ART['forest-pearl'],
+  headerSign: {
+    url: '/art/christmas/header-combined.webp',
+    width: 1019,
+    height: 473,
+    text: { left: 0.09, top: 0.6, right: 0.09, bottom: 0.085 },
+  },
   board: {
     felt: '/art/christmas/felt-base.webp',
     dot: (c) => `/art/christmas/dot-p${c}.webp`,

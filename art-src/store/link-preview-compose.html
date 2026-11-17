@@ -1,0 +1,44 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Outfit;src:url(outfit-var.woff2) format('woff2');font-weight:100 900}
+html,body{margin:0;background:#000}
+</style></head><body><canvas id="c" width="1200" height="630"></canvas><script>
+(async()=>{
+await document.fonts.load('800 100px Outfit');
+const img=new Image();img.src='src.png';await img.decode();
+const c=document.getElementById('c'),x=c.getContext('2d');
+const W=1200,H=630,S=2.1,PX=258,PY=253,LINE_Y=255;
+const ox=W/2-PX*S, oy=H/2-PY*S, iw=512*S, ih=512*S;
+// 1. Sides: the scene itself, blown up, blurred, darkened.
+// Only the painting's outer 70px strips (tree trunks), stretched to the edges.
+x.filter='blur(10px) brightness(0.8)';
+x.drawImage(img,0,0,70,512,-20,oy,ox+70*S+20,ih);
+x.drawImage(img,442,0,70,512,ox+442*S,oy,W-(ox+442*S)+20,ih);
+x.filter='none';
+// 2. The painting, its left/right edges feathered into the sides.
+const lay=document.createElement('canvas');lay.width=W;lay.height=H;const l=lay.getContext('2d');
+l.imageSmoothingQuality='high';l.drawImage(img,ox,oy,iw,ih);
+l.globalCompositeOperation='destination-in';
+const g=l.createLinearGradient(ox,0,ox+iw,0);const f=110/iw;
+g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(f,'#000');g.addColorStop(1-f,'#000');g.addColorStop(1,'rgba(0,0,0,0)');
+l.fillStyle=g;l.fillRect(0,0,W,H);
+x.drawImage(lay,0,0);
+// 3. The glow line carried on to the card's edges.
+const ly=oy+LINE_Y*S;
+for(const [x0,x1] of [[0,ox+60*S],[ox+452*S,W]]){
+  x.save();x.shadowColor='rgba(123,219,149,0.9)';x.shadowBlur=14;
+  x.strokeStyle='rgba(190,245,210,0.95)';x.lineWidth=3;x.beginPath();x.moveTo(x0,ly);x.lineTo(x1,ly);x.stroke();x.restore();
+}
+// 4. The name on the empty panel.
+const cx=W/2, cy=oy+PY*S;
+x.font='800 122px Outfit';x.textAlign='center';x.textBaseline='middle';
+const t='DotDuel';
+x.save();x.shadowColor='rgba(123,219,149,0.75)';x.shadowBlur=26;
+x.lineJoin='round';x.lineWidth=14;x.strokeStyle='#0a3a1b';x.strokeText(t,cx,cy+4);x.restore();
+const tg=x.createLinearGradient(0,cy-60,0,cy+60);
+tg.addColorStop(0,'#ffffff');tg.addColorStop(0.45,'#f0fbcf');tg.addColorStop(1,'#c9e0a0');
+x.fillStyle=tg;x.fillText(t,cx,cy+4);
+// pearly highlight along the top
+x.save();x.globalCompositeOperation='source-atop';x.restore();
+window.__w=x.measureText(t).width;window.__done=true;
+})();
+</script></body></html>

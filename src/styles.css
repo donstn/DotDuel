@@ -7991,7 +7991,10 @@ html[data-art~="pill-button"] .coach-bubble-btn {
   --h: 36px;
   color: var(--accent);
 }
-html[data-art~="pill-button"] .share-action:not(.primary) {
+/* :hover too: the shared rule above sets 42px on hover, so a tapped pill
+   (sticky hover on phones) grew and shoved its neighbours. */
+html[data-art~="pill-button"] .share-action:not(.primary),
+html[data-art~="pill-button"] .share-action:not(.primary):hover {
   --h: 38px;
   font-size: 0.85rem;
 }

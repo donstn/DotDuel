@@ -12,14 +12,15 @@ const SELECTOR =
   'button, [role="button"], .fit-text, .rules-header h2, .menu-shelf-body strong';
 const MIN_SCALE = 0.65;
 
-function fit(el: HTMLElement): void {
-  if (el.closest('[data-no-fit], svg')) return;
-  // Only labels we shrank need resetting; the rest are pure reads, so a
-  // scan of unshrunk buttons doesn't force a layout per element.
+function reset(el: HTMLElement): void {
   if (el.dataset.fit) {
     el.style.fontSize = '';
     delete el.dataset.fit;
   }
+}
+
+function fit(el: HTMLElement): void {
+  if (el.closest('[data-no-fit], svg')) return;
   // Enlarged text (accessibility) wraps instead of shrinking back down.
   if (document.documentElement.hasAttribute('data-text-large')) return;
   if (el.scrollWidth <= el.clientWidth + 1) return;
@@ -37,7 +38,13 @@ function fit(el: HTMLElement): void {
 let queued = false;
 function fitAll(): void {
   queued = false;
-  document.querySelectorAll<HTMLElement>(SELECTOR).forEach(fit);
+  // Reset every shrunk label BEFORE measuring any: buttons sharing a
+  // flex row take each other's space, so fitting one by one from a
+  // half-shrunk row gave different sizes on every rescan (the share
+  // dialog's pills jumped on each tap).
+  const els = [...document.querySelectorAll<HTMLElement>(SELECTOR)];
+  els.forEach(reset);
+  els.forEach(fit);
 }
 function schedule(): void {
   if (queued) return;

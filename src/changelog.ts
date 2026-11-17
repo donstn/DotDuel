@@ -30,6 +30,22 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Alpha 0.4.28.0',
+    date: '2026-11-17',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Christmas theme (until 15 January): red and gold baubles on a Christmas tree, tinsel lines and snowfall when you win.',
+      },
+      {
+        kind: 'changed',
+        text: 'Unclaimed lines are now outlined with a soft glow instead of dashes.',
+      },
+      { kind: 'fixed', text: 'Sharing your result is much faster.' },
+      { kind: 'fixed', text: 'Share buttons no longer change size when you tap them.' },
+    ],
+  },
+  {
     version: 'Alpha 0.4.27.2',
     date: '2026-11-17',
     changes: [

@@ -300,6 +300,7 @@ export const en = {
     done: 'Done',
     taglines: {
       'forest-pearl': 'The original. Emerald on jade vignette.',
+      christmas: 'Red and gold baubles on the tree.',
       'royal-court': 'Violet velvet vs antique gold.',
       'tempo-rivals': 'Wine red vs sky blue. Classic.',
       'sunset-catan': 'Terracotta deserts, parchment pieces.',

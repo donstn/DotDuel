@@ -1,5 +1,7 @@
 import qrcode from 'qrcode-generator';
-import { getBoards } from '../geometry';
+import { displayBoard, getBoards } from '../geometry';
+import { themeArt, treeBox } from '../themeArt';
+import type { ThemeId } from '../theme';
 import type { Player, ShapeId } from '../types';
 
 /** Shared canvas plumbing for the share-card renderers (victoryCard.ts). */
@@ -151,13 +153,33 @@ export interface BoardLayout {
   hull: Pt[];
   feltGap: number;
   rimW: number;
+  /** Christmas Triangle: the painted tree that is the board, in canvas space. */
+  tree?: { url: string; x: number; y: number; w: number; h: number };
 }
 
 export function layoutBoard(
   shape: ShapeId,
   rect: { x: number; y: number; w: number; h: number },
 ): BoardLayout {
-  const board = getBoards()[shape];
+  // Same orientation as the game board (the Christmas tree triangle).
+  const art = themeArt(document.documentElement.dataset.theme as ThemeId | undefined);
+  const board = displayBoard(shape, Boolean(art.treeTriangle));
+  const treeArt = shape === 'triangle' && art.treeTriangle ? art.board?.tree : undefined;
+  if (treeArt) {
+    // The tree (star to tub) is what has to fit; no felt margin.
+    const tb = treeBox(board.dots, treeArt);
+    const scale = Math.min(rect.w / tb.w, rect.h / tb.h);
+    const ox = rect.x + (rect.w - tb.w * scale) / 2 - tb.x * scale;
+    const oy = rect.y + (rect.h - tb.h * scale) / 2 - tb.y * scale;
+    const px = (x: number) => ox + x * scale;
+    const py = (y: number) => oy + y * scale;
+    const r = 0.31 * scale;
+    const hull = convexHull(board.dots.map((d) => ({ x: px(d.x), y: py(d.y) })));
+    return {
+      board, px, py, scale, r, hull, feltGap: r * 1.64, rimW: r * 0.5,
+      tree: { url: treeArt.url, x: px(tb.x), y: py(tb.y), w: tb.w * scale, h: tb.h * scale },
+    };
+  }
   const vb = board.viewBox;
   // Two-pass fit: the felt + rim extend past the dots by a dot-radius-derived
   // margin, so size the dot layout once, derive the margin, then refit.
@@ -445,8 +467,14 @@ export function drawQrTile(
   ctx.restore();
 }
 
-export function toPngBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+/** Encodes the card. JPEG is ~15× faster to encode than PNG here and ~9×
+ *  smaller (the film grain defeats PNG compression: 4.5 MB vs 0.5 MB). */
+export function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  type: 'image/png' | 'image/jpeg',
+  quality?: number,
+): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), type, quality);
   });
 }

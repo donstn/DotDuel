@@ -277,6 +277,7 @@ export const cs: Messages = {
     done: 'Hotovo',
     taglines: {
       'forest-pearl': 'Originál. Smaragd na nefritové vinětě.',
+      christmas: 'Červené a zlaté ozdoby na stromku.',
       'royal-court': 'Fialový samet proti starému zlatu.',
       'tempo-rivals': 'Vínová červeň proti nebeské modři. Klasika.',
       'sunset-catan': 'Terakotové pouště, pergamenové figurky.',
@@ -300,6 +301,14 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Alpha 0.4.28.0': {
+        changes: [
+          "Vánoční motiv (do 15. ledna): červené a zlaté baňky na vánočním stromku, čáry z lamet a sníh, když vyhraješ.",
+          "Nezabrané čáry teď mají jemně zářící obrys místo čárkování.",
+          "Sdílení výsledku je teď mnohem rychlejší.",
+          "Tlačítka pro sdílení se po klepnutí už nemění velikost.",
+        ],
+      },
       'Alpha 0.4.27.2': {
         changes: [
           "Tlačítko „Sdílet DotDuel“ v aplikaci pro Android teď otevře nabídku sdílení v telefonu.",

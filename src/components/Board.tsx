@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getBoard } from '../geometry';
+import { displayBoard } from '../geometry';
 import { useT } from '../i18n';
-import type { GameState, Line, Player } from '../types';
+import type { BoardShape, GameState, Line, Player } from '../types';
 import type { ThemeId } from '../theme';
-import { themeArt } from '../themeArt';
+import { themeArt, treeBox } from '../themeArt';
 
 interface ScoreEvent {
   dotId: number;
@@ -85,7 +85,7 @@ export const LINE_THICKNESS_MULT: Record<1 | 2, Record<number, number>> = {
 };
 
 function kindDirection(
-  board: ReturnType<typeof getBoard>,
+  board: BoardShape,
   kind: Line['kind']
 ): { ux: number; uy: number } {
   const sample = board.lines.find((l) => l.kind === kind && l.dotIds.length >= 2);
@@ -100,7 +100,7 @@ function kindDirection(
 }
 
 function lineEndpoints(
-  board: ReturnType<typeof getBoard>,
+  board: BoardShape,
   line: Line,
   overshoot: number
 ): { x1: number; y1: number; x2: number; y2: number } {
@@ -275,8 +275,9 @@ export function Board({
 }: Props) {
   const t = useT();
   const boardArt = themeArt(theme).board;
+  const dotScale = boardArt?.dotScale ?? 1;
   const paintedBoard = Boolean(boardArt);
-  const board = getBoard(state.shape);
+  const board = displayBoard(state.shape, Boolean(themeArt(theme).treeTriangle));
   const vb = board.viewBox;
   const dotRadius = state.shape === 'triangle' ? 0.32 : 0.34;
   const strokeWidth = dotRadius * 0.42;
@@ -288,12 +289,24 @@ export function Board({
   const recessBlur = feltMin * 0.013;
   const recessOff = feltMin * 0.0065;
   const framePad = feltGap + dotRadius * 0.25; // outer arc stays inside vbExp
-  const vbExp = {
-    x: vb.x - framePad,
-    y: vb.y - framePad,
-    w: vb.w + framePad * 2,
-    h: vb.h + framePad * 2,
-  };
+  // Christmas: the painted tree is the board (no felt, no rim); the view
+  // grows to hold its star and tub.
+  const tree =
+    state.shape === 'triangle' && themeArt(theme).treeTriangle ? boardArt?.tree : undefined;
+  const treeRect = useMemo(() => (tree ? treeBox(board.dots, tree) : null), [board, tree]);
+  const vbExp = treeRect
+    ? {
+        x: Math.min(treeRect.x, vb.x),
+        y: treeRect.y,
+        w: Math.max(treeRect.x + treeRect.w, vb.x + vb.w) - Math.min(treeRect.x, vb.x),
+        h: treeRect.h,
+      }
+    : {
+        x: vb.x - framePad,
+        y: vb.y - framePad,
+        w: vb.w + framePad * 2,
+        h: vb.h + framePad * 2,
+      };
   // Minkowski round-offset frame: constant gap + constant-radius arc corners, so
   // every shape (triangle apex included) frames with an even margin and identical
   // corner rounding. Two gaps -> a uniform-width annulus = the bevel facet.
@@ -614,37 +627,51 @@ export function Board({
           </filter>
         </defs>
 
-        {/* 1. Drop shadow — floats the board above the vignette. */}
-        <path
-          d={feltPathOuter}
-          fill={paintedBoard ? 'url(#board-felt-image)' : 'url(#board-felt)'}
-          pointerEvents="none"
-          style={{ filter: 'var(--rim-drop)' }}
-        />
-        {/* 2. Felt fill + recessed inner shadow (shape-matched, no blend modes). */}
-        <path
-          d={feltPathOuter}
-          fill={paintedBoard ? 'url(#board-felt-image)' : 'url(#board-felt)'}
-          pointerEvents="none"
-          filter="url(#felt-recess)"
-        />
-        {/* 3. Dark contact band — the evenodd annulus between the two offset
-            paths: the recessed valley where the bevel meets the felt. */}
-        <path
-          d={`${feltPathOuter} ${feltPathInner}`}
-          fillRule="evenodd"
-          fill="var(--rim-contact)"
-          pointerEvents="none"
-        />
-        {/* 4. Lit inner facet (raised bevel lip) — top-lit gradient stroke on the
-            inner path, inboard of the dark band, outboard of every dot. */}
-        <path
-          d={feltPathInner}
-          fill="none"
-          stroke="url(#board-rim)"
-          strokeWidth={litWidth}
-          pointerEvents="none"
-        />
+        {treeRect && tree ? (
+          <image
+            href={tree.url}
+            x={treeRect.x}
+            y={treeRect.y}
+            width={treeRect.w}
+            height={treeRect.h}
+            pointerEvents="none"
+            aria-hidden="true"
+          />
+        ) : (
+          <>
+          {/* 1. Drop shadow — floats the board above the vignette. */}
+          <path
+            d={feltPathOuter}
+            fill={paintedBoard ? 'url(#board-felt-image)' : 'url(#board-felt)'}
+            pointerEvents="none"
+            style={{ filter: 'var(--rim-drop)' }}
+          />
+          {/* 2. Felt fill + recessed inner shadow (shape-matched, no blend modes). */}
+          <path
+            d={feltPathOuter}
+            fill={paintedBoard ? 'url(#board-felt-image)' : 'url(#board-felt)'}
+            pointerEvents="none"
+            filter="url(#felt-recess)"
+          />
+          {/* 3. Dark contact band — the evenodd annulus between the two offset
+              paths: the recessed valley where the bevel meets the felt. */}
+          <path
+            d={`${feltPathOuter} ${feltPathInner}`}
+            fillRule="evenodd"
+            fill="var(--rim-contact)"
+            pointerEvents="none"
+          />
+          {/* 4. Lit inner facet (raised bevel lip) — top-lit gradient stroke on the
+              inner path, inboard of the dark band, outboard of every dot. */}
+          <path
+            d={feltPathInner}
+            fill="none"
+            stroke="url(#board-rim)"
+            strokeWidth={litWidth}
+            pointerEvents="none"
+          />
+          </>
+        )}
 
         {coach?.bands?.map((id) => {
           const line = linesById.get(id);
@@ -752,10 +779,10 @@ export function Board({
               {boardArt && ownerColor && (
                 <image
                   href={boardArt.dot(ownerColor)}
-                  x={d.x - dotRadius}
-                  y={d.y - dotRadius}
-                  width={dotRadius * 2}
-                  height={dotRadius * 2}
+                  x={d.x - dotRadius * dotScale}
+                  y={d.y - dotRadius * dotScale}
+                  width={dotRadius * 2 * dotScale}
+                  height={dotRadius * 2 * dotScale}
                   className={isLast ? 'dot-art-last' : undefined}
                   style={{ pointerEvents: 'none' }}
                   aria-hidden="true"
@@ -876,6 +903,7 @@ export function Board({
             const imgW = lineImgH * LINE_THICKNESS_MULT[cIdx][artLen];
             const imgH = len;
             const groupRotate = angleDeg - 90;
+            const glow = boardArt.lineGlow?.[cIdx];
             return (
               <g
                 key={c.lineId}
@@ -884,6 +912,23 @@ export function Board({
                 opacity={0.75}
                 style={{ pointerEvents: 'none' }}
               >
+                {glow &&
+                  // Halo as two soft pills (no blur filter: GPU cost).
+                  [
+                    [1.7, 0.16],
+                    [1.25, 0.3],
+                  ].map(([k, o]) => (
+                    <rect
+                      key={k}
+                      x={(-imgW * k) / 2}
+                      y={-imgH / 2}
+                      width={imgW * k}
+                      height={imgH}
+                      rx={(imgW * k) / 2}
+                      fill={glow}
+                      opacity={o}
+                    />
+                  ))}
                 <image
                   href={boardArt.line(artLen, cIdx)}
                   x={-imgW / 2}
@@ -926,26 +971,34 @@ export function Board({
         {(coach?.waiting ?? (showHints ? state.pending : [])).map((id) => {
           const line = linesById.get(id);
           if (!line) return null;
-          const e = lineEndpoints(board, line, dotRadius * 0.9);
-          const dash = `${dotRadius * 0.6} ${dotRadius * 0.55}`;
-          // Dark underlay with the same dash pattern outlines each dash, so it
-          // reads over cream strands and cream dots alike.
+          // A glowing rounded outline around the whole line (dots stay fully
+          // visible inside). The glow is stacked soft strokes, not a blur
+          // filter: filters are too costly on cheap phones (0.4.5.0 diet).
+          // Straight sides, softly rounded corners; a 1-point corner line
+          // gets a circle (a box around one dot reads as a tilted square).
+          const single = line.dotIds.length === 1;
+          const e = lineEndpoints(board, line, single ? 0 : dotRadius * 0.3);
+          const h = dotRadius * 2.9;
+          const w = Math.hypot(e.x2 - e.x1, e.y2 - e.y1) + h;
+          const angle = (Math.atan2(e.y2 - e.y1, e.x2 - e.x1) * 180) / Math.PI;
+          const capsule = {
+            x: -w / 2,
+            y: -h / 2,
+            width: w,
+            height: h,
+            rx: single ? h / 2 : h * 0.22,
+            fill: 'none',
+          };
           return (
-            <g key={`wait-${id}`} style={{ pointerEvents: 'none' }}>
-              <line
-                {...e}
-                className="waiting-line-edge"
-                strokeWidth={dotRadius * 0.7}
-                strokeDasharray={dash}
-                strokeLinecap="round"
-              />
-              <line
-                {...e}
-                className="waiting-line"
-                strokeWidth={dotRadius * 0.44}
-                strokeDasharray={dash}
-                strokeLinecap="round"
-              />
+            <g
+              key={`wait-${id}`}
+              transform={`translate(${(e.x1 + e.x2) / 2} ${(e.y1 + e.y2) / 2}) rotate(${angle})`}
+              style={{ pointerEvents: 'none' }}
+            >
+              <rect {...capsule} className="waiting-glow" strokeWidth={dotRadius * 0.6} />
+              <rect {...capsule} className="waiting-glow-mid" strokeWidth={dotRadius * 0.32} />
+              <rect {...capsule} className="waiting-edge" strokeWidth={dotRadius * 0.2} />
+              <rect {...capsule} className="waiting-core" strokeWidth={dotRadius * 0.1} />
             </g>
           );
         })}

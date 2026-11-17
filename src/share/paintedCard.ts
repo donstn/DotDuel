@@ -30,6 +30,8 @@ import type { ResultShare } from './resultShareText';
 
 interface CardArt {
   sign: PanelArt;
+  dotScale: number;
+  lineGlow?: Partial<Record<Player, string>>;
   frame: NineArt;
   img: {
     background: HTMLImageElement;
@@ -39,6 +41,8 @@ interface CardArt {
     dot: Record<Player, HTMLImageElement>;
     /** Strand sprites by `${len}-${player}`, lengths 2–9. */
     line: Map<string, HTMLImageElement>;
+    /** Christmas Triangle board tree, when the theme has one. */
+    tree?: HTMLImageElement;
   };
 }
 
@@ -65,13 +69,15 @@ async function loadCardArt(art: ThemeArt, state: GameState, shape: ShapeId): Pro
     if (len != null) lens.add(lineKey(strandLen(len), c.player));
   }
   try {
-    const [bg, sign, frame, felt, d1, d2, ...strands] = await Promise.all([
+    const treeUrl = shape === 'triangle' && art.treeTriangle ? board.tree?.url : undefined;
+    const [bg, sign, frame, felt, d1, d2, tree, ...strands] = await Promise.all([
       loadImage(background.landscape),
       loadImage(headerSign.url),
       loadImage(cardFrame.url),
       loadImage(board.felt),
       loadImage(board.dot(1)),
       loadImage(board.dot(2)),
+      treeUrl ? loadImage(treeUrl) : Promise.resolve(undefined),
       ...[...lens].map((k) => {
         const [len, p] = k.split('-').map(Number);
         return loadImage(board.line(len, p as Player));
@@ -81,8 +87,10 @@ async function loadCardArt(art: ThemeArt, state: GameState, shape: ShapeId): Pro
     [...lens].forEach((k, i) => line.set(k, strands[i]));
     return {
       sign: headerSign,
+      dotScale: board.dotScale ?? 1,
+      lineGlow: board.lineGlow,
       frame: cardFrame,
-      img: { background: bg, sign, frame, felt, dot: { 1: d1, 2: d2 }, line },
+      img: { background: bg, sign, frame, felt, dot: { 1: d1, 2: d2 }, line, tree },
     };
   } catch {
     return null;
@@ -201,45 +209,50 @@ function drawPaintedBoard(
   const left = Math.min(...hull.map((p) => p.x)) - feltGap - rimW;
   const right = Math.max(...hull.map((p) => p.x)) + feltGap + rimW;
 
-  // Bezel rim, top-lit, floated on a drop shadow; dark contact band inside.
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.6)';
-  ctx.shadowBlur = 30 * SCALE;
-  ctx.shadowOffsetY = 12 * SCALE;
-  const rim = ctx.createLinearGradient(0, top, 0, bot);
-  rim.addColorStop(0, theme.rimHi);
-  rim.addColorStop(0.5, theme.felt1);
-  rim.addColorStop(1, theme.rimLo);
-  fillSilhouette(ctx, hull, feltGap + rimW, rim);
-  ctx.restore();
-  fillSilhouette(ctx, hull, feltGap + rimW * 0.36, theme.rimLo);
+  if (l.tree && art.img.tree) {
+    // Christmas Triangle: the painted tree is the board.
+    ctx.drawImage(art.img.tree, l.tree.x, l.tree.y, l.tree.w, l.tree.h);
+  } else {
+    // Bezel rim, top-lit, floated on a drop shadow; dark contact band inside.
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = 30 * SCALE;
+    ctx.shadowOffsetY = 12 * SCALE;
+    const rim = ctx.createLinearGradient(0, top, 0, bot);
+    rim.addColorStop(0, theme.rimHi);
+    rim.addColorStop(0.5, theme.felt1);
+    rim.addColorStop(1, theme.rimLo);
+    fillSilhouette(ctx, hull, feltGap + rimW, rim);
+    ctx.restore();
+    fillSilhouette(ctx, hull, feltGap + rimW * 0.36, theme.rimLo);
 
-  // Moss felt: the silhouette on an offscreen layer, the felt art composited
-  // into it, then darkened toward the edge so it reads as recessed.
-  const layer = document.createElement('canvas');
-  layer.width = W * SCALE;
-  layer.height = H * SCALE;
-  const lc = layer.getContext('2d');
-  if (lc) {
-    lc.scale(SCALE, SCALE);
-    fillSilhouette(lc, hull, feltGap, '#000');
-    lc.globalCompositeOperation = 'source-in';
-    drawCover(lc, art.img.felt, left, top, right - left, bot - top);
-    lc.globalCompositeOperation = 'source-atop';
-    const span = Math.max(right - left, bot - top);
-    const shade = lc.createRadialGradient(
-      (left + right) / 2,
-      top + (bot - top) * 0.42,
-      span * 0.2,
-      (left + right) / 2,
-      (top + bot) / 2,
-      span * 0.62,
-    );
-    shade.addColorStop(0, 'rgba(0,0,0,0)');
-    shade.addColorStop(1, 'rgba(0,0,0,0.42)');
-    lc.fillStyle = shade;
-    lc.fillRect(left, top, right - left, bot - top);
-    ctx.drawImage(layer, 0, 0, W, H);
+    // Moss felt: the silhouette on an offscreen layer, the felt art composited
+    // into it, then darkened toward the edge so it reads as recessed.
+    const layer = document.createElement('canvas');
+    layer.width = W * SCALE;
+    layer.height = H * SCALE;
+    const lc = layer.getContext('2d');
+    if (lc) {
+      lc.scale(SCALE, SCALE);
+      fillSilhouette(lc, hull, feltGap, '#000');
+      lc.globalCompositeOperation = 'source-in';
+      drawCover(lc, art.img.felt, left, top, right - left, bot - top);
+      lc.globalCompositeOperation = 'source-atop';
+      const span = Math.max(right - left, bot - top);
+      const shade = lc.createRadialGradient(
+        (left + right) / 2,
+        top + (bot - top) * 0.42,
+        span * 0.2,
+        (left + right) / 2,
+        (top + bot) / 2,
+        span * 0.62,
+      );
+      shade.addColorStop(0, 'rgba(0,0,0,0)');
+      shade.addColorStop(1, 'rgba(0,0,0,0.42)');
+      lc.fillStyle = shade;
+      lc.fillRect(left, top, right - left, bot - top);
+      ctx.drawImage(layer, 0, 0, W, H);
+    }
   }
 
   for (const d of board.dots) {
@@ -247,7 +260,8 @@ function drawPaintedBoard(
     const x = px(d.x);
     const y = py(d.y);
     if (cd) {
-      ctx.drawImage(art.img.dot[cd.player], x - r, y - r, r * 2, r * 2);
+      const rr = r * art.dotScale;
+      ctx.drawImage(art.img.dot[cd.player], x - rr, y - rr, rr * 2, rr * 2);
     } else {
       const g = ctx.createRadialGradient(x - r * 0.2, y - r * 0.3, r * 0.05, x, y, r * 0.78);
       g.addColorStop(0, '#2a3a30');
@@ -276,6 +290,19 @@ function drawPaintedBoard(
     ctx.save();
     ctx.translate((x1 + x2) / 2, (y1 + y2) / 2);
     ctx.rotate(Math.atan2(y2 - y1, x2 - x1) - Math.PI / 2);
+    const glow = art.lineGlow?.[c.player];
+    if (glow) {
+      // Same halo as the game board: two soft pills behind the strand.
+      ctx.fillStyle = glow;
+      for (const [k, o] of [[1.7, 0.16], [1.25, 0.3]]) {
+        const w = imgW * k;
+        ctx.globalAlpha = o;
+        ctx.beginPath();
+        ctx.roundRect(-w / 2, -len / 2, w, len, w / 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
     ctx.drawImage(img, -imgW / 2, -len / 2, imgW, len);
     ctx.restore();
   }

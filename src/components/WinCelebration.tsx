@@ -12,6 +12,8 @@ import { useEffect, useRef } from 'react';
  * gold, coral gives coral, …). Plays once, drains, then stops the RAF loop.
  * Skipped entirely under prefers-reduced-motion. Never runs on the board, so
  * it doesn't touch the "no infinite board animation" rule.
+ * A theme with `celebration: 'snow'` (Christmas) gets a gentle snowfall of its
+ * particle sprites instead: no fireworks, no tumbling confetti.
  */
 
 function themePalette(): { standard: string[]; accent: string[] } {
@@ -72,8 +74,9 @@ export function WinCelebration({ level }: { level: number }) {
     const SHOW_MS = [2200, 2700, 3300, 4100, 5200][lvl - 1];
 
     // Sprites come from the active theme's art contract; none → CSS confetti only.
-    const spritePaths =
-      themeArt(document.documentElement.dataset.theme as ThemeId | undefined).particles ?? [];
+    const art = themeArt(document.documentElement.dataset.theme as ThemeId | undefined);
+    const snow = art.celebration === 'snow';
+    const spritePaths = art.particles ?? [];
     const hasSprites = spritePaths.length > 0;
     const sprites = hasSprites ? spritePaths.map((src) => {
       const img = new Image();
@@ -120,6 +123,16 @@ export function WinCelebration({ level }: { level: number }) {
     const rain = (set: string[], count: number) => {
       for (let i = 0; i < count; i++) {
         const z = rnd(0.5, 1.2);
+        if (snow) {
+          const size = rnd(9, 20) * z * DPR;
+          confetti.push({
+            x: rnd(0, W), y: rnd(-H, -10), z, w: size, h: size, color: pick(set),
+            vy: rnd(1.2, 2.6) * z * DPR, sway: rnd(0.4, 1.0),
+            phase: rnd(0, Math.PI * 2), rot: rnd(0, Math.PI * 2), vrot: rnd(-0.02, 0.02),
+            sprite: hasSprites ? pickSprite() : undefined,
+          });
+          continue;
+        }
         confetti.push({
           x: rnd(0, W), y: rnd(-H * 0.4, -10), z,
           w: rnd(5, 10) * z * DPR, h: rnd(8, 16) * z * DPR, color: pick(set),
@@ -175,6 +188,17 @@ export function WinCelebration({ level }: { level: number }) {
         ctx.save();
         ctx.translate(c.x, c.y); ctx.rotate(c.rot);
         ctx.globalAlpha = 0.92;
+        if (snow) {
+          if (hasSprites && c.sprite?.complete && c.sprite.naturalWidth > 0) {
+            ctx.drawImage(c.sprite, -c.w, -c.w, c.w * 2, c.w * 2);
+          } else {
+            ctx.fillStyle = c.color;
+            ctx.beginPath(); ctx.arc(0, 0, c.w / 3, 0, 7); ctx.fill();
+          }
+          ctx.restore();
+          if (c.y > H + 30) confetti.splice(i, 1);
+          continue;
+        }
         const sq = 0.35 + Math.abs(Math.sin(t * c.sway + c.phase)) * 0.65;
         if (hasSprites && c.sprite?.complete && c.sprite.naturalWidth > 0) {
           const w = c.w * sq * 2.2;
@@ -207,6 +231,19 @@ export function WinCelebration({ level }: { level: number }) {
     const set = isGold ? accent : standard;
     const confettiN = [45, 80, 120, 165, 210][lvl - 1];
     const shellN = [2, 3, 5, 7, 12][lvl - 1];
+    if (snow) {
+      // Snow is white whatever the theme; a bigger win is a heavier snowfall.
+      const flakes = ['#ffffff', '#f2f8ff', '#e6f0ff'];
+      rain(flakes, Math.round(confettiN * 1.3));
+      if (isGold) timers.push(window.setTimeout(() => rain(flakes, 140), 1400));
+      raf = requestAnimationFrame(frame);
+      return () => {
+        running = false;
+        if (raf) cancelAnimationFrame(raf);
+        timers.forEach((id) => clearTimeout(id));
+        window.removeEventListener('resize', resize);
+      };
+    }
     rain(set, confettiN);
     for (let i = 0; i < shellN; i++) {
       timers.push(window.setTimeout(() => launchShell(set), i * 300));

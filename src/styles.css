@@ -657,9 +657,42 @@ html[data-art~="background"] body {
    Re-tint darker and more opaque specifically for this theme so text stays
    legible against the busy art, without changing the look of any of the
    other 7 themes (which never match these selectors). */
-html[data-theme="forest-pearl"] {
+html[data-theme="forest-pearl"],
+html[data-theme="christmas"] {
   --glass-bg: rgba(6, 16, 11, 0.55);
   --glass-bg-strong: rgba(6, 16, 11, 0.72);
+}
+
+/* ---------- Seasonal: Christmas (red vs gold baubles on the tree) ----------
+   Shares Forest & Pearl's green chrome and painted UI; only the two player
+   families change. Dark red vs bright gold keeps them apart by luminance
+   alone (CVD rule), so red-green colour blindness doesn't matter. */
+html[data-theme="christmas"] {
+  /* Frosty glow around unclaimed lines (gold is taken by the baubles). */
+  --waiting-core: #ffffff;
+  --waiting-glow: #9fd8ff;
+  --p1: #7a0f1f;
+  --p1-glow: #a3162b;
+  --p1-bright: #e8475c;
+  --p1-deep: #2a0309;
+  --p1-rgb-bright: 232, 71, 92;
+  --p1-rgb-glow: 163, 22, 43;
+  --strike-p1-outer: #b3243a;
+  --strike-p1-inner: #ffc2cb;
+  --avatar-p1-fg: #ffd1d8;
+
+  --p2: #e0b23a;
+  --p2-glow: #f2c94c;
+  --p2-bright: #fff3c4;
+  --p2-deep: #6b4a08;
+  --p2-rgb-bright: 255, 243, 196;
+  --p2-rgb-glow: 242, 201, 76;
+  --strike-p2-outer: #d9a82e;
+  --strike-p2-inner: #fff8dc;
+  --avatar-p2-fg: #3a2805;
+
+  --bg-center: #0f2a1d;
+  --bg-edge: #020a06;
 }
 
 /* Subtle film-grain overlay across the whole app for organic depth */
@@ -2861,14 +2894,27 @@ h1, h2, h3,
   to { opacity: 1; }
 }
 
-/* Unclaimed (pending) line: one static dashed stroke, shown during the
-   learning window and in the lesson. Not gold — gold means "tap here". */
-.waiting-line {
-  stroke: #fffbea;
+/* Unclaimed (pending) line: a static glowing outline around the whole line,
+   shown vs the easy bots and in the lesson. Glow follows the theme
+   (--waiting-glow, default the accent); never gold — gold means "tap here". */
+:root {
+  --waiting-core: #fffbea;
+  --waiting-glow: var(--accent);
 }
-.waiting-line-edge {
+.waiting-glow {
+  stroke: var(--waiting-glow);
+  opacity: 0.3;
+}
+.waiting-glow-mid {
+  stroke: var(--waiting-glow);
+  opacity: 0.6;
+}
+.waiting-edge {
   stroke: #06120b;
-  opacity: 0.9;
+  opacity: 0.55;
+}
+.waiting-core {
+  stroke: var(--waiting-core);
 }
 
 @keyframes pop {
@@ -7945,7 +7991,10 @@ html[data-art~="pill-button"] .coach-bubble-btn {
   --h: 36px;
   color: var(--accent);
 }
-html[data-art~="pill-button"] .share-action:not(.primary) {
+/* :hover too: the shared rule above sets 42px on hover, so a tapped pill
+   (sticky hover on phones) grew and shoved its neighbours. */
+html[data-art~="pill-button"] .share-action:not(.primary),
+html[data-art~="pill-button"] .share-action:not(.primary):hover {
   --h: 38px;
   font-size: 0.85rem;
 }
@@ -8891,4 +8940,10 @@ html[data-text-large] .game-over-card h2 {
 html[data-text-large] .game-over {
   position: fixed;
   padding: 12px;
+}
+
+/* Light (paper) themes: an ink outline, since a cream core vanishes on paper. */
+html[data-theme="monochrome-pro"],
+html[data-theme="vintage-press"] {
+  --waiting-core: var(--accent);
 }

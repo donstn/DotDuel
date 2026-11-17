@@ -278,6 +278,7 @@ export const lt: Messages = {
     done: 'Atlikta',
     taglines: {
       'forest-pearl': 'Originalioji. Smaragdas ant žalsvo fono.',
+      christmas: 'Raudoni ir auksiniai žaisliukai ant eglutės.',
       'royal-court': 'Violetinis aksomas prieš senovinį auksą.',
       'tempo-rivals': 'Vyno raudonis prieš dangaus mėlyną. Klasika.',
       'sunset-catan': 'Terakotos dykumos, pergamento figūros.',
@@ -301,6 +302,14 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.28.0': {
+        changes: [
+          "Kalėdų tema (iki sausio 15 d.): raudoni ir auksiniai žaisliukai ant Kalėdų eglutės, blizgučių linijos ir sniegas, kai laimite.",
+          "Nepaimtos linijos dabar apvestos švelniai švytinčiu rėmeliu, o ne brūkšneliais.",
+          "Dalintis rezultatu dabar daug greičiau.",
+          "Dalijimosi mygtukai nebekeičia dydžio, kai juos paspaudžiate.",
+        ],
+      },
       'Alpha 0.4.27.2': {
         changes: [
           "„Pasidalinti DotDuel“ dabar „Android“ programėlėje atidaro telefono bendrinimo meniu.",

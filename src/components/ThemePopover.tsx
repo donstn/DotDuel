@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { THEMES, type ThemeId } from '../theme';
+import { THEMES, isThemeOffered, isThemeSelectable, type ThemeId } from '../theme';
 import { useT } from '../i18n';
 
 interface Props {
@@ -41,19 +41,20 @@ export function ThemePopover({ current, onSelect, onClose }: Props) {
         </header>
 
         <div className="theme-grid">
-          {THEMES.map((th) => {
+          {THEMES.filter((th) => isThemeOffered(th)).map((th) => {
             const selected = th.id === current;
             const tagline = tr.theme.taglines[th.id] ?? th.tagline;
+            const locked = !isThemeSelectable(th);
             return (
               <button
                 key={th.id}
                 type="button"
-                className={`theme-swatch${selected ? ' theme-swatch-selected' : ''}${th.locked ? ' theme-swatch-locked' : ''}`}
-                onClick={() => !th.locked && onSelect(th.id)}
-                disabled={th.locked}
+                className={`theme-swatch${selected ? ' theme-swatch-selected' : ''}${locked ? ' theme-swatch-locked' : ''}`}
+                onClick={() => !locked && onSelect(th.id)}
+                disabled={locked}
                 aria-pressed={selected}
-                aria-disabled={th.locked}
-                title={th.locked ? tr.theme.comingSoon : tagline}
+                aria-disabled={locked}
+                title={locked ? tr.theme.comingSoon : tagline}
               >
                 <div
                   className="theme-swatch-preview"
@@ -73,7 +74,7 @@ export function ThemePopover({ current, onSelect, onClose }: Props) {
                   <strong>{th.label}</strong>
                   <span>{tagline}</span>
                 </div>
-                {th.locked ? (
+                {locked ? (
                   <span className="theme-swatch-tag theme-swatch-tag-locked">
                     {tr.theme.comingSoon}
                   </span>

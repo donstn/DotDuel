@@ -267,6 +267,7 @@ export const es: Messages = {
     done: 'Hecho',
     taglines: {
       'forest-pearl': 'El original. Esmeralda sobre viñeta jade.',
+      christmas: 'Bolas rojas y doradas en el árbol.',
       'royal-court': 'Terciopelo violeta contra oro antiguo.',
       'tempo-rivals': 'Rojo vino contra azul cielo. Clásico.',
       'sunset-catan': 'Desiertos de terracota, piezas de pergamino.',
@@ -290,6 +291,14 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Alpha 0.4.28.0': {
+        changes: [
+          "Tema de Navidad (hasta el 15 de enero): bolas rojas y doradas en un árbol de Navidad, líneas de espumillón y nieve cuando ganas.",
+          "Las líneas sin reclamar ahora tienen un contorno con un brillo suave en lugar de guiones.",
+          "Compartir tu resultado ahora es mucho más rápido.",
+          "Los botones para compartir ya no cambian de tamaño al tocarlos.",
+        ],
+      },
       'Alpha 0.4.27.2': {
         changes: [
           "Compartir DotDuel ahora abre el menú para compartir de tu teléfono en la app de Android.",

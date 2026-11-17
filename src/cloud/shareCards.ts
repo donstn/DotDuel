@@ -2,8 +2,8 @@ import { SUPABASE_URL, currentSupabaseUid, supabase } from '../supabase';
 import type { ResultShare } from '../share/resultShareText';
 
 /**
- * Personalized share-link unfurl: uploads the rendered victory card (as JPEG —
- * ~5× smaller than the PNG the share sheet uses) to the public `share-cards`
+ * Personalized share-link unfurl: uploads the rendered victory card (a small
+ * 1200×630 JPEG, a quarter of the share-sheet card) to the public `share-cards`
  * bucket and registers it in `share_cards`, returning a
  * `/functions/v1/r/<id>` link whose OG tags unfurl into the card on social
  * platforms. Signed-in only; any failure returns null and the caller keeps the
@@ -34,8 +34,8 @@ function randomId(): string {
 const OG_W = 1200;
 const OG_H = 630;
 
-async function pngToJpeg(png: Blob): Promise<Blob> {
-  const bmp = await createImageBitmap(png);
+async function cardToJpeg(card: Blob): Promise<Blob> {
+  const bmp = await createImageBitmap(card);
   try {
     const canvas = document.createElement('canvas');
     canvas.width = OG_W;
@@ -73,13 +73,13 @@ const ENABLE_SHARE_CARD_LINKS: boolean = false;
 
 export async function createShareCardLink(
   share: ResultShare,
-  cardPng: Blob,
+  card: Blob,
 ): Promise<string | null> {
   if (!ENABLE_SHARE_CARD_LINKS) return null;
   const uid = currentSupabaseUid();
   if (!uid) return null;
   try {
-    const jpeg = await pngToJpeg(cardPng);
+    const jpeg = await cardToJpeg(card);
     const id = randomId();
     const { error: upErr } = await supabase.storage
       .from('share-cards')

@@ -303,6 +303,12 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Beta 0.5.0.0': {
+        highlight: "DotDuel jest teraz w wersji beta!",
+        changes: [
+          "Dziękujemy wszystkim, którzy grali w wersję alfa. Jeszcze kilka ulepszeń i DotDuel trafi do Google Play dla wszystkich.",
+        ],
+      },
       'Alpha 0.4.28.0': {
         changes: [
           "Motyw świąteczny (do 15 stycznia): czerwone i złote bombki na choince, linie z lametty i śnieg, gdy wygrasz.",

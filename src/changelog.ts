@@ -30,6 +30,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Beta 0.5.0.0',
+    date: '2026-11-17',
+    highlight: 'DotDuel is now in Beta!',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Thank you to everyone who played the Alpha. A few more improvements and DotDuel comes to Google Play for everyone.',
+      },
+    ],
+  },
+  {
     version: 'Alpha 0.4.28.0',
     date: '2026-11-17',
     changes: [

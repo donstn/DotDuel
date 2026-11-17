@@ -3,6 +3,14 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0.0] - 2026-11-17
+
+### Changed
+
+- **Alpha → Beta.** The version label is now `Beta 0.5.0.0` (`src/version.ts`);
+  nothing parses the prefix (footer, console log, `record_client` app version).
+  First step toward opening Google Play production.
+
 ## [0.4.28.0] - 2026-11-17 (Android 1.13, versionCode 15)
 
 ### Added

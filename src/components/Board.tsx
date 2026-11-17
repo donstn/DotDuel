@@ -930,7 +930,10 @@ export function Board({
           // A glowing rounded outline around the whole line (dots stay fully
           // visible inside). The glow is stacked soft strokes, not a blur
           // filter: filters are too costly on cheap phones (0.4.5.0 diet).
-          const e = lineEndpoints(board, line, dotRadius * 0.3);
+          // Straight sides, softly rounded corners; a 1-point corner line
+          // gets a circle (a box around one dot reads as a tilted square).
+          const single = line.dotIds.length === 1;
+          const e = lineEndpoints(board, line, single ? 0 : dotRadius * 0.3);
           const h = dotRadius * 2.9;
           const w = Math.hypot(e.x2 - e.x1, e.y2 - e.y1) + h;
           const angle = (Math.atan2(e.y2 - e.y1, e.x2 - e.x1) * 180) / Math.PI;
@@ -939,7 +942,7 @@ export function Board({
             y: -h / 2,
             width: w,
             height: h,
-            rx: h / 2,
+            rx: single ? h / 2 : h * 0.22,
             fill: 'none',
           };
           return (

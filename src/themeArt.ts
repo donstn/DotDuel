@@ -260,7 +260,7 @@ const ART: Partial<Record<ThemeId, ThemeArt>> = {
 };
 
 // Seasonal: Forest & Pearl's green chrome, buttons, frames and avatars, with
-// its own board (tree-shaped triangle, baubles, garlands), background and
+// its own board (tree-shaped triangle, baubles, tinsel), background and
 // snow. Prompts: docs/art/sheet-christmas.md.
 ART.christmas = {
   ...ART['forest-pearl'],

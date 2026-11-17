@@ -3,7 +3,7 @@
 Seasonal theme (1 Dec – 6 Jan). It reuses Forest & Pearl's green buttons,
 frames, header and avatars; only the pieces below are new. The Triangle board
 points UP in this theme, so the board itself is the tree: the felt is fir
-needles, the dots are baubles, a claimed line is a garland.
+needles, the dots are baubles, a claimed line is a strand of tinsel.
 
 Player colours (CSS in `src/styles.css`, `html[data-theme="christmas"]`):
 P1 = deep red, P2 = shiny gold. Dark vs bright, so the sides are told apart
@@ -12,7 +12,7 @@ by brightness alone (colour-blind safe). Never make P1 bright or P2 dark.
 **How to use:** paste ONE prompt per message (everything inside the box).
 Save each result in `art-src/christmas/` with the file name given, then tell
 Claude. Claude cuts, cleans and installs them (`scripts/process-art.mjs`).
-For prompts 1, 2, 3 and 6 attach `public/art/forest-pearl/dot-p1.webp` and
+For prompts 1, 2 and 3 attach `public/art/forest-pearl/dot-p1.webp` and
 `line-5-p1.webp` as style references, so the new pieces match the game.
 
 ---
@@ -36,31 +36,41 @@ Claude: `dot-p1` (left), `dot-p2` (right).
 
 ---
 
-## Prompt 2 — Red garlands (Player 1 lines) → `garlands-p1-sheet.png`
+## Prompt 2 — Red tinsel (Player 1 lines) → `tinsel-p1-sheet.png`
 
 ```
-Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games. Smooth glass and polished-metal materials, rich specular highlights, slightly stylized and rounded rather than photorealistic. No text, numbers, letters, watermark or logo anywhere.
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Candy Crush, Clash Royale pieces). Shiny metallic foil materials, rich specular highlights, slightly stylized and rounded rather than photorealistic. No text, numbers, letters, watermark or logo anywhere.
 
-Render EIGHT Christmas garlands standing UPRIGHT (each one runs straight up and down, vertically), side by side in one row, left to right from SHORTEST to LONGEST, with a wide empty gap between each. Every garland is a perfectly STRAIGHT vertical string (no sag, no curve, no loops) of small round deep ruby-red glass beads (#7a0f1f to #a3162b, with tiny bright #e8475c highlights), strung close together on a thin gold thread, with a soft warm red glow around the string. Both ends finish in a tiny gold bead. The beads are all the same size in every garland; longer garlands simply have more beads. Garland 1 is short (about 3 beads); garland 8 is about four times as long as garland 1; lengths grow evenly in between. Every garland is equally thin.
+Render EIGHT pieces of Christmas TINSEL standing UPRIGHT (each one runs straight up and down, vertically), side by side in one row, left to right from SHORTEST to LONGEST, with a wide empty gap between each. Every piece is one perfectly STRAIGHT, fluffy rope of shiny metallic tinsel: many fine glittering foil strands bristling evenly all around a central cord, like a soft shiny bottle brush. No sag, no curve, no loops, no beads, no lights, no bows.
 
-Very wide composition, about 2:1, with all eight garlands the same width and standing on the same baseline.
+Colour: deep metallic ruby red. Shadows #4a0812, body #7a0f1f to #a3162b, small bright glints #e8475c and a few tiny white sparkles. It must read as DARK red tinsel overall, not pink or bright red.
 
-BACKGROUND: extremely important. Everything around and between the garlands MUST be a bright, saturated, completely flat, solid magenta, hex #FF00FF. No gradient, no vignette, no shadow cast onto it, no fade to white and no grey. Only pure flat magenta, because it will be cut out and replaced with transparency.
+All eight have exactly the same thickness and the same fluffiness; longer pieces are simply longer. The ends are softly rounded, finishing the tinsel neatly. Piece 1 is short (about three times as long as it is thick); piece 8 is about four times as long as piece 1; lengths grow evenly in between.
+
+Very wide composition, about 2:1, all eight standing on the same baseline.
+
+BACKGROUND: extremely important. Everything around and between the tinsel pieces MUST be a bright, saturated, completely flat, solid magenta, hex #FF00FF. No gradient, no vignette, no shadow cast onto it, no magenta reflected in the foil, no fade to white and no grey. Only pure flat magenta, because it will be cut out and replaced with transparency.
 ```
 
 Claude: `line-2-p1` … `line-9-p1`, left to right.
 
 ---
 
-## Prompt 3 — Gold garlands (Player 2 lines) → `garlands-p2-sheet.png`
-
-Same as prompt 2 with ONE change: replace the bead sentence with
+## Prompt 3 — Gold tinsel (Player 2 lines) → `tinsel-p2-sheet.png`
 
 ```
-Every garland is a perfectly STRAIGHT vertical strand of fluffy, shimmering GOLD TINSEL (#e0b23a to #f2c94c with bright #fff3c4 glints), with a soft warm golden glow around it. Both ends finish in a tiny gold star-shaped sparkle.
-```
+Premium glossy 3D mobile-game asset render, in the visual register of high-end mobile puzzle games (Candy Crush, Clash Royale pieces). Shiny metallic foil materials, rich specular highlights, slightly stylized and rounded rather than photorealistic. No text, numbers, letters, watermark or logo anywhere.
 
-(Paste the whole prompt 2 text with that sentence swapped in.)
+Render EIGHT pieces of Christmas TINSEL standing UPRIGHT (each one runs straight up and down, vertically), side by side in one row, left to right from SHORTEST to LONGEST, with a wide empty gap between each. Every piece is one perfectly STRAIGHT, fluffy rope of shiny metallic tinsel: many fine glittering foil strands bristling evenly all around a central cord, like a soft shiny bottle brush. No sag, no curve, no loops, no beads, no lights, no bows.
+
+Colour: bright shiny GOLD. Body #e0b23a to #f2c94c, many bright glints #fff3c4 and tiny white sparkles, only small warm shadows #b8861f. It must read as BRIGHT, LIGHT gold tinsel overall, clearly lighter than dark red even in black and white.
+
+All eight have exactly the same thickness and the same fluffiness; longer pieces are simply longer. The ends are softly rounded, finishing the tinsel neatly. Piece 1 is short (about three times as long as it is thick); piece 8 is about four times as long as piece 1; lengths grow evenly in between.
+
+Very wide composition, about 2:1, all eight standing on the same baseline.
+
+BACKGROUND: extremely important. Everything around and between the tinsel pieces MUST be a bright, saturated, completely flat, solid magenta, hex #FF00FF. No gradient, no vignette, no shadow cast onto it, no magenta reflected in the foil, no fade to white and no grey. Only pure flat magenta, because it will be cut out and replaced with transparency.
+```
 
 Claude: `line-2-p2` … `line-9-p2`, left to right.
 
@@ -123,6 +133,7 @@ Claude: `header-combined` for this theme (checks the wordmark letter by letter).
 ## When Gemini drifts
 
 - Balls not round or cap too big: "Make both balls perfect spheres; the cap is tiny."
-- Garlands curved or horizontal: "Each garland is perfectly straight and vertical, standing upright in one row."
+- Tinsel curved or horizontal: "Each piece of tinsel is perfectly straight and vertical, standing upright in one row."
+- Red tinsel too bright or pink: "Make the red tinsel a deep, dark metallic ruby red."
 - Red ball looks bright / gold looks dark: "The red ball must be dark, the gold ball clearly bright."
 - Magenta reflected in the glass: "No magenta reflections in the objects."

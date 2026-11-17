@@ -120,6 +120,32 @@ Claude: `particle-snow-1` … `particle-snow-4` (reading order).
 
 ---
 
+## Prompt 8 — The tree that IS the board → `tree-board.png`
+
+Attach `felt-base.png` (the fir-needle board surface) so Gemini matches its needles.
+
+```
+Premium painted 2D mobile-game art, in the visual register of high-end mobile puzzle games (Candy Crush, Clash Royale). Rich, soft painterly shading, slightly stylized, not photorealistic. No text, numbers, letters, watermark or logo anywhere.
+
+ONE big, perfectly SYMMETRICAL Christmas fir tree, seen straight from the front, that will be used as a game board: round game pieces will later be placed all over its branches.
+
+The foliage is ONE broad, solid TRIANGLE: straight sloping sides from the top to a wide flat bottom, about as wide at the bottom as it is tall. NO separate tiers, NO gaps, NO holes and NO see-through spaces anywhere inside it. The whole triangle is evenly filled with lush, dense, dark fir branches and needles, exactly like the attached fir-needle texture, with gentle light and shadow so it looks rich and three-dimensional, never flat. Only the outer edges are feathery branch tips, with a little soft snow on the tips along the two sloping sides.
+
+NO decorations at all on the tree: no baubles, no lights, no tinsel, no garlands, no flat panel or shape in the middle. The tree is bare green so the game pieces stand out.
+
+A shining golden star on the very top. A short brown trunk in a small wooden tub at the bottom.
+
+Colours: needles #0f2a1d to #1f5236 with lighter tips #3d7a52, snow white with pale blue shadows, star #f2c94c with #fff3c4 highlights.
+
+Square composition. The tree fills the image from top to bottom.
+
+BACKGROUND: extremely important. Everything around the tree MUST be a bright, saturated, completely flat, solid magenta, hex #FF00FF. No gradient, no vignette, no shadow cast onto it, no glow, no snow on the background, no fade to white and no grey. Only pure flat magenta, because it will be cut out and replaced with transparency.
+```
+
+Claude: `tree-board`; replaces the board's felt and rim in the Christmas theme. The dot sockets are drawn on the branches.
+
+---
+
 ## Optional: snowy header sign → `header-snow.png`
 
 Attach `public/art/forest-pearl/header-combined.webp` and paste:

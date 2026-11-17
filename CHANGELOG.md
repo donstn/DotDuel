@@ -3,7 +3,7 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.4.28.0] - 2026-11-17
+## [0.4.28.0] - 2026-11-17 (Android 1.13, versionCode 15)
 
 ### Added
 

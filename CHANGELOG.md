@@ -3,6 +3,36 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.28.0] - 2026-11-17
+
+### Added
+
+- **Christmas theme** (seasonal, 17 Nov – 15 Jan, web + app; `?theme-preview=christmas`
+  previews it any time). Red (P1) vs gold (P2) baubles, red/gold tinsel lines
+  (red gets a soft white halo, `board.lineGlow`), snowy pine-forest
+  background, snowy header sign, snowfall instead of fireworks on a win.
+  Triangle: the board is a painted tree (`board.tree` + `treeBox()`),
+  pointing up; Square/Rectangle keep the fir-needle felt (wreath frame
+  pending art). Art prompts: `docs/art/sheet-christmas.md`. Non-English
+  theme taglines are drafts.
+
+### Changed
+
+- **Unclaimed lines** (vs easy bots on Triangle, and the lesson): a static
+  glowing outline around the whole line (straight sides, soft corners; a
+  circle for 1-point lines) in the theme's accent, instead of a dashed
+  stroke over the dots. No blur filter.
+
+### Fixed
+
+- **Share result was slow** - the card was encoded as a 4.5 MB PNG, then
+  re-encoded to JPEG. Now one JPEG straight from the canvas (~15x faster,
+  0.5 MB), drawn ahead while Game Over is shown; PNG only for Copy image.
+  Downloads are `.jpg`.
+- **Share dialog buttons changed size on tap** - `fitText` refitted labels
+  one by one from a half-shrunk row, and pill buttons grew to 42px on
+  (sticky) hover.
+
 ## [0.4.27.2] - 2026-11-17 (Android 1.12, versionCode 14; vc13 was built but superseded)
 
 ### Changed

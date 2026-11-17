@@ -291,6 +291,14 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Alpha 0.4.28.0': {
+        changes: [
+          "Tema de Natal (até 15 de janeiro): bolas vermelhas e douradas numa árvore de Natal, linhas de festão brilhante e neve quando você vence.",
+          "As linhas não reivindicadas agora têm um contorno com brilho suave em vez de tracejado.",
+          "Compartilhar seu resultado agora é muito mais rápido.",
+          "Os botões de compartilhar não mudam mais de tamanho quando você toca neles.",
+        ],
+      },
       'Alpha 0.4.27.2': {
         changes: [
           "Compartilhar DotDuel agora abre o menu de compartilhamento do seu celular no app Android.",

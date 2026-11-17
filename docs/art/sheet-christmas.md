@@ -1,6 +1,6 @@
 # Christmas theme: Gemini prompts
 
-Seasonal theme (1 Dec – 6 Jan). It reuses Forest & Pearl's green buttons,
+Seasonal theme (17 Nov – 15 Jan). It reuses Forest & Pearl's green buttons,
 frames, header and avatars; only the pieces below are new. The Triangle board
 points UP in this theme, so the board itself is the tree: the felt is fir
 needles, the dots are baubles, a claimed line is a strand of tinsel.

@@ -302,6 +302,14 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Alpha 0.4.28.0': {
+        changes: [
+          "Kalėdų tema (iki sausio 15 d.): raudoni ir auksiniai žaisliukai ant Kalėdų eglutės, blizgučių linijos ir sniegas, kai laimite.",
+          "Nepaimtos linijos dabar apvestos švelniai švytinčiu rėmeliu, o ne brūkšneliais.",
+          "Dalintis rezultatu dabar daug greičiau.",
+          "Dalijimosi mygtukai nebekeičia dydžio, kai juos paspaudžiate.",
+        ],
+      },
       'Alpha 0.4.27.2': {
         changes: [
           "„Pasidalinti DotDuel“ dabar „Android“ programėlėje atidaro telefono bendrinimo meniu.",

@@ -48,7 +48,7 @@ export const THEMES: ThemeMeta[] = [
     label: 'Christmas',
     tagline: 'Red and gold baubles on the tree.',
     swatch: { p1: '#a3162b', p2: '#f2c94c', bg: '#0b1f16' },
-    season: { from: [12, 1], to: [1, 6] },
+    season: { from: [11, 17], to: [1, 15] },
   },
   {
     id: 'royal-court',

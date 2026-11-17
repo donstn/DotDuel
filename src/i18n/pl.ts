@@ -303,6 +303,14 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Alpha 0.4.28.0': {
+        changes: [
+          "Motyw świąteczny (do 15 stycznia): czerwone i złote bombki na choince, linie z lametty i śnieg, gdy wygrasz.",
+          "Nieodebrane linie mają teraz delikatnie świecący obrys zamiast kresek.",
+          "Udostępnianie wyniku jest teraz dużo szybsze.",
+          "Przyciski udostępniania nie zmieniają już rozmiaru po dotknięciu.",
+        ],
+      },
       'Alpha 0.4.27.2': {
         changes: [
           "Przycisk „Udostępnij DotDuel” w aplikacji na Androida otwiera teraz menu udostępniania telefonu.",

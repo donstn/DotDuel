@@ -146,6 +146,32 @@ Claude: `tree-board`; replaces the board's felt and rim in the Christmas theme. 
 
 ---
 
+## Prompt 9 — Wreath frame for Square and Rectangle → `wreath-frame.png`
+
+Attach `felt-base.png` and `tree-board.png` so Gemini matches the needles and the moonlit painting style.
+
+```
+Premium painted 2D mobile-game art, in the same painterly, slightly realistic style and cold moonlit lighting as the attached tree. No text, numbers, letters, watermark or logo anywhere.
+
+ONE square picture FRAME made of a thick, lush band of snowy fir branches, seen straight from the front, like a Christmas wreath shaped as a square. The band has the SAME width on all four sides (about one tenth of the frame's width) and perfectly straight outer and inner edges with slightly rounded corners.
+
+The four straight sides are plain fir branches with soft clumps of snow on top: even and repeating, with NOTHING else on them (no cones, no berries, no bows in the middle of a side), because the sides will be stretched.
+
+Decorations ONLY on the four corners: on each corner a small cluster of two pine cones and a sprig of holly with red berries. The top-left and top-right corners also get a little snow cap.
+
+The INSIDE of the frame is completely EMPTY: flat solid magenta, no needles, no shadow, nothing.
+
+Colours: needles #0f2a1d to #1f5236 with lighter tips #3d7a52, snow white with pale blue shadows, holly berries #a3162b, pine cones warm brown.
+
+Square composition, the frame filling the image edge to edge.
+
+BACKGROUND: extremely important. Everything outside the frame AND the empty inside MUST be a bright, saturated, completely flat, solid magenta, hex #FF00FF. No gradient, no vignette, no shadow cast onto it, no glow, no fade to white and no grey. Only pure flat magenta, because it will be cut out and replaced with transparency.
+```
+
+Claude: `wreath-frame:nine` (nine-slice, so one picture fits the 7×7 Square and the 7×9 Rectangle); replaces the board's rim in Christmas. The fir-needle felt shows inside it.
+
+---
+
 ## Optional: snowy header sign → `header-snow.png`
 
 Attach `public/art/forest-pearl/header-combined.webp` and paste:

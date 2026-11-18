@@ -30,6 +30,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Beta 0.5.1.0',
+    date: '2026-11-18',
+    changes: [
+      {
+        kind: 'added',
+        text: 'Christmas theme now has its own sounds: bauble clinks, sleigh bells, a Jingle Bells win and a crackling campfire.',
+      },
+    ],
+  },
+  {
     version: 'Beta 0.5.0.0',
     date: '2026-11-17',
     highlight: 'DotDuel is now in Beta!',

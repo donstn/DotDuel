@@ -291,6 +291,11 @@ export const pt: Messages = {
     done: 'Concluído',
     months: ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'],
     entries: {
+      'Beta 0.5.1.0': {
+        changes: [
+          "O tema de Natal agora tem sons próprios: tilintar de bolas, sininhos de trenó, Jingle Bells na vitória e uma fogueira crepitando.",
+        ],
+      },
       'Beta 0.5.0.0': {
         highlight: "DotDuel agora está em beta!",
         changes: [

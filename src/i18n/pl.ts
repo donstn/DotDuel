@@ -303,6 +303,11 @@ export const pl: Messages = {
     done: 'Gotowe',
     months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],
     entries: {
+      'Beta 0.5.1.0': {
+        changes: [
+          "Motyw świąteczny ma teraz własne dźwięki: brzęk bombek, dzwonki sań, Jingle Bells na zwycięstwo i trzaskające ognisko.",
+        ],
+      },
       'Beta 0.5.0.0': {
         highlight: "DotDuel jest teraz w wersji beta!",
         changes: [

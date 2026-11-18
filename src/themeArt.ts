@@ -103,6 +103,9 @@ export interface ThemeArt {
   background?: { portrait: string; landscape: string };
   /** Menu ambience loops (played when music is on). */
   ambience?: { wind: string; stream: string; birds: string };
+  /** Synthesized theme sound set (game cues + procedural menu ambience,
+   *  src/audioXmas.ts) — replaces the default cues and file ambience. */
+  soundSet?: 'christmas';
 }
 
 /** A painted medal; `disc` is its empty centre as fractions of the image. */
@@ -297,11 +300,11 @@ ART.christmas = {
     lineGlow: { 1: '#ffffff' },
     tree: {
       url: '/art/christmas/tree-board.webp',
-      width: 806,
-      height: 984,
-      axisX: 403,
-      topDotY: 220,
-      bottomRowY: 745,
+      width: 883,
+      height: 989,
+      axisX: 441,
+      topDotY: 231,
+      bottomRowY: 806,
     },
     frame: {
       url: '/art/christmas/wreath-frame.webp',
@@ -325,6 +328,8 @@ ART.christmas = {
     portrait: '/art/christmas/background-portrait.webp',
     landscape: '/art/christmas/background-landscape.webp',
   },
+  ambience: undefined,
+  soundSet: 'christmas',
 };
 
 /** One piece of a nine-slice frame: source rect in the sprite, destination

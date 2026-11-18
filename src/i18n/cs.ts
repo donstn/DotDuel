@@ -301,6 +301,11 @@ export const cs: Messages = {
     done: 'Hotovo',
     months: ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'],
     entries: {
+      'Beta 0.5.1.0': {
+        changes: [
+          "Vánoční motiv má teď vlastní zvuky: cinkání baněk, rolničky saní, Jingle Bells při výhře a praskající táborák.",
+        ],
+      },
       'Beta 0.5.0.0': {
         highlight: "DotDuel je teď v betě!",
         changes: [

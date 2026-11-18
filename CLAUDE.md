@@ -120,7 +120,7 @@ No licensing/patent/royalty/per-user fees ever. For any new dependency, asset, s
 - Match docs readable by any signed-in user (displayName/Elo already public on leaderboard; tighten if chat/IP/email ever added).
 - Supabase anon key + GA measurement id are public by design (same model as the old Firebase web key); RLS is the gate.
 - Cookie/consent gate is client-side only; moves server-side if we add server-side analytics ingest.
-- Social RPCs have no rate-limiting yet — add a token-bucket before public launch.
+- Social spam caps live since 2026-11-17 (`20261117000000_social_pending_caps.sql`, applied in prod): max 10 unanswered friend requests, max 10 invites per 5 min (`TOO_MANY_PENDING`). Other RPCs have no rate limit.
 
 ## Production rules
 

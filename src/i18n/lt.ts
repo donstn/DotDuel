@@ -302,6 +302,11 @@ export const lt: Messages = {
     done: 'Atlikta',
     months: ['saus.', 'vas.', 'kov.', 'bal.', 'geg.', 'birž.', 'liep.', 'rugp.', 'rugs.', 'spal.', 'lapkr.', 'gruod.'],
     entries: {
+      'Beta 0.5.1.0': {
+        changes: [
+          "Kalėdų tema dabar turi savo garsus: žaisliukų skambčiojimą, rogių varpelius, „Jingle Bells“ pergalei ir traškantį laužą.",
+        ],
+      },
       'Beta 0.5.0.0': {
         highlight: "DotDuel dabar – beta versija!",
         changes: [

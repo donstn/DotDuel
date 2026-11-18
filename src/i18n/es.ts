@@ -291,6 +291,11 @@ export const es: Messages = {
     done: 'Hecho',
     months: ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'],
     entries: {
+      'Beta 0.5.1.0': {
+        changes: [
+          "El tema navideño ahora tiene sus propios sonidos: tintineo de bolas, cascabeles de trineo, «Jingle Bells» al ganar y una fogata crepitante.",
+        ],
+      },
       'Beta 0.5.0.0': {
         highlight: "¡DotDuel ya está en beta!",
         changes: [

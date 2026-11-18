@@ -3,6 +3,31 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.1.0] - 2026-11-18
+
+### Added
+
+- **Christmas sound set** (`src/audioXmas.ts`), fully synthesized, no samples:
+  bauble-glass dot clinks (pitch per player), glockenspiel line runs, sleigh-bell
+  claims, a Jingle Bells win, a We Wish You a Merry Christmas draw, a soft
+  descending loss. Melodies are our own renditions of public-domain carols.
+  Selected per theme via `ThemeArt.soundSet`.
+- **Procedural fireside ambience** on the Christmas menu: fire roar, gusting
+  wind, wood crackles and a distant sleigh now and then (`startFireside`).
+  Christmas no longer inherits Forest & Pearl's stream/wind ambience.
+- **Campfire in the Christmas background** (portrait and landscape), placed
+  low-left so the tree, Resign button and a future bottom ad never cover it.
+
+### Changed
+
+- **Christmas tree sprite** repainted; its snow drift is feathered and toned to
+  match the background snow under the vignette. Metrics re-measured in
+  `src/themeArt.ts`.
+
+### Fixed
+
+- Switching theme now stops the previous theme's menu ambience.
+
 ## [0.5.0.0] - 2026-11-17 (Android 1.14, versionCode 16)
 
 ### Added

@@ -7,6 +7,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import type { ThemeId } from './theme';
 import { themeArt } from './themeArt';
+import { playXmasSfx, startFireside } from './audioXmas';
 
 export type SfxName = 'place' | 'lineComplete' | 'claim' | 'win' | 'loss' | 'draw' | 'click';
 
@@ -61,6 +62,7 @@ interface LoopLayer {
 }
 let windLayer: LoopLayer | null = null;
 let streamLayer: LoopLayer | null = null;
+let stopProcedural: (() => void) | null = null;
 
 // Browsers refuse to start audio before a real user gesture. Call this once,
 // synchronously, from the first pointerdown/click/keydown the app sees.
@@ -95,6 +97,7 @@ export function setMusicEnabled(on: boolean): void {
 }
 
 export function setAmbianceTheme(theme: ThemeId): void {
+  if (theme !== activeTheme) stopAmbianceInternal();
   activeTheme = theme;
   syncAmbiance();
 }
@@ -168,6 +171,11 @@ export function playSfx(name: SfxName, opts?: { player?: 1 | 2; lineLength?: num
   const dest = sfxLimiter ?? ctx.destination;
   const player = opts?.player ?? 1;
   const lineLength = opts?.lineLength ?? 1;
+
+  if (activeTheme && themeArt(activeTheme).soundSet === 'christmas') {
+    playXmasSfx(ctx, dest, name, player, lineLength);
+    return;
+  }
 
   switch (name) {
     case 'place': {
@@ -335,11 +343,18 @@ function stopLoopLayer(layer: LoopLayer | null): void {
 
 function startAmbianceInternal(): void {
   if (!ctx || ambiancePlaying) return;
-  if (!ambianceBuffers.wind && !ambianceBuffers.stream) return;
+  const procedural = !!activeTheme && themeArt(activeTheme).soundSet === 'christmas';
+  if (!procedural && !ambianceBuffers.wind && !ambianceBuffers.stream) return;
   const audioCtx = ctx;
   ambianceBus = audioCtx.createGain();
   ambianceBus.gain.value = 0.5;
   ambianceBus.connect(audioCtx.destination);
+
+  if (procedural) {
+    stopProcedural = startFireside(audioCtx, ambianceBus);
+    ambiancePlaying = true;
+    return;
+  }
 
   if (ambianceBuffers.wind) {
     windLayer = startLoopLayer(audioCtx, ambianceBuffers.wind, 0.7, ambianceBus);
@@ -353,6 +368,8 @@ function startAmbianceInternal(): void {
 
 function stopAmbianceInternal(): void {
   if (!ambiancePlaying) return;
+  stopProcedural?.();
+  stopProcedural = null;
   stopLoopLayer(windLayer);
   stopLoopLayer(streamLayer);
   windLayer = null;
@@ -372,7 +389,7 @@ function syncAmbiance(): void {
     primed &&
     musicEnabled &&
     !!activeTheme &&
-    !!themeArt(activeTheme).ambience &&
+    (!!themeArt(activeTheme).ambience || !!themeArt(activeTheme).soundSet) &&
     !ambiancePausedForBackground;
   if (shouldPlay) {
     void loadAmbianceBuffers();

@@ -108,6 +108,60 @@ Claude: `background-landscape`.
 
 ---
 
+## Prompt 5b / 6b — Campfire edit of the backgrounds (2026-11-18)
+
+The Christmas menu ambience is a crackling fire (`src/audioXmas.ts`), so the
+backgrounds get a small campfire in the lower-left, kept out of the centre
+where the board sits. Edit the existing art rather than repainting it.
+
+Phone: attach `public/art/christmas/background-portrait.webp` and paste:
+
+```
+Edit the attached image. Keep EVERYTHING exactly as it is — the same snowy fir trees, mist, moonlight, falling snow, golden fairy-light bokeh, colours, framing and painterly mobile-game style. Change only one thing: add a small, cosy campfire in the LOWER-LEFT corner of the image, sitting on the snow at the foot of the left-hand fir trees, partly tucked behind their lowest branches.
+
+The campfire: a few crossed logs with small, warm orange-gold flames (#ffb347 to #ff7a1a), a few tiny sparks and embers rising, a thin wisp of smoke drifting up and fading into the mist. A ring of dark stones around it, and maybe one snowy log lying beside it as a seat. It is SMALL: no wider than about one fifth of the image width, and it stays within the bottom quarter of the image and the left quarter of the image.
+
+Lighting: the fire casts a soft warm orange glow on the nearby snow and on the underside of the nearest branches only. The glow fades out quickly: it must NOT reach the centre of the image. The CENTRE of the image must stay exactly as dark, calm and uncluttered as in the original, because a game board sits there.
+
+No people, no animals, no houses, no cabins, no tents, no Santa, no text, letters, watermark or logo. Same vertical portrait size and composition as the attached image, about 9:16.
+```
+
+Desktop: attach `public/art/christmas/background-landscape.webp`, same prompt
+with the size sentence changed to "no wider than about one eighth of the image
+width, standing on the snow in front of the small fir trees on the left side,
+within the bottom third of the image and the left fifth of the image" and the
+last sentence to "Same wide horizontal size and composition as the attached
+image, about 16:9."
+
+Claude: `background-portrait`, `background-landscape` (replace the old ones).
+
+Phone follow-up (final, `art-src/christmas/background-portrait-final.jpg`):
+edits of the old portrait kept failing (fire hidden behind the tree, a flat
+"billboard" panel when the prompt mentioned the game board), so it was
+repainted from scratch. Lessons: never tell Gemini about the board or an
+"empty middle" (it paints a placeholder), don't use "heart" for the fire's
+core (it draws hearts), describe only the scene. The fire must sit low-left
+(centre ~84% down, ~18% from the left): higher, it hides behind the tree on
+iPhone SE; it stays left of Resign and above a future ad banner. Prompt used:
+
+```
+A painted night scene in a snowy fir forest, made as a tall vertical phone wallpaper (9:16 portrait), in the style of premium mobile-game background art: rich, soft, painterly brushwork, slightly stylized, cosy and magical. Sharp and detailed throughout, at the highest resolution possible.
+
+We are standing at the edge of a quiet forest clearing at night, looking straight ahead into the woods. Tall dark fir trees with snow resting on their branches rise along the left and right sides of the picture, from the bottom to the top, framing the view. Between them, the forest continues deep into the distance: rows of fir trees getting smaller, darker and softer as they disappear into a cool blue-green mist, with no hard lines anywhere. High above, a soft beam of pale moonlight falls through a gap in the treetops. Gentle snowflakes drift down everywhere. Far away among the dark trees, a few tiny warm golden lights twinkle.
+
+The ground is a wide, smooth, snow-covered clearing that fills the lower half of the picture, soft and moonlit, in calm grey-blue and grey-teal tones. Down in the bottom-left corner, close to the bottom edge and the left edge, a small campfire on the snow: crossed logs in a ring of round grey stones, bright natural flickering orange and yellow flames with a yellow-white core, tiny round sparks rising, a thin curl of smoke, a short snow-capped log beside it. Its warm light glows on the snow just around it. Only nature in the picture; no people, animals, text or lettering.
+```
+
+Tree (`art-src/christmas/tree-board-v2.png`): repainted by Gemini with a small
+snow drift instead of the big white mound (prompt asked for drift snow
+`#4e6266`–`#5f7579`, i.e. as dark as the clearing looks under the app's
+vignette, which darkens the background but not the tree). The cut-out's drift
+was then feathered and toned down in code to remove the magenta rim. Metrics
+re-measured: 883×989, axisX 441, topDotY 231, bottomRowY 806. Older versions
+kept in `art-src/christmas/` (`tree-board-with-mound.webp`, `-faded.webp`).
+
+---
+
 ## Prompt 7 — Snowflakes for the win snowfall → `snow-sheet.png`
 
 ```

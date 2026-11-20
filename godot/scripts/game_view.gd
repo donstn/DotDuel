@@ -1708,16 +1708,24 @@ func _toast(text: String) -> void:
 		float_layer.add_child(l)
 		l.position = Vector2((size.x - l.size.x) / 2.0, size.y - 170)
 	else:
-		l = PanelContainer.new()
-		l.add_theme_stylebox_override("panel", UI.small_frame())
-		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# A plain Panel with the label placed by hand: inside a container a
+		# wrapping label asks for one letter per line before it has a width.
+		var sb := UI.small_frame()
+		var p := Panel.new()
+		p.add_theme_stylebox_override("panel", sb)
+		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var w := minf(620.0, size.x - 40.0)
+		var inner := w - sb.content_margin_left - sb.content_margin_right
+		var th := UI.font(true).get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, inner, 24).y + 8.0
 		var t := UI.label(text, 24, UI.GOLD, true, 5)
 		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.add_child(t)
-		float_layer.add_child(l)
-		l.custom_minimum_size.x = size.x - 40
-		l.size = l.get_combined_minimum_size()
-		l.position = Vector2(20, size.y - 120 - l.size.y)
+		t.position = Vector2(sb.content_margin_left, sb.content_margin_top)
+		t.size = Vector2(inner, th)
+		p.add_child(t)
+		p.size = Vector2(w, th + sb.content_margin_top + sb.content_margin_bottom)
+		p.position = Vector2((size.x - w) / 2.0, size.y - 120 - p.size.y)
+		float_layer.add_child(p)
+		l = p
 	_toast_label = l
 	var tw := l.create_tween()
 	tw.tween_interval(2.2)

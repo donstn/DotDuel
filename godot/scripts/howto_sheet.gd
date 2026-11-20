@@ -42,7 +42,7 @@ func setup(with_tutorial: bool, tab := "steps") -> void:
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.add_theme_font_override("font", UI.font(true))
 		b.add_theme_font_size_override("font_size", 26)
-		b.text = Lang.a("howto.tabSteps" if k == "steps" else "howto.tabRules")
+		b.text = (Lang.a("howto.tabSteps" if k == "steps" else "howto.tabRules")).to_upper()
 		b.pressed.connect(_set_tab.bind(k))
 		tabs.add_child(b)
 		_tabs.append(b)

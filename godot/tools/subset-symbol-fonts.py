@@ -37,6 +37,24 @@ def cmap(path):
     return set(TTFont(path).getBestCmap())
 
 
+def match_line_metrics(font):
+    """Godot sizes a line by the tallest font in the fallback chain, so the
+    fallbacks take Outfit's vertical metrics (scaled to their own em)."""
+    ref = TTFont(os.path.join(OUT, "outfit-var.ttf"))
+    k = font["head"].unitsPerEm / ref["head"].unitsPerEm
+    hh, os2 = ref["hhea"], ref["OS/2"]
+    font["hhea"].ascent = round(hh.ascent * k)
+    font["hhea"].descent = round(hh.descent * k)
+    font["hhea"].lineGap = round(hh.lineGap * k)
+    if "OS/2" in font:
+        o = font["OS/2"]
+        o.sTypoAscender = round(os2.sTypoAscender * k)
+        o.sTypoDescender = round(os2.sTypoDescender * k)
+        o.sTypoLineGap = round(os2.sTypoLineGap * k)
+        o.usWinAscent = round(os2.usWinAscent * k)
+        o.usWinDescent = round(os2.usWinDescent * k)
+
+
 def write_subset(src, out, cps):
     opts = subset.Options()
     opts.layout_features = ["*"]
@@ -45,6 +63,7 @@ def write_subset(src, out, cps):
     s = subset.Subsetter(opts)
     s.populate(unicodes=sorted(cps))
     s.subset(font)
+    match_line_metrics(font)
     subset.save_font(font, os.path.join(OUT, out), opts)
     print(out, len(cps), "code points")
 
@@ -91,6 +110,7 @@ fb.setupHorizontalHeader(ascent=800, descent=-200)
 fb.setupNameTable({"familyName": "DotDuel CatchAll", "styleName": "Regular"})
 fb.setupOS2()
 fb.setupPost()
+match_line_metrics(fb.font)
 # cmap written by hand: (3,10) format 13, two groups around the surrogates.
 groups = [(0x00A0, 0xD7FF, 1), (0xE000, 0x10FFFF, 1)]
 sub13 = struct.pack(">HHIII", 13, 0, 16 + 12 * len(groups), 0, len(groups))

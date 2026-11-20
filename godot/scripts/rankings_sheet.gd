@@ -92,9 +92,9 @@ func _table(head: Array, rows: Array, widths: Array, on_sort := Callable(), acti
 			var b := Button.new()
 			b.flat = true
 			b.focus_mode = Control.FOCUS_NONE
-			b.text = "%s %s" % [h[0], ("▼" if sort_desc else "▲") if h[1] == active else "↕"]
+			b.text = ("%s %s" % [h[0], ("▼" if sort_desc else "▲") if h[1] == active else "↕"]).to_upper()
 			b.add_theme_font_override("font", UI.font(true))
-			b.add_theme_font_size_override("font_size", 19)
+			b.add_theme_font_size_override("font_size", UI.BTN_S)
 			b.add_theme_color_override("font_color", UI.ACCENT if h[1] == active else UI.TEXT_DIM)
 			b.custom_minimum_size = Vector2(widths[i], 0)
 			b.pressed.connect(on_sort.bind(h[1]))

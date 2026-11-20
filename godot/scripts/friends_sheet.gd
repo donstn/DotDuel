@@ -40,12 +40,12 @@ func setup(m) -> void:
 		if edit.text.strip_edges() == "":
 			return
 		send.disabled = true
-		send.text = Lang.a("friends.sending")
+		send.text = (Lang.a("friends.sending")).to_upper()
 		var err: String = await Social.send_request(edit.text)
 		if not is_inside_tree():
 			return
 		send.disabled = false
-		send.text = Lang.a("friends.send")
+		send.text = (Lang.a("friends.send")).to_upper()
 		if err == "":
 			edit.text = ""
 			msg.text = Lang.a("friends.requestSent")

@@ -78,7 +78,7 @@ var _loaded_marked := false
 var _last_claim := 0.0
 var _resign_armed := -10.0
 var _result: Dictionary = {}
-var _toast_label: Label
+var _toast_label: Control
 var tree := false  # Christmas Triangle: the painted tree is the board, apex up
 
 # Painted Christmas board art, source pixels (src/themeArt.ts).
@@ -86,6 +86,8 @@ const TREE_SIZE := Vector2(883, 989)
 const TREE_AXIS := 441.0
 const TREE_TOP := 231.0
 const TREE_BOTTOM := 806.0
+## Bottom edge of the score cards (row offsets 160..310, +4% active scale).
+const CARDS_BOTTOM := 322.0
 const WREATH_W := 987.0
 const WREATH_CAPS := [207.0, 203.0, 205.0, 207.0]  # left, top, right, bottom
 
@@ -139,6 +141,7 @@ func _ready() -> void:
 	float_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(float_layer)
 	resized.connect(_layout)
+	Look.changed.connect(_on_theme)
 	_layout.call_deferred()
 	_intro.call_deferred()
 
@@ -178,12 +181,14 @@ func _build_hud() -> void:
 	add_child(help)
 
 	var banner := PanelContainer.new()
-	banner.add_theme_stylebox_override("panel", UI.art_box(UI.BANNER, 92))
+	var bsb := UI.art_box(UI.BANNER, 92)
+	bsb.content_margin_left = bsb.texture_margin_left
+	bsb.content_margin_right = bsb.texture_margin_right
+	banner.add_theme_stylebox_override("panel", bsb)
 	banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	banner.custom_minimum_size = Vector2(300, 92)
 	_offsets(banner, -150, 22, 150, 114)
 	left_label = UI.label("", 30, UI.TEXT)
-	left_label.clip_text = true
 	banner.add_child(left_label)
 	add_child(banner)
 	banner.visible = coach == null  # one number too many while learning
@@ -338,7 +343,7 @@ func _make_card(p: int) -> Control:
 	wrap.add_child(think)
 	wrap.resized.connect(func(): wrap.pivot_offset = wrap.size / 2.0)
 	score_l.text = str(s.scores[p])
-	cards[p] = {"wrap": wrap, "glow": glow, "score": score_l, "think": think, "avatar": av, "clock": clock_l}
+	cards[p] = {"wrap": wrap, "glow": glow, "score": score_l, "think": think, "avatar": av, "clock": clock_l, "sb": sb, "gsb": gsb, "chip": chip}
 	return wrap
 
 
@@ -347,11 +352,20 @@ func _update_hud() -> void:
 	var set_left := func(v: float):
 		shown_left = v
 		left_label.text = Lang.n("points_left", int(round(v)))
+		# The ribbon widens with its text (between ‹ and ?), the text stays on
+		# its flat middle and only shrinks once the ribbon can't grow.
 		var f := left_label.get_theme_font("font")
+		var banner := left_label.get_parent() as Control
+		var sb := banner.get_theme_stylebox("panel")
+		var ends: float = sb.content_margin_left + sb.content_margin_right
+		var max_w := maxf(300.0, size.x - 2.0 * 212.0)
 		var fs := 30
-		while fs > 16 and f.get_string_size(left_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > 215:
+		while fs > 16 and f.get_string_size(left_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > max_w - ends - 8:
 			fs -= 1
 		left_label.add_theme_font_size_override("font_size", fs)
+		var w := clampf(f.get_string_size(left_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + ends + 16, 300.0, max_w)
+		banner.offset_left = -w / 2.0
+		banner.offset_right = w / 2.0
 	create_tween().tween_method(set_left, shown_left, float(left), 0.5)
 	var n := s.pending.size()
 	waiting_label.text = "" if n == 0 else Lang.n("lines_waiting", n)
@@ -370,6 +384,26 @@ func _roll_score(p: int) -> void:
 
 # ---------------------------------------------------------------- layout
 
+## Theme switched mid-game (Settings): new palette, tree ↔ felt board.
+func _on_theme() -> void:
+	BRIGHT = Look.bright
+	STRIKE_OUTER = Look.strike_outer
+	STRIKE_INNER = Look.strike_inner
+	WAIT_COL = Look.pending_col
+	tree = Look.xmas() and shape == "triangle"
+	waiting_label.add_theme_color_override("font_color", WAIT_COL)
+	for p in [1, 2]:
+		var c: Color = BRIGHT[_sk(p)]
+		cards[p].gsb.bg_color = Color(c, 0.10)
+		cards[p].gsb.shadow_color = Color(c, 0.55)
+		cards[p].sb.border_color = Color(c, 0.55)
+		cards[p].score.add_theme_color_override("font_color", c)
+		cards[p].chip.texture = UI.tex("dot-p%d.webp" % _sk(p))
+		for d in cards[p].think.get_children():
+			d.add_theme_color_override("font_color", c)
+	_layout.call_deferred()
+
+
 func _layout() -> void:
 	if b == null or size.x <= 0:
 		return
@@ -378,8 +412,9 @@ func _layout() -> void:
 	var bw := b.bounds.size.x + 1.4
 	var bh := b.bounds.size.y + 1.4
 	var shift := 0.0
+	var ku := 0.0
 	if tree:
-		var ku := b.bounds.size.y / (TREE_BOTTOM - TREE_TOP)
+		ku = b.bounds.size.y / (TREE_BOTTOM - TREE_TOP)
 		# The outer branch tips may run a little past the screen edge, so the
 		# tree (and its dots) can be bigger.
 		bw = maxf(bw, TREE_SIZE.x * ku / 1.18)
@@ -390,19 +425,27 @@ func _layout() -> void:
 		bh = b.bounds.size.y + 2.8
 	unit = min(area.size.x / bw, area.size.y / bh, 130.0)
 	var cy := area.get_center().y
-	# The campfire stays in its painted fireplace; the tree makes room instead,
-	# so no flame ever reaches the bottom baubles (they'd hide the tips).
-	if tree and is_instance_valid(Look.fire):
-		var flame_top: float = Look.fire.global_position.y - global_position.y - FLAME_TOP * Look.fire.global_scale.y - 6.0
+	if tree:
+		# The star may tuck under the score cards, but the top bauble must sit
+		# fully below them (it was half hidden and hard to tap), and the campfire
+		# stays in its painted fireplace: no flame reaches the bottom baubles.
+		var floor_y := area.end.y
+		if is_instance_valid(Look.fire):
+			floor_y = Look.fire.global_position.y - global_position.y - FLAME_TOP * Look.fire.global_scale.y - 6.0
+		var apex := TREE_TOP * ku + 0.5  # tree top → top edge of the top bauble, in units
+		var reach := bh / 2.0 + b.bounds.size.y / 2.0 + 0.36 - shift  # tree top → bottom of last row
 		var tree_top := cy - bh / 2.0 * unit
-		var reach := bh / 2.0 + b.bounds.size.y / 2.0 + 0.36 - shift  # tree top → bottom of last row, in units
-		if tree_top + reach * unit > flame_top:
-			# First use the free space under the score cards, then shrink.
-			var lift := minf(tree_top + reach * unit - flame_top, tree_top - (top - 50.0))
-			tree_top -= maxf(lift, 0.0)
-			if tree_top + reach * unit > flame_top and flame_top > tree_top:
-				unit = maxf(unit * 0.7, (flame_top - tree_top) / reach)
-			cy = tree_top + bh / 2.0 * unit
+		# Lift into the free space under the cards only as far as the bauble allows.
+		var overflow := tree_top + reach * unit - floor_y
+		if overflow > 0:
+			tree_top -= minf(overflow, tree_top + apex * unit - CARDS_BOTTOM)
+		if tree_top + apex * unit < CARDS_BOTTOM:
+			tree_top = CARDS_BOTTOM - apex * unit
+		if tree_top + reach * unit > floor_y and floor_y > CARDS_BOTTOM:
+			# Still too tall: shrink, keeping the bauble just under the cards.
+			unit = maxf(minf(unit, (floor_y - CARDS_BOTTOM) / (reach - apex)), unit * 0.6)
+			tree_top = CARDS_BOTTOM - apex * unit
+		cy = tree_top + bh / 2.0 * unit
 	r = unit * 0.36
 	board.position = Vector2(area.get_center().x, cy) - Vector2(0, shift * unit)
 	_rebuild_board()
@@ -648,6 +691,7 @@ func _can_act() -> bool:
 
 
 var _act_since := 0.0
+var _last_tap := -10.0
 var _claim_hint_shown := false
 
 
@@ -768,13 +812,7 @@ func _coach_turn() -> bool:
 
 func _build_coach_bubble() -> void:
 	var card := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.03, 0.1, 0.06, 0.95)
-	sb.set_corner_radius_all(24)
-	sb.set_border_width_all(3)
-	sb.border_color = Color(UI.GOLD, 0.75)
-	sb.set_content_margin_all(18)
-	card.add_theme_stylebox_override("panel", sb)
+	card.add_theme_stylebox_override("panel", UI.small_frame())
 	card.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	_offsets(card, 24, -24, -24, -24)
 	card.grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -888,7 +926,16 @@ func _gui_input(e: InputEvent) -> void:
 			if nd >= 0:
 				Sfx.play("tick", 1.4, -14.0)
 	elif e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
-		if not _can_act() or _time - _act_since < 0.35:  # no double-tap through the bot's reply
+		# Only the second tap of a double-tap that began before this turn is
+		# dropped (it would place a dot straight through the bot's reply). Any
+		# other tap counts, however soon after the bot moved.
+		var prev := _last_tap
+		_last_tap = _time
+		if not _can_act():
+			hover_dot = -1
+			return
+		if _time - prev < 0.3 and _act_since > prev:
+			hover_dot = -1
 			return
 		var d := _dot_at(e.position)
 		if d < 0:
@@ -1081,13 +1128,7 @@ func _maybe_pending_tip() -> void:
 		return
 	Store.set_setting("pendingTipSeen", true)
 	var card := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.03, 0.1, 0.06, 0.96)
-	sb.set_corner_radius_all(24)
-	sb.set_border_width_all(3)
-	sb.border_color = Color(UI.GOLD, 0.8)
-	sb.set_content_margin_all(20)
-	card.add_theme_stylebox_override("panel", sb)
+	card.add_theme_stylebox_override("panel", UI.small_frame())
 	card.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	_offsets(card, 30, -330, -30, -60)
 	card.grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -1183,7 +1224,7 @@ func _game_over() -> void:
 	var beat_impossible := mode == "ai" and s.winner == 1 and level == 5
 	if beat_impossible:
 		title = Lang.a("gameOver.champion") if shape == FINAL_SHAPE else Lang.a("gameOver.impossibleDefeated")
-	var lines := ["%s vs %s · %s" % [_player_name(1), _player_name(2), Lang.t("shape_" + shape)]]
+	var lines: Array = []
 	if finished_reason == "resign":
 		lines.push_front(Lang.a("gameOver.youResigned"))
 	if mode == "daily":
@@ -1344,7 +1385,7 @@ func _suggestion(unlock: Dictionary, beat_impossible: bool) -> Control:
 
 
 ## Builds the end-of-game panel. Returns {panel, lines: Array[Label], primary}.
-func _result_panel(title: String, col: Color, celebrate: bool, happy: bool, lines: Array, primary_text: String, extra: Control = null) -> Dictionary:
+func _result_panel(title: String, _col: Color, celebrate: bool, happy: bool, lines: Array, primary_text: String, extra: Control = null) -> Dictionary:
 	var ov := Control.new()
 	ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(ov)
@@ -1352,63 +1393,230 @@ func _result_panel(title: String, col: Color, celebrate: bool, happy: bool, line
 	dim.color = Color(0, 0.02, 0.01, 0.0)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ov.add_child(dim)
-	create_tween().tween_property(dim, "color:a", 0.62, 0.4)
+	create_tween().tween_property(dim, "color:a", 0.68, 0.4)
 
+	# Behind the card: a soft glow always; light rays + confetti for a win.
+	var glow := DrawCtl.new()
+	glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	glow.fn = func(c: Control):
+		var at := c.size / 2.0
+		for i in 12:
+			c.draw_circle(at, c.size.x * (0.5 - i * 0.035), Color(UI.ACCENT, 0.025))
+	ov.add_child(glow)
+	var rays: DrawCtl = null
 	if celebrate:
+		rays = DrawCtl.new()
+		rays.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		rays.fn = func(c: Control):
+			var at := c.size / 2.0
+			var rad := c.size.x / 2.0
+			for i in 16:
+				var a0 := TAU * i / 16.0
+				var a1 := a0 + TAU / 40.0
+				c.draw_polygon(PackedVector2Array([at, at + Vector2.from_angle(a0) * rad, at + Vector2.from_angle(a1) * rad]),
+					PackedColorArray([Color(1, 0.94, 0.66, 0.2), Color(1, 0.94, 0.66, 0), Color(1, 0.94, 0.66, 0)]))
+		ov.add_child(rays)
 		_confetti(ov)
 
 	var panel := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.03, 0.1, 0.06, 0.95)
-	sb.set_corner_radius_all(36)
-	sb.set_border_width_all(4)
-	sb.border_color = Color(col, 0.8)
-	sb.shadow_color = Color(col, 0.35)
-	sb.shadow_size = 40
-	sb.content_margin_left = 36
-	sb.content_margin_right = 36
-	sb.content_margin_top = 34
-	sb.content_margin_bottom = 34
-	panel.add_theme_stylebox_override("panel", sb)
+	panel.add_theme_stylebox_override("panel", UI.frame_box(true))
 	ov.add_child(panel)
+	var w := minf(660.0, size.x - (100.0 if Look.xmas() else 40.0))
+	panel.custom_minimum_size.x = w
+	var inner_w := w - 92.0
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 18)
 	panel.add_child(vb)
-	var t := UI.label(title, 92, col, true, 16)
-	UI.fit_label(t, 92, Vector2(560, 120))
-	t.resized.connect(func(): t.pivot_offset = t.size / 2.0)
-	vb.add_child(t)
-	var sc := UI.label("%d  :  %d" % [s.scores[1], s.scores[2]], 64, UI.TEXT, true, 10)
-	vb.add_child(sc)
+
+	# Players and the score.
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	vb.add_child(row)
+	var side_w := minf(180.0, (inner_w - 150.0) / 2.0)
+	row.add_child(_result_side(1, side_w))
+	var sc := UI.label("%d : %d" % [s.scores[1], s.scores[2]], 64, UI.TEXT, true, 10)
+	sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UI.fit_label(sc, 64, Vector2(inner_w - 2.0 * side_w - 12.0, 80))
+	row.add_child(sc)
+	row.add_child(_result_side(2, side_w))
+
+	var pic := DrawCtl.new()
+	pic.custom_minimum_size = Vector2(0, minf(250.0, size.y * 0.2))
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pic.fn = _draw_mini_board
+	vb.add_child(pic)
+
+	var facts := _result_facts()
+	if facts:
+		vb.add_child(facts)
 	var labels: Array[Label] = []
 	for line in lines:
-		var l := UI.label(line, 24, UI.TEXT_DIM, false, 4)
+		var l := UI.label(line, 23, UI.TEXT_DIM, false, 4)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.custom_minimum_size = Vector2(520, 0)
+		l.custom_minimum_size = Vector2(inner_w, 0)
 		vb.add_child(l)
 		labels.append(l)
 	if extra:
 		vb.add_child(extra)
-	var again := UI.art_button(primary_text, UI.PRIMARY_BTN, 520, 114, 36, Color("0c2416"))
+	var again := UI.art_button(primary_text, UI.PRIMARY_BTN, int(inner_w), 108, UI.BTN_XL, Color("0c2416"))
+	again.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vb.add_child(again)
-	var menu := UI.art_button(Lang.a("gameOver.menu"), UI.PILL_BTN, 260, 92, 28)
-	menu.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var bottom := HBoxContainer.new()
+	bottom.add_theme_constant_override("separation", 14)
+	vb.add_child(bottom)
+	var menu := UI.plain_button(Lang.a("gameOver.menu"))
+	menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	menu.pressed.connect(func(): exit_requested.emit())
-	vb.add_child(menu)
+	bottom.add_child(menu)
 	if _can_share():
-		var share := UI.small_button(Lang.a("share.shareResult"), false, 22)
-		share.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		var share := UI.plain_button(Lang.a("share.shareResult"))
+		share.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		share.pressed.connect(func(): _share_result(share))
-		vb.add_child(share)
+		bottom.add_child(share)
+
+	var wreath: Control = UI.wreath() if Look.xmas() else null
+	if wreath:
+		ov.add_child(wreath)
+	var ribbon := UI.ribbon(title, minf(w - 60.0, 600.0))
+	ov.add_child(ribbon)
 
 	await get_tree().process_frame
 	panel.size = panel.get_combined_minimum_size()
-	var final_pos := (size - panel.size) / 2.0
-	panel.position = Vector2(final_pos.x, -panel.size.y - 40)
+	var final_pos := (size - panel.size) / 2.0 + Vector2(0, 20)
+	var place := func():
+		ribbon.position = panel.position + Vector2((panel.size.x - ribbon.size.x) / 2.0, -ribbon.size.y * 0.5)
+		if wreath:
+			UI.fit_wreath(wreath, panel)
+		var g := maxf(panel.size.x, panel.size.y) * 1.25
+		glow.size = Vector2(g, g)
+		glow.position = panel.position + panel.size / 2.0 - glow.size / 2.0
+		if rays:
+			var rr := maxf(size.x, size.y) * 1.2
+			rays.size = Vector2(rr, rr)
+			rays.pivot_offset = rays.size / 2.0
+			rays.position = Vector2(size.x / 2.0, panel.position.y + 60.0) - rays.size / 2.0
+	panel.item_rect_changed.connect(place)
+	panel.position = Vector2(final_pos.x, -panel.size.y - 80)
+	place.call()
 	var tw := create_tween()
 	tw.tween_property(panel, "position", final_pos, 0.7).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if rays:
+		rays.modulate.a = 0.0
+		var rt := rays.create_tween().set_loops()
+		rt.tween_property(rays, "rotation", TAU, 60.0).from(0.0)
+		rays.create_tween().tween_property(rays, "modulate:a", 1.0, 0.8).set_delay(0.4)
 	Sfx.result("win" if celebrate else ("draw" if happy else "loss"))
 	return {"panel": panel, "lines": labels, "primary": again}
+
+
+## One player on the result card: avatar in a ring of their dot colour, name.
+func _result_side(p: int, w: float) -> Control:
+	var vb := VBoxContainer.new()
+	vb.custom_minimum_size.x = w
+	vb.add_theme_constant_override("separation", 6)
+	var ring := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.02, 0.08, 0.04, 0.8)
+	sb.set_corner_radius_all(60)
+	sb.set_border_width_all(5)
+	sb.border_color = BRIGHT[_sk(p)]
+	sb.set_content_margin_all(6)
+	ring.add_theme_stylebox_override("panel", sb)
+	ring.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var av := TextureRect.new()
+	av.texture = cards[p].avatar.texture
+	av.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	av.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	av.custom_minimum_size = Vector2(92, 92)
+	ring.add_child(av)
+	vb.add_child(ring)
+	var n := UI.label(_player_name(p), 22, UI.TEXT, false, 5)
+	n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	n.max_lines_visible = 2
+	n.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	n.custom_minimum_size.x = w
+	vb.add_child(n)
+	return vb
+
+
+## Small facts under the board picture ("Longest line · 6", "Claimed · 3").
+func _result_facts() -> Control:
+	var me := my_slot if online else 1
+	var longest := 0
+	for li in b.lines.size():
+		if s.line_state[li] == GState.SCORED and s.line_owner[li] == me:
+			longest = maxi(longest, b.lines[li].size())
+	var items: Array[String] = []
+	if longest > 0:
+		items.append(Lang.t("fact_longest") % longest)
+	if not online and not auto_p1 and mode != "hotseat" and claims > 0:
+		items.append(Lang.t("fact_claimed") % claims)
+	if items.is_empty():
+		return null
+	var flow := HFlowContainer.new()
+	flow.alignment = FlowContainer.ALIGNMENT_CENTER
+	flow.add_theme_constant_override("h_separation", 12)
+	flow.add_theme_constant_override("v_separation", 10)
+	for t in items:
+		var chip := PanelContainer.new()
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.02, 0.09, 0.05, 0.85)
+		sb.border_color = Color(UI.ACCENT, 0.45)
+		sb.set_border_width_all(2)
+		sb.set_corner_radius_all(30)
+		sb.content_margin_left = 20
+		sb.content_margin_right = 20
+		sb.content_margin_top = 6
+		sb.content_margin_bottom = 6
+		chip.add_theme_stylebox_override("panel", sb)
+		chip.add_child(UI.label(t, 21, UI.TEXT, false, 3))
+		flow.add_child(chip)
+	return flow
+
+
+## The final board, small: same dots and strikes as the game.
+func _draw_mini_board(c: Control) -> void:
+	var bb := b.bounds.grow(0.7)
+	var k := minf(c.size.x / bb.size.x, c.size.y / bb.size.y)
+	var at := func(v: Vector2) -> Vector2:
+		var d := (v - b.bounds.get_center()) * k
+		if tree:
+			d.y = -d.y
+		return c.size / 2.0 + d
+	var hull := PackedVector2Array()
+	for v in b.outline:
+		hull.append(at.call(v))
+	c.draw_colored_polygon(hull, Color(0.04, 0.13, 0.08, 0.95))
+	hull.append(hull[0])
+	c.draw_polyline(hull, Color(0.75, 0.62, 0.38, 0.8), 3.0, true)
+	var rr := k * 0.36
+	for d in b.pos.size():
+		if s.colored[d] == 0:
+			c.draw_circle(at.call(b.pos[d]), rr * 0.8, Color(0, 0, 0, 0.45))
+	var ends := func(li: int) -> Array:
+		var ids := b.lines[li]
+		var a: Vector2 = at.call(b.pos[ids[0]])
+		var e: Vector2 = at.call(b.pos[ids[ids.size() - 1]])
+		var dir: Vector2
+		if ids.size() == 1:
+			dir = b.line_dir[li] * rr * 1.25
+			if tree:
+				dir.y = -dir.y
+		else:
+			dir = (e - a).normalized() * rr * 0.75
+		return [a - dir, e + dir]
+	for li in b.lines.size():
+		if s.line_state[li] == GState.SCORED:
+			var en: Array = ends.call(li)
+			c.draw_line(en[0], en[1], STRIKE_OUTER[_sk(s.line_owner[li])], rr * 0.5, true)
+	var half := rr * 0.95
+	for d in b.pos.size():
+		if s.colored[d] != 0:
+			c.draw_texture_rect(UI.tex("dot-p%d.webp" % _sk(s.colored[d])), Rect2(at.call(b.pos[d]) - Vector2(half, half), Vector2(half, half) * 2.0), false)
+	for li in b.lines.size():
+		if s.line_state[li] == GState.SCORED:
+			var en: Array = ends.call(li)
+			c.draw_line(en[0], en[1], Color(STRIKE_INNER[_sk(s.line_owner[li])], 0.9), rr * 0.2, true)
 
 
 func _confetti(parent: Control) -> void:
@@ -1491,13 +1699,25 @@ func resign() -> void:
 
 
 func _toast(text: String) -> void:
-	if _toast_label:
+	if is_instance_valid(_toast_label):
 		_toast_label.queue_free()
-	var l := UI.label(text, 30, UI.GOLD, true, 8)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	float_layer.add_child(l)
-	l.size = Vector2(size.x - 40, 50)
-	l.position = Vector2(20, size.y - 150)
+	var l: Control
+	if UI.font(true).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x <= minf(560.0, size.x - 40.0) - 130.0:
+		l = UI.ribbon(text, minf(560.0, size.x - 40.0))
+		(l.get_child(0) as Label).add_theme_color_override("font_color", UI.GOLD)
+		float_layer.add_child(l)
+		l.position = Vector2((size.x - l.size.x) / 2.0, size.y - 170)
+	else:
+		l = PanelContainer.new()
+		l.add_theme_stylebox_override("panel", UI.small_frame())
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var t := UI.label(text, 24, UI.GOLD, true, 5)
+		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.add_child(t)
+		float_layer.add_child(l)
+		l.custom_minimum_size.x = size.x - 40
+		l.size = l.get_combined_minimum_size()
+		l.position = Vector2(20, size.y - 120 - l.size.y)
 	_toast_label = l
 	var tw := l.create_tween()
 	tw.tween_interval(2.2)
@@ -1646,15 +1866,15 @@ func _online_over(row: Dictionary) -> void:
 		add.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		add.pressed.connect(func():
 			add.disabled = true
-			add.text = Lang.a("gameOver.sendingRequest")
+			add.text = (Lang.a("gameOver.sendingRequest")).to_upper()
 			var e: String = await Social.send_request_uid(opp_uid)
 			if not is_instance_valid(add):
 				return
 			if e == "":
-				add.text = Lang.a("gameOver.friendRequestSent")
+				add.text = (Lang.a("gameOver.friendRequestSent")).to_upper()
 			else:
 				add.disabled = false
-				add.text = Lang.a("gameOver.couldntSend"))
+				add.text = (Lang.a("gameOver.couldntSend")).to_upper())
 		extra.add_child(add)
 	# No rematch against a bot: the primary button goes back to the lobby.
 	if bot:
@@ -1673,7 +1893,7 @@ var _rematch_on := false
 
 func _toggle_rematch() -> void:
 	_rematch_on = not _rematch_on
-	_result.primary.text = Lang.a("gameOver.waitingForOpponent") if _rematch_on else Lang.a("gameOver.rematch")
+	_result.primary.text = (Lang.a("gameOver.waitingForOpponent") if _rematch_on else Lang.a("gameOver.rematch")).to_upper()
 	Online.request_rematch(_rematch_on)
 
 
@@ -1683,9 +1903,9 @@ func _update_rematch(row: Dictionary) -> void:
 	var rm = row.get("rematch", {})
 	var opp_wants := rm is Dictionary and bool(rm.get(str(3 - my_slot), false))
 	if opp_wants and not _rematch_on:
-		_result.primary.text = Lang.a("gameOver.acceptRematch")
+		_result.primary.text = (Lang.a("gameOver.acceptRematch")).to_upper()
 	elif not _rematch_on:
-		_result.primary.text = Lang.a("gameOver.rematch")
+		_result.primary.text = (Lang.a("gameOver.rematch")).to_upper()
 
 
 func _on_match_record(rec: Dictionary) -> void:
@@ -1772,7 +1992,7 @@ func _share_result(btn: Button) -> void:
 		return
 	var img := get_viewport().get_texture().get_image()
 	btn.modulate.a = 1.0
-	btn.text = Lang.a("share.preparing")
+	btn.text = (Lang.a("share.preparing")).to_upper()
 	var jpg := img.save_jpg_to_buffer(0.9)
 	var text := _share_text()
 	if OS.has_feature("web"):
@@ -1801,4 +2021,13 @@ func _share_result(btn: Button) -> void:
 		_toast(Lang.a("share.textCopied"))
 	if is_instance_valid(btn):
 		btn.disabled = false
-		btn.text = Lang.a("share.shareResult")
+		btn.text = (Lang.a("share.shareResult")).to_upper()
+
+
+## A Control that draws with a callable (result card art).
+class DrawCtl extends Control:
+	var fn: Callable
+
+	func _draw() -> void:
+		if fn.is_valid():
+			fn.call(self)

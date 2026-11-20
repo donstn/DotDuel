@@ -20,6 +20,13 @@ const PILL_BTN := ["pill-button.webp", 475, 179, 106, 108]
 const BANNER := ["title-banner.webp", 588, 178, 115, 115]
 const DANGER := ["danger-pill.webp", 215, 81, 54, 55]
 
+## Buttons: one font (Chakra Petch), always UPPERCASE; importance is shown by
+## size only. Callers' sizes snap to these four.
+const BTN_XL := 40  # the one main action of a screen (Start, Find match, Lobby)
+const BTN_L := 32   # home menu plaques
+const BTN_M := 26   # secondary actions: Back, Cancel, sheet buttons
+const BTN_S := 21   # inline list actions, links, tabs in tight rows
+
 static var _fonts := {}
 static var _tex := {}
 
@@ -93,7 +100,9 @@ static func label(text: String, size: int, color := TEXT, bold := true, outline 
 	return l
 
 
-static func art_button(text: String, spec: Array, w: int, h: int, font_size := 34, color := TEXT) -> Button:
+static func art_button(text: String, spec: Array, w: int, h: int, font_size := BTN_XL, color := TEXT) -> Button:
+	text = text.to_upper()
+	font_size = btn_size(font_size)
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(w, h)
@@ -116,6 +125,10 @@ static func art_button(text: String, spec: Array, w: int, h: int, font_size := 3
 	b.add_theme_font_size_override("font_size", fs)
 	juicy(b)
 	return b
+
+
+static func btn_size(fs: int) -> int:
+	return BTN_XL if fs >= 34 else (BTN_L if fs >= 29 else (BTN_M if fs >= 24 else BTN_S))
 
 
 ## Shrinks a wrapping label's font until its text fits `box`.
@@ -276,6 +289,89 @@ static func _switch_icon(on: bool) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
+## Popup background: the painted card frame (9-slice). With a title the top
+## margin leaves room for the ribbon that sits across the frame's top edge.
+static func frame_box(titled := true) -> StyleBoxTexture:
+	var sb := StyleBoxTexture.new()
+	sb.texture = scaled_tex("card-frame.webp", 520)
+	var m := 66.0  # painted corner ornaments (48 px in the 371 px source)
+	sb.texture_margin_left = m
+	sb.texture_margin_right = m
+	sb.texture_margin_top = m
+	sb.texture_margin_bottom = m
+	sb.content_margin_left = 46
+	sb.content_margin_right = 46
+	# Text keeps clear of the corner ornaments and the ribbon's lower half.
+	sb.content_margin_top = 80 if titled else 66
+	sb.content_margin_bottom = 66
+	return sb
+
+
+## The same painted frame at a smaller scale, for in-game cards and banners
+## (lesson bubble, tips, invites, long toasts).
+static func small_frame() -> StyleBoxTexture:
+	var sb := StyleBoxTexture.new()
+	sb.texture = scaled_tex("card-frame.webp", 360)
+	var m := 47.0
+	sb.texture_margin_left = m
+	sb.texture_margin_right = m
+	sb.texture_margin_top = m
+	sb.texture_margin_bottom = m
+	sb.content_margin_left = 34
+	sb.content_margin_right = 34
+	sb.content_margin_top = 46
+	sb.content_margin_bottom = 46
+	return sb
+
+
+## Christmas: the painted wreath laid over a popup's frame edge (see fit_wreath).
+static func wreath() -> NinePatchRect:
+	var n := NinePatchRect.new()
+	n.texture = scaled_tex("wreath-frame.webp", 360)
+	var m := int(210.0 * 360.0 / 990.0)
+	n.patch_margin_left = m
+	n.patch_margin_right = m
+	n.patch_margin_top = m
+	n.patch_margin_bottom = m
+	n.draw_center = false
+	n.axis_stretch_horizontal = NinePatchRect.AXIS_STRETCH_MODE_TILE_FIT
+	n.axis_stretch_vertical = NinePatchRect.AXIS_STRETCH_MODE_TILE_FIT
+	n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return n
+
+
+## The wreath reaches 38 px outside the panel, so its inner edge stays outside
+## the frame's content margin (46 px): it never covers text.
+static func fit_wreath(n: Control, panel: Control) -> void:
+	n.position = panel.position - Vector2(38, 38)
+	n.size = panel.size + Vector2(76, 76)
+
+
+## The painted title ribbon with `text` on it, at most `max_w` wide.
+static func ribbon(text: String, max_w: float) -> PanelContainer:
+	var h := 92
+	var p := PanelContainer.new()
+	var sb := art_box(BANNER, h)
+	# Text only on the ribbon's flat middle, never over the curled ends.
+	sb.content_margin_left = sb.texture_margin_left
+	sb.content_margin_right = sb.texture_margin_right
+	p.add_theme_stylebox_override("panel", sb)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var l := label(text, 30, TEXT, true, 6)
+	l.clip_text = true
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	var room := max_w - sb.content_margin_left - sb.content_margin_right
+	var fs := 30
+	while fs > 16 and font(true).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > room:
+		fs -= 1
+	l.add_theme_font_size_override("font_size", fs)
+	var w := font(true).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	p.custom_minimum_size = Vector2(clampf(w + sb.content_margin_left + sb.content_margin_right + 24, 300, max_w), h)
+	p.size = p.custom_minimum_size
+	p.add_child(l)
+	return p
+
+
 ## Dark rounded strip behind text that sits straight on the painted background
 ## (menu links, footer, card state lines) — the web app's glass pill.
 static func scrim(child: Control) -> PanelContainer:
@@ -358,28 +454,31 @@ static func small_button(text: String, danger := false, font_size := 22) -> Butt
 	return b
 
 
-static func plain_button(text: String, danger := false, font_size := 25) -> Button:
+static func plain_button(text: String, danger := false, font_size := BTN_M) -> Button:
+	var fs := btn_size(font_size)
 	var b := Button.new()
-	b.text = text
+	b.text = text.to_upper()
 	b.focus_mode = Control.FOCUS_NONE
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.add_theme_font_override("font", font(true))
-	b.add_theme_font_size_override("font_size", font_size)
+	b.add_theme_font_size_override("font_size", fs)
 	b.custom_minimum_size = Vector2(0, 68)
+	var sb := art_box(DANGER if danger else PILL_BTN, 68)
+	sb.content_margin_top = 8
+	sb.content_margin_bottom = 8
+	for st in ["normal", "hover", "pressed", "disabled", "focus"]:
+		b.add_theme_stylebox_override(st, sb)
 	# A shrink-centred wrapping button gets no width and breaks after every
 	# letter: only those keep their text's width (up to a line). Fill/fixed
 	# rows still wrap freely.
 	b.ready.connect(func():
 		if b.size_flags_horizontal == Control.SIZE_SHRINK_CENTER:
-			var w := font(true).get_string_size(b.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 48
+			var w := font(true).get_string_size(b.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + sb.content_margin_left + sb.content_margin_right + 12
 			b.custom_minimum_size.x = minf(w, 560))
-	var col := Color("ff8a7a") if danger else TEXT
 	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		b.add_theme_color_override(k, col)
-	var border := Color(1, 0.45, 0.4, 0.6) if danger else Color(1, 1, 1, 0.18)
-	b.add_theme_stylebox_override("normal", _flat_box(Color(0.02, 0.07, 0.04, 0.9), border))
-	b.add_theme_stylebox_override("hover", _flat_box(Color(0.05, 0.14, 0.08, 0.95), border))
-	b.add_theme_stylebox_override("pressed", _flat_box(Color(0.08, 0.2, 0.12, 0.95), ACCENT))
-	b.add_theme_stylebox_override("disabled", _flat_box(Color(0.02, 0.05, 0.03, 0.6), Color(1, 1, 1, 0.06)))
+		b.add_theme_color_override(k, TEXT)
 	b.add_theme_color_override("font_disabled_color", TEXT_DIM)
+	b.add_theme_constant_override("outline_size", 6)
+	b.add_theme_color_override("font_outline_color", Color(0, 0.08, 0.03, 0.8))
+	juicy(b)
 	return b

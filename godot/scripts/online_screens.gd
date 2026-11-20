@@ -324,7 +324,7 @@ func match_found() -> void:
 		if state.me:
 			return
 		state.me = true
-		ready_btn.text = Lang.t("waiting")
+		ready_btn.text = (Lang.t("waiting")).to_upper()
 		Online.mark_ready())
 	var tick := Timer.new()
 	tick.wait_time = 0.25

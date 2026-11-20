@@ -164,10 +164,10 @@ func _small(row: Container, text: String, action: Callable) -> void:
 func _link(row: Container, text: String, action: Callable) -> void:
 	var b := Button.new()
 	b.flat = true
-	b.text = text
+	b.text = text.to_upper()
 	b.focus_mode = Control.FOCUS_NONE
-	b.add_theme_font_override("font", UI.font(false))
-	b.add_theme_font_size_override("font_size", 24)
+	b.add_theme_font_override("font", UI.font(true))
+	b.add_theme_font_size_override("font_size", UI.BTN_S)
 	b.add_theme_color_override("font_color", UI.ACCENT)
 	b.add_theme_color_override("font_hover_color", UI.TEXT)
 	b.add_theme_color_override("font_pressed_color", UI.TEXT)

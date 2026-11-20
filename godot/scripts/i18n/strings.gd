@@ -9,6 +9,8 @@ extends RefCounted
 
 const STRINGS := {
 	"en": {
+		"fact_longest": "Longest line · %d",
+		"fact_claimed": "Claimed · %d",
 		"tagline": "Colour dots. Finish lines.\nOutscore your rival.",
 		"play_bot": "PLAY VS BOT",
 		"play_online": "PLAY ONLINE",
@@ -92,6 +94,8 @@ const STRINGS := {
 		"choose_language": "CHOOSE A LANGUAGE",
 	},
 	"lt": {
+		"fact_longest": "Ilgiausia linija · %d",
+		"fact_claimed": "Pasiimta linijų · %d",
 		"tagline": "Spalvinkite taškus. Užbaikite linijas.\nSurinkite daugiau už varžovą.",
 		"play_bot": "ŽAISTI SU BOTU",
 		"play_online": "ŽAISTI INTERNETE",
@@ -175,6 +179,8 @@ const STRINGS := {
 		"choose_language": "PASIRINKITE KALBĄ",
 	},
 	"es": {
+		"fact_longest": "Línea más larga · %d",
+		"fact_claimed": "Líneas reclamadas · %d",
 		"tagline": "Colorea puntos. Completa líneas.\nSupera a tu rival.",
 		"play_bot": "JUGAR CONTRA BOT",
 		"play_online": "JUGAR EN LÍNEA",
@@ -258,6 +264,8 @@ const STRINGS := {
 		"choose_language": "ELIGE UN IDIOMA",
 	},
 	"pt": {
+		"fact_longest": "Linha mais longa · %d",
+		"fact_claimed": "Linhas reclamadas · %d",
 		"tagline": "Pinte pontos. Complete linhas.\nSupere seu rival.",
 		"play_bot": "JOGAR CONTRA BOT",
 		"play_online": "JOGAR ONLINE",
@@ -341,6 +349,8 @@ const STRINGS := {
 		"choose_language": "ESCOLHA UM IDIOMA",
 	},
 	"pl": {
+		"fact_longest": "Najdłuższa linia · %d",
+		"fact_claimed": "Przejęte linie · %d",
 		"tagline": "Koloruj kropki. Kończ linie.\nPokonaj rywala.",
 		"play_bot": "GRAJ Z BOTEM",
 		"play_online": "GRAJ ONLINE",
@@ -424,6 +434,8 @@ const STRINGS := {
 		"choose_language": "WYBIERZ JĘZYK",
 	},
 	"cs": {
+		"fact_longest": "Nejdelší čára · %d",
+		"fact_claimed": "Převzaté čáry · %d",
 		"tagline": "Barvi tečky. Dokončuj linie.\nPřekonej soupeře.",
 		"play_bot": "HRÁT PROTI BOTOVI",
 		"play_online": "HRÁT ONLINE",

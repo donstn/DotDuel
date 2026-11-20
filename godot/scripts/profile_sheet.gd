@@ -63,10 +63,10 @@ func setup(m) -> void:
 	var dl := UI.plain_button(Lang.a("profile.downloadData"), false, 22)
 	dl.pressed.connect(func():
 		dl.disabled = true
-		dl.text = Lang.a("profile.preparing")
+		dl.text = (Lang.a("profile.preparing")).to_upper()
 		var ok: bool = await _download()
 		dl.disabled = false
-		dl.text = Lang.a("profile.downloadData")
+		dl.text = (Lang.a("profile.downloadData")).to_upper()
 		if not ok:
 			main.toast(Lang.a("profile.exportFailed")))
 	add_child(dl)

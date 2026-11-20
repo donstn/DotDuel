@@ -16,19 +16,46 @@ func _init(m) -> void:
 func show() -> void:
 	main.where = "online"
 	if not Supa.is_ready:
-		_message("CONNECTING…", "")
+		_message(Lang.t("connecting"), "")
 		await Supa.auth_changed
 		if main.where == "online":
 			show()
 		return
+	# Server blocked (DNS ad-blocker, strict Wi-Fi): say so instead of a frozen
+	# screen (App.tsx renderMpUnreachable).
+	var probe: Dictionary = await Supa.http(HTTPClient.METHOD_GET, "/auth/v1/health")
+	if main.where != "online":
+		return
+	if not probe.ok and int(probe.code) == 0:
+		_unreachable()
+		return
 	if not Supa.signed_in():
 		_sign_in()
 	elif not Online.profile_loaded:
-		_message("LOADING PROFILE…", "")
+		_message(Lang.t("loading_profile"), "")
 	elif not Online.has_username:
 		_name_picker()
 	else:
 		_lobby()
+
+
+func _unreachable() -> void:
+	var tips := "%s
+
+%s
+· %s
+· %s
+· %s
+· %s
+
+%s" % [Lang.a("mpUnavailable.blockedHint"), Lang.a("mpUnavailable.tryLabel"),
+		Lang.a("mpUnavailable.tryWifi"), Lang.a("mpUnavailable.tryBrowser"), Lang.a("mpUnavailable.tryDisableFilters"),
+		Lang.a("mpUnavailable.tryWhitelist", ["*.supabase.co"]), Lang.a("mpUnavailable.offlineHint")]
+	var vb := _message(Lang.a("mpUnavailable.heading"), tips)
+	var retry := UI.small_button(Lang.a("puzzleBoard.retry"), false, 24)
+	retry.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	retry.pressed.connect(show)
+	vb.add_child(retry)
 
 
 func _message(title: String, text: String) -> VBoxContainer:
@@ -48,20 +75,26 @@ func _message(title: String, text: String) -> VBoxContainer:
 
 func _back_row() -> Control:
 	var top := HBoxContainer.new()
-	var back := UI.art_button("‹ BACK", UI.PILL_BTN, 200, 76, 26)
+	var back := UI.art_button(Lang.t("back"), UI.PILL_BTN, 220, 76, 26)
 	back.pressed.connect(main.show_menu)
 	top.add_child(back)
 	return top
 
 
 func _sign_in() -> void:
-	var vb := _message("PLAY ONLINE", "Ranked matches against players on dotduel.com and the DotDuel app.\nSign in with Google to play.")
+	var vb := _message(Lang.t("play_online"), Lang.t("online_blurb"))
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(0, 30)
 	vb.add_child(gap)
-	var btn := UI.art_button("SIGN IN WITH GOOGLE", UI.PRIMARY_BTN, 620, 124, 34, Color("0c2416"))
+	var btn := UI.art_button(Lang.t("sign_in_google"), UI.PRIMARY_BTN, 620, 124, 34, Color("0c2416"))
 	btn.pressed.connect(func(): Supa.sign_in_google())
 	vb.add_child(main._center(btn))
+	var note := UI.label(Lang.t("signin_privacy"), 22, UI.TEXT_DIM, false, 3)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb.add_child(note)
+	var priv := UI.art_button(Lang.t("privacy_btn"), UI.PILL_BTN, 260, 70, 22)
+	priv.pressed.connect(main.show_privacy)
+	vb.add_child(main._center(priv))
 	if Supa.auth_error != "":
 		var e := UI.label(Supa.auth_error, 24, Color("ff8a7a"), false, 4)
 		e.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -69,10 +102,20 @@ func _sign_in() -> void:
 	main._stagger(vb)
 
 
+## Profile → Rename: the same picker, back to the menu when saved.
+func rename() -> void:
+	_renaming = true
+	main.where = "online"
+	_name_picker()
+
+
+var _renaming := false
+
+
 func _name_picker() -> void:
-	var vb := _message("PICK A GAME NAME", "This is the name other players see. 3–16 letters or numbers.")
+	var vb := _message(Lang.t("pick_name"), Lang.t("pick_name_info"))
 	var edit := LineEdit.new()
-	edit.text = Online.suggest_name()
+	edit.text = Online.display_name() if _renaming else Online.suggest_name()
 	edit.max_length = 16
 	edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	edit.custom_minimum_size = Vector2(520, 84)
@@ -87,7 +130,7 @@ func _name_picker() -> void:
 	edit.add_theme_stylebox_override("focus", sb)
 	vb.add_child(main._center(edit))
 	var err := UI.label("", 24, Color("ff8a7a"), false, 4)
-	var save := UI.art_button("SAVE NAME", UI.PRIMARY_BTN, 560, 120, 36, Color("0c2416"))
+	var save := UI.art_button(Lang.t("save_name"), UI.PRIMARY_BTN, 560, 120, 36, Color("0c2416"))
 	var do_save := func():
 		save.disabled = true
 		err.text = ""
@@ -95,6 +138,9 @@ func _name_picker() -> void:
 		save.disabled = false
 		if msg != "":
 			err.text = msg
+		elif _renaming:
+			_renaming = false
+			main.show_menu()
 		else:
 			show()
 	save.pressed.connect(do_save)
@@ -106,7 +152,7 @@ func _lobby() -> void:
 	var vb: VBoxContainer = main._page()
 	vb.alignment = BoxContainer.ALIGNMENT_BEGIN
 	vb.add_child(_back_row())
-	vb.add_child(main._banner("RANKED"))
+	vb.add_child(main._banner(Lang.t("ranked")))
 
 	var card := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
@@ -132,12 +178,12 @@ func _lobby() -> void:
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var n := UI.label(Online.display_name(), 36, UI.TEXT)
 	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	var rt := UI.label("Rating %d" % Online.rating(), 28, UI.ACCENT, false, 4)
+	var rt := UI.label(Lang.t("rating_n", [Online.rating()]), 28, UI.ACCENT, false, 4)
 	rt.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	info.add_child(n)
 	info.add_child(rt)
 	hb.add_child(info)
-	var out := UI.art_button("SIGN OUT", UI.PILL_BTN, 190, 70, 22)
+	var out := UI.art_button(Lang.t("sign_out"), UI.PILL_BTN, 210, 70, 22)
 	out.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	out.pressed.connect(func():
 		await Supa.sign_out()
@@ -145,14 +191,14 @@ func _lobby() -> void:
 	hb.add_child(out)
 	vb.add_child(card)
 
-	vb.add_child(main._banner("TIME CONTROL"))
+	vb.add_child(main._banner(Lang.t("time_control")))
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 16)
 	vb.add_child(row)
 	var tiles := {}
 	for spec in Online.TIME_CONTROLS:
-		var t: Button = main._tile("dot-p1.webp", spec[1], spec[2], Vector2(200, 200))
+		var t: Button = main._tile("dot-p1.webp", Lang.t("tc_" + spec[0]), Lang.n("minutes_each", int(spec[0].to_int())), Vector2(200, 200))
 		row.add_child(t)
 		tiles[spec[0]] = t
 	var pick := func(id: String):
@@ -169,28 +215,39 @@ func _lobby() -> void:
 	var gap := Control.new()
 	gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vb.add_child(gap)
-	var find := UI.art_button("FIND MATCH", UI.PRIMARY_BTN, 600, 130, 44, Color("0c2416"))
+	var find := UI.art_button(Lang.t("find_match"), UI.PRIMARY_BTN, 600, 130, 44, Color("0c2416"))
 	vb.add_child(main._center(find))
 	var go := func():
 		find.disabled = true
 		var lock: String = await Online.lock_state()
 		if lock == "other":
-			status.text = "You're playing on another device or tab. Finish that game first (or wait a minute if you closed it)."
+			status.text = Lang.t("lock_other")
 			find.disabled = false
 			return
 		if await Online.find_match(tc):
 			_searching()
 		else:
-			status.text = "Couldn't join the queue. Check your connection."
+			status.text = Lang.t("queue_failed")
 			find.disabled = false
 	find.pressed.connect(go)
 	main._stagger(vb)
 
 
+## Menu "Quick ranked game": straight into the 3-minute Triangle queue.
+func quick() -> void:
+	if not Supa.signed_in() or not Online.profile_loaded or not Online.has_username:
+		show()
+		return
+	if await Online.lock_state() == "other" or not await Online.find_match("3min"):
+		show()
+		return
+	_searching()
+
+
 func _searching() -> void:
 	main.where = "searching"
 	var vb: VBoxContainer = main._page()
-	vb.add_child(main._banner("FINDING OPPONENT"))
+	vb.add_child(main._banner(Lang.t("finding")))
 	var orbit := Control.new()
 	orbit.custom_minimum_size = Vector2(300, 300)
 	vb.add_child(main._center(orbit))
@@ -208,14 +265,12 @@ func _searching() -> void:
 	var t0 := Time.get_ticks_msec()
 	var elapsed := UI.label("0:00", 44, UI.TEXT)
 	vb.add_child(elapsed)
-	var hint := UI.label("Looking for a player near your rating…", 26, UI.TEXT_DIM, false, 4)
+	var hint := UI.label(Lang.t("looking"), 26, UI.TEXT_DIM, false, 4)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(hint)
-	var cancel := UI.art_button("CANCEL", UI.PILL_BTN, 260, 92, 28)
-	cancel.pressed.connect(func():
-		await Online.cancel_search()
-		show())
-	vb.add_child(main._center(cancel))
+	var cancel_btn := UI.art_button(Lang.t("cancel"), UI.PILL_BTN, 260, 92, 28)
+	cancel_btn.pressed.connect(cancel)
+	vb.add_child(main._center(cancel_btn))
 	var tick := Timer.new()
 	tick.wait_time = 0.5
 	tick.autostart = true
@@ -224,7 +279,13 @@ func _searching() -> void:
 		var s := int((Time.get_ticks_msec() - t0) / 1000)
 		elapsed.text = "%d:%02d" % [s / 60, s % 60]
 		if s >= Online.BOT_FALLBACK_S:
-			hint.text = "No one free right now, finding you a bot opponent…")
+			hint.text = Lang.t("bot_fallback"))
+
+
+## Leave the matchmaking queue and go back to the lobby.
+func cancel() -> void:
+	await Online.cancel_search()
+	show()
 
 
 func match_found() -> void:
@@ -232,7 +293,7 @@ func match_found() -> void:
 	var p := Online.pairing
 	var g := Online.game
 	var vb: VBoxContainer = main._page()
-	vb.add_child(main._banner("MATCH FOUND"))
+	vb.add_child(main._banner(Lang.t("match_found")))
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 24)
@@ -241,13 +302,16 @@ func match_found() -> void:
 	var lvl := clampi(int(p.get("opponent_bot_level", 3)) if p.get("opponent_bot_level") != null else 3, 1, 5)
 	row.add_child(_fighter("avatar-human.webp", Online.display_name(), Online.rating(), int(p.get("player", 1))))
 	row.add_child(UI.label("VS", 64, UI.GOLD, true, 12))
-	row.add_child(_fighter("avatar-l%d.webp" % lvl if opp_bot else "avatar-human.webp", str(p.get("opponent_display_name", "Opponent")), int(p.get("opponent_rating", 1000)), 3 - int(p.get("player", 1))))
-	var tc_name: String = {"1min": "Bullet · 1 min", "3min": "Blitz · 3 min", "5min": "Rapid · 5 min"}.get(str(g.get("time_control", "3min")), "")
-	var first := "You move first" if int(g.get("state", {}).get("current", 1)) == int(p.get("player", 1)) else "Opponent moves first"
-	vb.add_child(UI.label("Triangle · %s · %s" % [tc_name, first], 26, UI.TEXT_DIM, false, 4))
+	row.add_child(_fighter("avatar-l%d.webp" % lvl if opp_bot else "avatar-human.webp", str(p.get("opponent_display_name", Lang.t("opponent"))) + ("  · " + Lang.a("matchFound.bot") if opp_bot else ""), int(p.get("opponent_rating", 1000)), 3 - int(p.get("player", 1))))
+	var tc_id := str(g.get("time_control", "3min"))
+	var tc_name := Lang.t("tc_line", [Lang.t("tc_" + tc_id), tc_id.to_int()])
+	var first := Lang.t("you_first") if int(g.get("state", {}).get("current", 1)) == int(p.get("player", 1)) else Lang.t("opp_first")
+	var info := UI.label("%s · %s · %s" % [Lang.t("shape_" + str(g.get("shape", "triangle"))), tc_name, first], 26, UI.TEXT_DIM, false, 4)
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb.add_child(info)
 	var count := UI.label(str(COUNTDOWN), 72, UI.TEXT)
 	vb.add_child(count)
-	var ready_btn := UI.art_button("READY", UI.PRIMARY_BTN, 560, 124, 44, Color("0c2416"))
+	var ready_btn := UI.art_button(Lang.t("ready"), UI.PRIMARY_BTN, 560, 124, 44, Color("0c2416"))
 	vb.add_child(main._center(ready_btn))
 	Sfx.play("line6")
 	var state := {"left": COUNTDOWN, "me": false, "started": false}
@@ -260,7 +324,7 @@ func match_found() -> void:
 		if state.me:
 			return
 		state.me = true
-		ready_btn.text = "WAITING…"
+		ready_btn.text = Lang.t("waiting")
 		Online.mark_ready())
 	var tick := Timer.new()
 	tick.wait_time = 0.25

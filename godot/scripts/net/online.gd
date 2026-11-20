@@ -85,6 +85,7 @@ func load_profile() -> void:
 	has_username = names.size() > 0 and display_name() != ""
 	profile_loaded = true
 	profile_changed.emit()
+	Store.sync_cloud()
 
 
 func suggest_name() -> String:
@@ -100,14 +101,18 @@ func suggest_name() -> String:
 func claim_username(desired: String) -> String:
 	var name := desired.strip_edges()
 	if not RegEx.create_from_string(NAME_RE).search(name):
-		return "3–16 letters, numbers, _ or -"
+		return Lang.t("name_rule")
 	var lower := name.to_lower()
+	var old_lower := display_name().strip_edges().to_lower()
 	var existing := await Supa.select_one("usernames", "lower=eq.%s&select=uid" % lower.uri_encode())
 	if not existing.is_empty() and existing.get("uid") != me():
-		return "That name is taken."
+		return Lang.t("name_taken")
 	var res := await Supa.upsert("usernames", {"lower": lower, "uid": me(), "display_name": name})
 	if not res.ok:
-		return "That name is taken." if res.code == 409 else "Could not save the name (%d)." % res.code
+		return Lang.t("name_taken") if res.code == 409 else Lang.t("name_failed", [res.code])
+	# Rename (renameUsername in src/cloud/usernames.ts): free the old name.
+	if old_lower != "" and old_lower != lower:
+		await Supa.delete("usernames", "lower=eq.%s&uid=eq.%s" % [old_lower.uri_encode(), me()])
 	await Supa.update("profiles", "id=eq.%s" % me(), {"display_name": name})
 	await load_profile()
 	return ""
@@ -266,10 +271,22 @@ func _fetch_match_record(id: String) -> void:
 		var rec := await Supa.select_one("matches", "id=eq.%s&select=*" % id)
 		if not rec.is_empty() and (rec.get("elo_finalized", false) or i >= 11):
 			if id == str(pairing.get("match_id", "")):
+				_record_achievements(rec)
 				match_record.emit(rec)
 				load_profile()
 			return
 		await get_tree().create_timer(1.0).timeout
+
+
+## Ranked counters for achievements, here so they count even if the player
+## left the results screen before the record arrived (App.tsx records on finish).
+func _record_achievements(rec: Dictionary) -> void:
+	if str(rec.get("finished_reason", "")) == "aborted":
+		return
+	var slot := 1 if str(rec.get("p1_uid", "")) == me() else 2
+	var won := str(rec.get("winner", "")) == str(slot)
+	var after = rec.get("p%d_rating_after" % slot)
+	Ach.record_ranked(won, won and str(rec.get("finished_reason", "")) == "timeout", int(after) if after != null else 0)
 
 
 func _measure_skew() -> void:
@@ -292,6 +309,8 @@ func mark_ready() -> void:
 
 
 func mark_board_loaded(state_current: int) -> void:
+	if pairing.is_empty():
+		return
 	await Supa.call_rpc("set_board_loaded", {"p_game_id": pairing.match_id})
 	if pairing.get("opponent_is_bot", false) and state_current != my_slot():
 		var res := await Supa.invoke("submit-move", {"gameId": pairing.match_id, "action": {"kind": "botStart"}})
@@ -336,3 +355,14 @@ func _cleanup_match() -> void:
 	game = {}
 	searching = false
 	_search_gen += 1
+
+
+## Settings → Privacy (challenge_policy / show_presence), same columns as the app.
+func update_privacy(patch: Dictionary) -> void:
+	if not Supa.signed_in():
+		return
+	profile.merge(patch, true)
+	if patch.get("show_presence") == false:
+		Social.mark_offline()
+	await Supa.update("profiles", "id=eq.%s" % me(), patch)
+	profile_changed.emit()

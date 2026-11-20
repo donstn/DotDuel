@@ -28,14 +28,27 @@ static func font(bold := true) -> Font:
 	var key := "bold" if bold else "body"
 	if not _fonts.has(key):
 		if bold:
-			_fonts[key] = load("res://assets/fonts/chakra-petch-700.ttf")
+			_fonts[key] = _with_symbols(load("res://assets/fonts/chakra-petch-700.ttf"))
 		else:
 			# Outfit is a variable font; without an axis value it renders at its thinnest.
 			var v := FontVariation.new()
-			v.base_font = load("res://assets/fonts/outfit-var.ttf")
+			v.base_font = _with_symbols(load("res://assets/fonts/outfit-var.ttf"))
 			v.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): 560}
 			_fonts[key] = v
 	return _fonts[key]
+
+
+## The web export has no system fonts, so emoji/symbols would draw as hex boxes
+## without these bundled subsets (scripts in godot/tools/subset-symbol-fonts.py).
+static func _with_symbols(f: Font) -> Font:
+	if f.fallbacks.is_empty():
+		var fb: Array[Font] = []
+		for n in ["noto-emoji-subset", "noto-math-subset", "noto-symbols-subset"]:
+			fb.append(load("res://assets/fonts/%s.ttf" % n))
+		f.fallbacks = fb
+		if ThemeDB.fallback_font and ThemeDB.fallback_font.fallbacks.is_empty():
+			ThemeDB.fallback_font.fallbacks = fb
+	return f
 
 
 static func tex(file: String) -> Texture2D:

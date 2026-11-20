@@ -156,7 +156,7 @@ export const cs: Messages = {
     backToMenu: 'Zpět do menu',
     dailyTime: 'Tvůj čas na tento pokus',
     claimPhaseHint: "Všechny tečky jsou položené — klepni na nezabranou linii.",
-    nothingToClaim: 'Touto tečkou nevede žádná nezabraná linie.',
+    nothingToClaim: 'Zbývají jen nezabrané linie.',
     rules: 'Jak hrát',
     showRules: 'Zobrazit pravidla',
     resign: 'Vzdát se',

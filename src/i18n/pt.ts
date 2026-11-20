@@ -146,7 +146,7 @@ export const pt: Messages = {
     backToMenu: 'Voltar ao menu',
     dailyTime: 'Seu tempo para esta tentativa',
     claimPhaseHint: "Todos os pontos colocados — toque em uma linha não marcada.",
-    nothingToClaim: 'Nenhuma linha não marcada passa por esse ponto.',
+    nothingToClaim: 'Só restam linhas não marcadas.',
     rules: 'Como jogar',
     showRules: 'Mostrar regras',
     resign: 'Desistir',

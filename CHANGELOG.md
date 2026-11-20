@@ -3,6 +3,14 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.1.1] - 2026-11-21
+
+### Changed
+
+- Claim-phase message when a tapped dot has nothing to take: "Only unclaimed
+  lines are left." (was "No unclaimed line through that dot."), all six
+  languages (`game.nothingToClaim`).
+
 ## [0.5.1.0] - 2026-11-18
 
 ### Added

@@ -105,7 +105,13 @@ func _home(vb: VBoxContainer) -> void:
 		_link(share, Lang.a("share.labelShare"), main.share_app)
 	_link(share, Lang.a("menu.guide"), main.open_guide)
 	_link(share, Lang.a("menu.lesson"), main.start_coach)
-	vb.add_child(share)
+	# A flow inside a shrink-centred strip gets no width of its own: give it its
+	# one-line width (capped), so it only wraps when the text really is too long.
+	var w := 0.0
+	for c in share.get_children():
+		w += (c as Control).get_combined_minimum_size().x + 22
+	share.custom_minimum_size.x = minf(w - 22, 670)
+	vb.add_child(main._center(UI.scrim(share)))
 
 
 ## A home card: painted plaque with the title; under it only a state line
@@ -116,10 +122,10 @@ func _shelf(vb: VBoxContainer, title: String, sub: String, action: Callable, ena
 	b.modulate = Color.WHITE if enabled else Color(1, 1, 1, 0.6)
 	vb.add_child(main._center(b))
 	if sub != "":
-		var s := UI.label(sub, 21, UI.TEXT_DIM, false, 3)
+		var s := UI.label(sub, 22, UI.TEXT, false, 5)
 		s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		s.custom_minimum_size = Vector2(600, 0)
-		vb.add_child(main._center(s))
+		s.custom_minimum_size = Vector2(minf(UI.font(false).get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x + 4, 560), 0)
+		vb.add_child(main._center(UI.scrim(s)))
 	return b
 
 
@@ -164,6 +170,9 @@ func _link(row: Container, text: String, action: Callable) -> void:
 	b.add_theme_font_size_override("font_size", 24)
 	b.add_theme_color_override("font_color", UI.ACCENT)
 	b.add_theme_color_override("font_hover_color", UI.TEXT)
+	b.add_theme_color_override("font_pressed_color", UI.TEXT)
+	b.add_theme_constant_override("outline_size", 5)
+	b.add_theme_color_override("font_outline_color", Color(0, 0.06, 0.03, 0.85))
 	b.pressed.connect(action)
 	row.add_child(b)
 
@@ -201,11 +210,14 @@ func _corner(root: Control) -> void:
 ## Footer: How to play · Settings · Privacy, then © and the version (changelog).
 func _footer(root: Control) -> void:
 	var box := VBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	box.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	box.offset_bottom = -12
 	box.add_theme_constant_override("separation", 0)
-	root.add_child(box)
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	var strip := UI.scrim(box)
+	strip.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	strip.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	strip.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	strip.offset_bottom = -12
+	root.add_child(strip)
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 6)
@@ -222,5 +234,7 @@ func _footer(root: Control) -> void:
 	ver.add_theme_font_override("font", UI.font(false))
 	ver.add_theme_font_size_override("font_size", 19)
 	ver.add_theme_color_override("font_color", UI.TEXT_DIM)
+	ver.add_theme_constant_override("outline_size", 4)
+	ver.add_theme_color_override("font_outline_color", Color(0, 0.06, 0.03, 0.85))
 	ver.pressed.connect(main.show_changelog)
 	box.add_child(ver)

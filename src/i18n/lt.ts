@@ -157,7 +157,7 @@ export const lt: Messages = {
     backToMenu: 'Grįžti į meniu',
     dailyTime: 'Šio bandymo laikas',
     claimPhaseHint: "Visi taškai padėti – bakstelėkite nepaimtą liniją.",
-    nothingToClaim: 'Per šį tašką nėra nepaimtos linijos.',
+    nothingToClaim: 'Liko tik nepaimtos linijos.',
     rules: 'Kaip žaisti',
     showRules: 'Rodyti taisykles',
     resign: 'Pasiduoti',

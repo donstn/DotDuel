@@ -10,7 +10,7 @@ const P2 := Color("d3ecaa")
 const P2_BRIGHT := Color("f0fbcf")
 const ACCENT := Color("7bdb95")
 const TEXT := Color("eaf3e3")
-const TEXT_DIM := Color("93a89a")
+const TEXT_DIM := Color("b3c4b6")
 const GOLD := Color("f3d27a")
 
 # [file, src_w, src_h, cap_left, cap_right]
@@ -276,6 +276,19 @@ static func _switch_icon(on: bool) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
+## Dark rounded strip behind text that sits straight on the painted background
+## (menu links, footer, card state lines) — the web app's glass pill.
+static func scrim(child: Control) -> PanelContainer:
+	var p := PanelContainer.new()
+	var sb := _flat_box(Color(0.02, 0.08, 0.04, 0.78), Color(1, 1, 1, 0.1), 40, 22)
+	sb.content_margin_top = 4
+	sb.content_margin_bottom = 4
+	p.add_theme_stylebox_override("panel", sb)
+	p.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	p.add_child(child)
+	return p
+
+
 static func _flat_box(bg: Color, border: Color, radius := 18, pad := 16) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = bg
@@ -290,14 +303,14 @@ static func _flat_box(bg: Color, border: Color, radius := 18, pad := 16) -> Styl
 
 
 static func section(text: String) -> Label:
-	var l := label(text, 26, ACCENT, true, 4)
+	var l := label(text, 26, ACCENT, true, 8)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return l
 
 
 static func hint(text: String) -> Label:
-	var l := label(text, 20, TEXT_DIM, false, 3)
+	var l := label(text, 21, TEXT_DIM, false, 8)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return l

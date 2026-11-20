@@ -1153,7 +1153,7 @@ func show_setup() -> void:
 		for k in shape_tiles:
 			_select(shape_tiles[k], k == sh)
 			if shape_tiles[k].get_meta("locked"):
-				shape_tiles[k].modulate = Color(1, 1, 1, 0.4)
+				shape_tiles[k].modulate = Color(0.62, 0.62, 0.62)
 		for f in refresh_levels:
 			f.call()
 	for sh in shape_tiles:
@@ -1178,7 +1178,7 @@ func show_setup() -> void:
 			for i in 5:
 				_select(bot_tiles[i], i + 1 == level)
 				if not Store.is_unlocked(shape, i + 1):
-					bot_tiles[i].modulate = Color(0.35, 0.35, 0.35, 0.55)
+					bot_tiles[i].modulate = Color(0.4, 0.4, 0.4)
 		var pick_level := func(l: int):
 			if not Store.is_unlocked(shape, l):
 				show_hint.call(Lang.a("menu.unlockHint", [Lang.t("level_%d" % l), Lang.t("level_%d" % (l - 1)), Lang.t("shape_" + shape)]))
@@ -1206,7 +1206,14 @@ func show_setup() -> void:
 
 ## "Who's playing?": your name (or the account name), and in hot-seat
 ## player 2's name + swap colours. Saved as you type, like the app.
-func _names_block(vb: VBoxContainer) -> void:
+func _names_block(outer: VBoxContainer) -> void:
+	# On a dark card: the painted forest behind it is too bright for small text.
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UI._flat_box(Color(0.03, 0.09, 0.06, 0.82), Color(1, 1, 1, 0.12), 24, 18))
+	outer.add_child(card)
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", outer.get_theme_constant("separation"))
+	card.add_child(vb)
 	vb.add_child(UI.section(Lang.a("menu.whosPlaying")))
 	if Supa.signed_in() and Online.display_name() != "":
 		vb.add_child(UI.hint(Lang.a("menu.signedInAs", [Online.display_name()])))
@@ -1262,7 +1269,7 @@ func _tile(icon: String, title: String, sub: String, sz: Vector2) -> Button:
 	vb.add_child(tr)
 	if title != "":
 		vb.add_child(UI.label(title.to_upper(), 26, UI.TEXT))
-		vb.add_child(UI.label(sub, 20, UI.TEXT_DIM, false, 3))
+		vb.add_child(UI.label(sub, 20, UI.TEXT_DIM, false, 5))
 	UI.juicy(t)
 	return t
 
@@ -1273,7 +1280,7 @@ func _select(t: Button, on: bool) -> void:
 	sb.bg_color = Color(0.08, 0.25, 0.14, 0.9) if on else Color(0.03, 0.09, 0.06, 0.78)
 	sb.shadow_color = Color(UI.ACCENT, 0.45) if on else Color(0, 0, 0, 0)
 	sb.shadow_size = 18 if on else 0
-	t.modulate = Color.WHITE if on else Color(1, 1, 1, 0.7)
+	t.modulate = Color.WHITE if on else Color(0.82, 0.82, 0.82)
 
 
 # ---------------------------------------------------------------- game

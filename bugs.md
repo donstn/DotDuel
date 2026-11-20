@@ -337,6 +337,23 @@ Entries are dated and grouped by symptom domain. Most recent first within each s
 
 ## 🔧 Build / deploy
 
+### /GodotV1 opens the normal React app instead of the Godot build (2026-11-19)
+
+**Symptom**
+- www.dotduel.com/GodotV1/ loaded the Godot game once, then every later visit showed the regular DotDuel app.
+
+**Root cause**
+- The React app's service worker controls the whole site (`/`). Versions built before PR #48 answer *every* page navigation they don't recognise with the cached app shell (`navigateFallback`), and `/GodotV1/` was unknown to them.
+- PR #48 added `/^\/GodotV1/` to `navigateFallbackDenylist`, but the SW runs in `registerType: 'prompt'` (`src/swUpdate.ts`): a new SW waits until the app applies it (menu up 10+ s, then the tab is hidden) or until every dotduel.com tab is closed. Until then the OLD worker keeps hijacking `/GodotV1/`. The first visit worked because that tab wasn't controlled by the worker yet.
+
+**Fix / workaround**
+- Self-heals once the browser picks up the new SW: open dotduel.com, stay on the menu ~10 s, switch away or close all dotduel.com tabs.
+- `/GodotV1/index.html` always works, even with an old SW: every SW version denylists `/\.(html|xml|txt)$/`. Use that URL when sharing the link.
+
+**Forward-looking**
+- Any new sub-page served from `public/` (embed page, blog, etc.) hits the same trap: add it to `navigateFallbackDenylist` AND expect the old SW to keep hijacking it until players update. Link to the `.html` URL in the meantime.
+
+
 ### Firestore composite index required for puzzle leaderboard (Alpha 0.2.7.0 — 2026-05-31)
 
 **Symptom**

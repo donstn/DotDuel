@@ -555,13 +555,7 @@ func _refresh_invite_card() -> void:
 	if from == "":
 		from = Lang.a("invite.aFriend")
 	var panel := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.03, 0.12, 0.07, 0.96)
-	sb.set_corner_radius_all(22)
-	sb.set_border_width_all(3)
-	sb.border_color = UI.ACCENT
-	sb.set_content_margin_all(18)
-	panel.add_theme_stylebox_override("panel", sb)
+	panel.add_theme_stylebox_override("panel", UI.small_frame())
 	panel.anchor_left = 0.0
 	panel.anchor_right = 1.0
 	panel.anchor_top = 1.0
@@ -812,6 +806,16 @@ func open_overlay(title: String, scroll := false, full := false, modal := false,
 	else:
 		panel.custom_minimum_size = Vector2(minf(620, size.x - 44), 0)
 		panel.add_child(body)
+	var wreath: Control = UI.wreath() if Look.xmas() else null
+	if wreath:
+		card.add_child(wreath)
+		if scroll or full:
+			panel.offset_left = 40
+			panel.offset_right = -40
+			panel.offset_top = 70
+			panel.offset_bottom = -44
+		else:
+			panel.custom_minimum_size.x = minf(620, size.x - 80)
 	var ribbon: Control = UI.ribbon(title, minf(560, size.x - 120)) if has_title else null
 	if ribbon:
 		card.add_child(ribbon)
@@ -823,6 +827,8 @@ func open_overlay(title: String, scroll := false, full := false, modal := false,
 	var place := func():
 		if not is_instance_valid(panel):
 			return
+		if wreath:
+			UI.fit_wreath(wreath, panel)
 		if ribbon:
 			ribbon.position = panel.position + Vector2((panel.size.x - ribbon.size.x) / 2.0, -ribbon.size.y * 0.5)
 		if x:
@@ -1264,7 +1270,10 @@ func _names_block(outer: VBoxContainer) -> void:
 
 func _banner(text: String) -> Control:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UI.art_box(UI.BANNER, 84))
+	var sb := UI.art_box(UI.BANNER, 84)
+	sb.content_margin_left = sb.texture_margin_left
+	sb.content_margin_right = sb.texture_margin_right
+	p.add_theme_stylebox_override("panel", sb)
 	p.custom_minimum_size = Vector2(440, 84)
 	p.add_child(UI.label(text, 28, UI.TEXT))
 	return _center(p)

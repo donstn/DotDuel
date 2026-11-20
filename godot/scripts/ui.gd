@@ -301,9 +301,50 @@ static func frame_box(titled := true) -> StyleBoxTexture:
 	sb.texture_margin_bottom = m
 	sb.content_margin_left = 46
 	sb.content_margin_right = 46
-	sb.content_margin_top = 80 if titled else 52
-	sb.content_margin_bottom = 50
+	# Text keeps clear of the corner ornaments and the ribbon's lower half.
+	sb.content_margin_top = 80 if titled else 66
+	sb.content_margin_bottom = 66
 	return sb
+
+
+## The same painted frame at a smaller scale, for in-game cards and banners
+## (lesson bubble, tips, invites, long toasts).
+static func small_frame() -> StyleBoxTexture:
+	var sb := StyleBoxTexture.new()
+	sb.texture = scaled_tex("card-frame.webp", 360)
+	var m := 47.0
+	sb.texture_margin_left = m
+	sb.texture_margin_right = m
+	sb.texture_margin_top = m
+	sb.texture_margin_bottom = m
+	sb.content_margin_left = 34
+	sb.content_margin_right = 34
+	sb.content_margin_top = 46
+	sb.content_margin_bottom = 46
+	return sb
+
+
+## Christmas: the painted wreath laid over a popup's frame edge (see fit_wreath).
+static func wreath() -> NinePatchRect:
+	var n := NinePatchRect.new()
+	n.texture = scaled_tex("wreath-frame.webp", 360)
+	var m := int(210.0 * 360.0 / 990.0)
+	n.patch_margin_left = m
+	n.patch_margin_right = m
+	n.patch_margin_top = m
+	n.patch_margin_bottom = m
+	n.draw_center = false
+	n.axis_stretch_horizontal = NinePatchRect.AXIS_STRETCH_MODE_TILE_FIT
+	n.axis_stretch_vertical = NinePatchRect.AXIS_STRETCH_MODE_TILE_FIT
+	n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return n
+
+
+## The wreath reaches 38 px outside the panel, so its inner edge stays outside
+## the frame's content margin (46 px): it never covers text.
+static func fit_wreath(n: Control, panel: Control) -> void:
+	n.position = panel.position - Vector2(38, 38)
+	n.size = panel.size + Vector2(76, 76)
 
 
 ## The painted title ribbon with `text` on it, at most `max_w` wide.
@@ -311,6 +352,9 @@ static func ribbon(text: String, max_w: float) -> PanelContainer:
 	var h := 92
 	var p := PanelContainer.new()
 	var sb := art_box(BANNER, h)
+	# Text only on the ribbon's flat middle, never over the curled ends.
+	sb.content_margin_left = sb.texture_margin_left
+	sb.content_margin_right = sb.texture_margin_right
 	p.add_theme_stylebox_override("panel", sb)
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var l := label(text, 30, TEXT, true, 6)
@@ -318,7 +362,7 @@ static func ribbon(text: String, max_w: float) -> PanelContainer:
 	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	var room := max_w - sb.content_margin_left - sb.content_margin_right
 	var fs := 30
-	while fs > 18 and font(true).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > room:
+	while fs > 16 and font(true).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > room:
 		fs -= 1
 	l.add_theme_font_size_override("font_size", fs)
 	var w := font(true).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x

@@ -38,16 +38,15 @@ static func font(bold := true) -> Font:
 	return _fonts[key]
 
 
-## The web export has no system fonts, so emoji/symbols would draw as hex boxes
-## without these bundled subsets (scripts in godot/tools/subset-symbol-fonts.py).
+## The web export has no system fonts, so anything the game fonts lack would draw
+## as Godot's hex box. Bundled fallbacks (built by tools/subset-symbol-fonts.py);
+## catch-all turns whatever is still missing into a blank.
 static func _with_symbols(f: Font) -> Font:
 	if f.fallbacks.is_empty():
 		var fb: Array[Font] = []
-		for n in ["noto-emoji-subset", "noto-math-subset", "noto-symbols-subset"]:
+		for n in ["noto-sans-subset", "noto-math-subset", "noto-symbols-subset", "noto-emoji-subset", "catch-all"]:
 			fb.append(load("res://assets/fonts/%s.ttf" % n))
 		f.fallbacks = fb
-		if ThemeDB.fallback_font and ThemeDB.fallback_font.fallbacks.is_empty():
-			ThemeDB.fallback_font.fallbacks = fb
 	return f
 
 
@@ -198,6 +197,83 @@ static func draw_gear(n: CanvasItem, at: Vector2, rad: float, col: Color) -> voi
 		n.draw_line(at + dir * rad * 0.7, at + dir * rad * 1.12, col, rad * 0.42)
 	n.draw_circle(at, rad * 0.82, col)
 	n.draw_circle(at, rad * 0.36, Color(0.05, 0.12, 0.08))
+
+
+## App-wide theme so no control falls back to Godot's grey editor look
+## (switches, scrollbars, tooltips, text fields and their right-click menu).
+static func install_theme(window: Window) -> void:
+	var t := Theme.new()
+	t.default_font = font(false)
+	t.default_font_size = 25
+	var panel := _flat_box(Color(0.02, 0.07, 0.04, 0.97), Color(1, 1, 1, 0.18), 14, 12)
+	t.set_stylebox("panel", "TooltipPanel", panel)
+	t.set_color("font_color", "TooltipLabel", TEXT)
+	t.set_font_size("font_size", "TooltipLabel", 22)
+	t.set_stylebox("panel", "PopupMenu", panel)
+	t.set_stylebox("hover", "PopupMenu", _flat_box(Color(0.08, 0.2, 0.12, 0.95), Color(0, 0, 0, 0), 10, 8))
+	for k in ["font_color", "font_hover_color", "font_accelerator_color"]:
+		t.set_color(k, "PopupMenu", TEXT)
+	t.set_color("font_disabled_color", "PopupMenu", TEXT_DIM)
+	t.set_stylebox("separator", "PopupMenu", StyleBoxEmpty.new())
+	for k in ["normal", "focus", "read_only"]:
+		var on: bool = k == "focus"
+		t.set_stylebox(k, "LineEdit", _flat_box(Color(0.01, 0.05, 0.03, 0.9), ACCENT if on else Color(1, 1, 1, 0.18)))
+	t.set_color("font_color", "LineEdit", TEXT)
+	t.set_color("font_placeholder_color", "LineEdit", TEXT_DIM)
+	t.set_color("caret_color", "LineEdit", ACCENT)
+	t.set_color("selection_color", "LineEdit", Color(ACCENT, 0.35))
+	t.set_color("clear_button_color", "LineEdit", TEXT_DIM)
+	for sb_type in ["VScrollBar", "HScrollBar"]:
+		var track := StyleBoxFlat.new()
+		track.bg_color = Color(0, 0, 0, 0.25)
+		track.set_corner_radius_all(6)
+		track.content_margin_left = 6
+		track.content_margin_right = 6
+		track.content_margin_top = 6
+		track.content_margin_bottom = 6
+		t.set_stylebox("scroll", sb_type, track)
+		t.set_stylebox("scroll_focus", sb_type, track)
+		for g in ["grabber", "grabber_highlight", "grabber_pressed"]:
+			var grab := StyleBoxFlat.new()
+			grab.bg_color = Color(ACCENT, 0.55 if g == "grabber" else 0.85)
+			grab.set_corner_radius_all(6)
+			t.set_stylebox(g, sb_type, grab)
+	t.set_icon("checked", "CheckButton", _switch_icon(true))
+	t.set_icon("unchecked", "CheckButton", _switch_icon(false))
+	t.set_icon("checked_disabled", "CheckButton", _switch_icon(true))
+	t.set_icon("unchecked_disabled", "CheckButton", _switch_icon(false))
+	var ring := StyleBoxFlat.new()
+	ring.draw_center = false
+	ring.border_color = ACCENT
+	ring.set_border_width_all(3)
+	ring.set_corner_radius_all(18)
+	ring.set_expand_margin_all(3)
+	for c in ["Button", "CheckButton", "LinkButton", "TextureButton"]:
+		t.set_stylebox("focus", c, ring)
+	window.theme = t
+
+
+## A pill switch drawn at runtime (accent track + cream knob when on).
+static func _switch_icon(on: bool) -> Texture2D:
+	var w := 76
+	var h := 42
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var track := ACCENT if on else Color(0.13, 0.22, 0.16)
+	var knob := P2_BRIGHT if on else TEXT_DIM
+	var r := h / 2.0
+	var kx := w - r if on else r
+	for y in h:
+		for x in w:
+			var px := Vector2(x + 0.5, y + 0.5)
+			var cx := clampf(px.x, r, w - r)
+			var d_track := px.distance_to(Vector2(cx, r)) - (r - 1)
+			var d_knob := px.distance_to(Vector2(kx, r)) - (r - 5)
+			var c := Color(track, clampf(0.5 - d_track, 0, 1))
+			var a_knob := clampf(0.5 - d_knob, 0, 1)
+			if a_knob > 0:
+				c = c.lerp(knob, a_knob) if c.a > 0 else Color(knob, a_knob)
+			img.set_pixel(x, y, c)
+	return ImageTexture.create_from_image(img)
 
 
 static func _flat_box(bg: Color, border: Color, radius := 18, pad := 16) -> StyleBoxFlat:

@@ -27,12 +27,8 @@ func setup(m) -> void:
 	add_child(UI.section(Lang.a("friends.addByUsername")))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	var edit := LineEdit.new()
-	edit.placeholder_text = Lang.a("friends.usernamePlaceholder")
-	edit.max_length = 16
-	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var edit := UI.input("", Lang.a("friends.usernamePlaceholder"), 16)
 	edit.custom_minimum_size = Vector2(0, 68)
-	edit.add_theme_font_override("font", UI.font(true))
 	edit.add_theme_font_size_override("font_size", 24)
 	row.add_child(edit)
 	var send := UI.small_button(Lang.a("friends.send"), false, 22)

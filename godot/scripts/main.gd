@@ -19,6 +19,7 @@ var _js_pop: JavaScriptObject
 
 
 func _ready() -> void:
+	UI.install_theme(get_window())
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg = TextureRect.new()
 	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE

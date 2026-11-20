@@ -98,20 +98,20 @@ func _home(vb: VBoxContainer) -> void:
 	if not Supa.signed_in():
 		quick.call()
 
+	# Each link on its own dark strip; a narrow screen moves whole strips to
+	# the next row instead of breaking one box in two.
 	var share := HFlowContainer.new()
 	share.alignment = FlowContainer.ALIGNMENT_CENTER
-	share.add_theme_constant_override("h_separation", 22)
+	share.add_theme_constant_override("h_separation", 12)
+	share.add_theme_constant_override("v_separation", 10)
+	var links := [[Lang.a("menu.guide"), main.open_guide], [Lang.a("menu.lesson"), main.start_coach]]
 	if not Supa.signed_in():
-		_link(share, Lang.a("share.labelShare"), main.share_app)
-	_link(share, Lang.a("menu.guide"), main.open_guide)
-	_link(share, Lang.a("menu.lesson"), main.start_coach)
-	# A flow inside a shrink-centred strip gets no width of its own: give it its
-	# one-line width (capped), so it only wraps when the text really is too long.
-	var w := 0.0
-	for c in share.get_children():
-		w += (c as Control).get_combined_minimum_size().x + 22
-	share.custom_minimum_size.x = minf(w - 22, 670)
-	vb.add_child(main._center(UI.scrim(share)))
+		links.push_front([Lang.a("share.labelShare"), main.share_app])
+	for it in links:
+		var one := HBoxContainer.new()
+		_link(one, it[0], it[1])
+		share.add_child(UI.scrim(one, true))
+	vb.add_child(share)
 
 
 ## A home card: painted plaque with the title; under it only a state line
@@ -212,7 +212,7 @@ func _footer(root: Control) -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 0)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	var strip := UI.scrim(box)
+	var strip := UI.scrim(box, true)
 	strip.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	strip.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	strip.grow_vertical = Control.GROW_DIRECTION_BEGIN

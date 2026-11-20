@@ -374,9 +374,10 @@ static func ribbon(text: String, max_w: float) -> PanelContainer:
 
 ## Dark rounded strip behind text that sits straight on the painted background
 ## (menu links, footer, card state lines) — the web app's glass pill.
-static func scrim(child: Control) -> PanelContainer:
+static func scrim(child: Control, link := false) -> PanelContainer:
 	var p := PanelContainer.new()
-	var sb := _flat_box(Color(0.02, 0.08, 0.04, 0.78), Color(1, 1, 1, 0.1), 40, 22)
+	# Links get a thin accent edge (tappable); info lines have none.
+	var sb := _flat_box(Color(0.02, 0.08, 0.04, 0.78), Color(ACCENT, 0.5) if link else Color(0, 0, 0, 0), 40, 22)
 	sb.content_margin_top = 4
 	sb.content_margin_bottom = 4
 	p.add_theme_stylebox_override("panel", sb)

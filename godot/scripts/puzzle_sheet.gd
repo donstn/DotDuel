@@ -126,7 +126,7 @@ func _paint() -> void:
 		b.custom_minimum_size = Vector2(80, 70)
 		b.disabled = day > today
 		b.text = "%d\n%s" % [d, "👑" if won else (str(winner.best) if not winner.is_empty() else "")]
-		b.add_theme_font_override("font", UI.font(day == today))
+		b.add_theme_font_override("font", UI.font(true))
 		b.add_theme_font_size_override("font_size", 19)
 		var sb := StyleBoxFlat.new()
 		sb.set_corner_radius_all(12)

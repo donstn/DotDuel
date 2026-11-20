@@ -458,12 +458,12 @@ func show_invite(f: Dictionary) -> void:
 			err.text = Lang.a("invite.cantInviteNow", [f.name, why])
 			return
 		send.disabled = true
-		send.text = Lang.a("invite.sending")
+		send.text = (Lang.a("invite.sending")).to_upper()
 		var e: String = await Social.send_invite(f.uid, pick.shape, pick.tc, pick.ranked)
 		if not is_instance_valid(form):
 			return
 		send.disabled = false
-		send.text = Lang.a("invite.send")
+		send.text = (Lang.a("invite.send")).to_upper()
 		if e != "":
 			err.text = Lang.a("invite.tooManyPending") if e == "TOO_MANY_PENDING" else Lang.a("invite.inviteFailed")
 			return
@@ -519,7 +519,7 @@ func _invite_wait(body: VBoxContainer, form: Control, f: Dictionary) -> void:
 				return
 			state.declined = true
 			msg.text = Lang.a("invite.declined", [f.name])
-			cancel.text = Lang.a("invite.sendAgain")
+			cancel.text = (Lang.a("invite.sendAgain")).to_upper()
 			return
 
 
@@ -763,9 +763,10 @@ func icon_button(glyph: String) -> TextureButton:
 
 # ---------------------------------------------------------------- overlays
 
-## Sheet over the current screen (dim + framed panel); returns its content box.
-## Back, CLOSE or tapping the dimmed area closes it.
-func open_overlay(title: String, scroll := false, full := false, modal := false) -> VBoxContainer:
+## Sheet over the current screen: painted card frame, the title on the ribbon
+## across its top edge, a round ✕ in the corner. Returns its content box.
+## Back, ✕ or tapping the dimmed area closes it (modal: none of those).
+func open_overlay(title: String, scroll := false, full := false, modal := false, show_x := true) -> VBoxContainer:
 	close_overlay()
 	var ov := Control.new()
 	ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -781,50 +782,52 @@ func open_overlay(title: String, scroll := false, full := false, modal := false)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	ov.add_child(dim)
 	ov.create_tween().tween_property(dim, "color:a", 0.7, 0.25)
+	# Panel, ribbon and ✕ move and fade together.
+	var card := Control.new()
+	card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ov.add_child(card)
 	var panel := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.03, 0.1, 0.06, 0.96)
-	sb.set_corner_radius_all(32)
-	sb.set_border_width_all(3)
-	sb.border_color = Color(UI.ACCENT, 0.55)
-	sb.content_margin_left = 30
-	sb.content_margin_right = 30
-	sb.content_margin_top = 26
-	sb.content_margin_bottom = 26
-	panel.add_theme_stylebox_override("panel", sb)
-	ov.add_child(panel)
-	var outer := VBoxContainer.new()
-	outer.add_theme_constant_override("separation", 18)
-	panel.add_child(outer)
-	var head := UI.label(title, 34, UI.TEXT)
-	head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	outer.add_child(head)
+	var has_title := title != ""
+	panel.add_theme_stylebox_override("panel", UI.frame_box(has_title))
+	card.add_child(panel)
 	var body := VBoxContainer.new()
-	body.add_theme_constant_override("separation", 14)
+	body.add_theme_constant_override("separation", 14 if scroll or full else 22)
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if scroll or full:
 		panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		panel.offset_left = 26
-		panel.offset_right = -26
-		panel.offset_top = 50
-		panel.offset_bottom = -50
+		panel.offset_left = 22
+		panel.offset_right = -22
+		panel.offset_top = 64
+		panel.offset_bottom = -34
 	if full and not scroll:
 		body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		outer.add_child(body)
+		panel.add_child(body)
 	elif scroll:
 		var sc := ScrollContainer.new()
 		sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 		sc.add_child(body)
-		outer.add_child(sc)
+		panel.add_child(sc)
 	else:
-		panel.custom_minimum_size = Vector2(minf(600, size.x - 60), 0)
-		outer.add_child(body)
-	var close := UI.art_button(Lang.t("close"), UI.PILL_BTN, 280, 84, 26)
-	close.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	close.pressed.connect(close_overlay)
-	close.visible = not modal
-	outer.add_child(close)
+		panel.custom_minimum_size = Vector2(minf(620, size.x - 44), 0)
+		panel.add_child(body)
+	var ribbon: Control = UI.ribbon(title, minf(560, size.x - 120)) if has_title else null
+	if ribbon:
+		card.add_child(ribbon)
+	var x: TextureButton = null
+	if not modal and show_x:
+		x = close_button()
+		x.pressed.connect(close_overlay)
+		card.add_child(x)
+	var place := func():
+		if not is_instance_valid(panel):
+			return
+		if ribbon:
+			ribbon.position = panel.position + Vector2((panel.size.x - ribbon.size.x) / 2.0, -ribbon.size.y * 0.5)
+		if x:
+			x.position = panel.position + Vector2(panel.size.x - x.size.x * 1.05, -x.size.y * 0.35)
+	panel.item_rect_changed.connect(place)
 	if not scroll and not full:
 		var center := func():
 			if is_instance_valid(panel):
@@ -832,10 +835,32 @@ func open_overlay(title: String, scroll := false, full := false, modal := false)
 				panel.position = (size - panel.size) / 2.0
 		panel.resized.connect(center)
 		center.call_deferred()
-	panel.modulate.a = 0.0
-	panel.create_tween().tween_property(panel, "modulate:a", 1.0, 0.2)
+	place.call_deferred()
+	card.pivot_offset = size / 2.0
+	card.scale = Vector2.ONE * 0.94
+	card.modulate.a = 0.0
+	var tw := card.create_tween().set_parallel()
+	tw.tween_property(card, "modulate:a", 1.0, 0.18)
+	tw.tween_property(card, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_sync_guard()
 	return body
+
+
+## Round painted ✕ (popups' close).
+func close_button() -> TextureButton:
+	var t := icon_button("")
+	t.custom_minimum_size = Vector2(76, 76)
+	t.size = Vector2(76, 76)
+	var cross := Control.new()
+	cross.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	cross.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cross.draw.connect(func():
+		var c := cross.size / 2.0
+		for d in [Vector2(1, 1), Vector2(1, -1)]:
+			cross.draw_line(c - d * 12, c + d * 12, Color(0, 0.06, 0.03, 0.8), 9, true)
+			cross.draw_line(c - d * 12, c + d * 12, UI.TEXT, 5, true))
+	t.add_child(cross)
+	return t
 
 
 func close_overlay() -> void:
@@ -862,7 +887,7 @@ func _choice(text: String, sub: String, on: bool) -> Button:
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vb.add_theme_constant_override("separation", 0)
 	b.add_child(vb)
-	vb.add_child(UI.label(text, 30, UI.ACCENT if on else UI.TEXT, true, 4))
+	vb.add_child(UI.label(text.to_upper(), UI.BTN_M, UI.ACCENT if on else UI.TEXT, true, 4))
 	if sub != "":
 		var s := UI.label(sub, 21, UI.TEXT_DIM, false, 3)
 		s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -978,8 +1003,12 @@ func _shown_name(n: String, default: String) -> String:
 
 ## Yes/No sheet. `on_no` runs on No/back (e.g. reopen the sheet it came from).
 func confirm(text: String, on_yes: Callable, on_no := Callable(), yes_text := "", no_text := "") -> void:
-	var body := open_overlay("")
-	var l := UI.label(text, 27, UI.TEXT, false, 4)
+	# "Question?\nWhat happens": the question goes on the ribbon.
+	var parts := text.split("\n", false, 1)
+	var title := parts[0].strip_edges() if parts.size() > 1 else ""
+	var rest := parts[1].strip_edges() if parts.size() > 1 else text
+	var body := open_overlay(title, false, false, false, false)
+	var l := UI.label(rest, 27, UI.TEXT, false, 4)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.custom_minimum_size = Vector2(480, 0)
 	body.add_child(l)

@@ -1390,18 +1390,7 @@ func _result_panel(title: String, col: Color, celebrate: bool, happy: bool, line
 		_confetti(ov)
 
 	var panel := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.03, 0.1, 0.06, 0.95)
-	sb.set_corner_radius_all(36)
-	sb.set_border_width_all(4)
-	sb.border_color = Color(col, 0.8)
-	sb.shadow_color = Color(col, 0.35)
-	sb.shadow_size = 40
-	sb.content_margin_left = 36
-	sb.content_margin_right = 36
-	sb.content_margin_top = 34
-	sb.content_margin_bottom = 34
-	panel.add_theme_stylebox_override("panel", sb)
+	panel.add_theme_stylebox_override("panel", UI.frame_box(false))
 	ov.add_child(panel)
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 18)
@@ -1678,15 +1667,15 @@ func _online_over(row: Dictionary) -> void:
 		add.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		add.pressed.connect(func():
 			add.disabled = true
-			add.text = Lang.a("gameOver.sendingRequest")
+			add.text = (Lang.a("gameOver.sendingRequest")).to_upper()
 			var e: String = await Social.send_request_uid(opp_uid)
 			if not is_instance_valid(add):
 				return
 			if e == "":
-				add.text = Lang.a("gameOver.friendRequestSent")
+				add.text = (Lang.a("gameOver.friendRequestSent")).to_upper()
 			else:
 				add.disabled = false
-				add.text = Lang.a("gameOver.couldntSend"))
+				add.text = (Lang.a("gameOver.couldntSend")).to_upper())
 		extra.add_child(add)
 	# No rematch against a bot: the primary button goes back to the lobby.
 	if bot:
@@ -1705,7 +1694,7 @@ var _rematch_on := false
 
 func _toggle_rematch() -> void:
 	_rematch_on = not _rematch_on
-	_result.primary.text = Lang.a("gameOver.waitingForOpponent") if _rematch_on else Lang.a("gameOver.rematch")
+	_result.primary.text = (Lang.a("gameOver.waitingForOpponent") if _rematch_on else Lang.a("gameOver.rematch")).to_upper()
 	Online.request_rematch(_rematch_on)
 
 
@@ -1715,9 +1704,9 @@ func _update_rematch(row: Dictionary) -> void:
 	var rm = row.get("rematch", {})
 	var opp_wants := rm is Dictionary and bool(rm.get(str(3 - my_slot), false))
 	if opp_wants and not _rematch_on:
-		_result.primary.text = Lang.a("gameOver.acceptRematch")
+		_result.primary.text = (Lang.a("gameOver.acceptRematch")).to_upper()
 	elif not _rematch_on:
-		_result.primary.text = Lang.a("gameOver.rematch")
+		_result.primary.text = (Lang.a("gameOver.rematch")).to_upper()
 
 
 func _on_match_record(rec: Dictionary) -> void:
@@ -1804,7 +1793,7 @@ func _share_result(btn: Button) -> void:
 		return
 	var img := get_viewport().get_texture().get_image()
 	btn.modulate.a = 1.0
-	btn.text = Lang.a("share.preparing")
+	btn.text = (Lang.a("share.preparing")).to_upper()
 	var jpg := img.save_jpg_to_buffer(0.9)
 	var text := _share_text()
 	if OS.has_feature("web"):
@@ -1833,4 +1822,4 @@ func _share_result(btn: Button) -> void:
 		_toast(Lang.a("share.textCopied"))
 	if is_instance_valid(btn):
 		btn.disabled = false
-		btn.text = Lang.a("share.shareResult")
+		btn.text = (Lang.a("share.shareResult")).to_upper()

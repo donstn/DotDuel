@@ -6,8 +6,6 @@
 <meta name="theme-color" content="#0c1d14">
 <title>DotDuel (Godot test)</title>
 <!-- Loader art comes from the main site's public/ (same origin, already cached for returning players). -->
-<link rel="preload" as="image" href="/art/forest-pearl/background-portrait.webp">
-<link rel="preload" as="image" href="/art/forest-pearl/header-combined.webp">
 <style>
 @font-face { font-family: Outfit; src: url(/fonts/outfit-var.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
 html, body, #canvas { margin: 0; padding: 0; border: 0; }
@@ -73,6 +71,19 @@ body { background: #0c1d14; color: #eaf3e3; overflow: hidden; touch-action: none
 	100% { transform: translate(calc(var(--dx) * -0.5), -36vh); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .fly { display: none; } .hole i { transition: none; } }
+
+/* Christmas (same season + saved choice as the game): campfire background, snowy sign, baubles, snowflakes. */
+html[data-theme="christmas"] #loader { background-image: url(/art/christmas/background-portrait.webp); }
+@media (orientation: landscape) { html[data-theme="christmas"] #loader { background-image: url(/art/christmas/background-landscape.webp); } }
+html[data-theme="christmas"] .hole:nth-child(odd) i { background-image: url(/art/christmas/dot-p1.webp); }
+html[data-theme="christmas"] .hole:nth-child(even) i { background-image: url(/art/christmas/dot-p2.webp); }
+html[data-theme="christmas"] .fly { background: #ffffff; box-shadow: 0 0 6px 2px rgba(255,255,255,.5); animation-name: snow; }
+@keyframes snow {
+	0% { transform: translate(0, -40vh); opacity: 0; }
+	15% { opacity: .85; }
+	85% { opacity: .85; }
+	100% { transform: translate(var(--dx), 30vh); opacity: 0; }
+}
 </style>
 <link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
 <link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
@@ -83,16 +94,85 @@ body { background: #0c1d14; color: #eaf3e3; overflow: hidden; touch-action: none
 <noscript>DotDuel needs JavaScript.</noscript>
 
 <div id="loader" role="status" aria-live="polite">
-	<div class="sign"><img src="/art/forest-pearl/header-combined.webp" alt="DotDuel"><div class="tag">Colour dots. Finish lines.<br>Outscore your rival.</div></div>
+	<div class="sign"><img id="sign" src="" alt="DotDuel"><div class="tag" id="tag"></div></div>
 	<div class="track" id="track" aria-hidden="true"></div>
-	<div class="pct" id="pct">0%<small>Loading the forest…</small></div>
+	<div class="pct" id="pct">0%<small id="status"></small></div>
 	<div class="tip" id="tip"></div>
 	<div class="notice" id="notice"></div>
 </div>
 
+<script>
+// Language and theme for the loader, chosen like the game does (scripts/lang.gd,
+// scripts/look.gd): saved choice (shared with dotduel.com) -> browser -> English.
+const L10N = {
+	en: { tag: 'Colour dots. Finish lines.<br>Outscore your rival.', loading: 'Loading…', starting: 'Starting…', failed: 'Could not start. Try reloading the page.', broken: 'Something went wrong while loading.', missing: 'This browser is missing features DotDuel needs:', tips: [
+		'Complete a line to score <b>its length</b> in points.',
+		'Finish several lines at once? Only the <b>longest</b> scores. The rest wait as <b>pending</b> lines.',
+		'Any player can <b>claim</b> a pending line: tap one of its coloured dots.',
+		'A corner dot is a line of its own: <b>1 point</b>.',
+		'Before you place a dot, check what it sets up for your rival.',
+		'Ranked games use the <b>same rating</b> as the DotDuel app.'] },
+	lt: { tag: 'Spalvinkite taškus. Užbaikite linijas.<br>Surinkite daugiau už varžovą.', loading: 'Įkeliama…', starting: 'Paleidžiama…', failed: 'Nepavyko paleisti. Pabandykite perkrauti puslapį.', broken: 'Įkeliant įvyko klaida.', missing: 'Šioje naršyklėje trūksta funkcijų, kurių reikia DotDuel:', tips: [
+		'Užbaikite liniją ir gaukite tiek taškų, <b>kokio ilgio</b> ji yra.',
+		'Užbaigėte kelias linijas iš karto? Skaičiuojama tik <b>ilgiausia</b>. Kitos lieka <b>laukti</b>.',
+		'Laukiančią liniją gali <b>paimti</b> bet kuris žaidėjas: bakstelėkite vieną jos spalvotą tašką.',
+		'Kampinis taškas yra atskira linija: <b>1 taškas</b>.',
+		'Prieš dėdami tašką pagalvokite, ką juo paruošiate varžovui.',
+		'Reitingų žaidimuose galioja <b>tas pats reitingas</b> kaip DotDuel programėlėje.'] },
+	es: { tag: 'Colorea puntos. Completa líneas.<br>Supera a tu rival.', loading: 'Cargando…', starting: 'Iniciando…', failed: 'No se pudo iniciar. Prueba a recargar la página.', broken: 'Algo salió mal durante la carga.', missing: 'A este navegador le faltan funciones que DotDuel necesita:', tips: [
+		'Completa una línea para sumar <b>su longitud</b> en puntos.',
+		'¿Completas varias líneas a la vez? Solo puntúa la <b>más larga</b>. Las demás quedan <b>en espera</b>.',
+		'Cualquier jugador puede <b>reclamar</b> una línea en espera: toca uno de sus puntos de color.',
+		'Un punto de esquina es una línea por sí mismo: <b>1 punto</b>.',
+		'Antes de colocar un punto, mira qué le dejas preparado a tu rival.',
+		'Las partidas clasificatorias usan <b>la misma clasificación</b> que la app DotDuel.'] },
+	pt: { tag: 'Pinte pontos. Complete linhas.<br>Supere seu rival.', loading: 'Carregando…', starting: 'Iniciando…', failed: 'Não foi possível iniciar. Tente recarregar a página.', broken: 'Algo deu errado ao carregar.', missing: 'Este navegador não tem recursos de que o DotDuel precisa:', tips: [
+		'Complete uma linha para marcar <b>o comprimento dela</b> em pontos.',
+		'Completou várias linhas de uma vez? Só a <b>mais longa</b> pontua. As outras ficam <b>aguardando</b>.',
+		'Qualquer jogador pode <b>marcar</b> uma linha aguardando: toque em um dos pontos coloridos dela.',
+		'Um ponto de canto já é uma linha: <b>1 ponto</b>.',
+		'Antes de colocar um ponto, veja o que ele deixa pronto para o seu rival.',
+		'As partidas ranqueadas usam <b>a mesma classificação</b> do app DotDuel.'] },
+	pl: { tag: 'Koloruj kropki. Kończ linie.<br>Pokonaj rywala.', loading: 'Wczytywanie…', starting: 'Uruchamianie…', failed: 'Nie udało się uruchomić. Spróbuj odświeżyć stronę.', broken: 'Coś poszło nie tak podczas wczytywania.', missing: 'Tej przeglądarce brakuje funkcji potrzebnych DotDuel:', tips: [
+		'Ukończ linię, aby zdobyć tyle punktów, <b>ile ma długości</b>.',
+		'Kończysz kilka linii naraz? Punktuje tylko <b>najdłuższa</b>. Pozostałe <b>czekają</b>.',
+		'Każdy gracz może <b>zająć</b> czekającą linię: dotknij jednej z jej kolorowych kropek.',
+		'Kropka w rogu to osobna linia: <b>1 punkt</b>.',
+		'Zanim postawisz kropkę, sprawdź, co szykujesz rywalowi.',
+		'Gry rankingowe używają <b>tego samego rankingu</b> co aplikacja DotDuel.'] },
+	cs: { tag: 'Barvi tečky. Dokončuj linie.<br>Překonej soupeře.', loading: 'Načítám…', starting: 'Spouštím…', failed: 'Nepodařilo se spustit. Zkus stránku načíst znovu.', broken: 'Při načítání se něco pokazilo.', missing: 'Tomuto prohlížeči chybí funkce, které DotDuel potřebuje:', tips: [
+		'Dokonči linii a získáš tolik bodů, <b>kolik je dlouhá</b>.',
+		'Dokončíš víc linií naráz? Boduje jen <b>nejdelší</b>. Ostatní <b>čekají</b>.',
+		'Čekající linii může <b>zabrat</b> kterýkoli hráč: klepni na jednu z jejích barevných teček.',
+		'Rohová tečka je samostatná linie: <b>1 bod</b>.',
+		'Než položíš tečku, zkontroluj, co tím chystáš soupeři.',
+		'Hodnocené hry používají <b>stejné hodnocení</b> jako aplikace DotDuel.'] },
+};
+const LOADER = (function () {
+	const get = (k) => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+	let lang = get('dotduel:lang:v1');
+	if (!L10N[lang]) {
+		lang = 'en';
+		const tags = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ''];
+		for (const t of tags) { const l = String(t).toLowerCase().slice(0, 2); if (l !== 'en' && L10N[l]) { lang = l; break; } }
+		try { if (lang === 'en' && Intl.DateTimeFormat().resolvedOptions().timeZone === 'Europe/Vilnius') lang = 'lt'; } catch (e) {}
+	}
+	const now = new Date(), md = (now.getMonth() + 1) * 100 + now.getDate();
+	const xmasOffered = md >= 1117 || md <= 115 || get('dotduel:theme-preview:v1') === 'christmas';
+	const saved = get('dotduel:theme:v1');
+	const theme = xmasOffered && (saved === 'christmas' || saved === '') ? 'christmas' : 'forest-pearl';
+	document.documentElement.lang = lang;
+	document.documentElement.dataset.theme = theme;
+	document.getElementById('sign').src = '/art/' + theme + '/header-combined.webp';
+	const t = L10N[lang];
+	document.getElementById('tag').innerHTML = t.tag;
+	document.getElementById('status').textContent = t.loading;
+	return t;
+}());
+</script>
 <script src="index.js"></script>
 <script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":true,"fileSizes":{"index.pck":4519108,"index.wasm":39513091},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":true,"fileSizes":{"index.pck":8742328,"index.wasm":39513091},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -122,14 +202,7 @@ const engine = new Engine(GODOT_CONFIG);
 		loader.appendChild(f);
 	}
 
-	const TIPS = [
-		'Complete a line to score <b>its length</b> in points.',
-		'Finish several lines at once? Only the <b>longest</b> scores. The rest wait as <b>pending</b> lines.',
-		'Any player can <b>claim</b> a pending line: tap one of its coloured dots.',
-		'A corner dot is a line of its own: <b>1 point</b>.',
-		'Before you place a dot, check what it sets up for your rival.',
-		'Ranked games use the <b>same rating</b> as the DotDuel app.',
-	];
+	const TIPS = LOADER.tips;
 	let tipIdx = Math.floor(Math.random() * TIPS.length);
 	function nextTip() {
 		tip.style.opacity = 0;
@@ -147,19 +220,19 @@ const engine = new Engine(GODOT_CONFIG);
 		const lit = Math.floor(p * HOLES + 1e-6);
 		holes.forEach((h, i) => h.classList.toggle('on', i < lit));
 		pct.firstChild.nodeValue = n + '%';
-		if (n >= 100) pct.lastChild.textContent = 'Starting…';
+		if (n >= 100) pct.lastChild.textContent = LOADER.starting;
 	}
 	function fail(err) {
 		console.error(err);
 		clearInterval(tipTimer);
-		notice.textContent = (err && err.message) ? err.message : String(err || 'Something went wrong while loading.');
+		notice.textContent = (err && err.message) ? err.message : String(err || LOADER.broken);
 		notice.style.display = 'block';
-		pct.lastChild.textContent = 'Could not start. Try reloading the page.';
+		pct.lastChild.textContent = LOADER.failed;
 	}
 
 	const missing = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });
 	if (missing.length !== 0) {
-		fail('This browser is missing features DotDuel needs:\n' + missing.join(', '));
+		fail(LOADER.missing + '\n' + missing.join(', '));
 		return;
 	}
 	engine.startGame({

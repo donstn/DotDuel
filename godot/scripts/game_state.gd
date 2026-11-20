@@ -193,6 +193,28 @@ static func from_json(b: BoardDef, d: Dictionary) -> GState:
 	return s
 
 
+## The website's GameState JSON (src/types.ts) — for the shared saved game.
+## Per-dot/line turn numbers aren't tracked here; the order isn't shown anywhere.
+func to_json(b: BoardDef, shape: String, mode: String, level: int) -> Dictionary:
+	var col := {}
+	for d in colored.size():
+		if colored[d] != 0:
+			col[str(d)] = {"player": colored[d], "turn": 0}
+	var done := []
+	for li in line_state.size():
+		if line_state[li] == SCORED:
+			done.append({"lineId": b.line_id[li], "player": line_owner[li], "turn": 0})
+	var pend := []
+	for li in pending:
+		pend.append(b.line_id[li])
+	var d := {"shape": shape, "mode": mode, "current": current, "turn": turn, "colored": col,
+		"completed": done, "pending": pend, "scores": {"1": scores[1], "2": scores[2]},
+		"finished": finished, "winner": null if winner == 0 else ("draw" if winner == 3 else winner)}
+	if level > 0:
+		d.difficulty = level
+	return d
+
+
 static func action_json(b: BoardDef, a: int) -> Dictionary:
 	if a >= 0:
 		return {"kind": "dot", "dotId": a}

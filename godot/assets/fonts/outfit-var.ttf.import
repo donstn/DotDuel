@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://cwsl3wie77qm2"
-path="res://.godot/imported/outfit-var.woff2-d5788f633a762e89993fb6bc604e382f.fontdata"
+uid="uid://b8t4cuqyce7qd"
+path="res://.godot/imported/outfit-var.ttf-240db471f603a037bcc32b698d20d5d1.fontdata"
 
 [deps]
 
-source_file="res://assets/fonts/outfit-var.woff2"
-dest_files=["res://.godot/imported/outfit-var.woff2-d5788f633a762e89993fb6bc604e382f.fontdata"]
+source_file="res://assets/fonts/outfit-var.ttf"
+dest_files=["res://.godot/imported/outfit-var.ttf-240db471f603a037bcc32b698d20d5d1.fontdata"]
 
 [params]
 

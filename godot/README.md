@@ -24,11 +24,29 @@ Godot_v4.7.1-stable_win64.exe --path godot
 - Sound: cues synthesized at start-up (`scripts/sfx.gd`), plus the game's CC0 win/loss
   clips and forest ambience. Forest & Pearl art copied from `public/art/forest-pearl/`.
 
+- **Back button**: phone back gesture / browser back / Esc step back one screen
+  (`go_back()` in `main.gd`). On the web one guard entry sits on the browser
+  history (same pattern as the React app); back on the main menu leaves the page.
+  Mid-game it needs a second press; online it is the double-press resign.
+- **Languages**: EN/LT/ES/PT/PL/CS (`scripts/lang.gd`, picker top-right of the menu).
+  Godot-only strings live in `scripts/i18n/strings.gd`; shapes, bot levels, time
+  controls and the full privacy policy are generated from the React app's reviewed
+  translations: `npx tsx godot/tools/gen_i18n.ts` (writes `scripts/i18n/shared.gd`).
+  Language and theme choices share the website's localStorage keys.
+  Fonts are the full Chakra Petch / Outfit TTFs (OFL-1.1) so ą/č/ł/ř render.
+- **Privacy policy**: menu footer + sign-in screen, same text as the app.
+- **Christmas theme** (`scripts/look.gd`, offered 17 Nov – 15 Jan, `--theme=christmas`
+  or `?theme-preview=christmas` on the site to force): campfire background with a
+  live fire (`scripts/campfire.gd`), snow, red/gold baubles, the tree board for
+  Triangle (apex up), the wreath for Square/Rectangle, and the app's bell sound
+  set + crackling fire ported to `sfx.gd`. The web loader follows language + theme.
+
 ## Checks
 
 ```
 godot --headless --path godot -s res://tools/sim.gd          # bots vs bots, scoring integrity
-godot --path godot -- --autotest=<folder>                      # plays a demo game, saves screenshots, tests tapping
+godot --headless --path godot -s res://tools/i18n_check.gd    # every language has every key + matching placeholders
+godot --path godot -- --autotest=<folder> [--theme=christmas] [--lang=lt] [--shape=square]   # demo game + screenshots + tap test
 ```
 
 ## Web build (www.dotduel.com/GodotV1)

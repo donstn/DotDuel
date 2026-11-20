@@ -28,23 +28,23 @@ static func font(bold := true) -> Font:
 	var key := "bold" if bold else "body"
 	if not _fonts.has(key):
 		if bold:
-			_fonts[key] = load("res://assets/fonts/chakra-petch-700.woff2")
+			_fonts[key] = load("res://assets/fonts/chakra-petch-700.ttf")
 		else:
 			# Outfit is a variable font; without an axis value it renders at its thinnest.
 			var v := FontVariation.new()
-			v.base_font = load("res://assets/fonts/outfit-var.woff2")
+			v.base_font = load("res://assets/fonts/outfit-var.ttf")
 			v.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): 560}
 			_fonts[key] = v
 	return _fonts[key]
 
 
 static func tex(file: String) -> Texture2D:
-	return load(ART + file)
+	return load(Look.art(file))
 
 
 ## Texture resampled so its height is `h` px (keeps 9-slice caps in proportion).
 static func scaled_tex(file: String, h: int) -> Texture2D:
-	var key := "%s@%d" % [file, h]
+	var key := "%s@%d" % [Look.art(file), h]
 	if not _tex.has(key):
 		var img: Image = tex(file).get_image()
 		if img.is_compressed():
@@ -96,8 +96,23 @@ static func art_button(text: String, spec: Array, w: int, h: int, font_size := 3
 	b.add_theme_color_override("font_disabled_color", TEXT_DIM)
 	b.add_theme_constant_override("outline_size", 8)
 	b.add_theme_color_override("font_outline_color", Color(0, 0.08, 0.03, 0.8))
+	# Longer translations shrink to stay inside the painted caps.
+	var room := w - sb.content_margin_left - sb.content_margin_right
+	var fs := font_size
+	while fs > 14 and font(true).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 8 > room:
+		fs -= 1
+	b.add_theme_font_size_override("font_size", fs)
 	juicy(b)
 	return b
+
+
+## Shrinks a wrapping label's font until its text fits `box`.
+static func fit_label(l: Label, font_size: int, box: Vector2) -> void:
+	var f := l.get_theme_font("font")
+	var fs := font_size
+	while fs > 14 and f.get_multiline_string_size(l.text, HORIZONTAL_ALIGNMENT_CENTER, box.x, fs).y > box.y:
+		fs -= 1
+	l.add_theme_font_size_override("font_size", fs)
 
 
 ## Squash on press, spring back, grow a little on hover. Click tick sound.
@@ -144,3 +159,125 @@ static func particles_burst(parent: Node, at: Vector2, color: Color, amount := 1
 	p.emitting = true
 	p.finished.connect(p.queue_free)
 	return p
+
+
+static func rich(bb: String) -> RichTextLabel:
+	var r := RichTextLabel.new()
+	r.bbcode_enabled = true
+	r.fit_content = true
+	r.scroll_active = false
+	r.mouse_filter = Control.MOUSE_FILTER_PASS
+	r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	r.add_theme_font_override("normal_font", font(false))
+	r.add_theme_font_override("bold_font", font(true))
+	r.add_theme_font_size_override("normal_font_size", 23)
+	r.add_theme_font_size_override("bold_font_size", 23)
+	r.add_theme_color_override("default_color", UI.TEXT)
+	r.text = bb
+	return r
+
+
+## A cog: 8 teeth around a ring.
+static func draw_gear(n: CanvasItem, at: Vector2, rad: float, col: Color) -> void:
+	for i in 8:
+		var ang := TAU * i / 8.0
+		var dir := Vector2.from_angle(ang)
+		n.draw_line(at + dir * rad * 0.7, at + dir * rad * 1.12, col, rad * 0.42)
+	n.draw_circle(at, rad * 0.82, col)
+	n.draw_circle(at, rad * 0.36, Color(0.05, 0.12, 0.08))
+
+
+static func _flat_box(bg: Color, border: Color, radius := 18, pad := 16) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.border_color = border
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(radius)
+	sb.content_margin_left = pad
+	sb.content_margin_right = pad
+	sb.content_margin_top = 10
+	sb.content_margin_bottom = 10
+	return sb
+
+
+static func section(text: String) -> Label:
+	var l := label(text, 26, ACCENT, true, 4)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return l
+
+
+static func hint(text: String) -> Label:
+	var l := label(text, 20, TEXT_DIM, false, 3)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return l
+
+
+static func input(value: String, placeholder: String, max_len := 20) -> LineEdit:
+	var e := LineEdit.new()
+	e.text = value
+	e.placeholder_text = placeholder
+	e.max_length = max_len
+	e.custom_minimum_size = Vector2(0, 72)
+	e.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	e.add_theme_font_override("font", font(false))
+	e.add_theme_font_size_override("font_size", 28)
+	e.add_theme_color_override("font_color", TEXT)
+	e.add_theme_color_override("font_placeholder_color", TEXT_DIM)
+	e.add_theme_stylebox_override("normal", _flat_box(Color(0.01, 0.05, 0.03, 0.9), Color(1, 1, 1, 0.18)))
+	e.add_theme_stylebox_override("focus", _flat_box(Color(0.01, 0.05, 0.03, 0.9), ACCENT))
+	e.add_theme_stylebox_override("read_only", _flat_box(Color(0.03, 0.08, 0.05, 0.6), Color(1, 1, 1, 0.08)))
+	return e
+
+
+## A full-width checkbox row; `on_change(bool)` fires on every flip.
+static func toggle(text: String, on: bool, on_change: Callable) -> CheckButton:
+	var c := CheckButton.new()
+	c.text = text
+	c.button_pressed = on
+	c.focus_mode = Control.FOCUS_NONE
+	c.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	c.custom_minimum_size = Vector2(0, 64)
+	c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	c.add_theme_font_override("font", font(false))
+	c.add_theme_font_size_override("font_size", 25)
+	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
+		c.add_theme_color_override(k, TEXT)
+	c.toggled.connect(on_change)
+	return c
+
+
+## Plain rounded button (lists, secondary actions). danger = red outline.
+## A plain button sized to its text (no wrapping), for tight rows and pills.
+static func small_button(text: String, danger := false, font_size := 22) -> Button:
+	var b := plain_button(text, danger, font_size)
+	b.autowrap_mode = TextServer.AUTOWRAP_OFF
+	return b
+
+
+static func plain_button(text: String, danger := false, font_size := 25) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.focus_mode = Control.FOCUS_NONE
+	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	b.add_theme_font_override("font", font(true))
+	b.add_theme_font_size_override("font_size", font_size)
+	b.custom_minimum_size = Vector2(0, 68)
+	# A shrink-centred wrapping button gets no width and breaks after every
+	# letter: only those keep their text's width (up to a line). Fill/fixed
+	# rows still wrap freely.
+	b.ready.connect(func():
+		if b.size_flags_horizontal == Control.SIZE_SHRINK_CENTER:
+			var w := font(true).get_string_size(b.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 48
+			b.custom_minimum_size.x = minf(w, 560))
+	var col := Color("ff8a7a") if danger else TEXT
+	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		b.add_theme_color_override(k, col)
+	var border := Color(1, 0.45, 0.4, 0.6) if danger else Color(1, 1, 1, 0.18)
+	b.add_theme_stylebox_override("normal", _flat_box(Color(0.02, 0.07, 0.04, 0.9), border))
+	b.add_theme_stylebox_override("hover", _flat_box(Color(0.05, 0.14, 0.08, 0.95), border))
+	b.add_theme_stylebox_override("pressed", _flat_box(Color(0.08, 0.2, 0.12, 0.95), ACCENT))
+	b.add_theme_stylebox_override("disabled", _flat_box(Color(0.02, 0.05, 0.03, 0.6), Color(1, 1, 1, 0.06)))
+	b.add_theme_color_override("font_disabled_color", TEXT_DIM)
+	return b

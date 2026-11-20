@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://bw5afqhgtwk8b"
-path="res://.godot/imported/chakra-petch-600.woff2-ee605b164f59845a9be5c65e37e1d73e.fontdata"
+uid="uid://d01nsbe5xgqlr"
+path="res://.godot/imported/chakra-petch-700.ttf-7e0124af0abab71bb29eaf96588ce8c6.fontdata"
 
 [deps]
 
-source_file="res://assets/fonts/chakra-petch-600.woff2"
-dest_files=["res://.godot/imported/chakra-petch-600.woff2-ee605b164f59845a9be5c65e37e1d73e.fontdata"]
+source_file="res://assets/fonts/chakra-petch-700.ttf"
+dest_files=["res://.godot/imported/chakra-petch-700.ttf-7e0124af0abab71bb29eaf96588ce8c6.fontdata"]
 
 [params]
 

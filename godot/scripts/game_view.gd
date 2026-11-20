@@ -86,6 +86,8 @@ const TREE_SIZE := Vector2(883, 989)
 const TREE_AXIS := 441.0
 const TREE_TOP := 231.0
 const TREE_BOTTOM := 806.0
+## Bottom edge of the score cards (row offsets 160..310, +4% active scale).
+const CARDS_BOTTOM := 322.0
 const WREATH_W := 987.0
 const WREATH_CAPS := [207.0, 203.0, 205.0, 207.0]  # left, top, right, bottom
 
@@ -139,6 +141,7 @@ func _ready() -> void:
 	float_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(float_layer)
 	resized.connect(_layout)
+	Look.changed.connect(_on_theme)
 	_layout.call_deferred()
 	_intro.call_deferred()
 
@@ -338,7 +341,7 @@ func _make_card(p: int) -> Control:
 	wrap.add_child(think)
 	wrap.resized.connect(func(): wrap.pivot_offset = wrap.size / 2.0)
 	score_l.text = str(s.scores[p])
-	cards[p] = {"wrap": wrap, "glow": glow, "score": score_l, "think": think, "avatar": av, "clock": clock_l}
+	cards[p] = {"wrap": wrap, "glow": glow, "score": score_l, "think": think, "avatar": av, "clock": clock_l, "sb": sb, "gsb": gsb, "chip": chip}
 	return wrap
 
 
@@ -370,6 +373,26 @@ func _roll_score(p: int) -> void:
 
 # ---------------------------------------------------------------- layout
 
+## Theme switched mid-game (Settings): new palette, tree ↔ felt board.
+func _on_theme() -> void:
+	BRIGHT = Look.bright
+	STRIKE_OUTER = Look.strike_outer
+	STRIKE_INNER = Look.strike_inner
+	WAIT_COL = Look.pending_col
+	tree = Look.xmas() and shape == "triangle"
+	waiting_label.add_theme_color_override("font_color", WAIT_COL)
+	for p in [1, 2]:
+		var c: Color = BRIGHT[_sk(p)]
+		cards[p].gsb.bg_color = Color(c, 0.10)
+		cards[p].gsb.shadow_color = Color(c, 0.55)
+		cards[p].sb.border_color = Color(c, 0.55)
+		cards[p].score.add_theme_color_override("font_color", c)
+		cards[p].chip.texture = UI.tex("dot-p%d.webp" % _sk(p))
+		for d in cards[p].think.get_children():
+			d.add_theme_color_override("font_color", c)
+	_layout.call_deferred()
+
+
 func _layout() -> void:
 	if b == null or size.x <= 0:
 		return
@@ -378,8 +401,9 @@ func _layout() -> void:
 	var bw := b.bounds.size.x + 1.4
 	var bh := b.bounds.size.y + 1.4
 	var shift := 0.0
+	var ku := 0.0
 	if tree:
-		var ku := b.bounds.size.y / (TREE_BOTTOM - TREE_TOP)
+		ku = b.bounds.size.y / (TREE_BOTTOM - TREE_TOP)
 		# The outer branch tips may run a little past the screen edge, so the
 		# tree (and its dots) can be bigger.
 		bw = maxf(bw, TREE_SIZE.x * ku / 1.18)
@@ -390,19 +414,27 @@ func _layout() -> void:
 		bh = b.bounds.size.y + 2.8
 	unit = min(area.size.x / bw, area.size.y / bh, 130.0)
 	var cy := area.get_center().y
-	# The campfire stays in its painted fireplace; the tree makes room instead,
-	# so no flame ever reaches the bottom baubles (they'd hide the tips).
-	if tree and is_instance_valid(Look.fire):
-		var flame_top: float = Look.fire.global_position.y - global_position.y - FLAME_TOP * Look.fire.global_scale.y - 6.0
+	if tree:
+		# The star may tuck under the score cards, but the top bauble must sit
+		# fully below them (it was half hidden and hard to tap), and the campfire
+		# stays in its painted fireplace: no flame reaches the bottom baubles.
+		var floor_y := area.end.y
+		if is_instance_valid(Look.fire):
+			floor_y = Look.fire.global_position.y - global_position.y - FLAME_TOP * Look.fire.global_scale.y - 6.0
+		var apex := TREE_TOP * ku + 0.5  # tree top → top edge of the top bauble, in units
+		var reach := bh / 2.0 + b.bounds.size.y / 2.0 + 0.36 - shift  # tree top → bottom of last row
 		var tree_top := cy - bh / 2.0 * unit
-		var reach := bh / 2.0 + b.bounds.size.y / 2.0 + 0.36 - shift  # tree top → bottom of last row, in units
-		if tree_top + reach * unit > flame_top:
-			# First use the free space under the score cards, then shrink.
-			var lift := minf(tree_top + reach * unit - flame_top, tree_top - (top - 50.0))
-			tree_top -= maxf(lift, 0.0)
-			if tree_top + reach * unit > flame_top and flame_top > tree_top:
-				unit = maxf(unit * 0.7, (flame_top - tree_top) / reach)
-			cy = tree_top + bh / 2.0 * unit
+		# Lift into the free space under the cards only as far as the bauble allows.
+		var overflow := tree_top + reach * unit - floor_y
+		if overflow > 0:
+			tree_top -= minf(overflow, tree_top + apex * unit - CARDS_BOTTOM)
+		if tree_top + apex * unit < CARDS_BOTTOM:
+			tree_top = CARDS_BOTTOM - apex * unit
+		if tree_top + reach * unit > floor_y and floor_y > CARDS_BOTTOM:
+			# Still too tall: shrink, keeping the bauble just under the cards.
+			unit = maxf(minf(unit, (floor_y - CARDS_BOTTOM) / (reach - apex)), unit * 0.6)
+			tree_top = CARDS_BOTTOM - apex * unit
+		cy = tree_top + bh / 2.0 * unit
 	r = unit * 0.36
 	board.position = Vector2(area.get_center().x, cy) - Vector2(0, shift * unit)
 	_rebuild_board()

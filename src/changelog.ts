@@ -30,6 +30,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: 'Beta 0.5.1.1',
+    date: '2026-11-21',
+    changes: [
+      {
+        kind: 'changed',
+        text: 'Clearer message when you tap a dot with nothing left to take.',
+      },
+    ],
+  },
+  {
     version: 'Beta 0.5.1.0',
     date: '2026-11-18',
     changes: [

@@ -8947,3 +8947,43 @@ html[data-theme="monochrome-pro"],
 html[data-theme="vintage-press"] {
   --waiting-core: var(--accent);
 }
+
+/* Day-streak popup (after the day's first online game / daily puzzle). */
+.rules-card.streak-card {
+  max-width: 360px;
+  overflow-y: auto;
+  align-items: center;
+  text-align: center;
+  padding: 22px 22px 20px;
+  gap: 10px;
+}
+.streak-flame {
+  font-size: 3rem;
+  line-height: 1;
+}
+.streak-title {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+.streak-body {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.streak-ok {
+  margin-top: 6px;
+  width: 100%;
+  justify-content: center;
+}
+.settings-time-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.settings-time-row input[type='time'] {
+  width: auto;
+  min-width: 7.5em;
+}

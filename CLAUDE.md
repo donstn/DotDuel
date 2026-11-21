@@ -31,7 +31,7 @@ npm run build:android-release  # ONLY build serving real AdMob ads (.env.android
 npm run simulate / simulate:l4 / simulate:square / simulate:tri8
 ```
 
-Deploy: `git push origin main` → GH Pages. Android: `npx cap sync android`, then Android Studio / `gradlew bundleRelease` (signing via git-ignored `android/keystore.properties`; never commit keystores).
+Deploy: `git push origin main` → GH Pages. **`npm run build` is the WEB layout (Godot at `/`, React at `/classic/`) — never `cap sync` after it.** Android (still React): `npm run build:android-release` (or `tsc -b && vite build && tsx scripts/build-pages.ts --app` for a test build), then `npx cap sync android`, then Android Studio / `gradlew bundleRelease` (signing via git-ignored `android/keystore.properties`; never commit keystores).
 
 ## File layout
 

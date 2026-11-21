@@ -38,6 +38,7 @@ func _ready() -> void:
 	Online.pairing_changed.connect(_on_pairing)
 	Social.changed.connect(_refresh_invite_card)
 	Online.profile_changed.connect(_on_account_change)
+	Online.profile_changed.connect(_on_streak_check)
 	Supa.auth_changed.connect(_on_account_change)
 	Online.kicked.connect(_on_kicked)
 
@@ -1417,6 +1418,67 @@ func _on_account_change() -> void:
 		show_menu()
 
 
+# ---------------------------------------------------------------- day streak
+# Popup after the day's first finished online game or daily puzzle, from day 2
+# (once a day; the same localStorage key as the React app).
+
+const STREAK_POPUP_KEY := "dotduel:streakPopup:v1"
+var _streak_seen := {}
+
+
+func _on_streak_check() -> void:
+	if not Supa.signed_in() or not Online.profile_loaded or Online.profile.is_empty():
+		return
+	var v = Online.profile.get("streak_last_played_utc")
+	var day := str(v) if v != null else ""
+	var prev := _streak_seen
+	_streak_seen = {"uid": Online.me(), "day": day}
+	if prev.is_empty() or prev.uid != Online.me() or prev.day == day:
+		return
+	var today := Online.utc_day()
+	var n := Online.streak_alive()
+	if day != today or n < 2 or _streak_popup_day() == today:
+		return
+	_set_streak_popup_day(today)
+	await get_tree().create_timer(1.2).timeout
+	for i in 120:  # don't close another sheet (rematch, share…): wait for it
+		if not overlay:
+			break
+		await get_tree().create_timer(0.5).timeout
+	if not overlay:
+		_show_streak(n)
+
+
+func _streak_popup_day() -> String:
+	if not OS.has_feature("web"):
+		return str(Store.read(STREAK_POPUP_KEY)) if Store.read(STREAK_POPUP_KEY) != null else ""
+	var v = JavaScriptBridge.eval("(function(){try{return localStorage.getItem(%s)||''}catch(e){return ''}})()" % JSON.stringify(STREAK_POPUP_KEY), true)
+	return str(v) if v != null else ""
+
+
+func _set_streak_popup_day(day: String) -> void:
+	if not OS.has_feature("web"):
+		Store.write(STREAK_POPUP_KEY, day)
+		return
+	JavaScriptBridge.eval("try{localStorage.setItem(%s,%s)}catch(e){}" % [JSON.stringify(STREAK_POPUP_KEY), JSON.stringify(day)], true)
+
+
+func _show_streak(n: int) -> void:
+	var body := open_overlay(Lang.a("streak.popupTitle", [n]))
+	var flame := UI.label("🔥", 96, UI.TEXT, false, 0)
+	flame.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.add_child(flame)
+	var l := UI.label(Lang.a("streak.popupBody", [n]), 28, UI.TEXT, false, 4)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.custom_minimum_size = Vector2(480, 0)
+	body.add_child(l)
+	var ok := UI.plain_button(Lang.a("streak.popupOk"))
+	ok.pressed.connect(close_overlay)
+	body.add_child(ok)
+	Track.event("streak_popup_shown", {"days": n})
+
+
 func _on_pairing(p: Dictionary) -> void:
 	if p.is_empty():
 		return
@@ -1504,6 +1566,20 @@ func _shot(name: String) -> void:
 
 func _autotest() -> void:
 	Sfx.muted = true
+	if OS.get_cmdline_user_args().has("--streak-only"):
+		await get_tree().create_timer(2.0).timeout  # let the session restore finish first
+		Supa.session = {"access_token": "x", "user": {"id": "autotest"}}
+		Online.profile = {"display_name": "Donce", "streak_current": 5, "streak_longest": 7, "streak_last_played_utc": Online.utc_day()}
+		Online.profile_loaded = true
+		show_menu()
+		await get_tree().create_timer(1.2).timeout
+		await _shot("9-streak-menu")
+		_show_streak(5)
+		await get_tree().create_timer(0.8).timeout
+		await _shot("9b-streak-popup")
+		Supa.session = {}
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("--online-only"):
 		online_ui.show()
 		await get_tree().create_timer(1.5).timeout

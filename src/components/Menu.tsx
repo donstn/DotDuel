@@ -41,6 +41,8 @@ interface Props {
   progress: Progress;
   settings: Settings;
   gameName: string | null;
+  /** Alive day streak (0 when broken / signed out): the greeting shows it from 2 days. */
+  streakDays?: number;
   user: AppUser | null;
   onStart: (mode: GameMode, shape: ShapeId, difficulty?: Difficulty) => void;
   onSettingsUpdate: (next: Settings) => void;
@@ -115,6 +117,7 @@ export function Menu({
   progress,
   settings,
   gameName,
+  streakDays = 0,
   user,
   onStart,
   onSettingsUpdate,
@@ -271,7 +274,8 @@ export function Menu({
       user && welcomeName ? (
         <>
           {t.menu.welcomeLead}{' '}
-          <strong className="menu-welcome-name">{welcomeName}</strong> — {t.menu.tagline}
+          <strong className="menu-welcome-name">{welcomeName}</strong> —{' '}
+          {streakDays >= 2 ? t.streak.menuLine(streakDays) : t.menu.tagline}
         </>
       ) : (
         <>{t.menu.tagline}</>

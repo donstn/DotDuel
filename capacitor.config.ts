@@ -9,7 +9,9 @@ const config: CapacitorConfig = {
   plugins: {
     // Every theme is dark, so system-bar icons must be light even when the
     // phone is in light mode (DEFAULT follows the phone and drew dark icons).
-    SystemBars: { style: 'DARK' }
+    SystemBars: { style: 'DARK' },
+    // Streak reminder (src/reminders.ts): white status-bar icon + accent tint.
+    LocalNotifications: { smallIcon: 'ic_stat_dotduel', iconColor: '#7BDB95' }
   }
 };
 

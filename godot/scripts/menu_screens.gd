@@ -63,7 +63,9 @@ func _home(vb: VBoxContainer) -> void:
 	sign.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	sign.custom_minimum_size = Vector2(660, 305)
 	var who := Online.display_name() if Supa.signed_in() and Online.profile_loaded else ""
-	var greet := Lang.a("menu.tagline") if who == "" else "%s %s — %s" % [Lang.a("menu.welcomeLead"), who, Lang.a("menu.tagline")]
+	var days := Online.streak_alive() if who != "" else 0
+	var line := Lang.a("streak.menuLine", [days]) if days >= 2 else Lang.a("menu.tagline")
+	var greet := Lang.a("menu.tagline") if who == "" else "%s %s — %s" % [Lang.a("menu.welcomeLead"), who, line]
 	var tag := UI.label(greet, 28, UI.TEXT, false, 4)
 	tag.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

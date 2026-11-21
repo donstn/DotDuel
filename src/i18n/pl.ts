@@ -999,6 +999,19 @@ export const pl: Messages = {
     done: 'Gotowe',
   },
 
+  streak: {
+    menuLine: (n: number) => `Tak trzymaj, Twoja passa trwa już ${n} ${n === 1 ? 'dzień' : 'dni'}!`,
+    popupTitle: (n: number) => `Passa: ${n} ${n === 1 ? 'dzień' : 'dni'}!`,
+    popupBody: (n: number) => `Grasz online ${n} ${n === 1 ? 'dzień' : 'dni'} z rzędu. Wróć jutro, aby nie przerwać passy.`,
+    popupReminder: (time: string) => `Przypomnimy o ${time} w dni bez rozegranej gry.`,
+    popupOk: 'Super!',
+    notifTitle: (n: number) => `🔥 Passa: ${n} ${n === 1 ? 'dzień' : 'dni'}`,
+    notifBody: 'Zagraj grę online lub dzisiejszą łamigłówkę, aby nie przerwać passy.',
+    remindersH: 'Przypomnienia',
+    reminderToggle: 'Przypomnienie o passie',
+    reminderTime: 'Godzina',
+    reminderHint: 'Włącza się po 3 dniach z rzędu i tylko w dni, w które nie ukończono jeszcze gry online ani codziennej łamigłówki.',
+  },
   profile: {
     aria: 'Profil',
     close: 'Zamknij',
@@ -1023,11 +1036,11 @@ export const pl: Messages = {
     lastMatches: (n: number) => `Ostatnie ${plural(n, 'gra', 'gry', 'gier')}: ${n}`,
     noMatches: 'Brak gier rankingowych. Dołącz do kolejki z menu.',
     streakH: 'Dzienna passa',
-    streakEmpty: 'Zagraj dzisiejszą łamigłówkę, aby rozpocząć passę. (Wkrótce.)',
+    streakEmpty: 'Ukończ grę online lub dzisiejszą łamigłówkę, aby rozpocząć passę.',
     currentStreak: 'Aktualna passa',
     longest: 'Najdłuższa',
     dayN: (n: number) => `Dzień ${n}`,
-    streakHint: 'Passa liczy ukończenia codziennej łamigłówki. Opuść dzień, a się zeruje.',
+    streakHint: 'Passa rośnie każdego dnia, w którym kończysz grę online lub codzienną łamigłówkę (dni UTC). Opuść dzień, a się zeruje.',
     offlineHistoryH: (name: string) => `Historia offline — „${name}”`,
     offlineEmpty:
       'Brak gier na tym urządzeniu. Rozpocznij grę przeciw botowi lub grę lokalną, aby ją wypełnić.',

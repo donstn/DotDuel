@@ -991,7 +991,9 @@ export const es: Messages = {
   },
 
   streak: {
-    menuLine: (n: number) => `¡Sigue así, llevas una racha de ${n} ${n === 1 ? 'día' : 'días'}!`,
+    menuToday: (n: number) => `Racha de ${n} ${n === 1 ? 'día' : 'días'}, hoy hecho ✓`,
+    menuKeep: (n: number) => `Racha de ${n} ${n === 1 ? 'día' : 'días'}. ¡Juega online hoy para mantenerla!`,
+    menuStart: '¡Juega una partida online hoy y empieza una racha!',
     popupTitle: (n: number) => `¡Racha de ${n} ${n === 1 ? 'día' : 'días'}!`,
     popupBody: (n: number) => `Has jugado online ${n} ${n === 1 ? 'día' : 'días'} seguidos. Vuelve mañana para mantenerla.`,
     popupReminder: (time: string) => `Te lo recordaremos a las ${time} los días que aún no hayas jugado.`,

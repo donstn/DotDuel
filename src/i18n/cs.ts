@@ -1002,7 +1002,9 @@ export const cs: Messages = {
   },
 
   streak: {
-    menuLine: (n: number) => `Jen tak dál, tvoje série trvá už ${n} ${csDays(n)}!`,
+    menuToday: (n: number) => `Série: ${n} ${csDays(n)}, dnes splněno ✓`,
+    menuKeep: (n: number) => `Série: ${n} ${csDays(n)}. Zahraj si dnes online, ať o ni nepřijdeš!`,
+    menuStart: 'Zahraj si dnes online a začni sérii!',
     popupTitle: (n: number) => `Série: ${n} ${csDays(n)}!`,
     popupBody: (n: number) => `Hraješ online ${n} ${csDays(n)} v řadě. Vrať se zítra, ať série pokračuje.`,
     popupReminder: (time: string) => `Ve dnech bez hry ti v ${time} připomeneme.`,

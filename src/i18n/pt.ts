@@ -991,7 +991,9 @@ export const pt: Messages = {
   },
 
   streak: {
-    menuLine: (n: number) => `Continue assim, você tem uma sequência de ${n} ${n === 1 ? 'dia' : 'dias'}!`,
+    menuToday: (n: number) => `Sequência de ${n} ${n === 1 ? 'dia' : 'dias'}, hoje feito ✓`,
+    menuKeep: (n: number) => `Sequência de ${n} ${n === 1 ? 'dia' : 'dias'}. Jogue online hoje para mantê-la!`,
+    menuStart: 'Jogue uma partida online hoje e comece uma sequência!',
     popupTitle: (n: number) => `Sequência de ${n} ${n === 1 ? 'dia' : 'dias'}!`,
     popupBody: (n: number) => `Você jogou online ${n} ${n === 1 ? 'dia' : 'dias'} seguidos. Volte amanhã para mantê-la.`,
     popupReminder: (time: string) => `Vamos lembrar você às ${time} nos dias em que ainda não tiver jogado.`,

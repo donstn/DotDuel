@@ -234,6 +234,14 @@ export const pl: Messages = {
     gotIt: 'Rozumiem',
   },
 
+  social: {
+    communityH: 'Społeczność',
+    communityHint: 'Nowości, porady i inni gracze do wyzwania.',
+    discord: 'Dołącz do nas na Discordzie',
+    facebook: 'Obserwuj nas na Facebooku',
+    tiktok: 'Obserwuj nas na TikToku',
+    newWindow: '(otwiera się w nowym oknie)',
+  },
   settings: {
     aria: 'Ustawienia',
     close: 'Zamknij ustawienia',

@@ -343,7 +343,7 @@ ART.christmas = {
 // Desert Sunset (id 'sunset-catan', kept so saved choices still work): its own
 // painted canyon, sandstone board, terracotta vs parchment balls, sandstone and
 // walnut chrome (Gemini; small controls by GPT, toned to match), lines drawn as
-// the theme's CSS strokes. Avatars and badges are Forest & Pearl's. Prompts:
+// the theme's CSS strokes; its own robots. Badges are Forest & Pearl's. Prompts:
 // docs/art/sheet-desert-sunset.md.
 const DS = '/art/desert-sunset/';
 const dsStretch = (name: string, width: number, height: number, capLeft: number, capRight: number): StretchArt => ({
@@ -385,6 +385,10 @@ ART['sunset-catan'] = {
   board: {
     felt: `${DS}felt-base.webp`,
     dot: (c) => `${DS}dot-p${c}.webp`,
+  },
+  avatars: {
+    human: `${DS}avatar-human.webp`,
+    bot: (level) => `${DS}avatar-l${level}.webp`,
   },
   particles: [`${DS}particle-spark.webp`, `${DS}particle-dust.webp`, `${DS}particle-pebble.webp`, `${DS}particle-ember.webp`],
   background: {

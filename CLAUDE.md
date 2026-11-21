@@ -177,5 +177,5 @@ Live and ranked on www.dotduel.com. Arc since 0.3.0.0: **ads** (AdSense web + Ad
 6. After AI changes: `npm run simulate:l4` (~3 pts max gap); after square/pending changes: `npm run simulate:square` (50/50 + integrity OK).
 7. After push to `main`: `gh run list --limit 1` green, prod loads.
 8. After multiplayer changes: two-browser sanity (pair, ready, game, GameOver, Elo both sides, session lock releases).
-9. After Android-touching changes: `npx cap sync android` + emulator boot (AVD `dotduel_api35`, WHPX accel).
+9. **Android release:** work through `ANDROID_NEXT_RELEASE.md` first (the release build prints its open items); after every Play upload, copy new Play Console warnings into it. After Android-touching changes: `npx cap sync android` + emulator boot (AVD `dotduel_api35`, WHPX accel).
 10. After audio changes: place a dot as each player, complete a line, claim a pending line, finish a game each way (win/loss/draw), toggle both new Settings sound switches and confirm they're respected, and switch away from Forest & Pearl to confirm the ambiance stops.

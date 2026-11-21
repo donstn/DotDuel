@@ -1004,7 +1004,9 @@ export const lt: Messages = {
   },
 
   streak: {
-    menuLine: (n: number) => `Nesustokite – žaidžiate jau ${n} ${ltDaysAcc(n)} iš eilės!`,
+    menuToday: (n: number) => `${n} ${ltDaysGen(n)} serija, šiandien jau žaista ✓`,
+    menuKeep: (n: number) => `${n} ${ltDaysGen(n)} serija. Sužaiskite šiandien, kad nenutrūktų!`,
+    menuStart: 'Sužaiskite žaidimą internetu ir pradėkite seriją!',
     popupTitle: (n: number) => `${n} ${ltDaysGen(n)} serija!`,
     popupBody: (n: number) => `Žaidžiate internetu jau ${n} ${ltDaysAcc(n)} iš eilės. Sugrįžkite rytoj, kad serija nenutrūktų.`,
     popupReminder: (time: string) => `Priminsime ${time}, jei tą dieną dar nebūsite žaidę.`,

@@ -442,7 +442,9 @@ export const en = {
   // Day streak: menu line, popup after the day's first online game / puzzle,
   // Android reminders (Settings).
   streak: {
-    menuLine: (n: number) => `Keep going, you have a ${n}-day streak!`,
+    menuToday: (n: number) => `${n}-day streak, today done ✓`,
+    menuKeep: (n: number) => `${n}-day streak. Play an online game today to keep it!`,
+    menuStart: 'Play an online game today to start a streak!',
     popupTitle: (n: number) => `${n}-day streak!`,
     popupBody: (n: number) => `You’ve played online ${n} days in a row. Come back tomorrow to keep it going.`,
     popupReminder: (time: string) => `We’ll remind you at ${time} on days you haven’t played yet.`,

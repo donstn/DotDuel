@@ -151,7 +151,7 @@ import {
 } from './storage';
 import { BANNED_SHAPES, type Difficulty, type GameAction, type GameMode, type GameState, type Progress, type ShapeId } from './types';
 import { APP_VERSION } from './version';
-import { aliveStreak, utcDay } from './streak';
+import { aliveStreak, playedToday, utcDay } from './streak';
 import { REMINDER_MIN_STREAK, syncStreakReminder } from './reminders';
 import { StreakPopover } from './components/StreakPopover';
 import { Capacitor } from '@capacitor/core';
@@ -2960,6 +2960,7 @@ export default function App() {
           gameName={effectiveGameName}
           user={user}
           streakDays={user ? aliveStreak(cloudProfile?.streak) : 0}
+          streakToday={!!user && playedToday(cloudProfile?.streak)}
           theme={theme}
           onStart={startGame}
           onSettingsUpdate={updateSettings}

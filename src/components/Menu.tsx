@@ -41,8 +41,9 @@ interface Props {
   progress: Progress;
   settings: Settings;
   gameName: string | null;
-  /** Alive day streak (0 when broken / signed out): the greeting shows it from 2 days. */
+  /** Alive day streak (0 when broken) and whether today is already played; shown in the signed-in greeting. */
   streakDays?: number;
+  streakToday?: boolean;
   user: AppUser | null;
   onStart: (mode: GameMode, shape: ShapeId, difficulty?: Difficulty) => void;
   onSettingsUpdate: (next: Settings) => void;
@@ -118,6 +119,7 @@ export function Menu({
   settings,
   gameName,
   streakDays = 0,
+  streakToday = false,
   user,
   onStart,
   onSettingsUpdate,
@@ -275,7 +277,11 @@ export function Menu({
         <>
           {t.menu.welcomeLead}{' '}
           <strong className="menu-welcome-name">{welcomeName}</strong> —{' '}
-          {streakDays >= 2 ? t.streak.menuLine(streakDays) : t.menu.tagline}
+          {streakToday
+            ? t.streak.menuToday(streakDays)
+            : streakDays > 0
+              ? t.streak.menuKeep(streakDays)
+              : t.streak.menuStart}
         </>
       ) : (
         <>{t.menu.tagline}</>

@@ -64,7 +64,8 @@ const strandLen = (len: number) => Math.min(Math.max(len, 2), 9);
 
 async function loadCardArt(art: ThemeArt, state: GameState, shape: ShapeId): Promise<CardArt | null> {
   const { headerSign, cardFrame, board, background } = art;
-  if (!headerSign || !cardFrame || !board || !background) return null;
+  if (!headerSign || !cardFrame || !board?.line || !background) return null;
+  const strand = board.line;
   const lens = new Set<string>();
   const lines = new Map(getBoards()[shape].lines.map((ln) => [ln.id, ln.length]));
   for (const c of state.completed) {
@@ -85,7 +86,7 @@ async function loadCardArt(art: ThemeArt, state: GameState, shape: ShapeId): Pro
       wreathArt ? loadImage(wreathArt.url) : Promise.resolve(undefined),
       ...[...lens].map((k) => {
         const [len, p] = k.split('-').map(Number);
-        return loadImage(board.line(len, p as Player));
+        return loadImage(strand(len, p as Player));
       }),
     ]);
     const line = new Map<string, HTMLImageElement>();

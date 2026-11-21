@@ -903,7 +903,7 @@ export function Board({
           const innerHighlight = strokeWidth * 0.22;
           const cIdx = colorIndex(c.player, colorSwap);
           const keep = spot && line.dotIds.every((id) => spot.has(id)) ? 'coach-keep' : undefined;
-          if (boardArt) {
+          if (boardArt?.line) {
             const midX = (x1 + x2) / 2;
             const midY = (y1 + y2) / 2;
             const len = Math.hypot(x2 - x1, y2 - y1);
@@ -941,7 +941,7 @@ export function Board({
             // the true line direction, so `height=len` stretches the
             // strand's actual long axis to the real endpoint-to-endpoint
             // span.
-            const imgW = lineImgH * (boardArt.lineWidth ?? LINE_THICKNESS_MULT[cIdx][artLen]);
+            const imgW = lineImgH * LINE_THICKNESS_MULT[cIdx][artLen];
             const imgH = len;
             const groupRotate = angleDeg - 90;
             const glow = boardArt.lineGlow?.[cIdx];

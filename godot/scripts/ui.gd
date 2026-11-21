@@ -21,6 +21,14 @@ const PILL_BTN := ["pill-button.webp", 475, 179, 106, 108]
 const BANNER := ["title-banner.webp", 588, 178, 115, 115]
 const DANGER := ["danger-pill.webp", 215, 81, 54, 55]
 
+## Community pages: [i18n key under "social.", url]. Same list as the app's
+## src/social.ts; icons are Simple Icons (CC0), white, tinted in code.
+const SOCIAL := [
+	["discord", "https://discord.gg/mnfVHPdpU"],
+	["facebook", "https://www.facebook.com/profile.php?id=61590580491938"],
+	["tiktok", "https://www.tiktok.com/@dotduel.com"],
+]
+
 ## Buttons: one font (Chakra Petch), always UPPERCASE; importance is shown by
 ## size only. Callers' sizes snap to these four.
 const BTN_XL := 40  # the one main action of a screen (Start, Find match, Lobby)

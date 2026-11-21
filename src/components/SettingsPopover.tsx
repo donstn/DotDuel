@@ -3,6 +3,8 @@ import { Capacitor } from '@capacitor/core';
 import { DEFAULT_P1_NAME, DEFAULT_P2_NAME, resetStats } from '../storage';
 import type { Settings } from '../storage';
 import { useT } from '../i18n';
+import { SOCIAL_LINKS } from '../social';
+import { SocialIcon } from './SocialIcon';
 
 type ChallengePolicy = 'everyone' | 'friends-only' | 'nobody';
 
@@ -186,6 +188,26 @@ export function SettingsPopover({
               />
               <span>{t.settings.backgroundMusic}</span>
             </label>
+          </section>
+
+          <section className="settings-section">
+            <h3>{t.social.communityH}</h3>
+            <p className="settings-hint">{t.social.communityHint}</p>
+            <div className="settings-social">
+              {SOCIAL_LINKS.map((l) => (
+                <a
+                  key={l.id}
+                  className={`settings-social-btn settings-social-${l.id}`}
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${t.social[l.id]} ${t.social.newWindow}`}
+                >
+                  <SocialIcon link={l} size={20} />
+                  <span>{t.social[l.id]}</span>
+                </a>
+              ))}
+            </div>
           </section>
 
           {Capacitor.isNativePlatform() && (

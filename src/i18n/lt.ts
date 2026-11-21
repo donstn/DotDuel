@@ -236,6 +236,14 @@ export const lt: Messages = {
     gotIt: 'Supratau',
   },
 
+  social: {
+    communityH: 'Bendruomenė',
+    communityHint: 'Naujienos, patarimai ir kiti žaidėjai iššūkiams.',
+    discord: 'Prisijunkite prie mūsų Discord',
+    facebook: 'Sekite mus Facebook',
+    tiktok: 'Sekite mus TikTok',
+    newWindow: '(atsidaro naujame lange)',
+  },
   settings: {
     aria: 'Nustatymai',
     close: 'Uždaryti nustatymus',

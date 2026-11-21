@@ -233,6 +233,14 @@ export const cs: Messages = {
     gotIt: 'Rozumím',
   },
 
+  social: {
+    communityH: 'Komunita',
+    communityHint: 'Novinky, tipy a další hráči k vyzvání.',
+    discord: 'Přidej se k nám na Discordu',
+    facebook: 'Sleduj nás na Facebooku',
+    tiktok: 'Sleduj nás na TikToku',
+    newWindow: '(otevře se v novém okně)',
+  },
   settings: {
     aria: 'Nastavení',
     close: 'Zavřít nastavení',

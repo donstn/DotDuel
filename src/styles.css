@@ -9158,3 +9158,46 @@ html[data-theme="vintage-press"] {
 [data-theme="sunset-catan"] .ai-name-card {
   background: rgba(30, 16, 8, 0.85);
 }
+
+/* Community links (home footer icons + Settings). Plain one-colour brand
+   marks, as the Discord / Meta / TikTok brand guides allow. */
+.app-footer-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.app-footer-social .app-footer-ctl {
+  color: inherit;
+  text-decoration: none;
+}
+.settings-social {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.settings-social-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border-strong, rgba(255, 255, 255, 0.18));
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.settings-social-btn svg {
+  flex-shrink: 0;
+}
+.settings-social-btn:hover,
+.settings-social-btn:focus-visible {
+  border-color: var(--accent);
+}
+/* Discord leads: it's where players actually talk. */
+.settings-social-discord {
+  border-color: var(--accent);
+}

@@ -252,4 +252,23 @@ func _footer(root: Control) -> void:
 	ver.add_theme_constant_override("outline_size", 4)
 	ver.add_theme_color_override("font_outline_color", Look.tone(Color(0, 0.06, 0.03, 0.85)))
 	ver.pressed.connect(main.show_changelog)
-	box.add_child(ver)
+	var row2 := HBoxContainer.new()
+	row2.alignment = BoxContainer.ALIGNMENT_CENTER
+	row2.add_theme_constant_override("separation", 6)
+	row2.add_child(ver)
+	row2.add_child(UI.label("·", 22, UI.TEXT_DIM, false, 0))
+	for sl in UI.SOCIAL:
+		var b := TextureButton.new()
+		b.texture_normal = UI.tex("social-%s.webp" % sl[0])
+		b.ignore_texture_size = true
+		b.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		b.custom_minimum_size = Vector2(32, 32)
+		b.modulate = UI.TEXT_DIM
+		b.tooltip_text = Lang.a("social." + sl[0])
+		b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		b.mouse_entered.connect(func(): b.modulate = UI.ACCENT)
+		b.mouse_exited.connect(func(): b.modulate = UI.TEXT_DIM)
+		var url: String = sl[1]
+		b.pressed.connect(func(): OS.shell_open(url))
+		row2.add_child(b)
+	box.add_child(row2)

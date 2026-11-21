@@ -222,6 +222,14 @@ export const pt: Messages = {
     gotIt: 'Entendi',
   },
 
+  social: {
+    communityH: 'Comunidade',
+    communityHint: 'Novidades, dicas e outros jogadores para desafiar.',
+    discord: 'Entre no nosso Discord',
+    facebook: 'Siga-nos no Facebook',
+    tiktok: 'Siga-nos no TikTok',
+    newWindow: '(abre em uma nova janela)',
+  },
   settings: {
     aria: 'Configurações',
     close: 'Fechar configurações',

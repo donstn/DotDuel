@@ -1032,7 +1032,7 @@ export const pt: Messages = {
     streakEmpty: 'Termine uma partida online ou o desafio de hoje para iniciar uma sequência.',
     currentStreak: 'Sequência atual',
     longest: 'Maior',
-    dayN: (n: number) => `Dia ${n}`,
+    dayN: (n: number) => `${n} ${n === 1 ? 'dia' : 'dias'}`,
     streakHint: 'A sequência cresce a cada dia em que você termina uma partida online ou o desafio diário (dias UTC). Perca um dia e ela zera.',
     offlineHistoryH: (name: string) => `Histórico offline — “${name}”`,
     offlineEmpty:
@@ -1309,8 +1309,8 @@ export const pt: Messages = {
     bestToday: 'Melhor de hoje:',
     attemptOf: (n: number) => ` · tentativa ${n}/3`,
     streakLabel: 'Sequência:',
-    dayN: (n: number) => `Dia ${n}`,
-    bestDay: (n: number) => `(melhor: Dia ${n})`,
+    dayN: (n: number) => `${n} ${n === 1 ? 'dia' : 'dias'}`,
+    bestDay: (n: number) => `(melhor: ${n} ${n === 1 ? 'dia' : 'dias'})`,
     attemptsLeft: (n: number) =>
       `${n} tentativa${n === 1 ? '' : 's'} restante${n === 1 ? '' : 's'} hoje. Sua melhor conta no ranking.`,
     allAttemptsUsed: 'Você usou as 3 tentativas. Volte amanhã à meia-noite (UTC).',

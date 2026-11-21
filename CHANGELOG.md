@@ -3,6 +3,26 @@
 All notable changes to DotDuel will be documented in this file. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.0.0] - 2026-11-21
+
+### Changed
+
+- **Website switches to the Godot version** at `/`; the React app stays as a
+  backup at `/classic/` (noindex), `/GodotV1/` forwards to `/`, the old service
+  worker removes itself. GA4 ported to the Godot page (`public/dd-telemetry.js`).
+  Public changelog line: "New game engine, completely revamped visuals and
+  gameplay feel".
+
+### Added
+
+- **Day streak counts online games:** every finished ranked/friend game bumps
+  the streak like the daily puzzle (`bump_streak`, UTC days). Menu greeting line
+  and a once-a-day streak popup from day 2 (app + Godot web).
+- **Android streak reminder** (Settings → Reminders, default 14:55 local) from a
+  3-day streak; a WorkManager task asks `reminder_status(key)` first and stays
+  silent if the player already played that day anywhere.
+- Privacy policy: "Streak reminders (Android app)" item.
+
 ## [0.5.1.1] - 2026-11-21
 
 ### Changed

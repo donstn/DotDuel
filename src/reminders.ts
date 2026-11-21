@@ -1,11 +1,41 @@
-// Android app: one local "keep your streak" notification, scheduled on the
-// phone (no server, nothing leaves the device). From a 3-day streak on, the
-// app keeps exactly one reminder pending: at the chosen local time on the
-// next UTC day the player still has to play. Playing cancels and moves it.
-import { Capacitor } from '@capacitor/core';
+// Android app: one "keep your streak" reminder. From a 3-day streak on, the
+// app keeps exactly one pending: at the chosen local time on the next UTC day
+// the player still has to play. Playing in the app moves it; at reminder time
+// the native StreakReminderWorker first asks the server (reminder_status, by a
+// random per-player key, not the account id) and stays silent if the player
+// already played that day anywhere, e.g. on the website.
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { aliveStreak, playedToday, utcDay, type DayStreak } from './streak';
+import { supabase, SUPABASE_ANON_KEY, SUPABASE_URL } from './supabase';
 
-const REMINDER_ID = 4201;
+interface StreakReminderPlugin {
+  schedule(o: {
+    at: number;
+    day: string;
+    deadline: number;
+    title: string;
+    body: string;
+    key: string;
+    url: string;
+    apikey: string;
+  }): Promise<void>;
+  cancel(): Promise<void>;
+}
+const StreakReminder = registerPlugin<StreakReminderPlugin>('StreakReminder');
+
+// Per app run; the key never changes for an account.
+let keyCache: { sid: string; key: string } | null = null;
+async function reminderKey(): Promise<string> {
+  const { data: sess } = await supabase.auth.getSession();
+  const sid = sess.session?.user.id;
+  if (!sid) return '';
+  if (keyCache?.sid === sid) return keyCache.key;
+  const { data, error } = await supabase.rpc('my_reminder_key');
+  if (error || typeof data !== 'string') return '';
+  keyCache = { sid, key: data };
+  return data;
+}
+
 export const REMINDER_MIN_STREAK = 3;
 
 export interface ReminderOptions {
@@ -36,10 +66,10 @@ export function remindAt(day: string, time: string, now: number): Date | null {
 export async function syncStreakReminder(streak: DayStreak | null | undefined, o: ReminderOptions): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   try {
-    const { LocalNotifications } = await import('@capacitor/local-notifications');
-    await LocalNotifications.cancel({ notifications: [{ id: REMINDER_ID }] });
+    await StreakReminder.cancel();
     const n = aliveStreak(streak);
     if (!o.on || n < REMINDER_MIN_STREAK) return;
+    const { LocalNotifications } = await import('@capacitor/local-notifications');
     let perm = (await LocalNotifications.checkPermissions()).display;
     if (perm !== 'granted') {
       if (!o.ask || perm === 'denied') return;
@@ -47,19 +77,19 @@ export async function syncStreakReminder(streak: DayStreak | null | undefined, o
       if (perm !== 'granted') return;
     }
     const now = Date.now();
-    const at = remindAt(playedToday(streak, now) ? utcDay(1, now) : utcDay(0, now), o.time, now);
+    const day = playedToday(streak, now) ? utcDay(1, now) : utcDay(0, now);
+    const at = remindAt(day, o.time, now);
     if (!at) return;
-    await LocalNotifications.schedule({
-      notifications: [
-        {
-          id: REMINDER_ID,
-          title: o.title(n),
-          body: o.body,
-          schedule: { at, allowWhileIdle: true },
-          smallIcon: 'ic_stat_dotduel',
-          iconColor: '#7BDB95',
-        },
-      ],
+    const [y, mo, d] = day.split('-').map((x) => parseInt(x, 10));
+    await StreakReminder.schedule({
+      at: at.getTime(),
+      day,
+      deadline: Date.UTC(y, mo - 1, d + 1),
+      title: o.title(n),
+      body: o.body,
+      key: await reminderKey(),
+      url: SUPABASE_URL,
+      apikey: SUPABASE_ANON_KEY,
     });
   } catch (e) {
     console.warn('streak reminder failed:', e);

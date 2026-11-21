@@ -4,4 +4,6 @@
     <string name="title_activity_main">DotDuel</string>
     <string name="package_name">com.dotduel.app</string>
     <string name="custom_url_scheme">com.dotduel.app</string>
+    <!-- Android Settings > Notifications: the streak reminder channel. -->
+    <string name="streak_channel">Streak reminders</string>
 </resources>

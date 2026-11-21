@@ -64,7 +64,12 @@ func _home(vb: VBoxContainer) -> void:
 	sign.custom_minimum_size = Vector2(660, 305)
 	var who := Online.display_name() if Supa.signed_in() and Online.profile_loaded else ""
 	var days := Online.streak_alive() if who != "" else 0
-	var line := Lang.a("streak.menuLine", [days]) if days >= 2 else Lang.a("menu.tagline")
+	var today = Online.profile.get("streak_last_played_utc")
+	var line := Lang.a("streak.menuStart")
+	if days > 0 and today != null and str(today) == Online.utc_day():
+		line = Lang.a("streak.menuToday", [days])
+	elif days > 0:
+		line = Lang.a("streak.menuKeep", [days])
 	var greet := Lang.a("menu.tagline") if who == "" else "%s %s — %s" % [Lang.a("menu.welcomeLead"), who, line]
 	var tag := UI.label(greet, 28, UI.TEXT, false, 4)
 	tag.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

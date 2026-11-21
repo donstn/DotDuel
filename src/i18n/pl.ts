@@ -1003,7 +1003,9 @@ export const pl: Messages = {
   },
 
   streak: {
-    menuLine: (n: number) => `Tak trzymaj, Twoja passa trwa już ${n} ${n === 1 ? 'dzień' : 'dni'}!`,
+    menuToday: (n: number) => `Passa: ${n} ${n === 1 ? 'dzień' : 'dni'}, dziś zaliczone ✓`,
+    menuKeep: (n: number) => `Passa: ${n} ${n === 1 ? 'dzień' : 'dni'}. Zagraj dziś online, aby jej nie przerwać!`,
+    menuStart: 'Zagraj dziś online i zacznij passę!',
     popupTitle: (n: number) => `Passa: ${n} ${n === 1 ? 'dzień' : 'dni'}!`,
     popupBody: (n: number) => `Grasz online ${n} ${n === 1 ? 'dzień' : 'dni'} z rzędu. Wróć jutro, aby nie przerwać passy.`,
     popupReminder: (time: string) => `Przypomnimy o ${time} w dni bez rozegranej gry.`,

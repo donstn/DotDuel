@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build && tsx scripts/build-pages.ts && node scripts/web-layout.mjs",
     "build:pages": "tsx scripts/build-pages.ts",
     "build:staging": "tsc -b && vite build --mode staging",
-    "build:android-release": "tsc -b && vite build --mode androidrelease && tsx scripts/build-pages.ts --app && node -e \"require('fs').rmSync('dist/GodotV1',{recursive:true,force:true})\"",
+    "build:android-release": "node scripts/android-todo.mjs && tsc -b && vite build --mode androidrelease && tsx scripts/build-pages.ts --app && node -e \"require('fs').rmSync('dist/GodotV1',{recursive:true,force:true})\"",
     "preview": "vite preview",
     "test": "vitest run",
     "simulate": "tsx scripts/simulate.ts",

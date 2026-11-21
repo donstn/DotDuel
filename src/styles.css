@@ -8987,3 +8987,154 @@ html[data-theme="vintage-press"] {
   width: auto;
   min-width: 7.5em;
 }
+
+/* Vs-bot setup on one screen (like the website): shape tiles + a row of bots. */
+.ai-tiles {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 460px;
+}
+.ai-tile {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border-radius: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: rgba(8, 23, 15, 0.78);
+  color: var(--text);
+  cursor: pointer;
+  opacity: 0.82;
+  transition: transform 140ms, border-color 160ms, box-shadow 160ms, background 160ms;
+}
+.ai-tile:active {
+  transform: scale(0.96);
+}
+.ai-tile.selected {
+  opacity: 1;
+  border-color: var(--accent);
+  background: rgba(20, 64, 36, 0.9);
+  box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.45);
+}
+.ai-tile.locked {
+  opacity: 0.4;
+}
+.ai-tile-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: clamp(44px, 13vw, 64px);
+}
+.ai-tile-icon img,
+.ai-tile-icon svg {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.ai-tile-title {
+  font-weight: 700;
+  font-size: clamp(0.72rem, 3.4vw, 0.9rem);
+  text-transform: none;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.ai-tile-sub {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.ai-bot-tiles {
+  gap: 6px;
+}
+.ai-bot-tile {
+  padding: 6px 2px;
+}
+.ai-bot-tile .ai-tile-icon {
+  height: clamp(40px, 12vw, 58px);
+}
+.ai-bot-tile .avatar-img {
+  width: auto;
+  height: 100%;
+}
+.ai-level-line {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--accent);
+  text-align: center;
+}
+.ai-name-card {
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(8, 23, 15, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-sizing: border-box;
+}
+.ai-start {
+  width: 100%;
+  max-width: 440px;
+}
+@media (max-height: 680px) {
+  .ai-tile {
+    padding: 4px 2px;
+  }
+  .ai-shape-tiles .ai-tile-icon {
+    height: 34px;
+  }
+  .ai-bot-tile .ai-tile-icon {
+    height: 36px;
+  }
+  .ai-name-card {
+    padding: 6px 10px;
+  }
+  .ai-level-line {
+    font-size: 0.95rem;
+  }
+  .ai-level-hint {
+    font-size: 0.75rem;
+    line-height: 1.25;
+    margin: 0;
+  }
+}
+/* Short landscape: tiles on the left, name + Start on the right; the two
+   section banners go (the radiogroups keep their labels) so it fits 568x320. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .menu.ai-setup > h2,
+  html[data-art~="title-banner"] .menu.ai-setup > h2 {
+    display: none;
+  }
+  .ai-shape-tiles {
+    gap: 6px;
+  }
+  .ai-shape-tiles .ai-tile {
+    padding: 4px 2px;
+  }
+  .ai-tile-title {
+    font-size: 0.68rem;
+  }
+  .menu.ai-setup > .ai-name-card {
+    grid-row: 1 / span 2;
+    align-self: end;
+    margin-bottom: 10px;
+  }
+  .menu.ai-setup > .ai-start {
+    grid-column: 2;
+    grid-row: 3 / span 2;
+    align-self: start;
+  }
+  .ai-shape-tiles .ai-tile-icon {
+    height: 30px;
+  }
+  .ai-bot-tile .ai-tile-icon {
+    height: 34px;
+  }
+}

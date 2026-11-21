@@ -1,5 +1,8 @@
 import { useEffect } from 'react';
-import { CHANGELOG, type ChangeKind } from '../changelog';
+import { Capacitor } from '@capacitor/core';
+import { CHANGELOG as ALL_ENTRIES, type ChangeKind } from '../changelog';
+
+const CHANGELOG = Capacitor.isNativePlatform() ? ALL_ENTRIES.filter((e) => !e.webOnly) : ALL_ENTRIES;
 import { useT } from '../i18n';
 
 interface Props {

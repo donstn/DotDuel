@@ -25,6 +25,8 @@ export interface ChangelogEntry {
   version: string;
   date: string; // ISO YYYY-MM-DD
   highlight?: string; // optional one-line headline
+  /** Website only: hidden in the Android app (e.g. the Godot switch; the app is still React). */
+  webOnly?: boolean;
   changes: ChangelogChange[];
 }
 
@@ -32,6 +34,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: 'Beta 0.6.0.0',
     date: '2026-11-21',
+    webOnly: true,
     changes: [
       {
         kind: 'changed',

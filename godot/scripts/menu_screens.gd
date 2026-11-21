@@ -38,7 +38,7 @@ func show(cat := "") -> void:
 				_daily_card(vb)
 			"multi":
 				_shelf(vb, Lang.a("menu.hotseat"), "", main._open_setup.bind(true))
-				_online_card(vb, Lang.a("menu.onlineRanked"), "", func(): main.online_ui.show())
+				_online_card(vb, Lang.a("menu.onlineRanked"), "", func(): main.online_ui.show(), true)
 			"rankings":
 				var signed := Supa.signed_in()
 				var puzzle := func():
@@ -131,11 +131,17 @@ func _shelf(vb: VBoxContainer, title: String, sub: String, action: Callable, ena
 
 ## Online cards (Quick ranked / Online ranked): sign in first. The one-device
 ## lock is checked when the search starts.
-func _online_card(vb: VBoxContainer, title: String, sub: String, action: Callable) -> void:
+func _online_card(vb: VBoxContainer, title: String, sub: String, action: Callable, track := false) -> void:
+	var go: Callable = action if Supa.signed_in() else main.sign_in
+	if track:
+		var inner := go
+		go = func():
+			Track.event("multiplayer_button_clicked", {"auth_state": Track.auth_state()})
+			inner.call()
 	if not Supa.signed_in():
-		_shelf(vb, title, Lang.a("common.signInToPlay"), main.sign_in, false)
+		_shelf(vb, title, Lang.a("common.signInToPlay"), go, false)
 		return
-	_shelf(vb, title, sub, action)
+	_shelf(vb, title, sub, go)
 
 
 func _daily_card(vb: VBoxContainer) -> void:

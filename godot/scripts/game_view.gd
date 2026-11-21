@@ -18,6 +18,12 @@ var names := ["", "", ""]
 ## "ai" | "hotseat" | "daily" | "online" | "coach"
 var mode := "ai"
 var finished_reason := ""
+# Analytics (GA4, the same events as App.tsx): set by track_start().
+var _gi := 0
+var _t0 := 0
+var _tc := ""
+var _first_tracked := false
+var _finish_tracked := false
 ## The first-game lesson driving this board (mode "coach").
 var coach: Coach
 ## Daily puzzle: the player's 3-minute clock (runs only on their turn).
@@ -119,6 +125,7 @@ func setup_online(pairing: Dictionary, row: Dictionary) -> void:
 		s = GState.from_json(b, row.state)
 	_clock = row.get("clock", {}) if row.get("clock") is Dictionary else {}
 	_status = str(row.get("status", "active"))
+	_tc = str(row.get("time_control", pairing.get("time_control", "")))
 	shown_left = s.points_left(b)
 	shown_score = [0.0, float(s.scores[1]), float(s.scores[2])]
 	Online.game_changed.connect(_on_server)
@@ -781,6 +788,12 @@ func _do(a: int, remote := false) -> void:
 	s = s.apply(b, a)
 	if online and not remote:
 		_send(a, before)
+	if _gi > 0 and not _first_tracked and s.scores[1] + s.scores[2] > 0:
+		_first_tracked = true
+		var fs := _track_base()
+		fs["time_to_first_score_ms"] = Time.get_ticks_msec() - _t0
+		fs["scoring_player"] = 1 if s.scores[1] > 0 else 2
+		Track.event("game_first_score", fs)
 	if coach:
 		if p == 1:
 			coach.after_player(s.last_points)
@@ -910,6 +923,7 @@ func _coach_over() -> void:
 	if not is_inside_tree():
 		return
 	var won := s.winner == 1
+	Track.event("tutorial_complete", {"result": "win" if won else ("draw" if s.winner == 3 else "loss"), "replay": 1 if coach.replay else 0})
 	var title := Lang.a("coach.wonTitle") if won else Lang.a("coach.endTitle")
 	var res: Dictionary = await _result_panel(title, BRIGHT[_sk(1)] if won else UI.TEXT, won, true, [Lang.a("coach.endBody")], Lang.a("coach.playBot"))
 	res.primary.pressed.connect(func(): play_requested.emit("triangle", 1))
@@ -1229,6 +1243,7 @@ func _game_over() -> void:
 	busy = true
 	_update_turn()
 	Store.clear_active()
+	_track_finish(s.winner)
 	if mode == "daily":
 		# Saved straight away — leaving during the result's entrance can't drop it.
 		_daily_ticket = Daily.save(s.scores[1], Online.display_name() if Online.display_name() != "" else str(Store.settings.playerName))
@@ -1333,6 +1348,8 @@ func _daily_over(title: String, col: Color, lines: Array) -> void:
 				sl += " " + Lang.a("gameOver.bestDay", [int(st.get("longest", 0))])
 			lines.append(sl)
 		lines.append(Lang.a("gameOver.attemptsLeft", [left]) if left > 0 else Lang.a("gameOver.allAttemptsUsed"))
+		Track.event("daily_puzzle_solved", {"puzzle_id": Daily.puzzle_id, "score": s.scores[1], "best": int(res.get("best", 0)),
+			"attempts": int(res.get("attempts", 0)), "streak_current": cur})
 	var extra: Control = null
 	if left > 0:
 		var lb := UI.plain_button(Lang.a("gameOver.leaderboard"))
@@ -1859,6 +1876,7 @@ func _online_over(row: Dictionary) -> void:
 	elif w != null:
 		winner = int(w)
 	finished_reason = reason
+	_track_finish(winner)
 	# multiplayerOutcome (GameOver.tsx): title + how it was decided.
 	var title := Lang.a("gameOver.draw")
 	var sub := ""
@@ -1965,6 +1983,9 @@ var _share_cb: JavaScriptObject
 
 func _on_share_done(args: Array) -> void:
 	var r := str(args[0]) if args.size() > 0 else "fail"
+	if r in ["shared", "saved", "saved+copied"]:
+		Track.event("result_share_completed", {"mode": _track_mode(), "outcome": _share_outcome(),
+			"share_method": {"shared": "native-files", "saved": "download", "saved+copied": "download"}[r]})
 	if r == "saved+copied":
 		_toast(Lang.a("share.imageSaved") + " · " + Lang.a("share.textCopied"))
 	elif r == "saved":
@@ -2025,6 +2046,7 @@ func _share_result(btn: Button) -> void:
 	btn.text = (Lang.a("share.preparing")).to_upper()
 	var jpg := img.save_jpg_to_buffer(0.9)
 	var text := _share_text()
+	Track.event("result_share_clicked", {"mode": _track_mode(), "outcome": _share_outcome()})
 	if OS.has_feature("web"):
 		var js := """(async () => {
 			const b = Uint8Array.from(atob(%s), c => c.charCodeAt(0));
@@ -2061,3 +2083,54 @@ class DrawCtl extends Control:
 	func _draw() -> void:
 		if fn.is_valid():
 			fn.call(self)
+
+
+# ---------------------------------------------------------------- analytics
+
+## A freshly started game (not a resumed one): game_started now, then
+## game_first_score and game_finished from this view.
+func track_start() -> void:
+	_gi = Track.game_index()
+	_t0 = Time.get_ticks_msec()
+	Track.event("game_started", _track_base())
+
+
+func _track_mode() -> String:
+	return "multiplayer" if online else mode
+
+
+func _track_base() -> Dictionary:
+	var d := {"mode": _track_mode(), "shape": shape, "game_index": _gi, "auth_state": Track.auth_state()}
+	if online:
+		d["time_control"] = _tc
+	else:
+		d["difficulty"] = maxi(level, 0) if mode != "hotseat" else 0
+	return d
+
+
+## winner: 1 / 2, 3 = draw, 0 = none.
+func _track_finish(winner: int) -> void:
+	if _finish_tracked or mode == "coach" or auto_p1:
+		return
+	_finish_tracked = true
+	var d := _track_base()
+	if online:
+		d["winner"] = "draw" if winner == 3 else ("none" if winner == 0 else ("self" if winner == my_slot else "opp"))
+		d["score_self"] = s.scores[my_slot]
+		d["score_opp"] = s.scores[3 - my_slot]
+		d["finished_reason"] = finished_reason if finished_reason != "" else "normal"
+	else:
+		d["winner"] = "draw" if winner == 3 else ("none" if winner == 0 else "p%d" % winner)
+		d["score_self"] = s.scores[1]
+		d["score_opp"] = s.scores[2]
+	d["duration_ms"] = Time.get_ticks_msec() - _t0 if _t0 > 0 else 0
+	Track.event("game_finished", d)
+
+
+## resultShareText.ts outcomeFor(): the sharer's side (hot-seat: the winner).
+func _share_outcome() -> String:
+	if s.winner == 3 or s.winner == 0:
+		return "draw"
+	if mode == "hotseat":
+		return "win"
+	return "win" if s.winner == (my_slot if online else 1) else "loss"

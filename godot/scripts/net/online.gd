@@ -109,6 +109,8 @@ func claim_username(desired: String) -> String:
 		return Lang.t("name_taken")
 	var res := await Supa.upsert("usernames", {"lower": lower, "uid": me(), "display_name": name})
 	if not res.ok:
+		var msg := str(res.data.get("message", res.code)) if res.data is Dictionary else str(res.code)
+		Track.event("username_claim_failed", {"mode": "rename" if old_lower != "" else "claim", "error_code": msg})
 		return Lang.t("name_taken") if res.code == 409 else Lang.t("name_failed", [res.code])
 	# Rename (renameUsername in src/cloud/usernames.ts): free the old name.
 	if old_lower != "" and old_lower != lower:

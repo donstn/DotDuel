@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:staging": "vite --mode staging --host",
-    "build": "tsc -b && vite build && tsx scripts/build-pages.ts",
+    "build": "tsc -b && vite build && tsx scripts/build-pages.ts && node scripts/web-layout.mjs",
     "build:pages": "tsx scripts/build-pages.ts",
     "build:staging": "tsc -b && vite build --mode staging",
     "build:android-release": "tsc -b && vite build --mode androidrelease && tsx scripts/build-pages.ts --app",

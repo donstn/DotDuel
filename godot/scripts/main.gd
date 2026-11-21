@@ -167,7 +167,7 @@ func _fireflies() -> void:
 	var ramp := Gradient.new()
 	ramp.set_color(0, Color(1, 1, 0.7, 0))
 	ramp.add_point(0.3, Color(1, 1, 0.7, 0.9))
-	ramp.add_point(0.7, Color(0.8, 1, 0.6, 0.5))
+	ramp.add_point(0.7, Look.tone(Color(0.8, 1, 0.6, 0.5)))
 	ramp.set_color(ramp.get_point_count() - 1, Color(1, 1, 0.7, 0))
 	p.color_ramp = ramp
 	var mat := CanvasItemMaterial.new()
@@ -741,7 +741,7 @@ func show_welcome() -> void:
 	body.add_child(intro)
 	for i in 4:
 		body.add_child(UI.rich("[b]%d.  %s[/b] %s" % [i + 1, _esc(Lang.a("coach.welcomeSteps.%d.title" % i)), _esc(Lang.a("coach.welcomeSteps.%d.body" % i))]))
-	var play := UI.art_button(Lang.a("coach.welcomePlay"), UI.PRIMARY_BTN, 520, 110, 34, Color("0c2416"))
+	var play := UI.art_button(Lang.a("coach.welcomePlay"), UI.PRIMARY_BTN, 520, 110, 34, Look.tone(Color("0c2416")))
 	play.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	play.pressed.connect(start_coach)
 	body.add_child(play)
@@ -793,7 +793,7 @@ func open_overlay(title: String, scroll := false, full := false, modal := false,
 	add_child(ov)
 	overlay = ov
 	var dim := ColorRect.new()
-	dim.color = Color(0, 0.02, 0.01, 0.0)
+	dim.color = Look.tone(Color(0, 0.02, 0.01, 0.0))
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if not modal:
 		dim.gui_input.connect(func(e: InputEvent):
@@ -905,7 +905,7 @@ func close_button() -> TextureButton:
 	cross.draw.connect(func():
 		var c := cross.size / 2.0
 		for d in [Vector2(1, 1), Vector2(1, -1)]:
-			cross.draw_line(c - d * 12, c + d * 12, Color(0, 0.06, 0.03, 0.8), 9, true)
+			cross.draw_line(c - d * 12, c + d * 12, Look.tone(Color(0, 0.06, 0.03, 0.8)), 9, true)
 			cross.draw_line(c - d * 12, c + d * 12, UI.TEXT, 5, true))
 	t.add_child(cross)
 	return t
@@ -925,7 +925,7 @@ func _choice(text: String, sub: String, on: bool) -> Button:
 	var sb := StyleBoxFlat.new()
 	sb.set_corner_radius_all(22)
 	sb.set_border_width_all(3)
-	sb.bg_color = Color(0.08, 0.25, 0.14, 0.95) if on else Color(0.02, 0.07, 0.04, 0.9)
+	sb.bg_color = Look.tone(Color(0.08, 0.25, 0.14, 0.95)) if on else Look.tone(Color(0.02, 0.07, 0.04, 0.9))
 	sb.border_color = UI.ACCENT if on else Color(1, 1, 1, 0.12)
 	for st in ["normal", "hover", "pressed", "focus"]:
 		b.add_theme_stylebox_override(st, sb)
@@ -1328,7 +1328,7 @@ func show_setup() -> void:
 	var gap := Control.new()
 	gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vb.add_child(gap)
-	var start := UI.art_button(Lang.a("menu.startGame"), UI.PRIMARY_BTN, 600, 130, 46, Color("0c2416"))
+	var start := UI.art_button(Lang.a("menu.startGame"), UI.PRIMARY_BTN, 600, 130, 46, Look.tone(Color("0c2416")))
 	start.pressed.connect(start_game)
 	vb.add_child(_center(start))
 	_stagger(vb)
@@ -1339,7 +1339,7 @@ func show_setup() -> void:
 func _names_block(outer: VBoxContainer) -> void:
 	# On a dark card: the painted forest behind it is too bright for small text.
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UI._flat_box(Color(0.03, 0.09, 0.06, 0.82), Color(1, 1, 1, 0.12), 24, 18))
+	card.add_theme_stylebox_override("panel", UI._flat_box(Look.tone(Color(0.03, 0.09, 0.06, 0.82)), Color(1, 1, 1, 0.12), 24, 18))
 	outer.add_child(card)
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", outer.get_theme_constant("separation"))
@@ -1379,7 +1379,7 @@ func _tile(icon: String, title: String, sub: String, sz: Vector2) -> Button:
 	t.custom_minimum_size = sz
 	t.focus_mode = Control.FOCUS_NONE
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.03, 0.09, 0.06, 0.78)
+	sb.bg_color = Look.tone(Color(0.03, 0.09, 0.06, 0.78))
 	sb.set_corner_radius_all(24)
 	sb.set_border_width_all(3)
 	sb.border_color = Color(1, 1, 1, 0.12)
@@ -1410,7 +1410,7 @@ func _tile(icon: String, title: String, sub: String, sz: Vector2) -> Button:
 func _select(t: Button, on: bool) -> void:
 	var sb: StyleBoxFlat = t.get_meta("sb")
 	sb.border_color = UI.ACCENT if on else Color(1, 1, 1, 0.12)
-	sb.bg_color = Color(0.08, 0.25, 0.14, 0.9) if on else Color(0.03, 0.09, 0.06, 0.78)
+	sb.bg_color = Look.tone(Color(0.08, 0.25, 0.14, 0.9)) if on else Look.tone(Color(0.03, 0.09, 0.06, 0.78))
 	sb.shadow_color = Color(UI.ACCENT, 0.45) if on else Color(0, 0, 0, 0)
 	sb.shadow_size = 18 if on else 0
 	t.modulate = Color.WHITE if on else Color(0.82, 0.82, 0.82)

@@ -247,7 +247,7 @@
   --title-grad-bottom: #a8d8ec;
 }
 
-/* ---------- THEME 4: Sunset Catan (terracotta + parchment) ---------- */
+/* ---------- THEME 4: Desert Sunset (terracotta + parchment) ---------- */
 [data-theme="sunset-catan"] {
   --p1: #9c3a14;
   --p1-glow: #c25527;
@@ -279,7 +279,7 @@
   --rim-hi: #52443a;
   --rim-lo: #180f0b;
 
-  /* Warm umber wood felt + earthy sockets — a Catan-style table (was inheriting
+  /* Warm umber wood felt + earthy sockets — a desert-canyon table (was inheriting
      the default green felt). Terracotta P1 + parchment P2 both read on it. */
   --dot-empty-core: #160d06;
   --dot-empty-mid: #4a3420;
@@ -7567,7 +7567,7 @@ body.has-native-banner .native-ad-divider::before {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 10px;
+  gap: 6px 10px;
   width: 100%;
   max-width: 520px;
   box-sizing: border-box;
@@ -7576,8 +7576,8 @@ body.has-native-banner .native-ad-divider::before {
   background: rgba(8, 20, 12, 0.9);
   border: 1px solid var(--glass-border-strong);
   color: var(--text);
-  font-size: 0.95rem;
-  line-height: 1.35;
+  font-size: 1.0625rem;
+  line-height: 1.4;
 }
 .coach-bubble-name {
   flex-basis: 100%;
@@ -7588,10 +7588,10 @@ body.has-native-banner .native-ad-divider::before {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  color: var(--accent);
-  font-size: 0.7rem;
+  color: var(--coach-name, var(--accent));
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 /* First step only: which colour is "you" (themes differ, so a swatch, not a word). */
@@ -7602,14 +7602,14 @@ body.has-native-banner .native-ad-divider::before {
   color: var(--text);
   letter-spacing: normal;
   text-transform: none;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
 }
 .coach-you-dot {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, var(--p1-bright), var(--p1) 70%);
   box-shadow: 0 0 0 1.5px var(--p1-glow);
@@ -7617,6 +7617,7 @@ body.has-native-banner .native-ad-divider::before {
 .coach-bubble-text {
   flex: 1 1 200px;
   min-width: 0;
+  font-weight: 500;
 }
 .coach-bubble-tip {
   border-color: #ffd680;
@@ -8165,8 +8166,11 @@ html[data-art~="speech-bubble"] .coach-bubble {
   border-image-source: var(--speech-bubble-img);
   border-image-slice: var(--speech-bubble-slice);
   border-image-width: var(--speech-bubble-width);
-  border-image-repeat: round;
-  padding: 18px 22px 34px 26px;
+  /* Per theme: a plain edge stretches (tiling shows seams), a pearl strand
+     tiles (stretching smears the pearls). */
+  border-image-repeat: var(--speech-bubble-repeat, round);
+  /* Per theme (themeArt `speechBubble.pad`): each frame's ornaments differ. */
+  padding: var(--speech-bubble-pad, 20px 26px 30px 30px);
   color: var(--text-bright);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
@@ -8688,7 +8692,7 @@ html[data-art~='ach'] .ach-badge.is-earned svg {
   }
   .coach-screen .coach-bubble {
     padding: 8px 10px;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     line-height: 1.3;
   }
   .coach-screen .ss-left {
@@ -8988,6 +8992,11 @@ html[data-theme="vintage-press"] {
   min-width: 7.5em;
 }
 
+/* Christmas: the coach's name in gold like the rest of its HUD, not green. */
+[data-theme="christmas"] {
+  --coach-name: #f3d27a;
+}
+
 /* Vs-bot setup on one screen (like the website): shape tiles + a row of bots. */
 .ai-tiles {
   display: flex;
@@ -9137,6 +9146,17 @@ html[data-theme="vintage-press"] {
   .ai-bot-tile .ai-tile-icon {
     height: 34px;
   }
+}
+
+/* Desert Sunset: the bot-setup tiles and name card in warm walnut, not green. */
+[data-theme="sunset-catan"] .ai-tile {
+  background: rgba(30, 16, 8, 0.8);
+}
+[data-theme="sunset-catan"] .ai-tile.selected {
+  background: rgba(78, 41, 18, 0.92);
+}
+[data-theme="sunset-catan"] .ai-name-card {
+  background: rgba(30, 16, 8, 0.85);
 }
 
 /* Community links (home footer icons + Settings). Plain one-colour brand

@@ -269,13 +269,13 @@ class Mini:
 		var outline := PackedVector2Array()
 		for v in b.outline:
 			outline.append(size / 2.0 + (v - b.bounds.get_center()) * _unit)
-		draw_colored_polygon(outline, Color(0.04, 0.14, 0.08, 0.95))
+		draw_colored_polygon(outline, Look.tone(Color(0.04, 0.14, 0.08, 0.95)))
 		var closed := outline.duplicate()
 		closed.append(outline[0])
-		draw_polyline(closed, Color(0.75, 0.9, 0.6, 0.3), maxf(2.0, _r * 0.16), true)
+		draw_polyline(closed, Look.tone(Color(0.75, 0.9, 0.6, 0.3)), maxf(2.0, _r * 0.16), true)
 		for d in b.pos.size():
 			if s.colored[d] == 0:
-				draw_circle(_px(d), _r, Color(0.03, 0.08, 0.05))
+				draw_circle(_px(d), _r, Look.tone(Color(0.03, 0.08, 0.05)))
 				draw_arc(_px(d), _r, 0, TAU, 32, Color(0, 0, 0, 0.6), _r * 0.09, true)
 		for li in s.pending:
 			var e := _ends(li)

@@ -60,6 +60,8 @@ var _time := 0.0
 var holder: Control
 var board: Node2D
 var holes: Node2D
+## Bottom edge of the board (incl. its rim) in this view's coordinates.
+var _board_bottom := 0.0
 var pending_layer: Node2D
 var strike_layer: Node2D
 var dot_layer: Node2D
@@ -202,7 +204,7 @@ func _build_hud() -> void:
 	# Info, not a button: a soft dark strip with no border, sentence case.
 	var strip := PanelContainer.new()
 	var ssb := StyleBoxFlat.new()
-	ssb.bg_color = Color(0.01, 0.05, 0.03, 0.72)
+	ssb.bg_color = Look.tone(Color(0.01, 0.05, 0.03, 0.72))
 	ssb.set_corner_radius_all(16)
 	ssb.content_margin_left = 18
 	ssb.content_margin_right = 18
@@ -287,7 +289,7 @@ func _make_card(p: int) -> Control:
 
 	var card := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.03, 0.09, 0.06, 0.82)
+	sb.bg_color = Look.tone(Color(0.03, 0.09, 0.06, 0.82))
 	sb.set_corner_radius_all(26)
 	sb.set_border_width_all(3)
 	sb.border_color = Color(BRIGHT[_sk(p)], 0.55)
@@ -476,6 +478,7 @@ func _layout() -> void:
 			tree_top = CARDS_BOTTOM - apex * unit
 		cy = tree_top + bh / 2.0 * unit
 	r = unit * 0.36
+	_board_bottom = cy + bh / 2.0 * unit
 	board.position = Vector2(area.get_center().x, cy) - Vector2(0, shift * unit)
 	_rebuild_board()
 
@@ -587,14 +590,14 @@ func _add_felt() -> void:
 	felt.texture = UI.tex("felt-base.webp")
 	felt.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
 	felt.texture_scale = Vector2(1.4, 1.4)
-	felt.color = Color(2.1, 2.3, 2.0)
+	felt.color = Look.felt_tint
 	board.add_child(felt)
 	if _wreath():
 		_add_wreath()
 		return
 	var closed := outline.duplicate()
 	closed.append(outline[0])
-	for spec in [[r * 0.55, Color("1f160c")], [r * 0.16, Color(0.75, 0.9, 0.6, 0.35)]]:
+	for spec in [[r * 0.55, Color("1f160c")], [r * 0.16, Look.rim_light]]:
 		var rim := Line2D.new()
 		rim.points = closed
 		rim.width = spec[0]
@@ -636,9 +639,9 @@ func _draw_holes(n: Node2D) -> void:
 		if s.colored[d] != 0:
 			continue
 		var p := px(d)
-		n.draw_circle(p + Vector2(0, r * 0.08), r * 1.06, Color(0.75, 0.95, 0.7, 0.16))
-		n.draw_circle(p, r, Color(0.04, 0.1, 0.06))
-		n.draw_circle(p + Vector2(0, r * 0.22), r * 0.74, Color(0.1, 0.2, 0.12))
+		n.draw_circle(p + Vector2(0, r * 0.08), r * 1.06, Look.holes[0])
+		n.draw_circle(p, r, Look.holes[1])
+		n.draw_circle(p + Vector2(0, r * 0.22), r * 0.74, Look.holes[2])
 		n.draw_arc(p, r, 0, TAU, 40, Color(0, 0, 0, 0.7), r * 0.09, true)
 
 
@@ -847,19 +850,29 @@ func _coach_turn() -> bool:
 
 func _build_coach_bubble() -> void:
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UI.small_frame())
-	card.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_offsets(card, 24, -24, -24, -24)
-	card.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	var frame := UI.small_frame()
+	# Tighter top/bottom, wider sides: the text clears the corner studs
+	# without a tall empty band above and below it.
+	frame.content_margin_top = 30
+	frame.content_margin_bottom = 34
+	frame.content_margin_left = 40
+	frame.content_margin_right = 40
+	card.add_theme_stylebox_override("panel", frame)
+	# Placed just under the board by _place_coach_card (falls back to the bottom).
+	card.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_offsets(card, 24, 0, -24, 0)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(card)
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 6)
+	vb.add_theme_constant_override("separation", 8)
 	card.add_child(vb)
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 10)
 	vb.add_child(head)
-	head.add_child(UI.label(Lang.a("coach.name"), 24, UI.GOLD, true, 3))
+	head.add_child(UI.label(Lang.a("coach.name").to_upper(), 24, UI.GOLD, true, 3))
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(gap)
 	# "Your dots" swatch during the first step, so the colour is obvious.
 	var you := HBoxContainer.new()
 	you.add_theme_constant_override("separation", 6)
@@ -867,11 +880,11 @@ func _build_coach_bubble() -> void:
 	chip.texture = UI.tex("dot-p%d.webp" % _sk(1))
 	chip.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	chip.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	chip.custom_minimum_size = Vector2(26, 26)
+	chip.custom_minimum_size = Vector2(30, 30)
 	you.add_child(chip)
-	you.add_child(UI.label(Lang.a("coach.yourDots"), 20, UI.TEXT_DIM, false, 2))
+	you.add_child(UI.label(Lang.a("coach.yourDots"), 24, UI.TEXT, false, 2))
 	head.add_child(you)
-	_coach_text = UI.label("", 26, UI.TEXT, false, 3)
+	_coach_text = UI.label("", 34, UI.TEXT, false, 3)
 	_coach_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_coach_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	vb.add_child(_coach_text)
@@ -887,6 +900,16 @@ func _sync_coach(delta: float) -> void:
 	var card: Control = _coach_text.get_meta("card")
 	card.visible = t != "" and not s.finished
 	(_coach_text.get_meta("you") as Control).visible = coach.stage == "corner"
+	_place_coach_card(card)
+
+
+## The coach card sits right under the board, close to the hand it explains;
+## if it would run off the screen it rises to stay fully visible.
+func _place_coach_card(card: Control) -> void:
+	var h := card.get_combined_minimum_size().y
+	var y := minf(_board_bottom + 16.0, size.y - 24.0 - h)
+	card.offset_top = y
+	card.offset_bottom = y + h
 
 
 ## Lesson marks — static, except the "tap here" ring, which breathes (the
@@ -897,7 +920,7 @@ func _draw_coach(n: Node2D) -> void:
 	if m.has("spotlight"):
 		for d in b.pos.size():
 			if not d in m.spotlight:
-				n.draw_circle(px(d), r * 1.05, Color(0, 0.03, 0.01, 0.55))
+				n.draw_circle(px(d), r * 1.05, Look.tone(Color(0, 0.03, 0.01, 0.55)))
 	for li in m.get("bands", []):
 		var e := line_ends(li)
 		n.draw_line(e[0], e[1], Color(UI.GOLD, 0.28), r * 1.6, true)
@@ -1171,7 +1194,7 @@ func _maybe_pending_tip() -> void:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 12)
 	card.add_child(vb)
-	var l := UI.label(Lang.a("coach.pendingTip"), 24, UI.TEXT, false, 3)
+	var l := UI.label(Lang.a("coach.pendingTip"), 30, UI.TEXT, false, 3)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(l)
 	var ok := UI.plain_button(Lang.a("coach.gotIt"))
@@ -1429,7 +1452,7 @@ func _result_panel(title: String, _col: Color, celebrate: bool, happy: bool, lin
 	ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(ov)
 	var dim := ColorRect.new()
-	dim.color = Color(0, 0.02, 0.01, 0.0)
+	dim.color = Look.tone(Color(0, 0.02, 0.01, 0.0))
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ov.add_child(dim)
 	create_tween().tween_property(dim, "color:a", 0.68, 0.4)
@@ -1497,7 +1520,7 @@ func _result_panel(title: String, _col: Color, celebrate: bool, happy: bool, lin
 		labels.append(l)
 	if extra:
 		vb.add_child(extra)
-	var again := UI.art_button(primary_text, UI.PRIMARY_BTN, int(inner_w), 108, UI.BTN_XL, Color("0c2416"))
+	var again := UI.art_button(primary_text, UI.PRIMARY_BTN, int(inner_w), 108, UI.BTN_XL, Look.tone(Color("0c2416")))
 	again.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vb.add_child(again)
 	var bottom := HBoxContainer.new()
@@ -1555,7 +1578,7 @@ func _result_side(p: int, w: float) -> Control:
 	vb.add_theme_constant_override("separation", 6)
 	var ring := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.02, 0.08, 0.04, 0.8)
+	sb.bg_color = Look.tone(Color(0.02, 0.08, 0.04, 0.8))
 	sb.set_corner_radius_all(60)
 	sb.set_border_width_all(5)
 	sb.border_color = BRIGHT[_sk(p)]
@@ -1599,7 +1622,7 @@ func _result_facts() -> Control:
 	for t in items:
 		var chip := PanelContainer.new()
 		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0.02, 0.09, 0.05, 0.85)
+		sb.bg_color = Look.tone(Color(0.02, 0.09, 0.05, 0.85))
 		sb.border_color = Color(UI.ACCENT, 0.45)
 		sb.set_border_width_all(2)
 		sb.set_corner_radius_all(30)
@@ -1625,7 +1648,7 @@ func _draw_mini_board(c: Control) -> void:
 	var hull := PackedVector2Array()
 	for v in b.outline:
 		hull.append(at.call(v))
-	c.draw_colored_polygon(hull, Color(0.04, 0.13, 0.08, 0.95))
+	c.draw_colored_polygon(hull, Look.tone(Color(0.04, 0.13, 0.08, 0.95)))
 	hull.append(hull[0])
 	c.draw_polyline(hull, Color(0.75, 0.62, 0.38, 0.8), 3.0, true)
 	var rr := k * 0.36

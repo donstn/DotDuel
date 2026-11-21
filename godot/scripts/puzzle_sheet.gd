@@ -130,7 +130,7 @@ func _paint() -> void:
 		b.add_theme_font_size_override("font_size", 19)
 		var sb := StyleBoxFlat.new()
 		sb.set_corner_radius_all(12)
-		sb.bg_color = Color(0.08, 0.25, 0.14, 0.9) if not res.is_empty() else Color(0.02, 0.07, 0.04, 0.8)
+		sb.bg_color = Look.tone(Color(0.08, 0.25, 0.14, 0.9)) if not res.is_empty() else Look.tone(Color(0.02, 0.07, 0.04, 0.8))
 		sb.set_border_width_all(3 if day == selected else (2 if day == today or mine else 0))
 		sb.border_color = UI.ACCENT if day == selected else (UI.GOLD if mine else Color(1, 1, 1, 0.35))
 		for st in ["normal", "hover", "pressed", "disabled"]:

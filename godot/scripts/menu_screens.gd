@@ -61,7 +61,9 @@ func _home(vb: VBoxContainer) -> void:
 	sign.texture = UI.tex("header-combined.webp")
 	sign.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	sign.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	sign.custom_minimum_size = Vector2(660, 305)
+	var sg := Look.sign_geo()
+	var sh: float = 660.0 / sg[0]
+	sign.custom_minimum_size = Vector2(660, sh)
 	var who := Online.display_name() if Supa.signed_in() and Online.profile_loaded else ""
 	var days := Online.streak_alive() if who != "" else 0
 	var today = Online.profile.get("streak_last_played_utc")
@@ -74,11 +76,11 @@ func _home(vb: VBoxContainer) -> void:
 	var tag := UI.label(greet, 28, UI.TEXT, false, 4)
 	tag.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	tag.offset_left = 660 * 0.09
-	tag.offset_right = -660 * 0.09
-	tag.offset_top = 305 * 0.6
-	tag.offset_bottom = -305 * 0.085
-	UI.fit_label(tag, 28, Vector2(660 * 0.82, 305 * 0.315))
+	tag.offset_left = 660 * sg[1]
+	tag.offset_right = -660 * sg[1]
+	tag.offset_top = sh * sg[2]
+	tag.offset_bottom = -sh * sg[3]
+	UI.fit_label(tag, 28, Vector2(660 * (1.0 - 2.0 * sg[1]), sh * (1.0 - sg[2] - sg[3])))
 	sign.add_child(tag)
 	vb.add_child(main._center(sign))
 
@@ -185,7 +187,7 @@ func _link(row: Container, text: String, action: Callable) -> void:
 	b.add_theme_color_override("font_hover_color", UI.TEXT)
 	b.add_theme_color_override("font_pressed_color", UI.TEXT)
 	b.add_theme_constant_override("outline_size", 5)
-	b.add_theme_color_override("font_outline_color", Color(0, 0.06, 0.03, 0.85))
+	b.add_theme_color_override("font_outline_color", Look.tone(Color(0, 0.06, 0.03, 0.85)))
 	b.pressed.connect(action)
 	row.add_child(b)
 
@@ -248,7 +250,7 @@ func _footer(root: Control) -> void:
 	ver.add_theme_font_size_override("font_size", 19)
 	ver.add_theme_color_override("font_color", UI.TEXT_DIM)
 	ver.add_theme_constant_override("outline_size", 4)
-	ver.add_theme_color_override("font_outline_color", Color(0, 0.06, 0.03, 0.85))
+	ver.add_theme_color_override("font_outline_color", Look.tone(Color(0, 0.06, 0.03, 0.85)))
 	ver.pressed.connect(main.show_changelog)
 	var row2 := HBoxContainer.new()
 	row2.alignment = BoxContainer.ALIGNMENT_CENTER

@@ -8,9 +8,10 @@ const P1 := Color("0d4a23")
 const P1_BRIGHT := Color("62cf90")
 const P2 := Color("d3ecaa")
 const P2_BRIGHT := Color("f0fbcf")
-const ACCENT := Color("7bdb95")
-const TEXT := Color("eaf3e3")
-const TEXT_DIM := Color("b3c4b6")
+## Theme-dependent (Look sets them): Forest values here.
+static var ACCENT := Color("7bdb95")
+static var TEXT := Color("eaf3e3")
+static var TEXT_DIM := Color("b3c4b6")
 const GOLD := Color("f3d27a")
 
 # [file, src_w, src_h, cap_left, cap_right]
@@ -83,6 +84,7 @@ static func scaled_tex(file: String, h: int) -> Texture2D:
 
 
 static func art_box(spec: Array, h: int) -> StyleBoxTexture:
+	spec = Look.plate(spec)
 	var k: float = float(h) / spec[2]
 	var sb := StyleBoxTexture.new()
 	sb.texture = scaled_tex(spec[0], h)
@@ -102,7 +104,7 @@ static func label(text: String, size: int, color := TEXT, bold := true, outline 
 	l.add_theme_color_override("font_color", color)
 	if outline > 0:
 		l.add_theme_constant_override("outline_size", outline)
-		l.add_theme_color_override("font_outline_color", Color(0, 0.06, 0.03, 0.85))
+		l.add_theme_color_override("font_outline_color", Look.tone(Color(0, 0.06, 0.03, 0.85)))
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	return l
@@ -124,7 +126,7 @@ static func art_button(text: String, spec: Array, w: int, h: int, font_size := B
 		b.add_theme_color_override(c, color)
 	b.add_theme_color_override("font_disabled_color", TEXT_DIM)
 	b.add_theme_constant_override("outline_size", 8)
-	b.add_theme_color_override("font_outline_color", Color(0, 0.08, 0.03, 0.8))
+	b.add_theme_color_override("font_outline_color", Look.tone(Color(0, 0.08, 0.03, 0.8)))
 	# Longer translations shrink to stay inside the painted caps.
 	var room := w - sb.content_margin_left - sb.content_margin_right
 	var fs := font_size
@@ -217,7 +219,7 @@ static func draw_gear(n: CanvasItem, at: Vector2, rad: float, col: Color) -> voi
 		var dir := Vector2.from_angle(ang)
 		n.draw_line(at + dir * rad * 0.7, at + dir * rad * 1.12, col, rad * 0.42)
 	n.draw_circle(at, rad * 0.82, col)
-	n.draw_circle(at, rad * 0.36, Color(0.05, 0.12, 0.08))
+	n.draw_circle(at, rad * 0.36, Look.tone(Color(0.05, 0.12, 0.08)))
 
 
 ## App-wide theme so no control falls back to Godot's grey editor look
@@ -226,19 +228,19 @@ static func install_theme(window: Window) -> void:
 	var t := Theme.new()
 	t.default_font = font(false)
 	t.default_font_size = 25
-	var panel := _flat_box(Color(0.02, 0.07, 0.04, 0.97), Color(1, 1, 1, 0.18), 14, 12)
+	var panel := _flat_box(Look.tone(Color(0.02, 0.07, 0.04, 0.97)), Color(1, 1, 1, 0.18), 14, 12)
 	t.set_stylebox("panel", "TooltipPanel", panel)
 	t.set_color("font_color", "TooltipLabel", TEXT)
 	t.set_font_size("font_size", "TooltipLabel", 22)
 	t.set_stylebox("panel", "PopupMenu", panel)
-	t.set_stylebox("hover", "PopupMenu", _flat_box(Color(0.08, 0.2, 0.12, 0.95), Color(0, 0, 0, 0), 10, 8))
+	t.set_stylebox("hover", "PopupMenu", _flat_box(Look.tone(Color(0.08, 0.2, 0.12, 0.95)), Color(0, 0, 0, 0), 10, 8))
 	for k in ["font_color", "font_hover_color", "font_accelerator_color"]:
 		t.set_color(k, "PopupMenu", TEXT)
 	t.set_color("font_disabled_color", "PopupMenu", TEXT_DIM)
 	t.set_stylebox("separator", "PopupMenu", StyleBoxEmpty.new())
 	for k in ["normal", "focus", "read_only"]:
 		var on: bool = k == "focus"
-		t.set_stylebox(k, "LineEdit", _flat_box(Color(0.01, 0.05, 0.03, 0.9), ACCENT if on else Color(1, 1, 1, 0.18)))
+		t.set_stylebox(k, "LineEdit", _flat_box(Look.tone(Color(0.01, 0.05, 0.03, 0.9)), ACCENT if on else Color(1, 1, 1, 0.18)))
 	t.set_color("font_color", "LineEdit", TEXT)
 	t.set_color("font_placeholder_color", "LineEdit", TEXT_DIM)
 	t.set_color("caret_color", "LineEdit", ACCENT)
@@ -279,7 +281,7 @@ static func _switch_icon(on: bool) -> Texture2D:
 	var w := 76
 	var h := 42
 	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
-	var track := ACCENT if on else Color(0.13, 0.22, 0.16)
+	var track := ACCENT if on else Look.tone(Color(0.13, 0.22, 0.16))
 	var knob := P2_BRIGHT if on else TEXT_DIM
 	var r := h / 2.0
 	var kx := w - r if on else r
@@ -301,7 +303,7 @@ static func _switch_icon(on: bool) -> Texture2D:
 ## margin leaves room for the ribbon that sits across the frame's top edge.
 static func frame_box(titled := true) -> StyleBoxTexture:
 	var sb := StyleBoxTexture.new()
-	sb.texture = scaled_tex("card-frame.webp", 520)
+	sb.texture = scaled_tex("card-frame.webp", Look.frame_h(520))
 	var m := 66.0  # painted corner ornaments (48 px in the 371 px source)
 	sb.texture_margin_left = m
 	sb.texture_margin_right = m
@@ -319,7 +321,7 @@ static func frame_box(titled := true) -> StyleBoxTexture:
 ## (lesson bubble, tips, invites, long toasts).
 static func small_frame() -> StyleBoxTexture:
 	var sb := StyleBoxTexture.new()
-	sb.texture = scaled_tex("card-frame.webp", 360)
+	sb.texture = scaled_tex("card-frame.webp", Look.frame_h(360))
 	var m := 47.0
 	sb.texture_margin_left = m
 	sb.texture_margin_right = m
@@ -385,7 +387,7 @@ static func ribbon(text: String, max_w: float) -> PanelContainer:
 static func scrim(child: Control, link := false) -> PanelContainer:
 	var p := PanelContainer.new()
 	# Links get a thin accent edge (tappable); info lines have none.
-	var sb := _flat_box(Color(0.02, 0.08, 0.04, 0.78), Color(ACCENT, 0.5) if link else Color(0, 0, 0, 0), 40, 22)
+	var sb := _flat_box(Look.tone(Color(0.02, 0.08, 0.04, 0.78)), Color(ACCENT, 0.5) if link else Color(0, 0, 0, 0), 40, 22)
 	sb.content_margin_top = 4
 	sb.content_margin_bottom = 4
 	p.add_theme_stylebox_override("panel", sb)
@@ -432,9 +434,9 @@ static func input(value: String, placeholder: String, max_len := 20) -> LineEdit
 	e.add_theme_font_size_override("font_size", 28)
 	e.add_theme_color_override("font_color", TEXT)
 	e.add_theme_color_override("font_placeholder_color", TEXT_DIM)
-	e.add_theme_stylebox_override("normal", _flat_box(Color(0.01, 0.05, 0.03, 0.9), Color(1, 1, 1, 0.18)))
-	e.add_theme_stylebox_override("focus", _flat_box(Color(0.01, 0.05, 0.03, 0.9), ACCENT))
-	e.add_theme_stylebox_override("read_only", _flat_box(Color(0.03, 0.08, 0.05, 0.6), Color(1, 1, 1, 0.08)))
+	e.add_theme_stylebox_override("normal", _flat_box(Look.tone(Color(0.01, 0.05, 0.03, 0.9)), Color(1, 1, 1, 0.18)))
+	e.add_theme_stylebox_override("focus", _flat_box(Look.tone(Color(0.01, 0.05, 0.03, 0.9)), ACCENT))
+	e.add_theme_stylebox_override("read_only", _flat_box(Look.tone(Color(0.03, 0.08, 0.05, 0.6)), Color(1, 1, 1, 0.08)))
 	return e
 
 
@@ -488,6 +490,6 @@ static func plain_button(text: String, danger := false, font_size := BTN_M) -> B
 		b.add_theme_color_override(k, TEXT)
 	b.add_theme_color_override("font_disabled_color", TEXT_DIM)
 	b.add_theme_constant_override("outline_size", 6)
-	b.add_theme_color_override("font_outline_color", Color(0, 0.08, 0.03, 0.8))
+	b.add_theme_color_override("font_outline_color", Look.tone(Color(0, 0.08, 0.03, 0.8)))
 	juicy(b)
 	return b

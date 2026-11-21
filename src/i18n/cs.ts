@@ -924,6 +924,9 @@ export const cs: Messages = {
     collectDailyLead: 'Výsledky denní hádanky:',
     collectDaily:
       'u každé dokončené denní hádanky — tvé zobrazované jméno, nejlepší skóre, počet pokusů a čas dokončení. Veřejně zobrazeno v kalendáři denních výsledků.',
+    collectStreakLead: 'Připomínky série (aplikace pro Android):',
+    collectStreak:
+      'tvoje série dní (aktuální, nejdelší, poslední hraný den). Když máš připomínky zapnuté, aplikace dostane i náhodný klíč připomínky; v čase připomínky telefon pošle jen tento klíč, aby ověřil, zda už ten den proběhla hra, a zbytečně tě nerušil. Čas připomínky zůstává v telefonu. Smaže se spolu s účtem.',
     collectDeviceLead: 'Data pouze v zařízení:',
     collectDevice:
       'tvůj postup pro jednoho hráče, statistiky proti botům / místní hry, předvolba tématu a příznak „výukový program zobrazen“. Uloženo v localStorage tvého prohlížeče a nikdy nám neodesíláno.',

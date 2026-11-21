@@ -63,6 +63,7 @@ export function PrivacyPopover({ onClose, consent, onChangeConsent }: Props) {
               <li><strong>{p.collectLiveLead}</strong> {p.collectLive}</li>
               <li><strong>{p.collectFriendsLead}</strong> {p.collectFriends}</li>
               <li><strong>{p.collectDailyLead}</strong> {p.collectDaily}</li>
+              <li><strong>{p.collectStreakLead}</strong> {p.collectStreak}</li>
               <li><strong>{p.collectDeviceLead}</strong> {p.collectDevice}</li>
               <li><strong>{p.collectAnalyticsLead}</strong> {p.collectAnalytics}</li>
             </ul>

@@ -913,6 +913,9 @@ export const pt: Messages = {
     collectDailyLead: 'Resultados do desafio diário:',
     collectDaily:
       'para cada desafio diário que você conclui: seu nome de exibição, melhor pontuação, número de tentativas e horário de conclusão. Exibidos publicamente no calendário de resultados diários.',
+    collectStreakLead: 'Lembretes de sequência (app Android):',
+    collectStreak:
+      'sua sequência de dias (atual, mais longa, último dia jogado). Se os lembretes estiverem ativados, o app também recebe uma chave de lembrete aleatória; no horário do lembrete, seu telefone envia só essa chave para verificar se você já jogou naquele dia, para não avisar à toa. O horário do lembrete fica no seu telefone. Excluída junto com sua conta.',
     collectDeviceLead: 'Dados apenas do dispositivo:',
     collectDevice:
       'seu progresso de um jogador, as estatísticas contra IA / de partida local, a preferência de tema e o indicador de “tutorial visto”. Armazenados no localStorage do seu navegador e nunca transmitidos para nós.',

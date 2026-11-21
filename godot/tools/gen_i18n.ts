@@ -35,6 +35,7 @@ function privacy(m: Messages): Block[] {
     ['li', p.collectLiveLead, p.collectLive],
     ['li', p.collectFriendsLead, p.collectFriends],
     ['li', p.collectDailyLead, p.collectDaily],
+    ['li', p.collectStreakLead, p.collectStreak],
     ['li', p.collectDeviceLead, p.collectDevice],
     ['li', p.collectAnalyticsLead, p.collectAnalytics],
     ['h', p.whyH],

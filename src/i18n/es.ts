@@ -913,6 +913,9 @@ export const es: Messages = {
     collectDailyLead: 'Resultados del puzle diario:',
     collectDaily:
       'por cada puzle diario que terminas: tu nombre visible, tu mejor puntuación, el número de intentos y la hora de finalización. Se muestran públicamente en el calendario de resultados diarios.',
+    collectStreakLead: 'Recordatorios de racha (app Android):',
+    collectStreak:
+      'tu racha de días (actual, más larga, último día jugado). Si los recordatorios están activados, la app recibe además una clave de recordatorio aleatoria; a la hora del recordatorio tu teléfono envía solo esa clave para comprobar si ya has jugado ese día, y así no recibes avisos innecesarios. La hora del recordatorio se queda en tu teléfono. Se elimina con tu cuenta.',
     collectDeviceLead: 'Datos solo del dispositivo:',
     collectDevice:
       'tu progreso de un jugador, las estadísticas contra IA / de partida local, la preferencia de tema y la marca de «tutorial visto». Se almacenan en el localStorage de tu navegador y nunca se nos transmiten.',

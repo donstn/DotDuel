@@ -926,6 +926,9 @@ export const lt: Messages = {
     collectDailyLead: 'Dienos galvosūkio rezultatai:',
     collectDaily:
       'kiekvienam užbaigtam dienos galvosūkiui — jūsų rodomas vardas, geriausias rezultatas, bandymų skaičius ir užbaigimo laikas. Rodoma viešai dienos rezultatų kalendoriuje.',
+    collectStreakLead: 'Serijos priminimai (Android programėlė):',
+    collectStreak:
+      'jūsų dienų serija (dabartinė, ilgiausia, paskutinė žaista diena). Jei priminimai įjungti, programėlė dar gauna atsitiktinį priminimo raktą; priminimo metu telefonas siunčia tik šį raktą, kad patikrintų, ar tą dieną jau žaidėte, ir be reikalo jums nepriminė. Priminimo laikas lieka jūsų telefone. Ištrinama kartu su paskyra.',
     collectDeviceLead: 'Tik įrenginyje saugomi duomenys:',
     collectDevice:
       'jūsų vieno žaidėjo pažanga, žaidimų su botu / vietinių žaidimų statistika, temos pasirinkimas ir „mokymas peržiūrėtas“ žyma. Saugoma jūsų naršyklės „localStorage“ ir niekada mums neperduodama.',

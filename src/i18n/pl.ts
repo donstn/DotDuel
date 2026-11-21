@@ -925,6 +925,9 @@ export const pl: Messages = {
     collectDailyLead: 'Wyniki codziennej łamigłówki:',
     collectDaily:
       'dla każdej ukończonej codziennej łamigłówki — Twoja nazwa wyświetlana, najlepszy wynik, liczba prób i czas ukończenia. Widoczne publicznie w kalendarzu wyników dnia.',
+    collectStreakLead: 'Przypomnienia o passie (aplikacja na Androida):',
+    collectStreak:
+      'Twoja passa dni (obecna, najdłuższa, ostatni dzień gry). Jeśli przypomnienia są włączone, aplikacja dostaje też losowy klucz przypomnień; w porze przypomnienia telefon wysyła tylko ten klucz, aby sprawdzić, czy tego dnia była już rozegrana gra, i nie przypominać bez potrzeby. Godzina przypomnienia zostaje w telefonie. Usuwane razem z kontem.',
     collectDeviceLead: 'Dane tylko na urządzeniu:',
     collectDevice:
       'Twój postęp w trybie jednoosobowym, statystyki przeciw botom / w grze lokalnej, preferencja motywu i znacznik „samouczek obejrzany”. Przechowywane w localStorage Twojej przeglądarki i nigdy nam nieprzesyłane.',

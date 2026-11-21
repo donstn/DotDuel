@@ -362,6 +362,9 @@ export const en = {
     collectDailyLead: 'Daily puzzle results:',
     collectDaily:
       'for each daily puzzle you finish — your display name, best score, number of attempts and finish time. Shown publicly in the daily results calendar.',
+    collectStreakLead: 'Streak reminders (Android app):',
+    collectStreak:
+      'your day streak (current, longest, last day played). If reminders are on, the app also gets a random reminder key; at reminder time your phone sends only that key to check whether you have already played that day, so you are not reminded for nothing. The reminder time stays on your phone. Deleted with your account.',
     collectDeviceLead: 'Device-only data:',
     collectDevice:
       "your single-player progress, vs-AI/hot-seat stats, theme preference, and tutorial-seen flag. Stored in your browser's localStorage and never transmitted to us.",

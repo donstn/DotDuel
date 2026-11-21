@@ -5,7 +5,7 @@ description: Use when asked to launch/run/start the Android emulator or the DotD
 
 # Run DotDuel on the Android emulator
 
-One script does the whole flow: boot emulator → `npm run build` → `npx cap sync android` → `gradlew installDebug` → launch via `adb monkey`.
+One script does the whole flow: boot emulator → app web build (`tsc -b && vite build && build-pages --app`; NOT `npm run build`, which is the Godot web layout) → `npx cap sync android` → `gradlew installDebug` → launch via `adb monkey`.
 
 ```bash
 bash scripts/run-android-emulator.sh                # full flow (build + install + launch)

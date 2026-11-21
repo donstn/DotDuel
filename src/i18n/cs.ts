@@ -7,6 +7,7 @@
  * imperative (ty: Klepni, Vyber, Přihlas se). Reviewed in 3 native passes.
  */
 import type { Messages } from './en';
+const csDays = (n: number) => (n === 1 ? 'den' : n >= 2 && n <= 4 ? 'dny' : 'dní');
 
 /** Czech count form: one (1), few (exactly 2–4), many (0, 5+). No teen exception. */
 function plural(n: number, one: string, few: string, many: string): string {
@@ -923,6 +924,9 @@ export const cs: Messages = {
     collectDailyLead: 'Výsledky denní hádanky:',
     collectDaily:
       'u každé dokončené denní hádanky — tvé zobrazované jméno, nejlepší skóre, počet pokusů a čas dokončení. Veřejně zobrazeno v kalendáři denních výsledků.',
+    collectStreakLead: 'Připomínky série (aplikace pro Android):',
+    collectStreak:
+      'tvoje série dní (aktuální, nejdelší, poslední hraný den). Když máš připomínky zapnuté, aplikace dostane i náhodný klíč připomínky; v čase připomínky telefon pošle jen tento klíč, aby ověřil, zda už ten den proběhla hra, a zbytečně tě nerušil. Čas připomínky zůstává v telefonu. Smaže se spolu s účtem.',
     collectDeviceLead: 'Data pouze v zařízení:',
     collectDevice:
       'tvůj postup pro jednoho hráče, statistiky proti botům / místní hry, předvolba tématu a příznak „výukový program zobrazen“. Uloženo v localStorage tvého prohlížeče a nikdy nám neodesíláno.',
@@ -997,6 +1001,19 @@ export const cs: Messages = {
     done: 'Hotovo',
   },
 
+  streak: {
+    menuLine: (n: number) => `Jen tak dál, tvoje série trvá už ${n} ${csDays(n)}!`,
+    popupTitle: (n: number) => `Série: ${n} ${csDays(n)}!`,
+    popupBody: (n: number) => `Hraješ online ${n} ${csDays(n)} v řadě. Vrať se zítra, ať série pokračuje.`,
+    popupReminder: (time: string) => `Ve dnech bez hry ti v ${time} připomeneme.`,
+    popupOk: 'Paráda!',
+    notifTitle: (n: number) => `🔥 Série: ${n} ${csDays(n)}`,
+    notifBody: 'Zahraj si online hru nebo dnešní hádanku, ať série pokračuje.',
+    remindersH: 'Připomínky',
+    reminderToggle: 'Připomínka série',
+    reminderTime: 'Čas',
+    reminderHint: 'Zapne se po 3 dnech v řadě a jen ve dnech, kdy ještě neproběhla online hra ani denní hádanka.',
+  },
   profile: {
     aria: 'Profil',
     close: 'Zavřít',
@@ -1021,11 +1038,11 @@ export const cs: Messages = {
     lastMatches: (n: number) => `Posledních ${n} ${plural(n, 'hra', 'hry', 'her')}`,
     noMatches: 'Zatím žádné hodnocené hry. Zařaď se do fronty z menu.',
     streakH: 'Denní série',
-    streakEmpty: 'Zahraj si dnešní hádanku a začni sérii. (Již brzy.)',
+    streakEmpty: 'Dokonči online hru nebo dnešní hádanku a začni sérii.',
     currentStreak: 'Aktuální série',
     longest: 'Nejdelší',
     dayN: (n: number) => `${n}. den`,
-    streakHint: 'Série počítá dokončené denní hádanky. Vynech den a vynuluje se.',
+    streakHint: 'Série roste každý den, kdy dokončíš online hru nebo denní hádanku (dny v UTC). Vynech den a vynuluje se.',
     offlineHistoryH: (name: string) => `Offline historie — „${name}“`,
     offlineEmpty:
       'Na tomto zařízení zatím žádné hry. Začni hru proti botovi nebo místní hru, abys ji naplnil.',

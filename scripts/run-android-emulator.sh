@@ -51,7 +51,7 @@ boot_emulator
 
 if [ "$MODE" != "--no-build" ]; then
   echo "Building web assets..."
-  (cd "$REPO_ROOT" && npm run build)
+  (cd "$REPO_ROOT" && npx tsc -b && npx vite build && npx tsx scripts/build-pages.ts --app)
 
   echo "Syncing Capacitor Android project..."
   (cd "$REPO_ROOT" && npx cap sync android)

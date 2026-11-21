@@ -108,6 +108,12 @@ func _run_save(seq: int, score: int, display_name: String) -> void:
 	if not r.is_empty():
 		var st = r.get("streak")
 		Ach.record_daily(int(st.get("current", 0)) if st is Dictionary else 0, int(r.get("attempts", 0)) >= MAX_ATTEMPTS)
+		# The puzzle moved the day streak: update the cached profile (menu line, popup).
+		if st is Dictionary and Supa.signed_in() and not Online.profile.is_empty():
+			Online.profile["streak_current"] = int(st.get("current", 0))
+			Online.profile["streak_longest"] = int(st.get("longest", st.get("current", 0)))
+			Online.profile["streak_last_played_utc"] = today_key()
+			Online.profile_changed.emit()
 	saved.emit(seq)
 
 

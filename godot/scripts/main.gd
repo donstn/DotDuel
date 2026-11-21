@@ -38,6 +38,7 @@ func _ready() -> void:
 	Online.pairing_changed.connect(_on_pairing)
 	Social.changed.connect(_refresh_invite_card)
 	Online.profile_changed.connect(_on_account_change)
+	Online.profile_changed.connect(_on_streak_check)
 	Supa.auth_changed.connect(_on_account_change)
 	Online.kicked.connect(_on_kicked)
 
@@ -181,6 +182,10 @@ func _fireflies() -> void:
 	place.call_deferred()
 
 
+func _current_game() -> GameView:
+	return screen as GameView if screen is GameView else null
+
+
 func _swap(next: Control) -> void:
 	var old := screen
 	screen = next
@@ -269,18 +274,21 @@ func friends_label() -> String:
 
 ## Share DotDuel (signed out, clean link) / Invite a friend (with ?ref= code).
 func share_app() -> void:
-	_share(Lang.a("share.textShare"), "https://www.dotduel.com/")
+	_share(Lang.a("share.textShare"), "https://www.dotduel.com/", "share")
 
 
 func invite_friend() -> void:
 	var code: String = Online.profile.get("referral_code", "")
-	_share(Lang.a("share.textInvite"), "https://www.dotduel.com/" + ("?ref=" + code if code != "" else ""))
+	_share(Lang.a("share.textInvite"), "https://www.dotduel.com/" + ("?ref=" + code if code != "" else ""), "invite")
 
 
-func _share(text: String, url: String) -> void:
+## variant: "share" (signed out, clean link) / "invite" (with ?ref=), as
+## TellAFriendButton.tsx, for the tellafriend_* events.
+func _share(text: String, url: String, variant := "share") -> void:
+	Track.event("tellafriend_clicked", {"variant": variant})
 	if OS.has_feature("web"):
-		var js := "(async()=>{try{if(navigator.share){await navigator.share({title:%s,text:%s,url:%s});return 'shared'}await navigator.clipboard.writeText(%s);return 'copied'}catch(e){return 'fail'}})()"
-		JavaScriptBridge.eval(js % [JSON.stringify(Lang.a("share.title")), JSON.stringify(text), JSON.stringify(url), JSON.stringify(text + " " + url)], true)
+		var js := "(async()=>{try{if(navigator.share){await navigator.share({title:%s,text:%s,url:%s});return 'native'}await navigator.clipboard.writeText(%s);return 'clipboard'}catch(e){return 'fail'}})().then(m=>{if(m!=='fail'&&window.ddTrack)window.ddTrack('tellafriend_share_completed',JSON.stringify({variant:%s,share_method:m}))})"
+		JavaScriptBridge.eval(js % [JSON.stringify(Lang.a("share.title")), JSON.stringify(text), JSON.stringify(url), JSON.stringify(text + " " + url), JSON.stringify(variant)], true)
 		toast(Lang.a("share.linkCopied"))
 	else:
 		DisplayServer.clipboard_set(text + " " + url)
@@ -652,6 +660,8 @@ func start_daily() -> void:
 	g.shown_score = [0.0, float(g.s.scores[1]), float(g.s.scores[2])]
 	g.names[1] = Store.display_name(_player_one())
 	Store.note_game_started()
+	Track.event("daily_puzzle_started", {"puzzle_id": Daily.puzzle_id, "shape": def.shape, "difficulty": def.level})
+	g.track_start()
 	g.exit_requested.connect(_after_daily)
 	g.back_requested.connect(_after_daily)
 	g.settings_requested.connect(show_settings)
@@ -674,6 +684,8 @@ func start_coach() -> void:
 	where = "game"
 	var g := GameView.new()
 	g.coach = Coach.new()
+	g.coach.replay = bool(Store.settings.tutorialSeen)
+	Track.event("tutorial_start", {"replay": 1 if g.coach.replay else 0})
 	g.setup("triangle", 1)
 	g.mode = "coach"
 	g.s = g.coach.opening()
@@ -691,6 +703,9 @@ func start_coach() -> void:
 
 
 func _leave_coach() -> void:
+	var g := _current_game()
+	if g and g.coach and not g.s.finished:
+		Track.event("tutorial_skip", {"replay": 1 if g.coach.replay else 0})
 	Store.set_setting("tutorialSeen", true)
 	show_menu()
 
@@ -736,6 +751,7 @@ func show_welcome() -> void:
 	skip.modulate.a = 0.0
 	skip.disabled = true
 	skip.pressed.connect(func():
+		Track.event("tutorial_declined")
 		Store.set_setting("tutorialSeen", true)
 		close_overlay())
 	body.add_child(skip)
@@ -844,6 +860,22 @@ func open_overlay(title: String, scroll := false, full := false, modal := false,
 		if x:
 			x.position = panel.position + Vector2(panel.size.x - x.size.x * 1.05, -x.size.y * 0.35)
 	panel.item_rect_changed.connect(place)
+	if scroll and not full:
+		# Only as tall as the content (centred), up to the full-height sheet;
+		# scrolls only when the text really doesn't fit.
+		var top0 := panel.offset_top
+		var bottom0 := panel.offset_bottom
+		var fit := func():
+			if not is_instance_valid(panel):
+				return
+			var avail := size.y - top0 + bottom0
+			var need := body.get_combined_minimum_size().y + panel.get_theme_stylebox("panel").get_minimum_size().y
+			var h := minf(need, avail)
+			panel.offset_top = top0 + (avail - h) / 2.0
+			panel.offset_bottom = panel.offset_top + h - size.y
+		body.minimum_size_changed.connect(fit)
+		ov.resized.connect(fit)
+		fit.call_deferred()
 	if not scroll and not full:
 		var center := func():
 			if is_instance_valid(panel):
@@ -1051,6 +1083,9 @@ func show_privacy() -> void:
 	var tag := UI.label(Lang.t("privacy_tagline"), 24, UI.TEXT_DIM, false, 3)
 	tag.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_child(tag)
+	var cookies_h := Lang.a("privacy.cookiesH")
+	var in_cookies := false
+	var placed := not OS.has_feature("web")
 	for blk in Lang.privacy_blocks():
 		match blk[0]:
 			"h":
@@ -1058,10 +1093,49 @@ func show_privacy() -> void:
 				h.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 				h.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 				body.add_child(h)
+				in_cookies = blk[1] == cookies_h
 			"p":
 				body.add_child(UI.rich(_esc(blk[1])))
+				if in_cookies and not placed:
+					_consent_block(body)
+					placed = true
 			"li":
 				body.add_child(UI.rich("•  [b]%s[/b] %s" % [_esc(blk[1]), _esc(blk[2])]))
+	if not placed:
+		_consent_block(body, true)
+
+
+## Analytics choice (PrivacyPopover.tsx): GA4 loads only after "Accept".
+func _consent_block(body: Control, heading := false) -> void:
+	var cur := Track.consent()
+	if heading:
+		var h := UI.label(Lang.a("privacy.cookiesH"), 28, UI.ACCENT, true, 4)
+		h.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		h.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		body.add_child(h)
+	var state := Lang.a("privacy.choiceAccepted") if cur == "accepted" else (Lang.a("privacy.choiceDeclined") if cur == "declined" else Lang.a("privacy.choiceUndecided"))
+	body.add_child(UI.rich("%s [b]%s[/b]" % [_esc(Lang.a("privacy.currentChoice")), _esc(state)]))
+	var row := HFlowContainer.new()
+	row.alignment = FlowContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("h_separation", 12)
+	row.add_theme_constant_override("v_separation", 10)
+	for opt in [["accepted", "privacy.acceptAnalytics"], ["declined", "privacy.declineAnalytics"]]:
+		var b := UI.plain_button(Lang.a(opt[1]), false, UI.BTN_S)
+		b.autowrap_mode = TextServer.AUTOWRAP_OFF
+		b.custom_minimum_size = Vector2(0, 60)
+		b.disabled = cur == opt[0]
+		if b.disabled:
+			b.modulate.a = 0.5
+		var v: String = opt[0]
+		b.pressed.connect(func():
+			Track.set_consent(v)
+			close_overlay()
+			show_privacy())
+		row.add_child(b)
+	body.add_child(row)
+	var hint := UI.label(Lang.a("privacy.consentReloadHint"), 20, UI.TEXT_DIM, false, 3)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_child(hint)
 
 
 func _esc(t: String) -> String:
@@ -1344,6 +1418,67 @@ func _on_account_change() -> void:
 		show_menu()
 
 
+# ---------------------------------------------------------------- day streak
+# Popup after the day's first finished online game or daily puzzle, from day 2
+# (once a day; the same localStorage key as the React app).
+
+const STREAK_POPUP_KEY := "dotduel:streakPopup:v1"
+var _streak_seen := {}
+
+
+func _on_streak_check() -> void:
+	if not Supa.signed_in() or not Online.profile_loaded or Online.profile.is_empty():
+		return
+	var v = Online.profile.get("streak_last_played_utc")
+	var day := str(v) if v != null else ""
+	var prev := _streak_seen
+	_streak_seen = {"uid": Online.me(), "day": day}
+	if prev.is_empty() or prev.uid != Online.me() or prev.day == day:
+		return
+	var today := Online.utc_day()
+	var n := Online.streak_alive()
+	if day != today or n < 2 or _streak_popup_day() == today:
+		return
+	_set_streak_popup_day(today)
+	await get_tree().create_timer(1.2).timeout
+	for i in 120:  # don't close another sheet (rematch, share…): wait for it
+		if not overlay:
+			break
+		await get_tree().create_timer(0.5).timeout
+	if not overlay:
+		_show_streak(n)
+
+
+func _streak_popup_day() -> String:
+	if not OS.has_feature("web"):
+		return str(Store.read(STREAK_POPUP_KEY)) if Store.read(STREAK_POPUP_KEY) != null else ""
+	var v = JavaScriptBridge.eval("(function(){try{return localStorage.getItem(%s)||''}catch(e){return ''}})()" % JSON.stringify(STREAK_POPUP_KEY), true)
+	return str(v) if v != null else ""
+
+
+func _set_streak_popup_day(day: String) -> void:
+	if not OS.has_feature("web"):
+		Store.write(STREAK_POPUP_KEY, day)
+		return
+	JavaScriptBridge.eval("try{localStorage.setItem(%s,%s)}catch(e){}" % [JSON.stringify(STREAK_POPUP_KEY), JSON.stringify(day)], true)
+
+
+func _show_streak(n: int) -> void:
+	var body := open_overlay(Lang.a("streak.popupTitle", [n]))
+	var flame := UI.label("🔥", 96, UI.TEXT, false, 0)
+	flame.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.add_child(flame)
+	var l := UI.label(Lang.a("streak.popupBody", [n]), 28, UI.TEXT, false, 4)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.custom_minimum_size = Vector2(480, 0)
+	body.add_child(l)
+	var ok := UI.plain_button(Lang.a("streak.popupOk"))
+	ok.pressed.connect(close_overlay)
+	body.add_child(ok)
+	Track.event("streak_popup_shown", {"days": n})
+
+
 func _on_pairing(p: Dictionary) -> void:
 	if p.is_empty():
 		return
@@ -1367,6 +1502,7 @@ func start_online_game() -> void:
 	where = "online_game"
 	var g := GameView.new()
 	g.setup_online(Online.pairing, Online.game)
+	g.track_start()
 	g.exit_requested.connect(_leave_online.bind(true))
 	g.lobby_requested.connect(_leave_online)
 	g.settings_requested.connect(show_settings)
@@ -1393,6 +1529,7 @@ func start_game(auto := false, resume := {}) -> void:
 	g.mode = "hotseat" if hot_seat else "ai"
 	if not auto and resume.is_empty():
 		Store.note_game_started()
+		g.track_start()
 	g.auto_p1 = auto
 	if not resume.is_empty():
 		g.restore(resume)
@@ -1429,6 +1566,20 @@ func _shot(name: String) -> void:
 
 func _autotest() -> void:
 	Sfx.muted = true
+	if OS.get_cmdline_user_args().has("--streak-only"):
+		await get_tree().create_timer(2.0).timeout  # let the session restore finish first
+		Supa.session = {"access_token": "x", "user": {"id": "autotest"}}
+		Online.profile = {"display_name": "Donce", "streak_current": 5, "streak_longest": 7, "streak_last_played_utc": Online.utc_day()}
+		Online.profile_loaded = true
+		show_menu()
+		await get_tree().create_timer(1.2).timeout
+		await _shot("9-streak-menu")
+		_show_streak(5)
+		await get_tree().create_timer(0.8).timeout
+		await _shot("9b-streak-popup")
+		Supa.session = {}
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("--online-only"):
 		online_ui.show()
 		await get_tree().create_timer(1.5).timeout

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { DEFAULT_P1_NAME, DEFAULT_P2_NAME, resetStats } from '../storage';
 import type { Settings } from '../storage';
 import { useT } from '../i18n';
@@ -186,6 +187,35 @@ export function SettingsPopover({
               <span>{t.settings.backgroundMusic}</span>
             </label>
           </section>
+
+          {Capacitor.isNativePlatform() && (
+            <section className="settings-section">
+              <h3>{t.streak.remindersH}</h3>
+              <label className="settings-toggle">
+                <input
+                  type="checkbox"
+                  checked={local.remindersOn}
+                  onChange={(e) => setLocal((s) => ({ ...s, remindersOn: e.target.checked }))}
+                />
+                <span>{t.streak.reminderToggle}</span>
+              </label>
+              {local.remindersOn && (
+                <label className="settings-time-row">
+                  <span>{t.streak.reminderTime}</span>
+                  <input
+                    type="time"
+                    className="settings-input"
+                    value={local.reminderTime}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (/^\d{2}:\d{2}$/.test(v)) setLocal((s) => ({ ...s, reminderTime: v }));
+                    }}
+                  />
+                </label>
+              )}
+              <p className="settings-hint">{t.streak.reminderHint}</p>
+            </section>
+          )}
 
           {onChangePrivacy && (
             <section className="settings-section">

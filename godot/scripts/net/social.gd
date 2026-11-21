@@ -270,6 +270,8 @@ func send_invite(to_uid: String, shape: String, tc: String, ranked: bool) -> Str
 	var res: Dictionary = await Supa.call_rpc("send_invite", {"p_to_uids": [to_uid], "p_shape": shape, "p_time_control": tc, "p_from_ranked": ranked})
 	if not res.ok:
 		return _err(res)
+	var sent := int(res.data.get("sent", 1)) if res.data is Dictionary else 1
+	Track.event("friend_invite_sent", {"shape": shape, "time_control": tc, "ranked": "true" if ranked else "false", "recipient_count": sent})
 	await load_invites()
 	return ""
 
@@ -290,6 +292,7 @@ func accept_invite(id: String, ranked: bool) -> String:
 	var res: Dictionary = await Supa.invoke("accept-invite", {"inviteId": id, "ranked": ranked})
 	load_invites()
 	if res.ok and res.data is Dictionary and res.data.get("ok") == true:
+		Track.event("friend_invite_accepted", {"ranked": "true" if ranked else "false"})
 		return ""
 	return str(res.data.get("error", "")) if res.data is Dictionary and res.data.get("error") else _err(res)
 
@@ -314,6 +317,7 @@ func _capture_ref() -> void:
 		return
 	JavaScriptBridge.eval("sessionStorage.setItem('dotduel:pendingFriendRef', %s)" % JSON.stringify(code), true)
 	Store.write(REFERRER, {"uid": code, "landedAt": Time.get_unix_time_from_system() * 1000.0})
+	Track.hashed("ref_param_landed", {}, "referrer_uid_hash", code)
 
 
 func _referral() -> void:
@@ -333,6 +337,10 @@ func _referral() -> void:
 				uid = str(res.data) if res.ok and res.data is String else ""
 			if uid != "" and uid != me:
 				send_request_uid(uid)
+				var st = Store.read(REFERRER)
+				var at := float(st.get("landedAt", 0)) if st is Dictionary and st.get("landedAt") != null else 0.0
+				var days := int((Time.get_unix_time_from_system() * 1000.0 - at) / 86400000.0) if at > 0 else 0
+				Track.hashed("ref_friend_request_sent", {"days_since_landing": days}, "referrer_uid_hash", uid)
 	# 2) Attribution: once per account, codes only, within 30 days of landing.
 	var stored = Store.read(REFERRER)
 	if not stored is Dictionary:
@@ -347,7 +355,11 @@ func _referral() -> void:
 	if Store.read(guard) != null:
 		return
 	Store.write(guard, "1")
-	Supa.call_rpc("claim_referral", {"p_code": c})
+	var claim: Dictionary = await Supa.call_rpc("claim_referral", {"p_code": c})
+	if claim.ok:
+		Track.hashed("referral_claimed", {}, "referrer_code_hash", c)
+	else:
+		Track.event("referral_claim_failed", {"error_code": _err(claim)})
 
 
 # ---------------------------------------------------------------- helpers

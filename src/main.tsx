@@ -12,7 +12,6 @@ import { ADS_ENABLED, getFirstLoadMs } from './ads';
 import { bootSession } from './telemetry';
 import { startFitText } from './fitText';
 import { startDialogFocus } from './dialogFocus';
-import { startServiceWorker } from './swUpdate';
 import { startClientRecord } from './cloud/clientRecord';
 import { startAppUpdateCheck } from './appUpdate';
 import './styles.css';
@@ -34,23 +33,20 @@ if (nativeFontScale && nativeFontScale !== 1) {
   if (scale >= 1.15) document.documentElement.dataset.textLarge = '';
 }
 
-// Service worker: register on WEB only (updates applied at a safe moment, see
-// swUpdate.ts). In the
-// native Capacitor app, assets are bundled in the APK and a SW only causes
-// stale-asset bugs (serving a previous build's cache over the WebView), so we
-// skip registration AND tear down any SW/caches a prior build may have left.
-if (Capacitor.isNativePlatform()) {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker
-      .getRegistrations()
-      .then((regs) => regs.forEach((r) => r.unregister()))
-      .catch(() => {});
-  }
-  if (typeof caches !== 'undefined') {
-    caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
-  }
-} else {
-  startServiceWorker();
+// No service worker anywhere any more. On the web the Godot version is the
+// main game at / and this React build is the backup at /classic/; /sw.js is a
+// self-destroying worker (vite.config.ts) that frees returning visitors from
+// the old cached app. Registering one here would reload /classic/ in a loop,
+// so tear down whatever a prior build left (same as the native app always
+// did: there a SW only served a previous build's cache over the APK).
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker
+    .getRegistrations()
+    .then((regs) => regs.forEach((r) => r.unregister()))
+    .catch(() => {});
+}
+if (typeof caches !== 'undefined') {
+  caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
 }
 
 // Snapshot session-boot state for analytics BEFORE getFirstLoadMs writes

@@ -913,6 +913,9 @@ export const es: Messages = {
     collectDailyLead: 'Resultados del puzle diario:',
     collectDaily:
       'por cada puzle diario que terminas: tu nombre visible, tu mejor puntuación, el número de intentos y la hora de finalización. Se muestran públicamente en el calendario de resultados diarios.',
+    collectStreakLead: 'Recordatorios de racha (app Android):',
+    collectStreak:
+      'tu racha de días (actual, más larga, último día jugado). Si los recordatorios están activados, la app recibe además una clave de recordatorio aleatoria; a la hora del recordatorio tu teléfono envía solo esa clave para comprobar si ya has jugado ese día, y así no recibes avisos innecesarios. La hora del recordatorio se queda en tu teléfono. Se elimina con tu cuenta.',
     collectDeviceLead: 'Datos solo del dispositivo:',
     collectDevice:
       'tu progreso de un jugador, las estadísticas contra IA / de partida local, la preferencia de tema y la marca de «tutorial visto». Se almacenan en el localStorage de tu navegador y nunca se nos transmiten.',
@@ -987,6 +990,19 @@ export const es: Messages = {
     done: 'Hecho',
   },
 
+  streak: {
+    menuLine: (n: number) => `¡Sigue así, llevas una racha de ${n} ${n === 1 ? 'día' : 'días'}!`,
+    popupTitle: (n: number) => `¡Racha de ${n} ${n === 1 ? 'día' : 'días'}!`,
+    popupBody: (n: number) => `Has jugado online ${n} ${n === 1 ? 'día' : 'días'} seguidos. Vuelve mañana para mantenerla.`,
+    popupReminder: (time: string) => `Te lo recordaremos a las ${time} los días que aún no hayas jugado.`,
+    popupOk: '¡Adelante!',
+    notifTitle: (n: number) => `🔥 Racha de ${n} ${n === 1 ? 'día' : 'días'}`,
+    notifBody: 'Juega una partida online o el puzle de hoy para mantenerla.',
+    remindersH: 'Recordatorios',
+    reminderToggle: 'Recordatorio de racha',
+    reminderTime: 'Hora',
+    reminderHint: 'Empieza tras 3 días seguidos y solo los días en que aún no hayas terminado una partida online ni el puzle diario.',
+  },
   profile: {
     aria: 'Perfil',
     close: 'Cerrar',
@@ -1011,11 +1027,11 @@ export const es: Messages = {
     lastMatches: (n: number) => `Últimas ${n} partidas`,
     noMatches: 'Aún no hay partidas clasificatorias. Únete a la cola desde el menú.',
     streakH: 'Racha diaria',
-    streakEmpty: 'Juega el puzle de hoy para iniciar una racha. (Próximamente.)',
+    streakEmpty: 'Termina una partida online o el puzle de hoy para iniciar una racha.',
     currentStreak: 'Racha actual',
     longest: 'Más larga',
     dayN: (n: number) => `Día ${n}`,
-    streakHint: 'La racha cuenta los puzles diarios completados. Si fallas un día, se reinicia.',
+    streakHint: 'La racha suma cada día en que terminas una partida online o el puzle diario (días UTC). Si fallas un día, se reinicia.',
     offlineHistoryH: (name: string) => `Historial sin conexión — «${name}»`,
     offlineEmpty:
       'Aún no hay partidas en este dispositivo. Empieza una partida contra IA o local para llenar esto.',

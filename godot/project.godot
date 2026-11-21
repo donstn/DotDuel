@@ -21,6 +21,7 @@ Sfx="*res://scripts/sfx.gd"
 Realtime="*res://scripts/net/realtime.gd"
 Supa="*res://scripts/net/supa.gd"
 Online="*res://scripts/net/online.gd"
+Track="*res://scripts/net/track.gd"
 Daily="*res://scripts/net/daily.gd"
 Social="*res://scripts/net/social.gd"
 Ach="*res://scripts/achievements.gd"
@@ -39,4 +40,5 @@ window/handheld/orientation=1
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.047, 0.114, 0.078, 1)

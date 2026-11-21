@@ -21,6 +21,8 @@ const IDLE_HINT := 6.0
 
 var b: BoardDef
 var stage := "corner"
+## A replay from the menu (the player has seen the lesson before): analytics.
+var replay := false
 var misses := 0
 var msg := ""
 var idle := false
@@ -247,6 +249,8 @@ func refused() -> void:
 
 
 func after_player(points: int) -> void:
+	if stage != "free":
+		Track.event("tutorial_step", {"step": stage, "replay": 1 if replay else 0})
 	misses = 0
 	idle = false
 	_idle_t = 0.0

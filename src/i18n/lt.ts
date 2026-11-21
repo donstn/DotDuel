@@ -7,6 +7,8 @@
  * (1 → singular, 2–9 → plural nominative, 0 & 11–19 → plural genitive).
  */
 import type { Messages } from './en';
+const ltDaysAcc = (n: number) => (n % 10 === 1 && n % 100 !== 11 ? 'dieną' : n % 10 >= 2 && (n % 100 < 10 || n % 100 >= 20) ? 'dienas' : 'dienų');
+const ltDaysGen = (n: number) => (n % 10 === 1 && n % 100 !== 11 ? 'dienos' : 'dienų');
 
 /** Pick the Lithuanian form for a count: one (1,21…), few (2–9,22–29…), many (0,10–20…). */
 function plural(n: number, one: string, few: string, many: string): string {
@@ -924,6 +926,9 @@ export const lt: Messages = {
     collectDailyLead: 'Dienos galvosūkio rezultatai:',
     collectDaily:
       'kiekvienam užbaigtam dienos galvosūkiui — jūsų rodomas vardas, geriausias rezultatas, bandymų skaičius ir užbaigimo laikas. Rodoma viešai dienos rezultatų kalendoriuje.',
+    collectStreakLead: 'Serijos priminimai (Android programėlė):',
+    collectStreak:
+      'jūsų dienų serija (dabartinė, ilgiausia, paskutinė žaista diena). Jei priminimai įjungti, programėlė dar gauna atsitiktinį priminimo raktą; priminimo metu telefonas siunčia tik šį raktą, kad patikrintų, ar tą dieną jau žaidėte, ir be reikalo jums nepriminė. Priminimo laikas lieka jūsų telefone. Ištrinama kartu su paskyra.',
     collectDeviceLead: 'Tik įrenginyje saugomi duomenys:',
     collectDevice:
       'jūsų vieno žaidėjo pažanga, žaidimų su botu / vietinių žaidimų statistika, temos pasirinkimas ir „mokymas peržiūrėtas“ žyma. Saugoma jūsų naršyklės „localStorage“ ir niekada mums neperduodama.',
@@ -998,6 +1003,19 @@ export const lt: Messages = {
     done: 'Atlikta',
   },
 
+  streak: {
+    menuLine: (n: number) => `Nesustokite – žaidžiate jau ${n} ${ltDaysAcc(n)} iš eilės!`,
+    popupTitle: (n: number) => `${n} ${ltDaysGen(n)} serija!`,
+    popupBody: (n: number) => `Žaidžiate internetu jau ${n} ${ltDaysAcc(n)} iš eilės. Sugrįžkite rytoj, kad serija nenutrūktų.`,
+    popupReminder: (time: string) => `Priminsime ${time}, jei tą dieną dar nebūsite žaidę.`,
+    popupOk: 'Puiku!',
+    notifTitle: (n: number) => `🔥 ${n} ${ltDaysGen(n)} serija`,
+    notifBody: 'Sužaiskite žaidimą internetu arba šiandienos galvosūkį, kad serija nenutrūktų.',
+    remindersH: 'Priminimai',
+    reminderToggle: 'Serijos priminimas',
+    reminderTime: 'Laikas',
+    reminderHint: 'Įsijungia po 3 dienų iš eilės ir tik tomis dienomis, kai dar nesužaidėte žaidimo internetu ar dienos galvosūkio.',
+  },
   profile: {
     aria: 'Profilis',
     close: 'Uždaryti',
@@ -1022,11 +1040,11 @@ export const lt: Messages = {
     lastMatches: (n: number) => `Paskutiniai ${n} ${plural(n, 'žaidimas', 'žaidimai', 'žaidimų')}`,
     noMatches: 'Reitinguojamų žaidimų dar nėra. Pradėkite iš meniu.',
     streakH: 'Dienų serija',
-    streakEmpty: 'Žaiskite šiandienos galvosūkį, kad pradėtumėte seriją. (Netrukus.)',
+    streakEmpty: 'Sužaiskite žaidimą internetu arba šiandienos galvosūkį, kad pradėtumėte seriją.',
     currentStreak: 'Dabartinė serija',
     longest: 'Ilgiausia',
     dayN: (n: number) => `${n} d.`,
-    streakHint: 'Serija skaičiuoja dienos galvosūkio užbaigimus. Praleidus dieną, ji atsistato.',
+    streakHint: 'Serija auga kiekvieną dieną, kai sužaidžiate žaidimą internetu ar dienos galvosūkį (UTC laiku). Praleidus dieną, ji atsistato.',
     offlineHistoryH: (name: string) => `Žaidimų istorija — „${name}“`,
     offlineEmpty:
       'Šiame įrenginyje žaidimų dar nėra. Pradėkite žaidimą su botu ar vietinį žaidimą, kad jį užpildytumėte.',

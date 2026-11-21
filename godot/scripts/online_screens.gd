@@ -238,7 +238,9 @@ func quick() -> void:
 	if not Supa.signed_in() or not Online.profile_loaded or not Online.has_username:
 		show()
 		return
-	if await Online.lock_state() == "other" or not await Online.find_match("3min"):
+	var locked := await Online.lock_state() == "other"
+	Track.event("quick_ranked_clicked", {"session_locked": "true" if locked else "false"})
+	if locked or not await Online.find_match("3min"):
 		show()
 		return
 	_searching()

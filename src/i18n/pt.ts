@@ -913,6 +913,9 @@ export const pt: Messages = {
     collectDailyLead: 'Resultados do desafio diário:',
     collectDaily:
       'para cada desafio diário que você conclui: seu nome de exibição, melhor pontuação, número de tentativas e horário de conclusão. Exibidos publicamente no calendário de resultados diários.',
+    collectStreakLead: 'Lembretes de sequência (app Android):',
+    collectStreak:
+      'sua sequência de dias (atual, mais longa, último dia jogado). Se os lembretes estiverem ativados, o app também recebe uma chave de lembrete aleatória; no horário do lembrete, seu telefone envia só essa chave para verificar se você já jogou naquele dia, para não avisar à toa. O horário do lembrete fica no seu telefone. Excluída junto com sua conta.',
     collectDeviceLead: 'Dados apenas do dispositivo:',
     collectDevice:
       'seu progresso de um jogador, as estatísticas contra IA / de partida local, a preferência de tema e o indicador de “tutorial visto”. Armazenados no localStorage do seu navegador e nunca transmitidos para nós.',
@@ -987,6 +990,19 @@ export const pt: Messages = {
     done: 'Concluído',
   },
 
+  streak: {
+    menuLine: (n: number) => `Continue assim, você tem uma sequência de ${n} ${n === 1 ? 'dia' : 'dias'}!`,
+    popupTitle: (n: number) => `Sequência de ${n} ${n === 1 ? 'dia' : 'dias'}!`,
+    popupBody: (n: number) => `Você jogou online ${n} ${n === 1 ? 'dia' : 'dias'} seguidos. Volte amanhã para mantê-la.`,
+    popupReminder: (time: string) => `Vamos lembrar você às ${time} nos dias em que ainda não tiver jogado.`,
+    popupOk: 'Vamos lá!',
+    notifTitle: (n: number) => `🔥 Sequência de ${n} ${n === 1 ? 'dia' : 'dias'}`,
+    notifBody: 'Jogue uma partida online ou o desafio de hoje para mantê-la.',
+    remindersH: 'Lembretes',
+    reminderToggle: 'Lembrete de sequência',
+    reminderTime: 'Horário',
+    reminderHint: 'Começa após 3 dias seguidos e só nos dias em que você ainda não terminou uma partida online nem o desafio diário.',
+  },
   profile: {
     aria: 'Perfil',
     close: 'Fechar',
@@ -1011,11 +1027,11 @@ export const pt: Messages = {
     lastMatches: (n: number) => `Últimas ${n} partidas`,
     noMatches: 'Nenhuma partida ranqueada ainda. Entre na fila pelo menu.',
     streakH: 'Sequência diária',
-    streakEmpty: 'Jogue o desafio de hoje para iniciar uma sequência. (Em breve.)',
+    streakEmpty: 'Termine uma partida online ou o desafio de hoje para iniciar uma sequência.',
     currentStreak: 'Sequência atual',
     longest: 'Maior',
     dayN: (n: number) => `Dia ${n}`,
-    streakHint: 'A sequência conta as conclusões do desafio diário. Perca um dia e ela zera.',
+    streakHint: 'A sequência cresce a cada dia em que você termina uma partida online ou o desafio diário (dias UTC). Perca um dia e ela zera.',
     offlineHistoryH: (name: string) => `Histórico offline — “${name}”`,
     offlineEmpty:
       'Ainda não há partidas neste dispositivo. Inicie uma partida contra IA ou local para preencher isto.',

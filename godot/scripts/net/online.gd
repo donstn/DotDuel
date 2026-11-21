@@ -88,6 +88,21 @@ func load_profile() -> void:
 	Store.sync_cloud()
 
 
+## UTC calendar day "YYYY-MM-DD", `offset` days from today (streak days are UTC).
+static func utc_day(offset := 0) -> String:
+	return Time.get_date_string_from_unix_time(int(Time.get_unix_time_from_system()) + offset * 86400)
+
+
+## Day streak if still alive (last played today or yesterday, UTC), else 0.
+## Grows with each day with a finished online game or daily puzzle.
+func streak_alive() -> int:
+	var last = profile.get("streak_last_played_utc")
+	var cur = profile.get("streak_current")
+	if last == null or cur == null:
+		return 0
+	return int(cur) if str(last) == utc_day() or str(last) == utc_day(-1) else 0
+
+
 func suggest_name() -> String:
 	var meta := Supa.user_meta()
 	var full := str(meta.get("full_name", meta.get("name", "")))
@@ -109,6 +124,8 @@ func claim_username(desired: String) -> String:
 		return Lang.t("name_taken")
 	var res := await Supa.upsert("usernames", {"lower": lower, "uid": me(), "display_name": name})
 	if not res.ok:
+		var msg := str(res.data.get("message", res.code)) if res.data is Dictionary else str(res.code)
+		Track.event("username_claim_failed", {"mode": "rename" if old_lower != "" else "claim", "error_code": msg})
 		return Lang.t("name_taken") if res.code == 409 else Lang.t("name_failed", [res.code])
 	# Rename (renameUsername in src/cloud/usernames.ts): free the old name.
 	if old_lower != "" and old_lower != lower:

@@ -362,6 +362,9 @@ export const en = {
     collectDailyLead: 'Daily puzzle results:',
     collectDaily:
       'for each daily puzzle you finish — your display name, best score, number of attempts and finish time. Shown publicly in the daily results calendar.',
+    collectStreakLead: 'Streak reminders (Android app):',
+    collectStreak:
+      'your day streak (current, longest, last day played). If reminders are on, the app also gets a random reminder key; at reminder time your phone sends only that key to check whether you have already played that day, so you are not reminded for nothing. The reminder time stays on your phone. Deleted with your account.',
     collectDeviceLead: 'Device-only data:',
     collectDevice:
       "your single-player progress, vs-AI/hot-seat stats, theme preference, and tutorial-seen flag. Stored in your browser's localStorage and never transmitted to us.",
@@ -436,6 +439,21 @@ export const en = {
   },
 
   // Profile popover (account, multiplayer rating, daily streak, offline stats, GDPR).
+  // Day streak: menu line, popup after the day's first online game / puzzle,
+  // Android reminders (Settings).
+  streak: {
+    menuLine: (n: number) => `Keep going, you have a ${n}-day streak!`,
+    popupTitle: (n: number) => `${n}-day streak!`,
+    popupBody: (n: number) => `You’ve played online ${n} days in a row. Come back tomorrow to keep it going.`,
+    popupReminder: (time: string) => `We’ll remind you at ${time} on days you haven’t played yet.`,
+    popupOk: 'Keep it up!',
+    notifTitle: (n: number) => `🔥 ${n}-day streak`,
+    notifBody: 'Play an online game or today’s puzzle to keep it going.',
+    remindersH: 'Reminders',
+    reminderToggle: 'Streak reminder',
+    reminderTime: 'Time',
+    reminderHint: 'Starts after 3 days in a row, and only on days you haven’t finished an online game or the daily puzzle yet.',
+  },
   profile: {
     aria: 'Profile',
     close: 'Close',
@@ -460,11 +478,11 @@ export const en = {
     lastMatches: (n: number) => `Last ${n} matches`,
     noMatches: 'No ranked matches yet. Queue up from the menu.',
     streakH: 'Daily streak',
-    streakEmpty: 'Play today’s puzzle to start a streak. (Coming soon.)',
+    streakEmpty: 'Finish an online game or today’s puzzle to start a streak.',
     currentStreak: 'Current streak',
     longest: 'Longest',
     dayN: (n: number) => `Day ${n}`,
-    streakHint: 'Streak counts daily-puzzle completions. Miss a day and it resets.',
+    streakHint: 'Your streak grows each day you finish an online game or the daily puzzle (UTC days). Miss a day and it resets.',
     offlineHistoryH: (name: string) => `Offline history — “${name}”`,
     offlineEmpty:
       'No games on this device yet. Start a Vs-AI or Hot-seat match to populate this.',

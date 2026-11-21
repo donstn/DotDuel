@@ -23,6 +23,11 @@ export default defineConfig(() => ({
     // problem). 'prompt', not 'autoUpdate': autoUpdate reloaded the page on its
     // own mid-game; src/swUpdate.ts applies the waiting update at a safe moment.
     VitePWA({
+      // The web's main game is now the Godot build at / (scripts/web-layout.mjs)
+      // and this app is the backup at /classic/ with no service worker. The
+      // generated /sw.js unregisters itself, clears its caches and reloads open
+      // tabs once, so returning visitors stop getting the old cached app.
+      selfDestroying: true,
       registerType: 'prompt',
       // Don't auto-inject the register script — we register manually in main.tsx
       // so we can register on web only and SKIP it in the native Capacitor app

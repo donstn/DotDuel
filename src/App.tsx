@@ -146,9 +146,15 @@ import {
   DEFAULT_P1_NAME,
   DEFAULT_P2_NAME,
   displayPlayerName,
+  markStreakPopupShown,
+  streakPopupShownOn,
 } from './storage';
 import { BANNED_SHAPES, type Difficulty, type GameAction, type GameMode, type GameState, type Progress, type ShapeId } from './types';
 import { APP_VERSION } from './version';
+import { aliveStreak, utcDay } from './streak';
+import { REMINDER_MIN_STREAK, syncStreakReminder } from './reminders';
+import { StreakPopover } from './components/StreakPopover';
+import { Capacitor } from '@capacitor/core';
 import { applyUpdateIfReady } from './swUpdate';
 import { CoachGame } from './components/CoachGame';
 import { bumpAndGetGameIndex, IS_STAGING, sha256First8, trackEvent } from './telemetry';
@@ -426,7 +432,44 @@ export default function App() {
   const dailyTimedOutRef = useRef(false);
   const [dailyTimedOut, setDailyTimedOut] = useState(false);
 
+  // ---- Day streak: popup after the day's first finished online game or
+  // daily puzzle (from day 2), and the Android reminder (one pending local
+  // notification, src/reminders.ts).
+  const [streakPopup, setStreakPopup] = useState<number | null>(null);
+  const streakSeenRef = useRef<{ uid: string; day: string | null } | null>(null);
+  const streakDay = cloudProfile?.streak?.lastPlayedUTC ?? null;
+  const streakCur = cloudProfile?.streak?.current ?? 0;
+  useEffect(() => {
+    if (!user || !cloudProfile) return;
+    const prev = streakSeenRef.current;
+    streakSeenRef.current = { uid: user.uid, day: streakDay };
+    if (!prev || prev.uid !== user.uid || prev.day === streakDay) return;
+    const today = utcDay();
+    if (streakDay !== today || streakCur < 2 || streakPopupShownOn() === today) return;
+    markStreakPopupShown(today);
+    trackEvent('streak_popup_shown', { days: streakCur });
+    window.setTimeout(() => setStreakPopup(streakCur), 1200);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid, !!cloudProfile, streakDay, streakCur]);
+
+  const reminderAskRef = useRef(false);
+  const [reminderPing, setReminderPing] = useState(0);
+  useEffect(() => {
+    if (authLoading || (user && !cloudProfile)) return; // keep what's scheduled until we know
+    const ask = reminderAskRef.current;
+    reminderAskRef.current = false;
+    void syncStreakReminder(user ? cloudProfile?.streak : null, {
+      on: settings.remindersOn,
+      time: settings.reminderTime,
+      ask,
+      title: t.streak.notifTitle,
+      body: t.streak.notifBody,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.uid, !!cloudProfile, streakDay, streakCur, settings.remindersOn, settings.reminderTime, t, reminderPing]);
+
   const updateSettings = (next: Settings) => {
+    if (next.remindersOn && !settings.remindersOn) reminderAskRef.current = true;
     setSettings(next);
     saveSettings(next);
   };
@@ -2791,6 +2834,21 @@ export default function App() {
         {changelogOpen && (
           <ChangelogPopover onClose={() => setChangelogOpen(false)} />
         )}
+        {streakPopup !== null && (
+          <StreakPopover
+            days={streakPopup}
+            reminderTime={
+              Capacitor.isNativePlatform() && settings.remindersOn && streakPopup >= REMINDER_MIN_STREAK
+                ? settings.reminderTime
+                : null
+            }
+            onClose={() => {
+              setStreakPopup(null);
+              reminderAskRef.current = true;
+              setReminderPing((n) => n + 1);
+            }}
+          />
+        )}
         {settingsOpen && (
           <SettingsPopover
             settings={settings}
@@ -2901,6 +2959,7 @@ export default function App() {
           settings={settings}
           gameName={effectiveGameName}
           user={user}
+          streakDays={user ? aliveStreak(cloudProfile?.streak) : 0}
           theme={theme}
           onStart={startGame}
           onSettingsUpdate={updateSettings}
@@ -2966,6 +3025,21 @@ export default function App() {
         )}
         {changelogOpen && (
           <ChangelogPopover onClose={() => setChangelogOpen(false)} />
+        )}
+        {streakPopup !== null && (
+          <StreakPopover
+            days={streakPopup}
+            reminderTime={
+              Capacitor.isNativePlatform() && settings.remindersOn && streakPopup >= REMINDER_MIN_STREAK
+                ? settings.reminderTime
+                : null
+            }
+            onClose={() => {
+              setStreakPopup(null);
+              reminderAskRef.current = true;
+              setReminderPing((n) => n + 1);
+            }}
+          />
         )}
         {settingsOpen && (
           <SettingsPopover
@@ -3434,6 +3508,21 @@ export default function App() {
       )}
       {changelogOpen && (
         <ChangelogPopover onClose={() => setChangelogOpen(false)} />
+      )}
+      {streakPopup !== null && (
+        <StreakPopover
+          days={streakPopup}
+          reminderTime={
+            Capacitor.isNativePlatform() && settings.remindersOn && streakPopup >= REMINDER_MIN_STREAK
+              ? settings.reminderTime
+              : null
+          }
+          onClose={() => {
+            setStreakPopup(null);
+            reminderAskRef.current = true;
+            setReminderPing((n) => n + 1);
+          }}
+        />
       )}
       {settingsOpen && (
         <SettingsPopover

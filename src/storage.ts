@@ -138,6 +138,9 @@ export interface Settings {
   musicEnabled: boolean;
   /** Losses in a row vs one bot (`shape:difficulty`); a win or draw resets it. */
   aiLossRun: { key: string; n: number };
+  /** Android app: daily streak reminder (local notification) and its time, HH:MM local. */
+  remindersOn: boolean;
+  reminderTime: string;
 }
 
 function defaultSettings(): Settings {
@@ -153,6 +156,8 @@ function defaultSettings(): Settings {
     sfxEnabled: true,
     musicEnabled: true,
     aiLossRun: { key: '', n: 0 },
+    remindersOn: true,
+    reminderTime: '14:55',
   };
 }
 
@@ -186,6 +191,23 @@ export function getDeviceId(): string {
     memDeviceId = memDeviceId ?? fresh();
   }
   return memDeviceId;
+}
+
+// UTC day ('YYYY-MM-DD') the streak popup was last shown: once a day at most.
+const STREAK_POPUP_KEY = 'dotduel:streakPopup:v1';
+export function streakPopupShownOn(): string | null {
+  try {
+    return localStorage.getItem(STREAK_POPUP_KEY);
+  } catch {
+    return null;
+  }
+}
+export function markStreakPopupShown(day: string): void {
+  try {
+    localStorage.setItem(STREAK_POPUP_KEY, day);
+  } catch {
+    // ignore quota / private-mode
+  }
 }
 
 export function saveSettings(s: Settings): void {

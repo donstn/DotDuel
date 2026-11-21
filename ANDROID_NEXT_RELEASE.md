@@ -11,6 +11,11 @@ as they ship. **After every Play upload, copy any new Play Console warnings
 - [ ] R8: set `minifyEnabled true` (+ `shrinkResources true`) for release, add keep rules if needed, then test a RELEASE build on the emulator: Google sign-in, online game, streak popup, reminder, share, app update prompt.
 - [ ] Deprecated edge-to-edge APIs (setStatusBarColor/setNavigationBarColor, cutout mode): only inside libraries (AdMob SDK, androidbrowserhelper, Play Core). Nothing to fix in our code: update the Capacitor plugins when new versions are out, then recheck the Play warning.
 
+## Shipped to the app code since 1.16 (mention in the 1.17 changelog)
+
+- One-screen bot setup like the website (shape tiles + row of bots + name + Start), PR "Bot setup on one screen".
+- Streak greeting always shows the state; streak lengths read "1 day" / "8 days".
+
 ## Every release (these stay unticked: printed on every build)
 
 - [ ] Bump `versionCode` / `versionName` in `android/app/build.gradle`.

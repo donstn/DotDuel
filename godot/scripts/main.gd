@@ -49,13 +49,23 @@ func _ready() -> void:
 	if _shot_dir != "":
 		_autotest()
 		return
+	# Build the first screen once, after the saved sign-in and the profile are
+	# known (each used to rebuild the menu right after it appeared); the web
+	# loader stays up until then.
+	where = "boot"
+	var t0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < 5000 and not (Supa.is_ready and (not Supa.signed_in() or Online.profile_loaded)):
+		await get_tree().process_frame
 	var saved := Store.load_active()
 	if not saved.is_empty():
 		start_game(false, saved)
-		return
-	show_menu()
-	if not bool(Store.settings.tutorialSeen) and int(Store.settings.gamesPlayed) == 0:
-		show_welcome()
+	else:
+		show_menu()
+		if not bool(Store.settings.tutorialSeen) and int(Store.settings.gamesPlayed) == 0:
+			show_welcome()
+	if OS.has_feature("web"):
+		await get_tree().process_frame
+		JavaScriptBridge.eval("window.ddBooted && window.ddBooted()", true)
 
 
 # ---------------------------------------------------------------- theme decor

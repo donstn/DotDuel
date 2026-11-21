@@ -1,5 +1,5 @@
 extends Node
-## Sound: synthesized cues (generated at start-up, no sample files) plus the
+## Sound: synthesized cues (pre-rendered to .ogg by tools/render_sfx.tscn) plus the
 ## game's CC0 recordings for win / loss / forest ambience. The Christmas theme
 ## swaps in its own synthesized set, ported from src/audioXmas.ts: glass
 ## bauble taps, glockenspiel, sleigh bells, a Jingle Bells win (public-domain
@@ -49,17 +49,34 @@ func _ready() -> void:
 	_ambience = AudioStreamPlayer.new()
 	_ambience.volume_db = -16.0
 	add_child(_ambience)
-	_cache["place1"] = _pluck([659.25], 0.22, 0.55)
-	_cache["place2"] = _pluck([783.99], 0.22, 0.55)
-	_cache["tick"] = _pluck([1760.0], 0.05, 0.25)
-	_cache["pending"] = _pluck([1318.5, 1567.98], 0.5, 0.25)
-	_cache["claim"] = _arp([783.99, 1174.66], 0.07, 0.45)
-	_cache["whoosh"] = _noise(0.25, 0.25)
+	_cache = _load_set("forest")
+
+
+## The cues are pre-rendered by tools/render_sfx.tscn from synth_forest() /
+## synth_xmas() below: synthesizing them here took ~10 s on the web at start-up.
+func _load_set(dir: String) -> Dictionary:
+	var out := {}
+	var base := "res://assets/audio/synth/%s/" % dir
+	for f in ResourceLoader.list_directory(base):
+		if f.ends_with(".ogg"):
+			out[f.get_basename()] = load(base + f)
+	return out
+
+
+func synth_forest() -> Dictionary:
+	var c := {}
+	c["place1"] = _pluck([659.25], 0.22, 0.55)
+	c["place2"] = _pluck([783.99], 0.22, 0.55)
+	c["tick"] = _pluck([1760.0], 0.05, 0.25)
+	c["pending"] = _pluck([1318.5, 1567.98], 0.5, 0.25)
+	c["claim"] = _arp([783.99, 1174.66], 0.07, 0.45)
+	c["whoosh"] = _noise(0.25, 0.25)
 	for n in range(1, 10):
 		var arp: Array = []
 		for i in min(n, 6):
 			arp.append(NOTES[min(i + int(n / 3.0), NOTES.size() - 1)])
-		_cache["line%d" % n] = _arp(arp, 0.055, 0.5)
+		c["line%d" % n] = _arp(arp, 0.055, 0.5)
+	return c
 
 
 func play(cue: String, pitch := 1.0, vol_db := 0.0) -> void:
@@ -176,6 +193,13 @@ func _noise(dur: float, amp: float) -> AudioStreamWAV:
 func _build_xmas() -> void:
 	if not _xmas.is_empty():
 		return
+	_xmas = _load_set("xmas")
+	if _xmas.has("fireside"):
+		_xmas["fireside"].loop = true
+
+
+func synth_xmas() -> Dictionary:
+	var x := {}
 	var c5 := _note(3)
 	var d5 := _note(5)
 	var e5 := _note(7)
@@ -188,18 +212,18 @@ func _build_xmas() -> void:
 		var o := _buf(0.45)
 		_partials(o, 0.0, 1650.0 if p == 1 else 2050.0, 0.5, GLASS)
 		_burst(o, 0.0, 0.012, 0.18, 6000.0, 2.0)
-		_xmas["place%d" % p] = _wav(o, XRATE)
+		x["place%d" % p] = _wav(o, XRATE)
 	var tk := _buf(0.2)
 	_partials(tk, 0.0, 3200.0, 0.14, GLASS, 0.4)
-	_xmas["tick"] = _wav(tk, XRATE)
+	x["tick"] = _wav(tk, XRATE)
 	var pend := _buf(0.9)
 	_partials(pend, 0.0, _note(22), 0.25, GLOCK, 0.5)
 	_partials(pend, 0.09, _note(26), 0.2, GLOCK, 0.5)
-	_xmas["pending"] = _wav(pend, XRATE)
+	x["pending"] = _wav(pend, XRATE)
 	var cl := _buf(0.9)
 	_sleigh(cl, 0.0, 1.0, 6)
 	_partials(cl, 0.04, _note(19), 0.32, GLOCK, 0.6)
-	_xmas["claim"] = _wav(cl, XRATE)
+	x["claim"] = _wav(cl, XRATE)
 	var scale := []
 	for r in [1.0, 9.0 / 8.0, 5.0 / 4.0, 3.0 / 2.0, 5.0 / 3.0, 2.0]:
 		scale.append(r * _note(15))
@@ -210,7 +234,7 @@ func _build_xmas() -> void:
 			_partials(o, i * 0.055, scale[i], 0.38, GLOCK, 0.6)
 		if n >= 5:
 			_sleigh(o, count * 0.055, 0.8, 5)
-		_xmas["line%d" % n] = _wav(o, XRATE)
+		x["line%d" % n] = _wav(o, XRATE)
 	# Jingle Bells / We Wish You a Merry Christmas: public-domain carols.
 	var jingle := [[e5, 1], [e5, 1], [e5, 2], [e5, 1], [e5, 1], [e5, 2], [e5, 1], [g5, 1], [c5, 1.5], [d5, 0.5], [e5, 4]]
 	var beat := 0.17
@@ -221,17 +245,18 @@ func _build_xmas() -> void:
 	_partials(win, end - 4 * beat, c4, 0.26, TINE, 2.0)
 	_partials(win, end - 4 * beat, c4 * 1.5, 0.2, TINE, 2.0)
 	_sleigh(win, end - 4 * beat, 0.9, 8)
-	_xmas["x_win"] = _wav(win, XRATE)
+	x["x_win"] = _wav(win, XRATE)
 	var draw := _buf(3.4)
 	_phrase(draw, 0.0, [[g4, 1], [c5, 1], [c5, 0.5], [d5, 0.5], [c5, 0.5], [b4, 0.5], [a4, 1], [a4, 2]], 0.2, 0.4, TINE)
-	_xmas["x_draw"] = _wav(draw, XRATE)
+	x["x_draw"] = _wav(draw, XRATE)
 	var loss := _buf(3.6)
 	var fall := [g5, e5, d5, c5]
 	for i in 4:
 		_partials(loss, i * 0.32, fall[i], 0.3 - i * 0.04, TINE, 1.4)
 	_partials(loss, 0.96, c4, 0.17, TINE, 2.5)
-	_xmas["x_loss"] = _wav(loss, XRATE)
-	_xmas["fireside"] = _fireside(12.0)
+	x["x_loss"] = _wav(loss, XRATE)
+	x["fireside"] = _fireside(12.0)
+	return x
 
 
 func _note(semis_from_a4: float) -> float:

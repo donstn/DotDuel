@@ -202,7 +202,7 @@ func _build_hud() -> void:
 	# Info, not a button: a soft dark strip with no border, sentence case.
 	var strip := PanelContainer.new()
 	var ssb := StyleBoxFlat.new()
-	ssb.bg_color = Color(0.01, 0.05, 0.03, 0.72)
+	ssb.bg_color = Look.tone(Color(0.01, 0.05, 0.03, 0.72))
 	ssb.set_corner_radius_all(16)
 	ssb.content_margin_left = 18
 	ssb.content_margin_right = 18
@@ -287,7 +287,7 @@ func _make_card(p: int) -> Control:
 
 	var card := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.03, 0.09, 0.06, 0.82)
+	sb.bg_color = Look.tone(Color(0.03, 0.09, 0.06, 0.82))
 	sb.set_corner_radius_all(26)
 	sb.set_border_width_all(3)
 	sb.border_color = Color(BRIGHT[_sk(p)], 0.55)
@@ -587,14 +587,14 @@ func _add_felt() -> void:
 	felt.texture = UI.tex("felt-base.webp")
 	felt.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
 	felt.texture_scale = Vector2(1.4, 1.4)
-	felt.color = Color(2.1, 2.3, 2.0)
+	felt.color = Look.felt_tint
 	board.add_child(felt)
 	if _wreath():
 		_add_wreath()
 		return
 	var closed := outline.duplicate()
 	closed.append(outline[0])
-	for spec in [[r * 0.55, Color("1f160c")], [r * 0.16, Color(0.75, 0.9, 0.6, 0.35)]]:
+	for spec in [[r * 0.55, Color("1f160c")], [r * 0.16, Look.rim_light]]:
 		var rim := Line2D.new()
 		rim.points = closed
 		rim.width = spec[0]
@@ -636,9 +636,9 @@ func _draw_holes(n: Node2D) -> void:
 		if s.colored[d] != 0:
 			continue
 		var p := px(d)
-		n.draw_circle(p + Vector2(0, r * 0.08), r * 1.06, Color(0.75, 0.95, 0.7, 0.16))
-		n.draw_circle(p, r, Color(0.04, 0.1, 0.06))
-		n.draw_circle(p + Vector2(0, r * 0.22), r * 0.74, Color(0.1, 0.2, 0.12))
+		n.draw_circle(p + Vector2(0, r * 0.08), r * 1.06, Look.holes[0])
+		n.draw_circle(p, r, Look.holes[1])
+		n.draw_circle(p + Vector2(0, r * 0.22), r * 0.74, Look.holes[2])
 		n.draw_arc(p, r, 0, TAU, 40, Color(0, 0, 0, 0.7), r * 0.09, true)
 
 
@@ -897,7 +897,7 @@ func _draw_coach(n: Node2D) -> void:
 	if m.has("spotlight"):
 		for d in b.pos.size():
 			if not d in m.spotlight:
-				n.draw_circle(px(d), r * 1.05, Color(0, 0.03, 0.01, 0.55))
+				n.draw_circle(px(d), r * 1.05, Look.tone(Color(0, 0.03, 0.01, 0.55)))
 	for li in m.get("bands", []):
 		var e := line_ends(li)
 		n.draw_line(e[0], e[1], Color(UI.GOLD, 0.28), r * 1.6, true)
@@ -1429,7 +1429,7 @@ func _result_panel(title: String, _col: Color, celebrate: bool, happy: bool, lin
 	ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(ov)
 	var dim := ColorRect.new()
-	dim.color = Color(0, 0.02, 0.01, 0.0)
+	dim.color = Look.tone(Color(0, 0.02, 0.01, 0.0))
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ov.add_child(dim)
 	create_tween().tween_property(dim, "color:a", 0.68, 0.4)
@@ -1497,7 +1497,7 @@ func _result_panel(title: String, _col: Color, celebrate: bool, happy: bool, lin
 		labels.append(l)
 	if extra:
 		vb.add_child(extra)
-	var again := UI.art_button(primary_text, UI.PRIMARY_BTN, int(inner_w), 108, UI.BTN_XL, Color("0c2416"))
+	var again := UI.art_button(primary_text, UI.PRIMARY_BTN, int(inner_w), 108, UI.BTN_XL, Look.tone(Color("0c2416")))
 	again.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vb.add_child(again)
 	var bottom := HBoxContainer.new()
@@ -1555,7 +1555,7 @@ func _result_side(p: int, w: float) -> Control:
 	vb.add_theme_constant_override("separation", 6)
 	var ring := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.02, 0.08, 0.04, 0.8)
+	sb.bg_color = Look.tone(Color(0.02, 0.08, 0.04, 0.8))
 	sb.set_corner_radius_all(60)
 	sb.set_border_width_all(5)
 	sb.border_color = BRIGHT[_sk(p)]
@@ -1599,7 +1599,7 @@ func _result_facts() -> Control:
 	for t in items:
 		var chip := PanelContainer.new()
 		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0.02, 0.09, 0.05, 0.85)
+		sb.bg_color = Look.tone(Color(0.02, 0.09, 0.05, 0.85))
 		sb.border_color = Color(UI.ACCENT, 0.45)
 		sb.set_border_width_all(2)
 		sb.set_corner_radius_all(30)
@@ -1625,7 +1625,7 @@ func _draw_mini_board(c: Control) -> void:
 	var hull := PackedVector2Array()
 	for v in b.outline:
 		hull.append(at.call(v))
-	c.draw_colored_polygon(hull, Color(0.04, 0.13, 0.08, 0.95))
+	c.draw_colored_polygon(hull, Look.tone(Color(0.04, 0.13, 0.08, 0.95)))
 	hull.append(hull[0])
 	c.draw_polyline(hull, Color(0.75, 0.62, 0.38, 0.8), 3.0, true)
 	var rr := k * 0.36

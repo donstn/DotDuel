@@ -27,6 +27,9 @@ export interface NineArt {
   capRight: number;
   capTop: number;
   capBottom: number;
+  /** Rendered px per painted px, when the slot's default would draw this
+   *  art's corners too big or too small. */
+  scale?: number;
 }
 
 /** Fixed panel with a text-safe box (fractions of width / height). */
@@ -67,7 +70,8 @@ export interface ThemeArt {
   board?: {
     felt: string;
     dot: (color: 1 | 2) => string;
-    line: (len: number, color: 1 | 2) => string;
+    /** Line-stroke sprites; without them lines are the theme's CSS strokes. */
+    line?: (len: number, color: 1 | 2) => string;
     /** Dot sprite size relative to the dot. Above 1 when the sprite is padded
      *  square around something taller than the ball (a bauble's hanger cap). */
     dotScale?: number;
@@ -332,6 +336,60 @@ ART.christmas = {
   soundSet: 'christmas',
 };
 
+// Desert Sunset (id 'sunset-catan', kept so saved choices still work): its own
+// painted canyon, sandstone board, terracotta vs parchment balls, sandstone and
+// walnut chrome (Gemini; small controls by GPT, toned to match), lines drawn as
+// the theme's CSS strokes. Avatars and badges are Forest & Pearl's. Prompts:
+// docs/art/sheet-desert-sunset.md.
+const DS = '/art/desert-sunset/';
+const dsStretch = (name: string, width: number, height: number, capLeft: number, capRight: number): StretchArt => ({
+  url: `${DS}${name}.webp`,
+  width,
+  height,
+  capLeft,
+  capRight,
+});
+ART['sunset-catan'] = {
+  ...ART['forest-pearl'],
+  headerSign: {
+    url: `${DS}header-combined.webp`,
+    width: 1081,
+    height: 601,
+    text: { left: 0.07, top: 0.61, right: 0.07, bottom: 0.09 },
+  },
+  menuButton: dsStretch('menu-button', 1118, 187, 200, 199),
+  pillButton: dsStretch('pill-button', 460, 138, 103, 104),
+  primaryButton: dsStretch('primary-button', 1117, 187, 338, 349),
+  titleBanner: dsStretch('title-banner', 920, 140, 111, 108),
+  cardFrame: { url: `${DS}card-frame.webp`, width: 433, height: 635, capLeft: 112, capRight: 111, capTop: 106, capBottom: 121, scale: 0.34 },
+  iconButton: `${DS}icon-button.webp`,
+  dangerPill: dsStretch('danger-pill', 290, 87, 61, 62),
+  tabOff: dsStretch('tab-off', 286, 87, 40, 41),
+  tabOn: dsStretch('tab-on', 282, 93, 85, 97),
+  tabTopOff: dsStretch('tab-off', 286, 87, 40, 41),
+  tabTopOn: dsStretch('tab-on', 282, 93, 85, 97),
+  inputField: dsStretch('input-field', 481, 79, 61, 62),
+  toggleKnob: `${DS}toggle-knob.webp`,
+  choiceTile: { url: `${DS}choice-tile.webp`, width: 290, height: 299, capLeft: 70, capRight: 71, capTop: 70, capBottom: 75, scale: 0.38 },
+  speechBubble: { url: `${DS}speech-bubble.webp`, width: 349, height: 373, capLeft: 160, capRight: 80, capTop: 79, capBottom: 156, scale: 0.34 },
+  shapeIcons: {
+    triangle: `${DS}menu-icon-shape-triangle.webp`,
+    square: `${DS}menu-icon-shape-square.webp`,
+    rectangle: `${DS}menu-icon-shape-rectangle.webp`,
+    rhombus: `${DS}menu-icon-shape-rhombus.webp`,
+  },
+  board: {
+    felt: `${DS}felt-base.webp`,
+    dot: (c) => `${DS}dot-p${c}.webp`,
+  },
+  particles: [`${DS}particle-spark.webp`, `${DS}particle-dust.webp`, `${DS}particle-pebble.webp`, `${DS}particle-ember.webp`],
+  background: {
+    portrait: `${DS}background-portrait.webp`,
+    landscape: `${DS}background-landscape.webp`,
+  },
+  ambience: undefined,
+};
+
 /** One piece of a nine-slice frame: source rect in the sprite, destination
  *  rect in the caller's units. */
 export interface FrameSlice {
@@ -452,7 +510,7 @@ function themeArtVars(art: ThemeArt): { vars: Record<string, string>; slots: str
   }
   if (art.cardFrame) {
     // Rendered at 80% of the painted pixels (crisp on 2–3× screens).
-    Object.assign(vars, nineVars('card-frame', art.cardFrame, 0.8));
+    Object.assign(vars, nineVars('card-frame', art.cardFrame, art.cardFrame.scale ?? 0.8));
     slots.push('card-frame');
   }
   const stretches: [string, StretchArt | undefined][] = [
@@ -469,11 +527,11 @@ function themeArtVars(art: ThemeArt): { vars: Record<string, string>; slots: str
     slots.push(slot);
   }
   if (art.choiceTile) {
-    Object.assign(vars, nineVars('choice-tile', art.choiceTile, 0.45));
+    Object.assign(vars, nineVars('choice-tile', art.choiceTile, art.choiceTile.scale ?? 0.45));
     slots.push('choice-tile');
   }
   if (art.speechBubble) {
-    Object.assign(vars, nineVars('speech-bubble', art.speechBubble, 0.42));
+    Object.assign(vars, nineVars('speech-bubble', art.speechBubble, art.speechBubble.scale ?? 0.42));
     slots.push('speech-bubble');
   }
   if (art.iconButton) {

@@ -66,7 +66,7 @@ export const THEMES: ThemeMeta[] = [
   },
   {
     id: 'sunset-catan',
-    label: 'Sunset Catan',
+    label: 'Desert Sunset',
     tagline: 'Terracotta deserts, parchment pieces.',
     swatch: { p1: '#c25527', p2: '#f4e4bc', bg: '#3a2418' },
     locked: true,

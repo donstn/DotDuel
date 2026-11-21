@@ -79,7 +79,7 @@ func _badge(id: String, earned: bool, capstone: bool, pin: String) -> Button:
 	b.tooltip_text = Lang.a("achievements.nodeTitle", [Ach.title(id) if not hidden else Lang.a("achievements.secret"), Lang.a("achievements.statusUnlocked") if earned else Lang.a("achievements.statusLocked")])
 	var sb := StyleBoxFlat.new()
 	sb.set_corner_radius_all(int(d_px / 2.0))
-	sb.bg_color = Color(0.06, 0.2, 0.11, 0.95) if earned else Color(0.02, 0.06, 0.04, 0.85)
+	sb.bg_color = Look.tone(Color(0.06, 0.2, 0.11, 0.95)) if earned else Look.tone(Color(0.02, 0.06, 0.04, 0.85))
 	sb.set_border_width_all(4 if id == _selected or id == pin else 2)
 	var tier := clampi(int(d.get("tier", 1)), 1, 5)
 	sb.border_color = UI.ACCENT if id == _selected else (UI.GOLD if id == pin else (TIER[tier] if earned else Color(1, 1, 1, 0.15)))

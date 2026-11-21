@@ -57,7 +57,7 @@ func _style_tab(b: Button, on: bool) -> void:
 	var sb := StyleBoxFlat.new()
 	sb.set_corner_radius_all(20)
 	sb.set_border_width_all(3)
-	sb.bg_color = Color(0.08, 0.25, 0.14, 0.95) if on else Color(0.02, 0.07, 0.04, 0.9)
+	sb.bg_color = Look.tone(Color(0.08, 0.25, 0.14, 0.95)) if on else Look.tone(Color(0.02, 0.07, 0.04, 0.9))
 	sb.border_color = UI.ACCENT if on else Color(1, 1, 1, 0.12)
 	for st in ["normal", "hover", "pressed", "focus"]:
 		b.add_theme_stylebox_override(st, sb)

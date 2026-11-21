@@ -86,7 +86,7 @@ func _sign_in() -> void:
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(0, 30)
 	vb.add_child(gap)
-	var btn := UI.art_button(Lang.t("sign_in_google"), UI.PRIMARY_BTN, 620, 124, 34, Color("0c2416"))
+	var btn := UI.art_button(Lang.t("sign_in_google"), UI.PRIMARY_BTN, 620, 124, 34, Look.tone(Color("0c2416")))
 	btn.pressed.connect(func(): Supa.sign_in_google())
 	vb.add_child(main._center(btn))
 	var note := UI.label(Lang.t("signin_privacy"), 22, UI.TEXT_DIM, false, 3)
@@ -122,7 +122,7 @@ func _name_picker() -> void:
 	edit.add_theme_font_override("font", UI.font(true))
 	edit.add_theme_font_size_override("font_size", 36)
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.02, 0.07, 0.04, 0.9)
+	sb.bg_color = Look.tone(Color(0.02, 0.07, 0.04, 0.9))
 	sb.set_corner_radius_all(20)
 	sb.set_border_width_all(3)
 	sb.border_color = UI.ACCENT
@@ -130,7 +130,7 @@ func _name_picker() -> void:
 	edit.add_theme_stylebox_override("focus", sb)
 	vb.add_child(main._center(edit))
 	var err := UI.label("", 24, Color("ff8a7a"), false, 4)
-	var save := UI.art_button(Lang.t("save_name"), UI.PRIMARY_BTN, 560, 120, 36, Color("0c2416"))
+	var save := UI.art_button(Lang.t("save_name"), UI.PRIMARY_BTN, 560, 120, 36, Look.tone(Color("0c2416")))
 	var do_save := func():
 		save.disabled = true
 		err.text = ""
@@ -156,7 +156,7 @@ func _lobby() -> void:
 
 	var card := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.03, 0.09, 0.06, 0.82)
+	sb.bg_color = Look.tone(Color(0.03, 0.09, 0.06, 0.82))
 	sb.set_corner_radius_all(26)
 	sb.set_border_width_all(3)
 	sb.border_color = Color(UI.ACCENT, 0.5)
@@ -215,7 +215,7 @@ func _lobby() -> void:
 	var gap := Control.new()
 	gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vb.add_child(gap)
-	var find := UI.art_button(Lang.t("find_match"), UI.PRIMARY_BTN, 600, 130, 44, Color("0c2416"))
+	var find := UI.art_button(Lang.t("find_match"), UI.PRIMARY_BTN, 600, 130, 44, Look.tone(Color("0c2416")))
 	vb.add_child(main._center(find))
 	var go := func():
 		find.disabled = true
@@ -313,7 +313,7 @@ func match_found() -> void:
 	vb.add_child(info)
 	var count := UI.label(str(COUNTDOWN), 72, UI.TEXT)
 	vb.add_child(count)
-	var ready_btn := UI.art_button(Lang.t("ready"), UI.PRIMARY_BTN, 560, 124, 44, Color("0c2416"))
+	var ready_btn := UI.art_button(Lang.t("ready"), UI.PRIMARY_BTN, 560, 124, 44, Look.tone(Color("0c2416")))
 	vb.add_child(main._center(ready_btn))
 	Sfx.play("line6")
 	var state := {"left": COUNTDOWN, "me": false, "started": false}

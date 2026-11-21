@@ -146,7 +146,7 @@ export const es: Messages = {
     backToMenu: 'Volver al menú',
     dailyTime: 'Tu tiempo para este intento',
     claimPhaseHint: "Todos los puntos colocados: toca una línea sin reclamar.",
-    nothingToClaim: 'Ninguna línea sin reclamar pasa por ese punto.',
+    nothingToClaim: 'Solo quedan líneas sin reclamar.',
     rules: 'Cómo jugar',
     showRules: 'Mostrar reglas',
     resign: 'Rendirse',

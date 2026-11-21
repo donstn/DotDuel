@@ -192,10 +192,24 @@ func _build_hud() -> void:
 	banner.add_child(left_label)
 	add_child(banner)
 	banner.visible = coach == null  # one number too many while learning
-	waiting_label = UI.label("", 22, WAIT_COL, false, 5)
-	waiting_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_offsets(waiting_label, -300, 118, 300, 150)
-	add_child(waiting_label)
+	# Info, not a button: a soft dark strip with no border, sentence case.
+	var strip := PanelContainer.new()
+	var ssb := StyleBoxFlat.new()
+	ssb.bg_color = Color(0.01, 0.05, 0.03, 0.72)
+	ssb.set_corner_radius_all(16)
+	ssb.content_margin_left = 18
+	ssb.content_margin_right = 18
+	ssb.content_margin_top = 2
+	ssb.content_margin_bottom = 4
+	strip.add_theme_stylebox_override("panel", ssb)
+	strip.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_offsets(strip, 0, 116, 0, 152)
+	strip.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	strip.visible = false
+	waiting_label = UI.label("", 22, WAIT_COL, false, 4)
+	strip.add_child(waiting_label)
+	add_child(strip)
 
 	var row := HBoxContainer.new()
 	row.set_anchors_preset(Control.PRESET_TOP_WIDE)
@@ -369,6 +383,14 @@ func _update_hud() -> void:
 	create_tween().tween_method(set_left, shown_left, float(left), 0.5)
 	var n := s.pending.size()
 	waiting_label.text = "" if n == 0 else Lang.n("lines_waiting", n)
+	# Out of the layout flow (anchored), so showing it never moves anything.
+	(waiting_label.get_parent() as Control).visible = n > 0
+	# A long translation shrinks to fit between the screen edges.
+	var wf := waiting_label.get_theme_font("font")
+	var wfs := 22
+	while wfs > 15 and wf.get_string_size(waiting_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, wfs).x > size.x - 80.0:
+		wfs -= 1
+	waiting_label.add_theme_font_size_override("font_size", wfs)
 
 
 func _roll_score(p: int) -> void:
@@ -1708,16 +1730,24 @@ func _toast(text: String) -> void:
 		float_layer.add_child(l)
 		l.position = Vector2((size.x - l.size.x) / 2.0, size.y - 170)
 	else:
-		l = PanelContainer.new()
-		l.add_theme_stylebox_override("panel", UI.small_frame())
-		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# A plain Panel with the label placed by hand: inside a container a
+		# wrapping label asks for one letter per line before it has a width.
+		var sb := UI.small_frame()
+		var p := Panel.new()
+		p.add_theme_stylebox_override("panel", sb)
+		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var w := minf(620.0, size.x - 40.0)
+		var inner := w - sb.content_margin_left - sb.content_margin_right
+		var th := UI.font(true).get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, inner, 24).y + 8.0
 		var t := UI.label(text, 24, UI.GOLD, true, 5)
 		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.add_child(t)
-		float_layer.add_child(l)
-		l.custom_minimum_size.x = size.x - 40
-		l.size = l.get_combined_minimum_size()
-		l.position = Vector2(20, size.y - 120 - l.size.y)
+		t.position = Vector2(sb.content_margin_left, sb.content_margin_top)
+		t.size = Vector2(inner, th)
+		p.add_child(t)
+		p.size = Vector2(w, th + sb.content_margin_top + sb.content_margin_bottom)
+		p.position = Vector2((size.x - w) / 2.0, size.y - 120 - p.size.y)
+		float_layer.add_child(p)
+		l = p
 	_toast_label = l
 	var tw := l.create_tween()
 	tw.tween_interval(2.2)

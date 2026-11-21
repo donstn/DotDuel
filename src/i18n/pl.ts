@@ -158,7 +158,7 @@ export const pl: Messages = {
     backToMenu: 'Powrót do menu',
     dailyTime: 'Twój czas na tę próbę',
     claimPhaseHint: "Wszystkie kropki postawione — dotknij niezajętej linii.",
-    nothingToClaim: 'Przez tę kropkę nie biegnie żadna niezajęta linia.',
+    nothingToClaim: 'Zostały tylko niezajęte linie.',
     rules: 'Jak grać',
     showRules: 'Pokaż zasady',
     resign: 'Poddaj się',

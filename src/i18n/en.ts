@@ -174,7 +174,7 @@ export const en = {
     backToMenu: 'Back to menu',
     dailyTime: 'Your time for this attempt',
     claimPhaseHint: "All dots placed — tap an unclaimed line to claim it.",
-    nothingToClaim: 'No unclaimed line through that dot.',
+    nothingToClaim: 'Only unclaimed lines are left.',
     rules: 'How to play',
     showRules: 'Show rules',
     resign: 'Resign',

@@ -6,8 +6,12 @@
 -- days), so games played before the change count too. Never lowers a streak:
 -- longest only grows, and a newer stored last day is kept as is. Bots skipped.
 
-begin;
-select set_config('app.allow_protected_write', 'on', true);
+-- One DO block = one statement and one transaction, so the protected-write
+-- flag is still on when the UPDATE runs (run as separate statements in the
+-- SQL Editor, the guard trigger silently reverted every change).
+do $$
+begin
+perform set_config('app.allow_protected_write', 'on', true);
 
 with days as (
   select uid, d from (
@@ -38,5 +42,5 @@ update public.profiles p
  where p.id = b.uid
    and not exists (select 1 from public.bots where uid = p.id)
    and (p.streak_last_played_utc is null or b.last >= p.streak_last_played_utc);
-
-commit;
+end
+$$;

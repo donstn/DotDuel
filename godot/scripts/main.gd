@@ -1010,6 +1010,17 @@ func show_settings() -> void:
 	body.add_child(UI.toggle(Lang.a("settings.soundEffects"), bool(Store.settings.sfxEnabled), func(on: bool): Sfx.set_sfx(on)))
 	body.add_child(UI.toggle(Lang.a("settings.backgroundMusic"), bool(Store.settings.musicEnabled), func(on: bool): Sfx.set_music(on)))
 
+	body.add_child(UI.section(Lang.a("social.communityH")))
+	body.add_child(UI.hint(Lang.a("social.communityHint")))
+	for sl in UI.SOCIAL:
+		var sb := UI.plain_button(Lang.a("social." + sl[0]))
+		sb.icon = UI.tex("social-%s.webp" % sl[0])
+		sb.add_theme_constant_override("icon_max_width", 34)
+		sb.add_theme_constant_override("h_separation", 14)
+		var url: String = sl[1]
+		sb.pressed.connect(func(): OS.shell_open(url))
+		body.add_child(sb)
+
 	# Privacy toggles only from the menu screens, like the app.
 	if Supa.signed_in() and Online.profile_loaded and not where in ["game", "online_game"]:
 		body.add_child(UI.section(Lang.a("settings.privacyH")))

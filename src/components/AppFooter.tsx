@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LANGS, useLang, useT } from '../i18n';
+import { SOCIAL_LINKS } from '../social';
+import { SocialIcon } from './SocialIcon';
 
 interface Props {
   onOpenHowTo: () => void;
@@ -124,6 +126,26 @@ export function AppFooter({
             {version}
           </button>
         </span>
+        {showLanguage && (
+          <>
+            <span className="sep">·</span>
+            <span className="app-footer-group app-footer-social">
+              {SOCIAL_LINKS.map((l) => (
+                <a
+                  key={l.id}
+                  className="app-footer-ctl"
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${t.social[l.id]} ${t.social.newWindow}`}
+                  title={t.social[l.id]}
+                >
+                  <SocialIcon link={l} size={15} />
+                </a>
+              ))}
+            </span>
+          </>
+        )}
       </div>
     </footer>
   );

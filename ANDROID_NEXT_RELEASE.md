@@ -15,6 +15,7 @@ as they ship. **After every Play upload, copy any new Play Console warnings
 
 - One-screen bot setup like the website (shape tiles + row of bots + name + Start), PR "Bot setup on one screen".
 - Streak greeting always shows the state; streak lengths read "1 day" / "8 days".
+- Community links: Discord / Facebook / TikTok icons in the home footer and a Community section in Settings (`src/social.ts`). Check on a device that each opens outside the app (Discord/TikTok app or the browser).
 
 ## Every release (these stay unticked: printed on every build)
 

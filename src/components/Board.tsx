@@ -941,7 +941,7 @@ export function Board({
             // the true line direction, so `height=len` stretches the
             // strand's actual long axis to the real endpoint-to-endpoint
             // span.
-            const imgW = lineImgH * LINE_THICKNESS_MULT[cIdx][artLen];
+            const imgW = lineImgH * (boardArt.lineWidth ?? LINE_THICKNESS_MULT[cIdx][artLen]);
             const imgH = len;
             const groupRotate = angleDeg - 90;
             const glow = boardArt.lineGlow?.[cIdx];

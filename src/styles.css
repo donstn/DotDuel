@@ -247,7 +247,7 @@
   --title-grad-bottom: #a8d8ec;
 }
 
-/* ---------- THEME 4: Sunset Catan (terracotta + parchment) ---------- */
+/* ---------- THEME 4: Desert Sunset (terracotta + parchment) ---------- */
 [data-theme="sunset-catan"] {
   --p1: #9c3a14;
   --p1-glow: #c25527;
@@ -279,7 +279,7 @@
   --rim-hi: #52443a;
   --rim-lo: #180f0b;
 
-  /* Warm umber wood felt + earthy sockets — a Catan-style table (was inheriting
+  /* Warm umber wood felt + earthy sockets — a desert-canyon table (was inheriting
      the default green felt). Terracotta P1 + parchment P2 both read on it. */
   --dot-empty-core: #160d06;
   --dot-empty-mid: #4a3420;

@@ -74,6 +74,9 @@ export interface ThemeArt {
     /** Soft halo behind one player's line sprites, when they'd vanish on
      *  their own dots (Christmas: red tinsel on red baubles). */
     lineGlow?: Partial<Record<1 | 2, string>>;
+    /** One line thickness for every length, relative to the default (for
+     *  art drawn the same thickness at every length, e.g. Desert Sunset's cords). */
+    lineWidth?: number;
     /** Triangle only: a painted tree that IS the board (replaces felt + rim).
      *  Pixel geometry in the sprite: the column of the tree's axis, and where
      *  the top dot's and bottom row's centres sit. */
@@ -330,6 +333,23 @@ ART.christmas = {
   },
   ambience: undefined,
   soundSet: 'christmas',
+};
+
+// Desert Sunset (id 'sunset-catan', kept so saved choices still work): painted
+// canyon background and board (sandstone felt, terracotta vs parchment balls,
+// braided cords). Chrome stays the theme's CSS glass. Prompts:
+// docs/art/sheet-desert-sunset.md.
+ART['sunset-catan'] = {
+  board: {
+    felt: '/art/desert-sunset/felt-base.webp',
+    dot: (c) => `/art/desert-sunset/dot-p${c}.webp`,
+    line: (len, c) => `/art/desert-sunset/line-${len}-p${c}.webp`,
+    lineWidth: 0.55,
+  },
+  background: {
+    portrait: '/art/desert-sunset/background-portrait.webp',
+    landscape: '/art/desert-sunset/background-landscape.webp',
+  },
 };
 
 /** One piece of a nine-slice frame: source rect in the sprite, destination

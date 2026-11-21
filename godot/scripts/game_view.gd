@@ -587,14 +587,14 @@ func _add_felt() -> void:
 	felt.texture = UI.tex("felt-base.webp")
 	felt.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
 	felt.texture_scale = Vector2(1.4, 1.4)
-	felt.color = Color(2.1, 2.3, 2.0)
+	felt.color = Look.felt_tint
 	board.add_child(felt)
 	if _wreath():
 		_add_wreath()
 		return
 	var closed := outline.duplicate()
 	closed.append(outline[0])
-	for spec in [[r * 0.55, Color("1f160c")], [r * 0.16, Color(0.75, 0.9, 0.6, 0.35)]]:
+	for spec in [[r * 0.55, Color("1f160c")], [r * 0.16, Look.rim_light]]:
 		var rim := Line2D.new()
 		rim.points = closed
 		rim.width = spec[0]
@@ -636,9 +636,9 @@ func _draw_holes(n: Node2D) -> void:
 		if s.colored[d] != 0:
 			continue
 		var p := px(d)
-		n.draw_circle(p + Vector2(0, r * 0.08), r * 1.06, Color(0.75, 0.95, 0.7, 0.16))
-		n.draw_circle(p, r, Color(0.04, 0.1, 0.06))
-		n.draw_circle(p + Vector2(0, r * 0.22), r * 0.74, Color(0.1, 0.2, 0.12))
+		n.draw_circle(p + Vector2(0, r * 0.08), r * 1.06, Look.holes[0])
+		n.draw_circle(p, r, Look.holes[1])
+		n.draw_circle(p + Vector2(0, r * 0.22), r * 0.74, Look.holes[2])
 		n.draw_arc(p, r, 0, TAU, 40, Color(0, 0, 0, 0.7), r * 0.09, true)
 
 

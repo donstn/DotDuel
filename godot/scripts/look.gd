@@ -10,7 +10,12 @@ const WEB_KEY := "dotduel:theme:v1"
 const PREVIEW_KEY := "dotduel:theme-preview:v1"
 const XMAS := "christmas"
 const FOREST := "forest-pearl"
-const NAMES := {"forest-pearl": "Forest & Pearl", "christmas": "Christmas"}
+## Desert Sunset keeps the app's id so a saved choice is shared. Locked like
+## in the app: only offered with ?theme-preview=sunset-catan (or the
+## --theme-preview=sunset-catan command-line arg) until it is released.
+const DESERT := "sunset-catan"
+const NAMES := {"forest-pearl": "Forest & Pearl", "christmas": "Christmas", "sunset-catan": "Desert Sunset"}
+const ART_DIRS := {"christmas": "christmas/", "sunset-catan": "desert-sunset/"}
 
 var id := FOREST
 
@@ -20,6 +25,12 @@ var strike_outer: Array = []
 var strike_inner: Array = []
 var pending_col := UI.GOLD
 var dot_scale := 1.0
+## Brightness/tint multiplier for the board's felt texture.
+var felt_tint := Color(2.1, 2.3, 2.0)
+## Empty-hole shading [glow, core, inner] and the board rim's light edge.
+const GREEN_HOLES := [Color(0.75, 0.95, 0.7, 0.16), Color(0.04, 0.1, 0.06), Color(0.1, 0.2, 0.12)]
+var holes: Array = GREEN_HOLES
+var rim_light := Color(0.75, 0.9, 0.6, 0.35)
 ## The menu background's campfire; the Christmas tree board draws a copy of
 ## it in front of the tree (the fire stands nearer the viewer).
 var fire: Node2D
@@ -41,6 +52,8 @@ func _ready() -> void:
 func offered(t: String) -> bool:
 	if t == FOREST:
 		return true
+	if t == DESERT:
+		return Prefs.web_get(PREVIEW_KEY) == DESERT or OS.get_cmdline_user_args().has("--theme-preview=" + DESERT)
 	if t != XMAS:
 		return false
 	if Prefs.web_get(PREVIEW_KEY) == XMAS or OS.get_cmdline_user_args().has("--xmas"):
@@ -51,7 +64,11 @@ func offered(t: String) -> bool:
 
 
 func available() -> Array:
-	return [FOREST, XMAS] if offered(XMAS) else [FOREST]
+	var out := [FOREST]
+	for t in [XMAS, DESERT]:
+		if offered(t):
+			out.append(t)
+	return out
 
 
 func xmas() -> bool:
@@ -75,18 +92,33 @@ func _palette() -> void:
 		strike_inner = [Color.WHITE, Color("ffc2cb"), Color("fff8dc")]
 		pending_col = Color("9fd8ff")
 		dot_scale = 1.31
+		felt_tint = Color(2.1, 2.3, 2.0)
+		holes = GREEN_HOLES
+		rim_light = Color(0.75, 0.9, 0.6, 0.35)
+	elif id == DESERT:
+		bright = [Color.WHITE, Color("e07a3f"), Color("fffaf0")]
+		strike_outer = [Color.WHITE, Color("9c3a14"), Color("c8a868")]
+		strike_inner = [Color.WHITE, Color("e07a3f"), Color("fffaf0")]
+		pending_col = UI.GOLD
+		dot_scale = 1.0
+		felt_tint = Color(1.15, 1.1, 1.05)
+		holes = [Color(1.0, 0.82, 0.62, 0.14), Color(0.09, 0.05, 0.025), Color(0.2, 0.12, 0.07)]
+		rim_light = Color(1.0, 0.82, 0.6, 0.3)
 	else:
 		bright = [Color.WHITE, UI.P1_BRIGHT, UI.P2_BRIGHT]
 		strike_outer = [Color.WHITE, Color("2b8a4c"), Color("c8c878")]
 		strike_inner = [Color.WHITE, Color("b8f5d3"), Color("ffffff")]
 		pending_col = UI.GOLD
 		dot_scale = 1.0
+		felt_tint = Color(2.1, 2.3, 2.0)
+		holes = GREEN_HOLES
+		rim_light = Color(0.75, 0.9, 0.6, 0.35)
 
 
-## Art path for the current theme: the Christmas copy when one exists.
+## Art path for the current theme: the theme's own copy when one exists.
 func art(file: String) -> String:
-	if xmas():
-		var p := UI.ART + "christmas/" + file
+	if ART_DIRS.has(id):
+		var p: String = UI.ART + ART_DIRS[id] + file
 		if ResourceLoader.exists(p):
 			return p
 	return UI.ART + file
@@ -96,4 +128,6 @@ func art(file: String) -> String:
 func colour_name(p: int) -> String:
 	if xmas():
 		return Lang.t("col_red" if p == 1 else "col_gold")
+	if id == DESERT:
+		return Lang.t("col_terracotta" if p == 1 else "col_cream")
 	return Lang.t("col_green" if p == 1 else "col_cream")

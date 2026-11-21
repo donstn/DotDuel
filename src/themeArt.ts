@@ -30,6 +30,10 @@ export interface NineArt {
   /** Rendered px per painted px, when the slot's default would draw this
    *  art's corners too big or too small. */
   scale?: number;
+  /** CSS padding that keeps content clear of the painted ornaments (and tail). */
+  pad?: string;
+  /** CSS border-image-repeat for the edges (default per slot). */
+  repeat?: 'stretch' | 'round';
 }
 
 /** Fixed panel with a text-safe box (fractions of width / height). */
@@ -371,7 +375,7 @@ ART['sunset-catan'] = {
   inputField: dsStretch('input-field', 481, 79, 61, 62),
   toggleKnob: `${DS}toggle-knob.webp`,
   choiceTile: { url: `${DS}choice-tile.webp`, width: 290, height: 299, capLeft: 70, capRight: 71, capTop: 70, capBottom: 75, scale: 0.38 },
-  speechBubble: { url: `${DS}speech-bubble.webp`, width: 349, height: 373, capLeft: 160, capRight: 80, capTop: 79, capBottom: 156, scale: 0.34 },
+  speechBubble: { url: `${DS}speech-bubble.webp`, width: 349, height: 373, capLeft: 160, capRight: 80, capTop: 79, capBottom: 156, scale: 0.34, pad: '22px 32px 44px 36px', repeat: 'stretch' },
   shapeIcons: {
     triangle: `${DS}menu-icon-shape-triangle.webp`,
     square: `${DS}menu-icon-shape-square.webp`,
@@ -486,6 +490,8 @@ function nineVars(prefix: string, f: NineArt, scale: number): Record<string, str
     [`--${prefix}-img`]: `url("${f.url}")`,
     [`--${prefix}-slice`]: `${f.capTop} ${f.capRight} ${f.capBottom} ${f.capLeft} fill`,
     [`--${prefix}-width`]: `${px(f.capTop)} ${px(f.capRight)} ${px(f.capBottom)} ${px(f.capLeft)}`,
+    ...(f.pad ? { [`--${prefix}-pad`]: f.pad } : {}),
+    ...(f.repeat ? { [`--${prefix}-repeat`]: f.repeat } : {}),
   };
 }
 

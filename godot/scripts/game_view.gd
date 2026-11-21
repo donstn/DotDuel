@@ -60,6 +60,8 @@ var _time := 0.0
 var holder: Control
 var board: Node2D
 var holes: Node2D
+## Bottom edge of the board (incl. its rim) in this view's coordinates.
+var _board_bottom := 0.0
 var pending_layer: Node2D
 var strike_layer: Node2D
 var dot_layer: Node2D
@@ -476,6 +478,7 @@ func _layout() -> void:
 			tree_top = CARDS_BOTTOM - apex * unit
 		cy = tree_top + bh / 2.0 * unit
 	r = unit * 0.36
+	_board_bottom = cy + bh / 2.0 * unit
 	board.position = Vector2(area.get_center().x, cy) - Vector2(0, shift * unit)
 	_rebuild_board()
 
@@ -847,19 +850,29 @@ func _coach_turn() -> bool:
 
 func _build_coach_bubble() -> void:
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UI.small_frame())
-	card.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_offsets(card, 24, -24, -24, -24)
-	card.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	var frame := UI.small_frame()
+	# Tighter top/bottom, wider sides: the text clears the corner studs
+	# without a tall empty band above and below it.
+	frame.content_margin_top = 30
+	frame.content_margin_bottom = 34
+	frame.content_margin_left = 40
+	frame.content_margin_right = 40
+	card.add_theme_stylebox_override("panel", frame)
+	# Placed just under the board by _place_coach_card (falls back to the bottom).
+	card.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_offsets(card, 24, 0, -24, 0)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(card)
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 6)
+	vb.add_theme_constant_override("separation", 8)
 	card.add_child(vb)
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 10)
 	vb.add_child(head)
-	head.add_child(UI.label(Lang.a("coach.name"), 24, UI.GOLD, true, 3))
+	head.add_child(UI.label(Lang.a("coach.name").to_upper(), 24, UI.GOLD, true, 3))
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(gap)
 	# "Your dots" swatch during the first step, so the colour is obvious.
 	var you := HBoxContainer.new()
 	you.add_theme_constant_override("separation", 6)
@@ -867,11 +880,11 @@ func _build_coach_bubble() -> void:
 	chip.texture = UI.tex("dot-p%d.webp" % _sk(1))
 	chip.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	chip.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	chip.custom_minimum_size = Vector2(26, 26)
+	chip.custom_minimum_size = Vector2(30, 30)
 	you.add_child(chip)
-	you.add_child(UI.label(Lang.a("coach.yourDots"), 20, UI.TEXT_DIM, false, 2))
+	you.add_child(UI.label(Lang.a("coach.yourDots"), 24, UI.TEXT, false, 2))
 	head.add_child(you)
-	_coach_text = UI.label("", 26, UI.TEXT, false, 3)
+	_coach_text = UI.label("", 34, UI.TEXT, false, 3)
 	_coach_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_coach_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	vb.add_child(_coach_text)
@@ -887,6 +900,16 @@ func _sync_coach(delta: float) -> void:
 	var card: Control = _coach_text.get_meta("card")
 	card.visible = t != "" and not s.finished
 	(_coach_text.get_meta("you") as Control).visible = coach.stage == "corner"
+	_place_coach_card(card)
+
+
+## The coach card sits right under the board, close to the hand it explains;
+## if it would run off the screen it rises to stay fully visible.
+func _place_coach_card(card: Control) -> void:
+	var h := card.get_combined_minimum_size().y
+	var y := minf(_board_bottom + 16.0, size.y - 24.0 - h)
+	card.offset_top = y
+	card.offset_bottom = y + h
 
 
 ## Lesson marks — static, except the "tap here" ring, which breathes (the
@@ -1171,7 +1194,7 @@ func _maybe_pending_tip() -> void:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 12)
 	card.add_child(vb)
-	var l := UI.label(Lang.a("coach.pendingTip"), 24, UI.TEXT, false, 3)
+	var l := UI.label(Lang.a("coach.pendingTip"), 30, UI.TEXT, false, 3)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(l)
 	var ok := UI.plain_button(Lang.a("coach.gotIt"))

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AppUser } from '../auth/AppUser';
-import { availableDifficulties, DEFAULT_P1_NAME, DEFAULT_P2_NAME, isUnlocked } from '../storage';
+import { DEFAULT_P1_NAME, DEFAULT_P2_NAME, isUnlocked } from '../storage';
 import type { Settings } from '../storage';
 import { PLAYABLE_SHAPE_META } from '../types';
 import type { Difficulty, GameMode, Progress, ShapeId } from '../types';
@@ -148,24 +148,22 @@ export function Menu({
   const [mode, setMode] = useState<GameMode | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
   const [shape, setShape] = useState<ShapeId | null>(null);
-  const [aiDifficulty, setAiDifficulty] = useState<Difficulty | null>(null);
   const t = useT();
   const { lang } = useLang();
 
   useEffect(() => {
     onDepthChange?.(category !== null || mode !== null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, mode, shape, aiDifficulty]);
+  }, [category, mode, shape]);
 
   const prevBackSignal = useRef(backSignal);
   useEffect(() => {
     if (backSignal === undefined || prevBackSignal.current === backSignal) return;
     prevBackSignal.current = backSignal;
-    if (aiDifficulty !== null) setAiDifficulty(null);
-    else if (shape !== null) setShape(null);
+    if (shape !== null) setShape(null);
     else if (mode !== null) setMode(null);
     else if (category !== null) setCategory(null);
-  }, [backSignal, aiDifficulty, shape, mode, category]);
+  }, [backSignal, shape, mode, category]);
 
   // Painted plaque buttons (when the theme has them) are text-only: icons go,
   // and descriptive subtitles too — only state lines (locked, sign in,
@@ -525,115 +523,19 @@ export function Menu({
     );
   }
 
-  if (mode === 'ai' && !shape) {
-    // storage.recordWin: beating Easy (L2) or better opens the next shape.
-    const lockedAt = PLAYABLE_SHAPE_META.findIndex((s) => progress.unlocked[s.id] === 0);
-    const shapeHint =
-      lockedAt > 0
-        ? t.menu.unlockHint(
-            t.shapes[PLAYABLE_SHAPE_META[lockedAt].id],
-            t.difficulty[2],
-            t.shapes[PLAYABLE_SHAPE_META[lockedAt - 1].id],
-          )
-        : null;
-    return (
-      <div className="menu">
-        <button className="link-btn back-link" onClick={() => setMode(null)}>‹ {t.common.back}</button>
-        <h2>{t.menu.chooseShape}</h2>
-        <div className="menu-shelves">
-          {PLAYABLE_SHAPE_META.map((s) => {
-            const unlockedAny = progress.unlocked[s.id] > 0;
-            const ShapeIcon = SHAPE_ICON[s.id];
-            return (
-              <button
-                key={s.id}
-                className={`menu-shelf ${unlockedAny ? '' : 'disabled'}`}
-                disabled={!unlockedAny}
-                onClick={() => setShape(s.id)}
-                title={unlockedAny ? '' : shapeHint ?? ''}
-              >
-                <CardInner
-                  icon={
-                    art.shapeIcons ? (
-                      <img src={art.shapeIcons[s.id]} alt="" aria-hidden="true" />
-                    ) : (
-                      <ShapeIcon />
-                    )
-                  }
-                  iconClass={art.shapeIcons ? 'is-avatar' : ''}
-                  title={t.shapes[s.id]}
-                  sub={unlockedAny ? t.menu.dots(s.dots) : t.common.locked}
-                />
-              </button>
-            );
-          })}
-        </div>
-        {shapeHint && <p className="hint unlock-hint">{shapeHint}</p>}
-      </div>
-    );
-  }
-
-  if (mode === 'ai' && shape && aiDifficulty === null) {
-    const all: Difficulty[] = [1, 2, 3, 4, 5];
-    const available = availableDifficulties(progress, shape);
-    const nextLocked = all.find((d) => !isUnlocked(progress, shape, d) && !available.includes(d));
-    const levelHint =
-      nextLocked && nextLocked > 1
-        ? t.menu.unlockHint(
-            t.difficulty[nextLocked],
-            t.difficulty[(nextLocked - 1) as Difficulty],
-            t.shapes[shape],
-          )
-        : null;
-    return (
-      <div className="menu">
-        <button className="link-btn back-link" onClick={() => setShape(null)}>‹ {t.common.back}</button>
-        <h2>{t.menu.chooseDifficulty}</h2>
-        <p className="hint">{t.shapes[shape]}</p>
-        <div className="menu-shelves">
-          {all.map((d) => {
-            const unlocked = isUnlocked(progress, shape, d) || available.includes(d);
-            return (
-              <button
-                key={d}
-                className={`menu-shelf ${unlocked ? '' : 'disabled'}`}
-                disabled={!unlocked}
-                onClick={() => {
-                  if (gameName) {
-                    onStart('ai', shape, d);
-                  } else {
-                    setAiDifficulty(d);
-                  }
-                }}
-              >
-                <CardInner
-                  iconClass="is-avatar"
-                  icon={<AIAvatar level={d} theme={theme} />}
-                  title={t.difficulty[d]}
-                  sub={unlocked ? t.menu.level(d) : t.common.locked}
-                />
-              </button>
-            );
-          })}
-        </div>
-        {levelHint && <p className="hint unlock-hint">{levelHint}</p>}
-      </div>
-    );
-  }
-
-  if (mode === 'ai' && shape && aiDifficulty !== null) {
+  if (mode === 'ai') {
     return (
       <VsAISetup
-        shape={shape}
-        difficulty={aiDifficulty}
+        progress={progress}
+        theme={theme}
         settings={settings}
         lockedName={gameName}
-        onBack={() => setAiDifficulty(null)}
-        onStart={(name) => {
+        onBack={() => setMode(null)}
+        onStart={(name, sh, d) => {
           if (!gameName) {
             onSettingsUpdate({ ...settings, playerName: name });
           }
-          onStart('ai', shape, aiDifficulty);
+          onStart('ai', sh, d);
         }}
       />
     );
@@ -643,41 +545,108 @@ export function Menu({
 }
 
 interface VsAISetupProps {
-  shape: ShapeId;
-  difficulty: Difficulty;
+  progress: Progress;
+  theme?: ThemeId;
   settings: Settings;
   lockedName: string | null;
   onBack: () => void;
-  onStart: (name: string) => void;
+  onStart: (name: string, shape: ShapeId, difficulty: Difficulty) => void;
 }
 
-function VsAISetup({
-  shape,
-  difficulty,
-  settings,
-  lockedName,
-  onBack,
-  onStart,
-}: VsAISetupProps) {
+const ALL_LEVELS: Difficulty[] = [1, 2, 3, 4, 5];
+
+// Vs-bot setup on one screen, like the website: shape tiles, a row of the five
+// bots, the chosen level, your name, Start.
+function VsAISetup({ progress, theme, settings, lockedName, onBack, onStart }: VsAISetupProps) {
   const t = useT();
+  const art = themeArt(theme);
+  const [shape, setShape] = useState<ShapeId>('triangle');
+  const [level, setLevel] = useState<Difficulty>(() => Math.min(3, Math.max(1, progress.unlocked.triangle)) as Difficulty);
+  const [hint, setHint] = useState<string | null>(null);
   const [name, setName] = useState(
     lockedName ?? (settings.playerName === DEFAULT_P1_NAME ? '' : settings.playerName),
   );
 
-  const start = () => {
-    onStart((lockedName ?? name).trim() || DEFAULT_P1_NAME);
+  const pickShape = (sh: ShapeId) => {
+    if (progress.unlocked[sh] === 0) {
+      const i = PLAYABLE_SHAPE_META.findIndex((m) => m.id === sh);
+      const prev = PLAYABLE_SHAPE_META[Math.max(0, i - 1)].id;
+      setHint(t.menu.unlockHint(t.shapes[sh], t.difficulty[2], t.shapes[prev]));
+      return;
+    }
+    setHint(null);
+    setShape(sh);
+    if (!isUnlocked(progress, sh, level)) setLevel(Math.max(1, progress.unlocked[sh]) as Difficulty);
   };
 
-  const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') start();
+  const pickLevel = (d: Difficulty) => {
+    if (!isUnlocked(progress, shape, d)) {
+      setHint(t.menu.unlockHint(t.difficulty[d], t.difficulty[(d - 1) as Difficulty], t.shapes[shape]));
+      return;
+    }
+    setHint(null);
+    setLevel(d);
   };
+
+  const start = () => onStart((lockedName ?? name).trim() || DEFAULT_P1_NAME, shape, level);
 
   return (
-    <div className="menu">
+    <div className="menu ai-setup">
       <button className="link-btn back-link" onClick={onBack}>‹ {t.common.back}</button>
-      <h2>{t.menu.whosPlaying}</h2>
-      <p className="hint">{t.menu.vsBot(t.shapes[shape], t.difficulty[difficulty])}</p>
-      <div className="hotseat-setup">
+      <h2>{t.menu.chooseShape}</h2>
+      <div className="ai-tiles ai-shape-tiles" role="radiogroup" aria-label={t.menu.chooseShape}>
+        {PLAYABLE_SHAPE_META.map((m) => {
+          const locked = progress.unlocked[m.id] === 0;
+          const ShapeIcon = SHAPE_ICON[m.id];
+          return (
+            <button
+              key={m.id}
+              type="button"
+              role="radio"
+              aria-checked={shape === m.id}
+              aria-disabled={locked}
+              className={`ai-tile ${shape === m.id ? 'selected' : ''} ${locked ? 'locked' : ''}`}
+              onClick={() => pickShape(m.id)}
+            >
+              <span className="ai-tile-icon" aria-hidden="true">
+                {art.shapeIcons ? <img src={art.shapeIcons[m.id]} alt="" /> : <ShapeIcon />}
+              </span>
+              <span className="ai-tile-title">{t.shapes[m.id]}</span>
+              <span className="ai-tile-sub">{locked ? `🔒 ${t.common.locked}` : t.menu.dots(m.dots)}</span>
+            </button>
+          );
+        })}
+      </div>
+      <h2>{t.menu.chooseDifficulty}</h2>
+      <div className="ai-tiles ai-bot-tiles" role="radiogroup" aria-label={t.menu.chooseDifficulty}>
+        {ALL_LEVELS.map((d) => {
+          const locked = !isUnlocked(progress, shape, d);
+          return (
+            <button
+              key={d}
+              type="button"
+              role="radio"
+              aria-checked={level === d}
+              aria-disabled={locked}
+              aria-label={`${t.menu.level(d)} · ${t.difficulty[d]}${locked ? ` (${t.common.locked})` : ''}`}
+              className={`ai-tile ai-bot-tile ${level === d ? 'selected' : ''} ${locked ? 'locked' : ''}`}
+              onClick={() => pickLevel(d)}
+            >
+              <span className="ai-tile-icon" aria-hidden="true">
+                <AIAvatar level={d} theme={theme} />
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {hint ? (
+        <p className="hint unlock-hint ai-level-hint" role="status">{hint}</p>
+      ) : (
+        <p className="ai-level-line">
+          {t.menu.level(level)} · {t.difficulty[level]}
+        </p>
+      )}
+      <div className="hotseat-setup ai-name-card">
         <label className="hotseat-name">
           <span className="hotseat-name-label">
             <span className="dot-swatch dot-swatch-p1" data-swap="0" aria-hidden="true" />
@@ -688,19 +657,18 @@ function VsAISetup({
             className="settings-input"
             value={lockedName ?? name}
             onChange={(e) => !lockedName && setName(e.target.value)}
-            onKeyDown={onKey}
+            onKeyDown={(e) => e.key === 'Enter' && start()}
             maxLength={20}
             placeholder={t.menu.player1Placeholder}
-            autoFocus={!lockedName}
             readOnly={!!lockedName}
             aria-readonly={!!lockedName}
           />
         </label>
         {lockedName && <p className="settings-hint">{t.menu.signedInAs(lockedName)}</p>}
-        <button className="hotseat-start" onClick={start}>
-          {t.menu.startGame}
-        </button>
       </div>
+      <button className="hotseat-start ai-start" onClick={start}>
+        {t.menu.startGame}
+      </button>
     </div>
   );
 }

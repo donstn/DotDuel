@@ -16,6 +16,20 @@ const FOREST := "forest-pearl"
 const DESERT := "sunset-catan"
 const NAMES := {"forest-pearl": "Forest & Pearl", "christmas": "Christmas", "sunset-catan": "Desert Sunset"}
 const ART_DIRS := {"christmas": "christmas/", "sunset-catan": "desert-sunset/"}
+## Painted plates whose geometry differs from Forest & Pearl's (UI.MENU_BTN …):
+## file → [width, height, capLeft, capRight] in the theme's own pixels.
+const PLATES := {"sunset-catan": {
+	"menu-button.webp": [1118, 187, 200, 199],
+	"primary-button.webp": [1117, 187, 338, 349],
+	"pill-button.webp": [460, 138, 103, 104],
+	"title-banner.webp": [920, 140, 111, 108],
+	"danger-pill.webp": [290, 87, 61, 62],
+}}
+## Card frame: [corner px, height px] of the painted frame (Forest: 48 of 371).
+const FRAMES := {"sunset-catan": [112.0, 635.0]}
+## Header sign: [aspect, text box left/right, top, bottom as fractions].
+const SIGNS := {"sunset-catan": [1081.0 / 601.0, 0.07, 0.61, 0.09]}
+const FOREST_SIGN := [987.0 / 456.0, 0.09, 0.6, 0.085]
 
 var id := FOREST
 
@@ -93,6 +107,9 @@ func _palette() -> void:
 		pending_col = Color("9fd8ff")
 		dot_scale = 1.31
 		felt_tint = Color(2.1, 2.3, 2.0)
+		UI.ACCENT = Color("7bdb95")
+		UI.TEXT = Color("eaf3e3")
+		UI.TEXT_DIM = Color("b3c4b6")
 		holes = GREEN_HOLES
 		rim_light = Color(0.75, 0.9, 0.6, 0.35)
 	elif id == DESERT:
@@ -102,6 +119,9 @@ func _palette() -> void:
 		pending_col = UI.GOLD
 		dot_scale = 1.0
 		felt_tint = Color(1.15, 1.1, 1.05)
+		UI.ACCENT = Color("e0a050")
+		UI.TEXT = Color("fff3e0")
+		UI.TEXT_DIM = Color("cbb8a2")
 		holes = [Color(1.0, 0.82, 0.62, 0.14), Color(0.09, 0.05, 0.025), Color(0.2, 0.12, 0.07)]
 		rim_light = Color(1.0, 0.82, 0.6, 0.3)
 	else:
@@ -111,8 +131,37 @@ func _palette() -> void:
 		pending_col = UI.GOLD
 		dot_scale = 1.0
 		felt_tint = Color(2.1, 2.3, 2.0)
+		UI.ACCENT = Color("7bdb95")
+		UI.TEXT = Color("eaf3e3")
+		UI.TEXT_DIM = Color("b3c4b6")
 		holes = GREEN_HOLES
 		rim_light = Color(0.75, 0.9, 0.6, 0.35)
+
+
+## Desert Sunset: the code-drawn UI greens (panels, selected tiles, borders)
+## turned into the matching warm browns. Other themes keep them as they are.
+func tone(c: Color) -> Color:
+	if id != DESERT or c.g <= c.r:
+		return c
+	return Color(c.g, (c.r + c.g) * 0.42, minf(c.r, c.b) * 0.8, c.a)
+
+
+## A plate spec ([file, w, h, capL, capR]) with the theme's own geometry.
+func plate(spec: Array) -> Array:
+	if PLATES.has(id) and PLATES[id].has(spec[0]):
+		return [spec[0]] + PLATES[id][spec[0]]
+	return spec
+
+
+## Height to resample the card frame to so its corners match Forest's size at `h`.
+func frame_h(h: int) -> int:
+	if not FRAMES.has(id):
+		return h
+	return int(round(h * (48.0 / 371.0) / (FRAMES[id][0] / FRAMES[id][1])))
+
+
+func sign_geo() -> Array:
+	return SIGNS.get(id, FOREST_SIGN)
 
 
 ## Art path for the current theme: the theme's own copy when one exists.

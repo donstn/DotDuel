@@ -147,3 +147,26 @@ Claude: `stone-frame:nine` (nine-slice, fits all three board shapes).
 - Cream ball looks grey or dark: "The right ball must be bright parchment cream, clearly lighter."
 - Cords curved or horizontal: "Each cord is perfectly straight and vertical, standing upright in one row."
 - Magenta reflected in the pieces: "No magenta reflections in the objects."
+
+---
+
+## Chrome (2026-11-21)
+
+Sheets in `art-src/desert-sunset/`: `header-sheet.jpg`, `buttons-sheet.jpg`,
+`boxes-sheet.jpg` (Gemini), `controls-sheet-gpt.png` (GPT, out of Gemini
+credits), `particles-sheet.png`. The prompts (A header sign, B buttons, C boxes,
+D small controls, E shape icons, F particles) share one style block: carved
+sandstone + dark walnut, terracotta and cream cabochons, palette #9c3a14 /
+#c25527 / #e07a3f, #e8d4a6 / #f4e4bc / #fffaf0, amber #e0a050, umber
+#3a2418 → #0d0604, sun-ray carvings.
+
+Fix-ups done in processing, so redo them if a sheet is regenerated:
+- GPT controls: rims were more golden than Gemini's → sharp
+  `modulate({ saturation: 0.72, brightness: 0.93 })` on every piece but the knob.
+- Boxes sheet split by hand (objects too close for process-art). The speech
+  bubble is the dark scroll tile + the tail cut from the light bubble, tail at
+  the bottom left (the light bubble's centre was too light for cream text).
+- Spark / ember particles are drawn in code (soft radial glows): the painted
+  ones kept a purple magenta fringe. Dust recoloured cream.
+- Shape icons are built from `dot-p1/p2.webp` (GPT's striped balls did not
+  match the board). `shape-icons-gpt-unused.png` is kept for reference.

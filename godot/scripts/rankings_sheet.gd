@@ -66,7 +66,7 @@ func _pills(parent: Control, items: Array, active: String, on_pick: Callable) ->
 		if it[0] == active:
 			b.add_theme_color_override("font_color", UI.ACCENT)
 			var sb := StyleBoxFlat.new()
-			sb.bg_color = Color(0.08, 0.25, 0.14, 0.95)
+			sb.bg_color = Look.tone(Color(0.08, 0.25, 0.14, 0.95))
 			sb.border_color = UI.ACCENT
 			sb.set_border_width_all(2)
 			sb.set_corner_radius_all(16)

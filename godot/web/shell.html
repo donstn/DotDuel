@@ -252,9 +252,18 @@ const engine = new Engine(GODOT_CONFIG);
 		},
 	}).then(() => {
 		setProgress(1);
-		clearInterval(tipTimer);
-		loader.classList.add('done');
-		setTimeout(() => loader.remove(), 600);
+		// Keep the loader up until the game has built its first screen
+		// (sign-in and profile restored), so the menu appears once, complete.
+		let hidden = false;
+		const hide = () => {
+			if (hidden) return;
+			hidden = true;
+			clearInterval(tipTimer);
+			loader.classList.add('done');
+			setTimeout(() => loader.remove(), 600);
+		};
+		window.ddBooted = hide;
+		setTimeout(hide, 8000);
 	}, fail);
 }());
 </script>

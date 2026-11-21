@@ -255,6 +255,14 @@ export const en = {
   },
 
   // Settings popover.
+  social: {
+    communityH: 'Community',
+    communityHint: 'News, tips and other players to challenge.',
+    discord: 'Join us on Discord',
+    facebook: 'Follow us on Facebook',
+    tiktok: 'Follow us on TikTok',
+    newWindow: '(opens in a new window)',
+  },
   settings: {
     aria: 'Settings',
     close: 'Close settings',

@@ -483,7 +483,7 @@ export const en = {
     streakEmpty: 'Finish an online game or today’s puzzle to start a streak.',
     currentStreak: 'Current streak',
     longest: 'Longest',
-    dayN: (n: number) => `Day ${n}`,
+    dayN: (n: number) => `${n} ${n === 1 ? 'day' : 'days'}`,
     streakHint: 'Your streak grows each day you finish an online game or the daily puzzle (UTC days). Miss a day and it resets.',
     offlineHistoryH: (name: string) => `Offline history — “${name}”`,
     offlineEmpty:
@@ -684,8 +684,8 @@ export const en = {
     bestToday: 'Best today:',
     attemptOf: (n: number) => ` · attempt ${n}/3`,
     streakLabel: 'Streak:',
-    dayN: (n: number) => `Day ${n}`,
-    bestDay: (n: number) => `(best: Day ${n})`,
+    dayN: (n: number) => `${n} ${n === 1 ? 'day' : 'days'}`,
+    bestDay: (n: number) => `(best: ${n} ${n === 1 ? 'day' : 'days'})`,
     attemptsLeft: (n: number) =>
       `${n} attempt${n === 1 ? '' : 's'} left today. Your best counts on the leaderboard.`,
     allAttemptsUsed: 'All 3 attempts used. Come back tomorrow at midnight UTC.',

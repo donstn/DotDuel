@@ -1043,7 +1043,7 @@ export const cs: Messages = {
     streakEmpty: 'Dokonči online hru nebo dnešní hádanku a začni sérii.',
     currentStreak: 'Aktuální série',
     longest: 'Nejdelší',
-    dayN: (n: number) => `${n}. den`,
+    dayN: (n: number) => `${n} ${csDays(n)}`,
     streakHint: 'Série roste každý den, kdy dokončíš online hru nebo denní hádanku (dny v UTC). Vynech den a vynuluje se.',
     offlineHistoryH: (name: string) => `Offline historie — „${name}“`,
     offlineEmpty:
@@ -1237,8 +1237,8 @@ export const cs: Messages = {
     bestToday: 'Nejlepší dnes:',
     attemptOf: (n: number) => ` · pokus ${n}/3`,
     streakLabel: 'Série:',
-    dayN: (n: number) => `${n}. den`,
-    bestDay: (n: number) => `(nejlepší: ${n}. den)`,
+    dayN: (n: number) => `${n} ${csDays(n)}`,
+    bestDay: (n: number) => `(nejlepší: ${n} ${csDays(n)})`,
     attemptsLeft: (n: number) =>
       `Dnes ${plural(n, 'ti zbývá', 'ti zbývají', 'ti zbývá')} ${n} ${pokusy(n)}. Na žebříčku se počítá tvůj nejlepší.`,
     allAttemptsUsed: 'Všechny 3 pokusy vyčerpány. Vrať se zítra o půlnoci (UTC).',

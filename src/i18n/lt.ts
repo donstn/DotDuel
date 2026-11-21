@@ -8,6 +8,7 @@
  */
 import type { Messages } from './en';
 const ltDaysAcc = (n: number) => (n % 10 === 1 && n % 100 !== 11 ? 'dieną' : n % 10 >= 2 && (n % 100 < 10 || n % 100 >= 20) ? 'dienas' : 'dienų');
+const ltDaysNom = (n: number) => (n % 10 === 1 && n % 100 !== 11 ? 'diena' : n % 10 >= 2 && (n % 100 < 10 || n % 100 >= 20) ? 'dienos' : 'dienų');
 const ltDaysGen = (n: number) => (n % 10 === 1 && n % 100 !== 11 ? 'dienos' : 'dienų');
 
 /** Pick the Lithuanian form for a count: one (1,21…), few (2–9,22–29…), many (0,10–20…). */
@@ -1045,7 +1046,7 @@ export const lt: Messages = {
     streakEmpty: 'Sužaiskite žaidimą internetu arba šiandienos galvosūkį, kad pradėtumėte seriją.',
     currentStreak: 'Dabartinė serija',
     longest: 'Ilgiausia',
-    dayN: (n: number) => `${n} d.`,
+    dayN: (n: number) => `${n} ${ltDaysNom(n)}`,
     streakHint: 'Serija auga kiekvieną dieną, kai sužaidžiate žaidimą internetu ar dienos galvosūkį (UTC laiku). Praleidus dieną, ji atsistato.',
     offlineHistoryH: (name: string) => `Žaidimų istorija — „${name}“`,
     offlineEmpty:
@@ -1239,8 +1240,8 @@ export const lt: Messages = {
     bestToday: 'Šiandienos rekordas:',
     attemptOf: (n: number) => ` · bandymas ${n}/3`,
     streakLabel: 'Serija:',
-    dayN: (n: number) => `${n} d.`,
-    bestDay: (n: number) => `(rekordas: ${n} d.)`,
+    dayN: (n: number) => `${n} ${ltDaysNom(n)}`,
+    bestDay: (n: number) => `(rekordas: ${n} ${ltDaysNom(n)})`,
     attemptsLeft: (n: number) =>
       `Šiandien liko ${n} ${bandymai(n)}. Į lyderių lentelę įskaitomas geriausias rezultatas.`,
     allAttemptsUsed: 'Išnaudoti visi 3 bandymai. Grįžkite rytoj vidurnaktį (UTC).',

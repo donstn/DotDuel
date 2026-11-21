@@ -1044,7 +1044,7 @@ export const pl: Messages = {
     streakEmpty: 'Ukończ grę online lub dzisiejszą łamigłówkę, aby rozpocząć passę.',
     currentStreak: 'Aktualna passa',
     longest: 'Najdłuższa',
-    dayN: (n: number) => `Dzień ${n}`,
+    dayN: (n: number) => `${n} ${n === 1 ? 'dzień' : 'dni'}`,
     streakHint: 'Passa rośnie każdego dnia, w którym kończysz grę online lub codzienną łamigłówkę (dni UTC). Opuść dzień, a się zeruje.',
     offlineHistoryH: (name: string) => `Historia offline — „${name}”`,
     offlineEmpty:
@@ -1238,8 +1238,8 @@ export const pl: Messages = {
     bestToday: 'Najlepszy dziś:',
     attemptOf: (n: number) => ` · próba ${n}/3`,
     streakLabel: 'Passa:',
-    dayN: (n: number) => `Dzień ${n}`,
-    bestDay: (n: number) => `(najlepszy: Dzień ${n})`,
+    dayN: (n: number) => `${n} ${n === 1 ? 'dzień' : 'dni'}`,
+    bestDay: (n: number) => `(najlepszy: ${n} ${n === 1 ? 'dzień' : 'dni'})`,
     attemptsLeft: (n: number) =>
       `${plural(n, 'Pozostała', 'Pozostały', 'Pozostało')} dziś ${n} ${proby(n)}. Na tabeli wyników liczy się Twój najlepszy.`,
     allAttemptsUsed: 'Wykorzystano wszystkie 3 próby. Wróć jutro o północy (UTC).',

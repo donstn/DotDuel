@@ -1032,7 +1032,7 @@ export const es: Messages = {
     streakEmpty: 'Termina una partida online o el puzle de hoy para iniciar una racha.',
     currentStreak: 'Racha actual',
     longest: 'Más larga',
-    dayN: (n: number) => `Día ${n}`,
+    dayN: (n: number) => `${n} ${n === 1 ? 'día' : 'días'}`,
     streakHint: 'La racha suma cada día en que terminas una partida online o el puzle diario (días UTC). Si fallas un día, se reinicia.',
     offlineHistoryH: (name: string) => `Historial sin conexión — «${name}»`,
     offlineEmpty:
@@ -1226,8 +1226,8 @@ export const es: Messages = {
     bestToday: 'Mejor de hoy:',
     attemptOf: (n: number) => ` · intento ${n}/3`,
     streakLabel: 'Racha:',
-    dayN: (n: number) => `Día ${n}`,
-    bestDay: (n: number) => `(mejor: Día ${n})`,
+    dayN: (n: number) => `${n} ${n === 1 ? 'día' : 'días'}`,
+    bestDay: (n: number) => `(mejor: ${n} ${n === 1 ? 'día' : 'días'})`,
     attemptsLeft: (n: number) =>
       `Te queda${n === 1 ? '' : 'n'} ${n} intento${n === 1 ? '' : 's'} hoy. Tu mejor marca cuenta en la clasificación.`,
     allAttemptsUsed: 'Has usado los 3 intentos. Vuelve mañana a medianoche (UTC).',

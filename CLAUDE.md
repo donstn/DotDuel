@@ -148,6 +148,8 @@ Live and ranked on www.dotduel.com. Arc since 0.3.0.0: **ads** (AdSense web + Ad
 
 ## Backlog / deferred — don't start without explicit ask
 
+- **Desert pyramid board (requested 2026-11-22)** — in Desert Sunset the Triangle board points up and is a stepped sandstone pyramid (one dot row per step, golden capstone), like Christmas's tree board. Gemini prompt + code plan: `docs/art/sheet-desert-sunset.md` prompt 8. Waiting on the art.
+
 - **Endgame claim-out (tester feedback 2026-11-22)** — once all dots are coloured only claims remain, but pending lines are invisible (except vs L1–L3 Triangle), so players tap dots at random to finish; no strategy left and hard on small screens. Options discussed: show pending lines once dots run out (changes the "invisible by design" rule — user's call), "Finish automatically" (alternate biggest-first + tally), or a claim list. Parked by user; the tutorial fix (coach bubble above the board) may already reduce it.
 - **Story / characters / progression (tester feedback 2026-11-22)** — "give a carrot". Ideas offered (not puzzle/rankings): bot campaign map with named bots per theme world + short banter; per-bot rule quirks as level modifiers; 1–3 stars per level unlocking cosmetics; bot collection screen with silhouettes; painted story cards between regions; boss rematch per region. Recommended start: campaign map + stars. Ask web/app/both before building.
 

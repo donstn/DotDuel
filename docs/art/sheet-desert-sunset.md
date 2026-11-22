@@ -170,3 +170,34 @@ Fix-ups done in processing, so redo them if a sheet is regenerated:
   ones kept a purple magenta fringe. Dust recoloured cream.
 - Shape icons are built from `dot-p1/p2.webp` (GPT's striped balls did not
   match the board). `shape-icons-gpt-unused.png` is kept for reference.
+
+---
+
+## Prompt 8 (backlog) — The pyramid that IS the Triangle board → `pyramid-board.png`
+
+Like Christmas's tree (`sheet-christmas.md` prompt 8): in Desert Sunset the
+Triangle board would point UP and be a stepped sandstone pyramid, one dot row
+per step (8 steps for Triangle rows 1→8). Attach `public/art/desert-sunset/felt-base.webp`
+and `dot-p1.webp` as style references. Save to `art-src/desert-sunset/`.
+
+```
+Premium painted 2D mobile-game art, in the visual register of high-end mobile puzzle games. Rich, soft painterly shading, slightly stylized, not photorealistic. No text, numbers, letters, hieroglyphs, watermark or logo anywhere.
+
+ONE big, perfectly SYMMETRICAL stepped pyramid of warm sandstone, seen straight from the front at eye level (no perspective, no visible side faces), that will be used as a game board: round game pieces will later be placed in rows on its steps.
+
+The pyramid is ONE solid TRIANGLE made of exactly EIGHT horizontal steps, stacked like a staircase on both sides: the bottom step is the widest, each step above is narrower by the same amount on the left and on the right, and the top step is a small flat block about one eighth of the bottom step's width. All eight steps have the SAME height. The pyramid is about as wide at the bottom as it is tall. The front face of every step is a smooth, plain band of sandstone with only faint wind-worn horizontal strata: NO doors, NO windows, NO stairs up the middle, NO carvings, NO cracks, NO holes and NO separate blocks drawn in, so pieces placed on it stay the clear centre of attention.
+
+A small polished golden capstone sits on the very top step. A little drift of fine sand at the foot of the pyramid on both sides, low and soft.
+
+Colours: sandstone #c2875a to #9c3a14 in the shadows, step tops lit warm gold #e0a050 by a low sunset from the upper left, deep umber #2a160c in the darkest creases, capstone #f2c94c with #fff3c4 highlights, sand #d9a66b.
+
+Square composition. The pyramid fills the image from top to bottom.
+
+BACKGROUND: extremely important. Everything around the pyramid MUST be a bright, saturated, completely flat, solid magenta, hex #FF00FF. No gradient, no vignette, no shadow cast onto it, no glow, no sky, no sand on the background, no fade to white and no grey. Only pure flat magenta, because it will be cut out and replaced with transparency.
+```
+
+Claude: `pyramid-board`; replaces the board's felt and rim for Triangle in
+Desert Sunset. Code: generalise the Christmas tree mode (`tree` in
+`godot/scripts/game_view.gd`, `treeTriangle` in `src/themeArt.ts`) into an
+"apex-up board art" with per-theme metrics (size, axis X, top-dot Y,
+bottom-row Y), measured from the cut-out.

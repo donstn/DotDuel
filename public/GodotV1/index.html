@@ -216,6 +216,15 @@ html[data-theme="sunset-catan"] #loader { background-image: url(/art/desert-suns
 @media (orientation: landscape) { html[data-theme="sunset-catan"] #loader { background-image: url(/art/desert-sunset/background-landscape.webp); } }
 html[data-theme="sunset-catan"] .hole:nth-child(odd) i { background-image: url(/art/desert-sunset/dot-p1.webp); }
 html[data-theme="sunset-catan"] .hole:nth-child(even) i { background-image: url(/art/desert-sunset/dot-p2.webp); }
+/* Desert Sunset: warm umber and sandstone instead of the forest greens, embers for fireflies. */
+html[data-theme="sunset-catan"] body, html[data-theme="sunset-catan"] #loader { background-color: #2a160c; }
+html[data-theme="sunset-catan"] #loader::before { background: radial-gradient(ellipse at 50% 45%, rgba(30,12,4,.12) 0%, rgba(30,12,4,.5) 70%, rgba(30,12,4,.78) 100%); }
+html[data-theme="sunset-catan"] .tag { color: rgba(255,243,224,.94); }
+html[data-theme="sunset-catan"] .track { background: rgba(38,18,8,.85); border-color: rgba(224,160,80,.45); }
+html[data-theme="sunset-catan"] .hole { background: radial-gradient(circle at 50% 62%, #4a2a16 0 55%, #170a04 70%); }
+html[data-theme="sunset-catan"] .tip { color: #f4e4bc; }
+html[data-theme="sunset-catan"] .tip b { color: #e0a050; }
+html[data-theme="sunset-catan"] .fly { background: #ffd08a; box-shadow: 0 0 9px 3px rgba(255,150,60,.5); }
 html[data-theme="christmas"] .fly { background: #ffffff; box-shadow: 0 0 6px 2px rgba(255,255,255,.5); animation-name: snow; }
 @keyframes snow {
 	0% { transform: translate(0, -40vh); opacity: 0; }
@@ -302,6 +311,7 @@ const LOADER = (function () {
 	const theme = saved === 'sunset-catan' ? 'sunset-catan' : xmasOffered && (saved === 'christmas' || saved === '') ? 'christmas' : 'forest-pearl';
 	document.documentElement.lang = lang;
 	document.documentElement.dataset.theme = theme;
+	if (theme === 'sunset-catan') document.querySelector('meta[name=theme-color]').content = '#2a160c';
 	document.getElementById('sign').src = '/art/' + (theme === 'sunset-catan' ? 'desert-sunset' : theme) + '/header-combined.webp';
 	const t = L10N[lang];
 	document.getElementById('tag').innerHTML = t.tag;

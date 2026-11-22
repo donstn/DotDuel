@@ -100,9 +100,18 @@ func _on_skin() -> void:
 
 
 ## Rebuild the current screen (language or theme changed).
+## Every screen built from theme art is rebuilt, not just the home menu (a
+## theme switch from a sub-menu left its buttons in the old theme). Games
+## restyle themselves (GameView._on_theme); matchmaking screens are left alone.
 func _refresh() -> void:
 	if where == "menu":
 		show_menu()
+	elif where.begins_with("menu_"):
+		menu_ui.show(menu_ui.category)
+	elif where == "setup":
+		show_setup()
+	elif where == "online":
+		online_ui.show()
 
 
 ## Background art for the window's orientation; the campfire follows the
@@ -956,7 +965,7 @@ func show_language_picker() -> void:
 func show_theme_picker() -> void:
 	var body := open_overlay(Lang.t("choose_theme"))
 	for id in Look.available():
-		var tagline := Lang.t("theme_tagline_christmas" if id == Look.XMAS else "theme_tagline_forest")
+		var tagline := Lang.t({Look.XMAS: "theme_tagline_christmas", Look.DESERT: "theme_tagline_desert"}.get(id, "theme_tagline_forest"))
 		var b := _choice(Look.NAMES[id], tagline, id == Look.id)
 		b.pressed.connect(func():
 			close_overlay()
@@ -1700,6 +1709,16 @@ func _autotest() -> void:
 	await get_tree().create_timer(0.4).timeout
 	await _shot("1h-h2h")
 	close_overlay()
+	# Theme switched twice from a sub-menu: its buttons must follow the theme.
+	var was := Look.id
+	menu_ui.show("single")
+	Look.set_id(Look.DESERT)
+	Look.set_id(Look.FOREST)
+	Look.set_id(Look.DESERT)
+	await get_tree().create_timer(0.6).timeout
+	await _shot("1u-theme-switch-submenu")
+	print("THEME SWITCH: ", "OK" if where == "menu_single" and Look.id == Look.DESERT else "FAIL")
+	Look.set_id(was)
 	hot_seat = false
 	level = 4
 	show_setup()

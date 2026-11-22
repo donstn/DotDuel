@@ -212,6 +212,10 @@ html[data-theme="christmas"] #loader { background-image: url(/art/christmas/back
 @media (orientation: landscape) { html[data-theme="christmas"] #loader { background-image: url(/art/christmas/background-landscape.webp); } }
 html[data-theme="christmas"] .hole:nth-child(odd) i { background-image: url(/art/christmas/dot-p1.webp); }
 html[data-theme="christmas"] .hole:nth-child(even) i { background-image: url(/art/christmas/dot-p2.webp); }
+html[data-theme="sunset-catan"] #loader { background-image: url(/art/desert-sunset/background-portrait.webp); }
+@media (orientation: landscape) { html[data-theme="sunset-catan"] #loader { background-image: url(/art/desert-sunset/background-landscape.webp); } }
+html[data-theme="sunset-catan"] .hole:nth-child(odd) i { background-image: url(/art/desert-sunset/dot-p1.webp); }
+html[data-theme="sunset-catan"] .hole:nth-child(even) i { background-image: url(/art/desert-sunset/dot-p2.webp); }
 html[data-theme="christmas"] .fly { background: #ffffff; box-shadow: 0 0 6px 2px rgba(255,255,255,.5); animation-name: snow; }
 @keyframes snow {
 	0% { transform: translate(0, -40vh); opacity: 0; }
@@ -295,10 +299,10 @@ const LOADER = (function () {
 	const now = new Date(), md = (now.getMonth() + 1) * 100 + now.getDate();
 	const xmasOffered = md >= 1117 || md <= 115 || get('dotduel:theme-preview:v1') === 'christmas';
 	const saved = get('dotduel:theme:v1');
-	const theme = xmasOffered && (saved === 'christmas' || saved === '') ? 'christmas' : 'forest-pearl';
+	const theme = saved === 'sunset-catan' ? 'sunset-catan' : xmasOffered && (saved === 'christmas' || saved === '') ? 'christmas' : 'forest-pearl';
 	document.documentElement.lang = lang;
 	document.documentElement.dataset.theme = theme;
-	document.getElementById('sign').src = '/art/' + theme + '/header-combined.webp';
+	document.getElementById('sign').src = '/art/' + (theme === 'sunset-catan' ? 'desert-sunset' : theme) + '/header-combined.webp';
 	const t = L10N[lang];
 	document.getElementById('tag').innerHTML = t.tag;
 	document.getElementById('status').textContent = t.loading;
@@ -307,7 +311,7 @@ const LOADER = (function () {
 </script>
 <script src="index.js"></script>
 <script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":true,"fileSizes":{"index.pck":13221096,"index.wasm":39513091},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":true,"fileSizes":{"index.pck":13221016,"index.wasm":39513091},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 

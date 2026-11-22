@@ -47,6 +47,7 @@ var b: BoardDef
 var s: GState
 var busy := true
 var unit := 80.0
+var _board_top := 0.0  # screen y the board (and the lesson arrow) may not cross
 var r := 28.0
 var hover_dot := -1
 var aim_dot := -1
@@ -61,7 +62,6 @@ var holder: Control
 var board: Node2D
 var holes: Node2D
 ## Bottom edge of the board (incl. its rim) in this view's coordinates.
-var _board_bottom := 0.0
 var pending_layer: Node2D
 var strike_layer: Node2D
 var dot_layer: Node2D
@@ -438,7 +438,10 @@ func _on_theme() -> void:
 func _layout() -> void:
 	if b == null or size.x <= 0:
 		return
-	var top := 250.0 if tree else 330.0
+	# Everything above the board: the score cards, plus the lesson bubble.
+	var cards_bottom := _place_coach_bubble() if coach else CARDS_BOTTOM
+	_board_top = cards_bottom
+	var top := cards_bottom - 72.0 if tree else cards_bottom + 8.0
 	var area := Rect2(24, top, size.x - 48, size.y - top - 40)
 	var bw := b.bounds.size.x + 1.4
 	var bh := b.bounds.size.y + 1.4
@@ -469,16 +472,15 @@ func _layout() -> void:
 		# Lift into the free space under the cards only as far as the bauble allows.
 		var overflow := tree_top + reach * unit - floor_y
 		if overflow > 0:
-			tree_top -= minf(overflow, tree_top + apex * unit - CARDS_BOTTOM)
-		if tree_top + apex * unit < CARDS_BOTTOM:
-			tree_top = CARDS_BOTTOM - apex * unit
-		if tree_top + reach * unit > floor_y and floor_y > CARDS_BOTTOM:
+			tree_top -= minf(overflow, tree_top + apex * unit - cards_bottom)
+		if tree_top + apex * unit < cards_bottom:
+			tree_top = cards_bottom - apex * unit
+		if tree_top + reach * unit > floor_y and floor_y > cards_bottom:
 			# Still too tall: shrink, keeping the bauble just under the cards.
-			unit = maxf(minf(unit, (floor_y - CARDS_BOTTOM) / (reach - apex)), unit * 0.6)
-			tree_top = CARDS_BOTTOM - apex * unit
+			unit = maxf(minf(unit, (floor_y - cards_bottom) / (reach - apex)), unit * 0.6)
+			tree_top = cards_bottom - apex * unit
 		cy = tree_top + bh / 2.0 * unit
 	r = unit * 0.36
-	_board_bottom = cy + bh / 2.0 * unit
 	board.position = Vector2(area.get_center().x, cy) - Vector2(0, shift * unit)
 	_rebuild_board()
 
@@ -858,9 +860,9 @@ func _build_coach_bubble() -> void:
 	frame.content_margin_left = 40
 	frame.content_margin_right = 40
 	card.add_theme_stylebox_override("panel", frame)
-	# Placed just under the board by _place_coach_card (falls back to the bottom).
+	# Above the board, not below it: at the bottom the player's hands hid it
+	# (tester, 2026-11-22). _layout sizes and places it.
 	card.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	_offsets(card, 24, 0, -24, 0)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(card)
 	var vb := VBoxContainer.new()
@@ -890,6 +892,31 @@ func _build_coach_bubble() -> void:
 	vb.add_child(_coach_text)
 	_coach_text.set_meta("card", card)
 	_coach_text.set_meta("you", you)
+	_coach_text.set_meta("head", head)
+
+
+const COACH_KEYS := ["corner", "finish", "double", "claim", "find", "botTook", "free", "finishMiss",
+	"findHelp", "findMiss", "cornerDone", "finishDone", "doubleDone", "claimDone", "findDone",
+	"claimEnd", "idleHint", "claimHint"]
+
+
+## Places the lesson bubble under the score cards at the height of its longest
+## message, so the board below never moves when the text changes. Returns the
+## y where the board may start.
+func _place_coach_bubble() -> float:
+	var card: PanelContainer = _coach_text.get_meta("card")
+	var sb := card.get_theme_stylebox("panel")
+	var w := size.x - 48.0 - sb.get_margin(SIDE_LEFT) - sb.get_margin(SIDE_RIGHT)
+	var f := UI.font(false)
+	var flags := TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
+	var text_h := 0.0
+	for k in COACH_KEYS:
+		text_h = maxf(text_h, f.get_multiline_string_size(Lang.a("coach." + k, [99]), HORIZONTAL_ALIGNMENT_LEFT, w, 34, -1, flags).y)
+	var head_h := (_coach_text.get_meta("head") as Control).get_combined_minimum_size().y
+	var h := ceilf(sb.get_margin(SIDE_TOP) + sb.get_margin(SIDE_BOTTOM) + head_h + 8.0 + text_h + 8.0)
+	var y := CARDS_BOTTOM + 6.0
+	_offsets(card, 24, y, -24, y + h)
+	return y + h + 18.0
 
 
 func _sync_coach(delta: float) -> void:
@@ -900,16 +927,6 @@ func _sync_coach(delta: float) -> void:
 	var card: Control = _coach_text.get_meta("card")
 	card.visible = t != "" and not s.finished
 	(_coach_text.get_meta("you") as Control).visible = coach.stage == "corner"
-	_place_coach_card(card)
-
-
-## The coach card sits right under the board, close to the hand it explains;
-## if it would run off the screen it rises to stay fully visible.
-func _place_coach_card(card: Control) -> void:
-	var h := card.get_combined_minimum_size().y
-	var y := minf(_board_bottom + 16.0, size.y - 24.0 - h)
-	card.offset_top = y
-	card.offset_bottom = y + h
 
 
 ## Lesson marks — static, except the "tap here" ring, which breathes (the
@@ -937,7 +954,71 @@ func _draw_coach(n: Node2D) -> void:
 		n.draw_string(f, at, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, UI.GOLD)
 	if m.has("pointer"):
 		var k := 0.5 + 0.5 * sin(_time * 5.0)
-		n.draw_arc(px(m.pointer), r * (1.45 + 0.25 * k), 0, TAU, 48, Color(UI.GOLD, 0.55 + 0.4 * k), r * 0.14, true)
+		var ring_at: Vector2 = _tour_point(m.tour) if m.has("tour") and m.tour.size() > 1 else px(m.pointer)
+		n.draw_arc(ring_at, r * (1.45 + 0.25 * k), 0, TAU, 48, Color(UI.GOLD, 0.55 + 0.4 * k), r * 0.14, true)
+		var labelled: bool = m.has("label") and m.label[0] == m.pointer
+		if m.has("tour") and m.tour.size() > 1:
+			_draw_coach_arrow(n, _tour_point(m.tour), _arrow_dir(m.tour, false))
+		else:
+			_draw_coach_arrow(n, px(m.pointer), _arrow_dir([m.pointer], labelled))
+
+
+## Claiming: the arrow glides from dot to dot of the line (a pause on each)
+## until the player taps — any of them takes the line.
+func _tour_point(tour: Array) -> Vector2:
+	const HOLD := 0.7
+	const GLIDE := 0.45
+	var t := fmod(_time, (HOLD + GLIDE) * tour.size())
+	var i := int(t / (HOLD + GLIDE))
+	var k := clampf((t - i * (HOLD + GLIDE) - HOLD) / GLIDE, 0.0, 1.0)
+	k = k * k * (3.0 - 2.0 * k)
+	return px(tour[i]).lerp(px(tour[(i + 1) % tour.size()]), k)
+
+
+## Which side the arrow comes from (dot → tail): the open side of the board
+## (fewest dots covered), one side for all the dots it visits, never up into
+## the lesson bubble, never over a "+N" label on the dot.
+func _arrow_dir(dots: Array, labelled: bool) -> Vector2:
+	var reach := r * (1.85 + 3.4)
+	var best := Vector2.ZERO
+	var best_score := -INF
+	for i in 8:
+		var dir := Vector2.from_angle(i * TAU / 8.0)
+		if labelled and dir.y < -0.3:
+			continue
+		var score := 0.0
+		for d in dots:
+			var at := px(d)
+			var tail := board.position + at + dir * reach
+			if tail.x < 12.0 or tail.x > size.x - 12.0 or tail.y < _board_top + r * 1.2 or tail.y > size.y - 12.0:
+				score = -INF
+				break
+			score += dir.dot(at.normalized() if at.length() > 1.0 else Vector2.DOWN)
+		if score > best_score:
+			best_score = score
+			best = dir
+	return best
+
+
+## A wide gold arrow whose tip stops just outside the dot's "tap here" ring.
+func _draw_coach_arrow(n: Node2D, at: Vector2, best: Vector2) -> void:
+	if best == Vector2.ZERO:
+		return
+	var tip_gap := r * 1.85
+	var length := r * 3.4
+	var tip := at + best * tip_gap
+	var back := -best  # the arrow points along this
+	var side := back.orthogonal()
+	var head_len := r * 1.4
+	var head_w := r * 1.35
+	var shaft_w := r * 0.6
+	var neck := tip - back * head_len
+	var tail := tip - back * length
+	var pts := PackedVector2Array([tip, neck + side * head_w, neck + side * shaft_w, tail + side * shaft_w,
+		tail - side * shaft_w, neck - side * shaft_w, neck - side * head_w])
+	n.draw_colored_polygon(pts, UI.GOLD)
+	pts.append(tip)
+	n.draw_polyline(pts, Color(0, 0.06, 0.03, 0.9), r * 0.12, true)
 
 
 func _coach_over() -> void:

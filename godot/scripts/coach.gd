@@ -307,7 +307,8 @@ func show_waiting(s: GState) -> bool:
 
 
 ## What to mark: {spotlight: [dots], rings: [dots], bands: [lines], gap: dot,
-## label: [dot, text], pointer: dot, waiting: bool}.
+## label: [dot, text], pointer: dot, tour: [dots the arrow glides between],
+## waiting: bool}.
 func marks(s: GState, my_turn: bool) -> Dictionary:
 	var m := {}
 	if show_waiting(s):
@@ -346,6 +347,8 @@ func marks(s: GState, my_turn: bool) -> Dictionary:
 						dots.append(d)
 			if not dots.is_empty():
 				m.pointer = dots[0]
+				m.tour = dots
+				m.rings = dots
 		"find":
 			var open := scoring_dots(s)
 			if misses >= 2:
@@ -359,6 +362,14 @@ func marks(s: GState, my_turn: bool) -> Dictionary:
 					m.waiting = true
 					m.spotlight = line_dots(t.line)
 					m.pointer = t.dot
+					# Every dot that claims this line (and no other), for the arrow to visit.
+					var tour := []
+					for d in line_dots(t.line):
+						if Array(s.pending).filter(func(li): return d in b.lines[li]).size() == 1:
+							tour.append(d)
+					if tour.size() > 1:
+						m.tour = tour
+						m.rings = tour
 			elif idle:
 				m.spotlight = lines_finished_by(s, scoring_dots(s).slice(0, 1))
 				m.rings = m.spotlight

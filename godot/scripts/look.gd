@@ -51,6 +51,7 @@ var fire: Node2D
 
 
 func _ready() -> void:
+	_remember_preview()
 	var want := str(Prefs.read("theme", ""))
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--theme="):
@@ -61,6 +62,13 @@ func _ready() -> void:
 		want = XMAS
 	id = want if offered(want) else FOREST
 	_palette()
+
+
+## `?theme-preview=<id>` on the site is remembered on this device (`off`
+## clears it), the same as the React app (src/theme.ts previewTheme).
+func _remember_preview() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("(function(){try{var q=new URLSearchParams(location.search).get('theme-preview');if(q==='off')localStorage.removeItem(%s);else if(q)localStorage.setItem(%s,q)}catch(e){}})()" % [JSON.stringify(PREVIEW_KEY), JSON.stringify(PREVIEW_KEY)], true)
 
 
 func offered(t: String) -> bool:

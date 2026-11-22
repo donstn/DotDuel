@@ -102,7 +102,7 @@ export interface ThemeArt {
   /** Win celebration style: fireworks + confetti (default) or a gentle
    *  snowfall of the particle sprites only. */
   celebration?: 'fireworks' | 'snow';
-  /** Draw the Triangle board pointing UP (a tree) instead of down. Pure
+  /** Draw the Triangle board pointing UP (a tree, a pyramid) instead of down. Pure
    *  rendering: the same dots and lines, mirrored top to bottom. */
   treeTriangle?: boolean;
   /** Achievement badges: a medal frame per tier (1–5) and painted glyphs. */
@@ -360,6 +360,7 @@ ART['sunset-catan'] = {
   // game cues from src/audioDesert.ts.
   ambience: { wind: '/audio/forest-pearl/ambience-wind.mp3', birds: '/audio/desert-sunset/hawk.mp3' },
   soundSet: 'desert',
+  treeTriangle: true,
   headerSign: {
     url: `${DS}header-combined.webp`,
     width: 1081,
@@ -390,6 +391,16 @@ ART['sunset-catan'] = {
   board: {
     felt: `${DS}felt-base.webp`,
     dot: (c) => `${DS}dot-p${c}.webp`,
+    // Triangle points up on a stepped sandstone pyramid, one dot row per step
+    // (art-src/desert-sunset/pyramid-board.jpg, cut out in this PR).
+    tree: {
+      url: `${DS}pyramid-board.webp`,
+      width: 981,
+      height: 733,
+      axisX: 489,
+      topDotY: 94,
+      bottomRowY: 671,
+    },
   },
   avatars: {
     human: `${DS}avatar-human.webp`,

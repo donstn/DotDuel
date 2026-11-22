@@ -87,13 +87,15 @@ var _last_claim := 0.0
 var _resign_armed := -10.0
 var _result: Dictionary = {}
 var _toast_label: Control
-var tree := false  # Christmas Triangle: the painted tree is the board, apex up
+var tree := false  # Triangle drawn apex up on painted art (Christmas tree, Desert pyramid)
 
 # Painted Christmas board art, source pixels (src/themeArt.ts).
-const TREE_SIZE := Vector2(883, 989)
-const TREE_AXIS := 441.0
-const TREE_TOP := 231.0
-const TREE_BOTTOM := 806.0
+## Apex-up Triangle art per theme, in the art's pixels: size, centre line,
+## top dot and bottom row (same numbers as `board.tree` in src/themeArt.ts).
+const BOARD_ART := {
+	"christmas": {"file": "tree-board.webp", "size": Vector2(883, 989), "axis": 441.0, "top": 231.0, "bottom": 806.0, "overhang": 1.18},
+	"sunset-catan": {"file": "pyramid-board.webp", "size": Vector2(981, 733), "axis": 489.0, "top": 94.0, "bottom": 671.0, "overhang": 1.06},
+}
 ## Bottom edge of the score cards (row offsets 160..310, +4% active scale).
 const CARDS_BOTTOM := 322.0
 const WREATH_W := 987.0
@@ -110,7 +112,7 @@ func setup(p_shape: String, p_level: int) -> void:
 	shape = p_shape
 	level = p_level
 	b = BoardDef.get_board(shape)
-	tree = Look.xmas() and shape == "triangle"
+	tree = BOARD_ART.has(Look.id) and shape == "triangle"
 	s = GState.create(b)
 	shown_left = b.total_points
 
@@ -421,7 +423,7 @@ func _on_theme() -> void:
 	STRIKE_OUTER = Look.strike_outer
 	STRIKE_INNER = Look.strike_inner
 	WAIT_COL = Look.pending_col
-	tree = Look.xmas() and shape == "triangle"
+	tree = BOARD_ART.has(Look.id) and shape == "triangle"
 	waiting_label.add_theme_color_override("font_color", WAIT_COL)
 	for p in [1, 2]:
 		var c: Color = BRIGHT[_sk(p)]
@@ -448,12 +450,12 @@ func _layout() -> void:
 	var shift := 0.0
 	var ku := 0.0
 	if tree:
-		ku = b.bounds.size.y / (TREE_BOTTOM - TREE_TOP)
+		ku = b.bounds.size.y / (_art().bottom - _art().top)
 		# The outer branch tips may run a little past the screen edge, so the
 		# tree (and its dots) can be bigger.
-		bw = maxf(bw, TREE_SIZE.x * ku / 1.18)
-		bh = TREE_SIZE.y * ku
-		shift = -b.bounds.size.y / 2.0 + (TREE_SIZE.y / 2.0 - TREE_TOP) * ku
+		bw = maxf(bw, _art().size.x * ku / _art().overhang)
+		bh = _art().size.y * ku
+		shift = -b.bounds.size.y / 2.0 + (_art().size.y / 2.0 - _art().top) * ku
 	elif _wreath():
 		bw = b.bounds.size.x + 2.8
 		bh = b.bounds.size.y + 2.8
@@ -466,7 +468,7 @@ func _layout() -> void:
 		var floor_y := area.end.y
 		if is_instance_valid(Look.fire):
 			floor_y = Look.fire.global_position.y - global_position.y - FLAME_TOP * Look.fire.global_scale.y - 6.0
-		var apex := TREE_TOP * ku + 0.5  # tree top → top edge of the top bauble, in units
+		var apex: float = _art().top * ku + 0.5  # tree top → top edge of the top bauble, in units
 		var reach := bh / 2.0 + b.bounds.size.y / 2.0 + 0.36 - shift  # tree top → bottom of last row
 		var tree_top := cy - bh / 2.0 * unit
 		# Lift into the free space under the cards only as far as the bauble allows.
@@ -545,15 +547,19 @@ func _rebuild_board() -> void:
 	board.add_child(overlay_layer)
 
 
-## Christmas Triangle: the painted tree, its top dot and bottom row on the
+func _art() -> Dictionary:
+	return BOARD_ART[Look.id]
+
+
+## Apex-up Triangle (Christmas tree, Desert pyramid): the painted board, its top dot and bottom row on the
 ## first and last rows of dots (same fit as treeBox in src/themeArt.ts).
 func _add_tree() -> void:
 	var sp := Sprite2D.new()
-	sp.texture = UI.tex("tree-board.webp")
+	sp.texture = UI.tex(_art().file)
 	sp.centered = false
-	var k := b.bounds.size.y * unit / (TREE_BOTTOM - TREE_TOP)
-	sp.scale = Vector2(k, k) * (TREE_SIZE.x / sp.texture.get_width())
-	sp.position = Vector2(-TREE_AXIS * k, -b.bounds.size.y * unit / 2.0 - TREE_TOP * k)
+	var k: float = b.bounds.size.y * unit / (_art().bottom - _art().top)
+	sp.scale = Vector2(k, k) * (_art().size.x / sp.texture.get_width())
+	sp.position = Vector2(-_art().axis * k, -b.bounds.size.y * unit / 2.0 - _art().top * k)
 	board.add_child(sp)
 	if is_instance_valid(Look.fire):
 		_front_fire = Campfire.new()

@@ -8,6 +8,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import type { ThemeId } from './theme';
 import { themeArt } from './themeArt';
 import { playXmasSfx, startFireside } from './audioXmas';
+import { playDesertSfx } from './audioDesert';
 
 export type SfxName = 'place' | 'lineComplete' | 'claim' | 'win' | 'loss' | 'draw' | 'click';
 
@@ -176,6 +177,9 @@ export function playSfx(name: SfxName, opts?: { player?: 1 | 2; lineLength?: num
     playXmasSfx(ctx, dest, name, player, lineLength);
     return;
   }
+  if (activeTheme && themeArt(activeTheme).soundSet === 'desert' && playDesertSfx(ctx, dest, name, player, lineLength)) {
+    return;
+  }
 
   switch (name) {
     case 'place': {
@@ -240,7 +244,9 @@ async function loadAmbianceBuffers(): Promise<void> {
   // its own map, never into this theme's buffers.
   const buffers: Partial<Record<AmbianceKey, AudioBuffer>> = {};
   ambianceBuffers = buffers;
-  const entries = Object.entries(files) as [AmbianceKey, string][];
+  const entries = (Object.entries(files) as [AmbianceKey, string | undefined][]).filter(
+    (e): e is [AmbianceKey, string] => !!e[1],
+  );
   await Promise.all(
     entries.map(async ([key, url]) => {
       try {

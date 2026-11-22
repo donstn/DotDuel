@@ -10,9 +10,7 @@ const WEB_KEY := "dotduel:theme:v1"
 const PREVIEW_KEY := "dotduel:theme-preview:v1"
 const XMAS := "christmas"
 const FOREST := "forest-pearl"
-## Desert Sunset keeps the app's id so a saved choice is shared. Locked like
-## in the app: only offered with ?theme-preview=sunset-catan (or the
-## --theme-preview=sunset-catan command-line arg) until it is released.
+## Desert Sunset keeps the app's id so a saved choice is shared. Offered all year.
 const DESERT := "sunset-catan"
 const NAMES := {"forest-pearl": "Forest & Pearl", "christmas": "Christmas", "sunset-catan": "Desert Sunset"}
 const ART_DIRS := {"christmas": "christmas/", "sunset-catan": "desert-sunset/"}
@@ -51,6 +49,7 @@ var fire: Node2D
 
 
 func _ready() -> void:
+	_remember_preview()
 	var want := str(Prefs.read("theme", ""))
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--theme="):
@@ -63,11 +62,16 @@ func _ready() -> void:
 	_palette()
 
 
+## `?theme-preview=<id>` on the site is remembered on this device (`off`
+## clears it), the same as the React app (src/theme.ts previewTheme).
+func _remember_preview() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("(function(){try{var q=new URLSearchParams(location.search).get('theme-preview');if(q==='off')localStorage.removeItem(%s);else if(q)localStorage.setItem(%s,q)}catch(e){}})()" % [JSON.stringify(PREVIEW_KEY), JSON.stringify(PREVIEW_KEY)], true)
+
+
 func offered(t: String) -> bool:
-	if t == FOREST:
+	if t == FOREST or t == DESERT:
 		return true
-	if t == DESERT:
-		return Prefs.web_get(PREVIEW_KEY) == DESERT or OS.get_cmdline_user_args().has("--theme-preview=" + DESERT)
 	if t != XMAS:
 		return false
 	if Prefs.web_get(PREVIEW_KEY) == XMAS or OS.get_cmdline_user_args().has("--xmas"):

@@ -3,7 +3,9 @@ extends Node
 ## game's CC0 recordings for win / loss / forest ambience. The Christmas theme
 ## swaps in its own synthesized set, ported from src/audioXmas.ts: glass
 ## bauble taps, glockenspiel, sleigh bells, a Jingle Bells win (public-domain
-## melody) and a crackling campfire loop.
+## melody) and a crackling campfire loop. Desert Sunset has its own set too:
+## wooden marimba taps, kalimba arpeggios, a sand shaker, hand-drum stings,
+## and the CC0 wind loop with a distant hawk cry now and then.
 
 const RATE := 22050
 const XRATE := 44100
@@ -14,12 +16,18 @@ const GLOCK := [[1.0, 1.0, 1.4], [2.76, 0.32, 0.45], [5.4, 0.12, 0.18], [8.93, 0
 const TINE := [[1.0, 1.0, 1.1], [2.0, 0.18, 0.4], [3.0, 0.08, 0.25], [4.2, 0.04, 0.12]]
 const GLASS := [[1.0, 1.0, 0.38], [2.32, 0.5, 0.24], [4.25, 0.28, 0.13], [6.63, 0.12, 0.07]]
 const SLEIGH := [[1.0, 1.0, 0.16], [1.47, 0.5, 0.1], [2.13, 0.3, 0.06]]
+# Desert: marimba bar (1 : 3.9 : 9.2) and kalimba tine.
+const WOOD := [[1.0, 1.0, 0.32], [3.93, 0.28, 0.07], [9.2, 0.07, 0.025]]
+const KALIMBA := [[1.0, 1.0, 0.9], [5.4, 0.16, 0.1], [2.0, 0.08, 0.35]]
 
 var _players: Array[AudioStreamPlayer] = []
 var _next := 0
 var _cache := {}
 var _xmas := {}
+var _desert := {}
 var _ambience: AudioStreamPlayer
+var _hawk: AudioStreamPlayer
+var _hawk_timer: Timer
 ## Autotest forces silence; otherwise the two Settings switches decide.
 var muted := false
 
@@ -49,6 +57,12 @@ func _ready() -> void:
 	_ambience = AudioStreamPlayer.new()
 	_ambience.volume_db = -16.0
 	add_child(_ambience)
+	_hawk = AudioStreamPlayer.new()
+	add_child(_hawk)
+	_hawk_timer = Timer.new()
+	_hawk_timer.one_shot = true
+	_hawk_timer.timeout.connect(_on_hawk)
+	add_child(_hawk_timer)
 	_cache = _load_set("forest")
 
 
@@ -82,11 +96,10 @@ func synth_forest() -> Dictionary:
 func play(cue: String, pitch := 1.0, vol_db := 0.0) -> void:
 	if not sfx_on():
 		return
-	if Look.xmas():
-		_build_xmas()
-		if _xmas.has(cue):
-			_play_stream(_xmas[cue], pitch, vol_db)
-			return
+	var own := _theme_set()
+	if own.has(cue):
+		_play_stream(own[cue], pitch, vol_db)
+		return
 	if _cache.has(cue):
 		_play_stream(_cache[cue], pitch, vol_db)
 
@@ -101,6 +114,8 @@ func play_file(path: String, vol_db := 0.0) -> void:
 func result(kind: String) -> void:
 	if Look.xmas():
 		play("x_" + kind, 1.0, -1.0)
+	elif _is_desert():
+		play("d_" + kind, 1.0, -1.0)
 	elif kind == "loss":
 		play_file("res://assets/audio/loss-rain.mp3")
 		play("line3", 0.7, -4.0)
@@ -111,9 +126,16 @@ func result(kind: String) -> void:
 
 func ambience(on: bool) -> void:
 	_ambience.stop()
+	_hawk_timer.stop()
 	if not on or not music_on():
 		return
-	if Look.xmas():
+	if _is_desert():
+		var w: AudioStreamMP3 = load("res://assets/audio/ambience-wind.mp3")
+		w.loop = true
+		_ambience.stream = w
+		_ambience.volume_db = -12.0
+		_hawk_timer.start(randf_range(8.0, 20.0))
+	elif Look.xmas():
 		_build_xmas()
 		_ambience.stream = _xmas["fireside"]
 		_ambience.volume_db = -8.0
@@ -186,6 +208,156 @@ func _noise(dur: float, amp: float) -> AudioStreamWAV:
 		lp = lerpf(lp, randf_range(-1.0, 1.0), 0.08 + 0.3 * t)
 		out[i] = lp * sin(PI * t) * amp
 	return _wav(out)
+
+
+# ---------------------------------------------------------------- theme sets
+
+func _is_desert() -> bool:
+	return Look.id == Look.DESERT
+
+
+func _theme_set() -> Dictionary:
+	if Look.xmas():
+		_build_xmas()
+		return _xmas
+	if _is_desert():
+		if _desert.is_empty():
+			_desert = _load_set("desert")
+		return _desert
+	return {}
+
+
+## A distant hawk over the canyon every 25-60 s (follows the music switch).
+func _on_hawk() -> void:
+	if not _is_desert() or not music_on() or not _ambience.playing:
+		return
+	var cues := _theme_set()
+	if cues.has("hawk"):
+		_hawk.stream = cues["hawk"]
+		_hawk.pitch_scale = randf_range(0.94, 1.06)
+		_hawk.volume_db = randf_range(-16.0, -11.0)
+		_hawk.play()
+	_hawk_timer.start(randf_range(25.0, 60.0))
+
+
+# ---------------------------------------------------------------- Desert
+
+func synth_desert() -> Dictionary:
+	var x := {}
+	# D minor pentatonic, kalimba register.
+	var pent := []
+	for semis in [5, 8, 10, 12, 15, 17, 20, 22, 24]:
+		pent.append(_note(semis))
+	for p in [1, 2]:
+		var o := _buf(0.5)
+		_partials(o, 0.0, _note(-2) if p == 1 else _note(1), 0.55, WOOD)
+		_burst(o, 0.0, 0.01, 0.12, 1400.0, 1.5)
+		x["place%d" % p] = _wav(o, XRATE)
+	var tk := _buf(0.12)
+	_partials(tk, 0.0, 1900.0, 0.2, WOOD, 0.25)
+	_burst(tk, 0.0, 0.006, 0.12, 2600.0, 2.0)
+	x["tick"] = _wav(tk, XRATE)
+	var pend := _buf(1.0)
+	_partials(pend, 0.0, pent[4], 0.28, KALIMBA)
+	_partials(pend, 0.1, pent[6], 0.22, KALIMBA)
+	x["pending"] = _wav(pend, XRATE)
+	var cl := _buf(1.0)
+	_shaker(cl, 0.0, 0.9)
+	_partials(cl, 0.03, pent[3], 0.3, KALIMBA)
+	_partials(cl, 0.1, pent[5], 0.3, KALIMBA)
+	x["claim"] = _wav(cl, XRATE)
+	x["whoosh"] = _sand_whoosh(0.35)
+	for n in range(1, 10):
+		var count := mini(pent.size(), maxi(2, 2 + n / 2))
+		var lift := mini(n / 3, pent.size() - count)
+		var o := _buf(1.5)
+		for i in count:
+			_partials(o, i * 0.06, pent[i + lift], 0.36, KALIMBA)
+		if n >= 5:
+			_shaker(o, count * 0.06, 0.7)
+		x["line%d" % n] = _wav(o, XRATE)
+	var d4 := _note(-7)
+	var win := _buf(3.4)
+	for i in 6:
+		_drum(win, i * 0.16, 0.5 if i % 2 == 0 else 0.3, d4 if i % 2 == 0 else d4 * 1.5)
+	var up := [0, 2, 3, 4, 6, 8]
+	for i in up.size():
+		_partials(win, 0.96 + i * 0.11, pent[up[i]], 0.38, KALIMBA, 1.4)
+	_shaker(win, 0.96 + up.size() * 0.11, 1.0)
+	_partials(win, 0.96 + up.size() * 0.11, d4, 0.3, WOOD, 4.0)
+	x["d_win"] = _wav(win, XRATE)
+	var draw := _buf(2.6)
+	var dn := [3, 4, 3, 2, 3]
+	for i in dn.size():
+		_partials(draw, i * 0.2, pent[dn[i]], 0.32, KALIMBA, 1.2)
+	_drum(draw, 0.0, 0.35, d4)
+	_drum(draw, 0.8, 0.35, d4)
+	x["d_draw"] = _wav(draw, XRATE)
+	var loss := _buf(3.0)
+	var fall := [6, 4, 3, 1, 0]
+	for i in fall.size():
+		_partials(loss, i * 0.28, pent[fall[i]], 0.32 - i * 0.03, KALIMBA, 1.3)
+	_drum(loss, 1.4, 0.45, d4 * 0.75)
+	x["d_loss"] = _wav(loss, XRATE)
+	x["hawk"] = _hawk_cry()
+	return x
+
+
+## Sand shaker: a quick run of bright band-passed noise grains.
+func _shaker(out: PackedFloat32Array, at: float, peak: float) -> void:
+	var t := at
+	for h in 7:
+		_burst(out, t, randf_range(0.02, 0.045), peak * randf_range(0.05, 0.09), randf_range(5500.0, 8500.0), 0.8)
+		t += randf_range(0.018, 0.035)
+
+
+## Hand drum: pitched thump with a falling pitch and a skin slap.
+func _drum(out: PackedFloat32Array, at: float, peak: float, freq: float) -> void:
+	var start := int(at * XRATE)
+	var n := mini(int(0.45 * XRATE), out.size() - start)
+	var ph := 0.0
+	for i in n:
+		var t := float(i) / XRATE
+		ph += TAU * freq * (1.0 + 0.6 * exp(-t * 30.0)) / XRATE
+		out[start + i] += sin(ph) * peak * exp(-t * 9.0) * minf(1.0, i / 40.0)
+	_burst(out, at, 0.015, peak * 0.25, 900.0, 1.2)
+
+
+func _sand_whoosh(dur: float) -> AudioStreamWAV:
+	var o := _buf(dur)
+	var y := 0.0
+	for i in o.size():
+		var t := float(i) / o.size()
+		var hp := randf_range(-1.0, 1.0)
+		y = lerpf(y, hp, 0.25 + 0.5 * t)
+		o[i] = (hp - y) * sin(PI * t) * 0.22
+	return _wav(o, XRATE)
+
+
+## Distant red-tail hawk: a raspy "kee-eeer" falling in pitch, low-passed and
+## echoed off the canyon walls.
+func _hawk_cry() -> AudioStreamWAV:
+	var dur := 1.6
+	var o := _buf(dur + 1.4, RATE)
+	var ph := 0.0
+	var lp := 0.0
+	var n := int(dur * RATE)
+	for i in n:
+		var t := float(i) / RATE
+		var k := t / dur
+		var f := lerpf(3000.0, 2050.0, k * k) * (1.0 + 0.02 * sin(TAU * 26.0 * t))
+		ph += TAU * f / RATE
+		var env := minf(1.0, t / 0.12) * pow(1.0 - k, 1.6)
+		var v := sin(ph) + 0.5 * sin(2.0 * ph) + 0.25 * sin(3.0 * ph)
+		v *= 0.75 + 0.25 * randf_range(-1.0, 1.0)
+		lp += 0.35 * (v - lp)
+		o[i] = lp * env * 0.28
+	var dry := o.duplicate()
+	for e in [[0.32, 0.35], [0.7, 0.18], [1.1, 0.08]]:
+		var d := int(e[0] * RATE)
+		for i in range(d, o.size()):
+			o[i] += dry[i - d] * e[1]
+	return _wav(o, RATE)
 
 
 # ---------------------------------------------------------------- Christmas

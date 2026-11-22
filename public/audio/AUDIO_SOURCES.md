@@ -25,3 +25,7 @@ live at the top level.
 - Transform: 4.5s rain excerpt (fade in 0.4s / out 0.6s) mixed with a
   quieter (30%) wind excerpt of the same length (fade in 0.6s / out 0.6s),
   downmixed to mono, re-encoded at 64kbps.
+
+## desert-sunset/
+
+All synthesized in-house (no third-party audio, no licence): `godot/scripts/sfx.gd` `synth_desert()`, rendered by `godot/tools/render_sfx.sh`, converted to MP3 with ffmpeg. The Desert background wind reuses `forest-pearl/ambience-wind.mp3` (CC0, see above).

@@ -110,10 +110,11 @@ export interface ThemeArt {
   /** Full-screen scenery behind the vignette. */
   background?: { portrait: string; landscape: string };
   /** Menu ambience loops (played when music is on). */
-  ambience?: { wind: string; stream: string; birds: string };
+  /** `birds` is the occasional one-shot call (Desert: a distant hawk). */
+  ambience?: { wind: string; stream?: string; birds?: string };
   /** Synthesized theme sound set (game cues + procedural menu ambience,
    *  src/audioXmas.ts) — replaces the default cues and file ambience. */
-  soundSet?: 'christmas';
+  soundSet?: 'christmas' | 'desert';
 }
 
 /** A painted medal; `disc` is its empty centre as fractions of the image. */
@@ -355,6 +356,10 @@ const dsStretch = (name: string, width: number, height: number, capLeft: number,
 });
 ART['sunset-catan'] = {
   ...ART['forest-pearl'],
+  // Canyon wind (the CC0 Forest wind loop) and a distant hawk now and then;
+  // game cues from src/audioDesert.ts.
+  ambience: { wind: '/audio/forest-pearl/ambience-wind.mp3', birds: '/audio/desert-sunset/hawk.mp3' },
+  soundSet: 'desert',
   headerSign: {
     url: `${DS}header-combined.webp`,
     width: 1081,
@@ -395,7 +400,6 @@ ART['sunset-catan'] = {
     portrait: `${DS}background-portrait.webp`,
     landscape: `${DS}background-landscape.webp`,
   },
-  ambience: undefined,
 };
 
 /** One piece of a nine-slice frame: source rect in the sprite, destination

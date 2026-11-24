@@ -2,53 +2,17 @@
 // scripts/build-pages.ts). Plain HTML + one stylesheet, no JS — readable by
 // search engines and the AdSense crawler without rendering the game.
 
-export type Lang = 'en' | 'lt';
+import { LANGS, LANG_NAMES, SITE, type Lang, type PageName } from './langs';
 
-export interface PageKey {
-  key: 'howToPlay' | 'strategy' | 'about' | 'changelog';
-}
+export type { Lang };
 
 export const ORIGIN = 'https://www.dotduel.com';
 
-export const PATHS: Record<Lang, Record<PageKey['key'], string>> = {
-  en: {
-    howToPlay: '/how-to-play/',
-    strategy: '/strategy/',
-    about: '/about/',
-    changelog: '/changelog/',
-  },
-  lt: {
-    howToPlay: '/lt/kaip-zaisti/',
-    strategy: '/lt/strategija/',
-    about: '/lt/apie/',
-    changelog: '/lt/naujienos/',
-  },
-};
-
-const NAV: Record<Lang, Record<PageKey['key'], string> & { play: string; privacy: string; other: string }> = {
-  en: {
-    howToPlay: 'Guide',
-    strategy: 'Strategy',
-    about: 'About',
-    changelog: 'Changelog',
-    play: 'Play now',
-    privacy: 'Privacy',
-    other: 'Lietuviškai',
-  },
-  lt: {
-    howToPlay: 'Vadovas',
-    strategy: 'Strategija',
-    about: 'Apie',
-    changelog: 'Naujienos',
-    play: 'Žaisti',
-    privacy: 'Privatumas',
-    other: 'English',
-  },
-};
+export const NAV_ORDER: PageName[] = ['howToPlay', 'strategy', 'faq', 'about', 'changelog'];
 
 export interface PageInput {
   lang: Lang;
-  key: PageKey['key'];
+  key: PageName;
   title: string;
   description: string;
   h1: string;
@@ -65,15 +29,19 @@ export function esc(s: string): string {
 }
 
 export function renderPage(p: PageInput): string {
-  const other: Lang = p.lang === 'en' ? 'lt' : 'en';
-  const nav = NAV[p.lang];
-  const path = PATHS[p.lang][p.key];
-  const links = (Object.keys(PATHS[p.lang]) as PageKey['key'][])
-    .map(
-      (k) =>
-        `<a href="${PATHS[p.lang][k]}"${k === p.key ? ' aria-current="page"' : ''}>${nav[k]}</a>`,
-    )
-    .join('');
+  const nav = SITE[p.lang].nav;
+  const path = SITE[p.lang].paths[p.key];
+  const links = NAV_ORDER.map(
+    (k) => `<a href="${SITE[p.lang].paths[k]}"${k === p.key ? ' aria-current="page"' : ''}>${nav[k]}</a>`,
+  ).join('');
+  const alternates = LANGS.map(
+    (l) => `  <link rel="alternate" hreflang="${l}" href="${ORIGIN}${SITE[l].paths[p.key]}" />`,
+  ).join('\n');
+  const langLinks = LANGS.map((l) =>
+    l === p.lang
+      ? `<span aria-current="true">${LANG_NAMES[l]}</span>`
+      : `<a href="${SITE[l].paths[p.key]}" hreflang="${l}" lang="${l}">${LANG_NAMES[l]}</a>`,
+  ).join('');
   return `<!doctype html>
 <html lang="${p.lang}">
 <head>
@@ -82,9 +50,8 @@ export function renderPage(p: PageInput): string {
   <title>${esc(p.title)}</title>
   <meta name="description" content="${esc(p.description)}" />
   <link rel="canonical" href="${ORIGIN}${path}" />
-  <link rel="alternate" hreflang="${p.lang}" href="${ORIGIN}${path}" />
-  <link rel="alternate" hreflang="${other}" href="${ORIGIN}${PATHS[other][p.key]}" />
-  <link rel="alternate" hreflang="x-default" href="${ORIGIN}${PATHS.en[p.key]}" />
+${alternates}
+  <link rel="alternate" hreflang="x-default" href="${ORIGIN}${SITE.en.paths[p.key]}" />
   <meta property="og:title" content="${esc(p.title)}" />
   <meta property="og:description" content="${esc(p.description)}" />
   <meta property="og:image" content="${ORIGIN}/og-card.png" />
@@ -99,7 +66,7 @@ export function renderPage(p: PageInput): string {
       <a class="brand" href="/">DotDuel</a>
       <a class="play-btn" href="/">${nav.play}</a>
     </div>
-    <nav class="wrap site-nav" aria-label="DotDuel">${links}<a class="lang" href="${PATHS[other][p.key]}" hreflang="${other}" lang="${other}">${nav.other}</a></nav>
+    <nav class="wrap site-nav" aria-label="DotDuel">${links}</nav>
   </header>
   <main class="wrap">
     <h1>${esc(p.h1)}</h1>
@@ -108,6 +75,7 @@ ${p.body}
     <p class="cta"><a class="play-btn big" href="/">${nav.play}</a></p>
   </main>
   <footer class="wrap site-foot">
+    <nav class="langs" aria-label="Language">${langLinks}</nav>
     <span>© 2026 DotDuel</span>
     <a href="/privacy.html">${nav.privacy}</a>
     <a href="mailto:donstn@gmail.com">donstn@gmail.com</a>

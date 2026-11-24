@@ -54,7 +54,8 @@ strong { color: #fff; }
 .site-nav { display: flex; flex-wrap: wrap; gap: 4px 16px; padding-bottom: 10px; font-size: 0.95rem; }
 .site-nav a { color: var(--muted); text-decoration: none; padding: 4px 0; }
 .site-nav a[aria-current='page'] { color: var(--text); border-bottom: 2px solid var(--accent); }
-.site-nav .lang { margin-left: auto; }
+.site-foot .langs { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.site-foot .langs span { color: var(--text, inherit); font-weight: 600; }
 
 .play-btn {
   display: inline-block;

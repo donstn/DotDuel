@@ -1,8 +1,8 @@
-// Builds the static guide pages (how to play, strategy, about, changelog — in
-// English and Lithuanian) plus sitemap.xml into dist/, after `vite build`.
-// Plain HTML so search engines and the AdSense crawler can read DotDuel
-// without running the game. Content: site/content.ts; changelog text comes
-// from src/changelog.ts (+ the Lithuanian translations in src/i18n/lt.ts).
+// Builds the static guide pages (how to play, strategy, FAQ, about, changelog —
+// in all six languages) plus sitemap.xml into dist/, after `vite build`.
+// Plain HTML so search engines can read DotDuel without running the game.
+// Text: site/langs/<lang>.ts; changelog entries come from src/changelog.ts
+// (+ translations in src/i18n/<lang>.ts where they exist).
 //
 //   tsx scripts/build-pages.ts         (website)
 //   tsx scripts/build-pages.ts --app   (Android bundle: Capacitor's local
@@ -12,14 +12,18 @@ import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CHANGELOG, type ChangeKind } from '../src/changelog';
+import { cs } from '../src/i18n/cs';
 import { en } from '../src/i18n/en';
+import { es } from '../src/i18n/es';
 import { lt } from '../src/i18n/lt';
-import { CHANGELOG_TEXT, CONTENT } from '../site/content';
-import { ORIGIN, PATHS, esc, renderPage, type Lang } from '../site/template';
+import { pl } from '../src/i18n/pl';
+import { pt } from '../src/i18n/pt';
+import { LANGS, SITE } from '../site/langs';
+import { ORIGIN, esc, renderPage, type Lang } from '../site/template';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = resolve(root, 'dist');
-const MESSAGES = { en, lt };
+const MESSAGES = { en, lt, es, pt, pl, cs };
 const KINDS: ChangeKind[] = ['added', 'changed', 'fixed'];
 const APP = process.argv.includes('--app');
 
@@ -27,7 +31,7 @@ function write(path: string, html: string) {
   const file = resolve(dist, `.${path}index.html`);
   mkdirSync(dirname(file), { recursive: true });
   // Site-relative folder links only (canonical/hreflang URLs are absolute).
-  writeFileSync(file, APP ? html.replace(/href="(\/(?:lt\/)?[a-z-]+\/)"/g, 'href="$1index.html"') : html);
+  writeFileSync(file, APP ? html.replace(/href="(\/(?:[a-z]{2}\/)?[a-z-]+\/)"/g, 'href="$1index.html"') : html);
 }
 
 function formatDate(iso: string, lang: Lang): string {
@@ -58,16 +62,14 @@ ${highlight ? `      <p class="highlight">${esc(highlight)}</p>\n` : ''}${groups
 }
 
 const urls: string[] = [];
-for (const lang of ['en', 'lt'] as Lang[]) {
-  for (const key of ['howToPlay', 'strategy', 'about'] as const) {
-    write(PATHS[lang][key], renderPage({ lang, key, ...CONTENT[key][lang] }));
-    urls.push(PATHS[lang][key]);
+for (const lang of LANGS) {
+  const text = SITE[lang];
+  for (const key of ['howToPlay', 'strategy', 'faq', 'about'] as const) {
+    write(text.paths[key], renderPage({ lang, key, ...text[key] }));
+    urls.push(text.paths[key]);
   }
-  write(
-    PATHS[lang].changelog,
-    renderPage({ lang, key: 'changelog', ...CHANGELOG_TEXT[lang], body: changelogBody(lang) }),
-  );
-  urls.push(PATHS[lang].changelog);
+  write(text.paths.changelog, renderPage({ lang, key: 'changelog', ...text.changelog, body: changelogBody(lang) }));
+  urls.push(text.paths.changelog);
 }
 copyFileSync(resolve(root, 'site/pages.css'), resolve(dist, 'pages.css'));
 

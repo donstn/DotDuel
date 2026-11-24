@@ -139,6 +139,7 @@ export const lt: Messages = {
     howToPlay: 'Kaip žaisti',
     settings: 'Nustatymai',
     privacy: 'Privatumas',
+    about: 'Apie',
     theme: 'Tema',
     brand: 'DotDuel © 2026',
     brandTitle:

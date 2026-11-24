@@ -4,7 +4,7 @@
 //   /classic/    the React app, kept as a backup (not indexed, no link to it)
 //   /GodotV1/    forwards to / (old links keep working, ?ref= kept)
 // The guide pages, privacy.html, sitemap and art stay where they were.
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync, copyFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const DIST = 'dist';
@@ -28,7 +28,14 @@ for (const f of readdirSync(GODOT)) {
   if (f === 'index.html') continue;
   renameSync(join(GODOT, f), join(DIST, f));
 }
-copyFileSync(join(GODOT, 'index.html'), join(DIST, 'index.html'));
+// The game fills the first screen; the text from site/home.ts goes below it.
+const section = join(DIST, 'home-section.html');
+let home = readFileSync(join(GODOT, 'index.html'), 'utf8');
+if (existsSync(section)) {
+  home = home.replace('</body>', readFileSync(section, 'utf8') + '</body>');
+  rmSync(section);
+}
+writeFileSync(join(DIST, 'index.html'), home);
 
 // 3. /GodotV1/ -> / (keeps ?ref= and #hash).
 rmSync(GODOT, { recursive: true, force: true });

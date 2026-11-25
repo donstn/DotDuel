@@ -195,9 +195,7 @@ func _build_hud() -> void:
 	add_child(help)
 
 	var banner := PanelContainer.new()
-	var bsb := UI.art_box(UI.BANNER, 92)
-	bsb.content_margin_left = bsb.texture_margin_left
-	bsb.content_margin_right = bsb.texture_margin_right
+	var bsb := UI.banner_box(92)
 	banner.add_theme_stylebox_override("panel", bsb)
 	banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	banner.custom_minimum_size = Vector2(300, 92)

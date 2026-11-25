@@ -1407,9 +1407,7 @@ func _names_block(outer: VBoxContainer) -> void:
 
 func _banner(text: String) -> Control:
 	var p := PanelContainer.new()
-	var sb := UI.art_box(UI.BANNER, 84)
-	sb.content_margin_left = sb.texture_margin_left
-	sb.content_margin_right = sb.texture_margin_right
+	var sb := UI.banner_box(84)
 	p.add_theme_stylebox_override("panel", sb)
 	p.custom_minimum_size = Vector2(440, 84)
 	p.add_child(UI.label(text, 28, UI.TEXT))

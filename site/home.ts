@@ -120,6 +120,63 @@ export function homeSection(): string {
   top.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); var c = document.getElementById('canvas'); if (c) c.focus({ preventScroll: true }); });
   // Called by the game's "About DotDuel" link (menu footer).
   window.ddAbout = function () { document.getElementById('dd-about').scrollIntoView({ behavior: 'smooth' }); };
+
+  // The game swallows touch and wheel events, so the page can't scroll from
+  // over it. On the home menu (window.ddHome, set by the game) we scroll the
+  // page ourselves: a swipe moves it with the finger, then settles on the text
+  // or back on the game; the wheel scrolls normally.
+  // Once a finger has moved 10px the page takes it over: the game is told the
+  // touch was cancelled (window.ddCancelTouch, so the button it started on
+  // doesn't fire) and gets no more of its events.
+  var canvas = document.getElementById('canvas');
+  var about = document.getElementById('dd-about');
+  var y0 = null, y = 0, dragging = false, anim = 0;
+  function onCanvas(e) { return canvas && e.target === canvas; }
+  function glide(to) {
+    cancelAnimationFrame(anim);
+    var from = window.scrollY, t0 = performance.now();
+    (function step(t) {
+      var k = Math.min(1, (t - t0) / 300);
+      window.scrollTo(0, from + (to - from) * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) anim = requestAnimationFrame(step);
+    })(t0);
+  }
+  window.addEventListener('touchstart', function (e) {
+    cancelAnimationFrame(anim);
+    y0 = null;
+    dragging = false;
+    if (!window.ddHome || e.touches.length !== 1 || !onCanvas(e)) return;
+    y0 = y = e.touches[0].clientY;
+  }, { capture: true, passive: true });
+  window.addEventListener('touchmove', function (e) {
+    if (y0 === null || e.touches.length !== 1) return;
+    var ny = e.touches[0].clientY;
+    if (!dragging) {
+      if (Math.abs(ny - y0) < 10) return;
+      dragging = true;
+      if (window.ddCancelTouch) window.ddCancelTouch();
+    }
+    e.stopPropagation();
+    window.scrollBy(0, y - ny);
+    y = ny;
+  }, { capture: true, passive: true });
+  function end(e) {
+    if (y0 === null) return;
+    var d = y0 - y, was = dragging;
+    y0 = null;
+    dragging = false;
+    if (!was) return;
+    e.stopPropagation();
+    var aboutTop = about.getBoundingClientRect().top + window.scrollY;
+    if (window.scrollY < aboutTop) glide(d > 40 ? aboutTop : 0);
+  }
+  window.addEventListener('touchend', end, { capture: true, passive: true });
+  window.addEventListener('touchcancel', end, { capture: true, passive: true });
+  window.addEventListener('wheel', function (e) {
+    if (!window.ddHome || !onCanvas(e)) return;
+    cancelAnimationFrame(anim);
+    window.scrollBy(0, e.deltaMode === 1 ? e.deltaY * 40 : e.deltaY);
+  }, { capture: true, passive: true });
 }());
 </script>
 `;

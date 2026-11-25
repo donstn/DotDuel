@@ -12,6 +12,11 @@ var where := ""
 var online_ui: OnlineScreens
 var menu_ui: MenuScreens
 var overlay: Control = null
+## Website: true while the home menu shows with nothing on top, so a swipe or
+## the mouse wheel over the game scrolls the page down to the text under it
+## (site/home.ts reads window.ddHome). Anywhere else the game keeps them.
+var _web_home := false
+var _web_cancel_touch: JavaScriptObject
 var _decor: Array[Node] = []
 var _fire: Node2D
 var _guard := false
@@ -252,6 +257,34 @@ func _refresh_daily_card() -> void:
 
 
 # ---------------------------------------------------------------- menu actions
+
+func _process(_delta: float) -> void:
+	if not OS.has_feature("web"):
+		return
+	if _web_cancel_touch == null:
+		_web_cancel_touch = JavaScriptBridge.create_callback(_cancel_touch)
+		JavaScriptBridge.get_interface("window").ddCancelTouch = _web_cancel_touch
+	var home := where == "menu" and overlay == null
+	if home != _web_home:
+		_web_home = home
+		JavaScriptBridge.eval("window.ddHome = %s" % ("true" if home else "false"))
+
+
+# The page took this finger over to scroll down to the text (site/home.ts):
+# drag it far off-screen and release it there, so the button it started on
+# doesn't fire (a button checks "still inside" on the drag, not the release).
+func _cancel_touch(_args: Array) -> void:
+	var d := InputEventScreenDrag.new()
+	d.index = 0
+	d.position = Vector2(-10000, -10000)
+	Input.parse_input_event(d)
+	var e := InputEventScreenTouch.new()
+	e.index = 0
+	e.pressed = false
+	e.canceled = true
+	e.position = Vector2(-10000, -10000)
+	Input.parse_input_event(e)
+
 
 func sign_in() -> void:
 	online_ui.show()

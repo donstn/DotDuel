@@ -1086,6 +1086,9 @@ export const pt: Messages = {
     errRateLimit: 'Tentativas demais. Tente novamente em um minuto.',
     errNetwork: 'Erro de rede. Verifique sua conexão e tente novamente.',
     errGeneric: 'Algo deu errado.',
+    errNoAccount: 'Não há nenhuma conta do Google neste celular. Adicione uma nas configurações do celular e tente novamente.',
+    errTimeout: 'O login demorou demais. Tente novamente.',
+    errFailed: 'Não foi possível entrar. Tente novamente.',
   },
 
   username: {

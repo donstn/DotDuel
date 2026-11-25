@@ -1086,6 +1086,9 @@ export const es: Messages = {
     errRateLimit: 'Demasiados intentos. Vuelve a intentarlo en un minuto.',
     errNetwork: 'Error de red. Comprueba tu conexión e inténtalo de nuevo.',
     errGeneric: 'Algo salió mal.',
+    errNoAccount: 'No hay ninguna cuenta de Google en este teléfono. Añade una en los ajustes del teléfono y vuelve a intentarlo.',
+    errTimeout: 'El inicio de sesión ha tardado demasiado. Vuelve a intentarlo.',
+    errFailed: 'No se pudo iniciar sesión. Vuelve a intentarlo.',
   },
 
   username: {

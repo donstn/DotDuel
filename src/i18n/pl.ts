@@ -1098,6 +1098,9 @@ export const pl: Messages = {
     errRateLimit: 'Zbyt wiele prób. Spróbuj ponownie za minutę.',
     errNetwork: 'Błąd sieci. Sprawdź połączenie i spróbuj ponownie.',
     errGeneric: 'Coś poszło nie tak.',
+    errNoAccount: 'Na tym telefonie nie ma konta Google. Dodaj je w ustawieniach telefonu i spróbuj ponownie.',
+    errTimeout: 'Logowanie trwało zbyt długo. Spróbuj ponownie.',
+    errFailed: 'Nie udało się zalogować. Spróbuj ponownie.',
   },
 
   username: {

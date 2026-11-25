@@ -242,7 +242,7 @@ func _build_hud() -> void:
 	_cards_row = row
 	# A clock appearing or a name wrapping makes the cards taller: place the
 	# board again so it never runs under them.
-	row.minimum_size_changed.connect(func(): _layout.call_deferred())
+	_relayout_on_height(row)
 	for p in [1, 2]:
 		row.add_child(_make_card(p))
 
@@ -317,7 +317,7 @@ func _make_card(p: int) -> Control:
 	card.add_theme_stylebox_override("panel", sb)
 	card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	card.minimum_size_changed.connect(func(): _layout.call_deferred())
+	_relayout_on_height(card)
 	wrap.add_child(card)
 
 	var hb := HBoxContainer.new()
@@ -532,6 +532,17 @@ func _place_side_cards(top: float) -> void:
 ## Width the side cards take from each edge of the screen (card + margins).
 func _side_inset() -> float:
 	return SIDE_W * _side_k + 48.0
+
+
+## Re-places the board when c gets taller or shorter (a clock appears, a name
+## wraps). Not on width changes: a score going 9 → 10 must not rebuild the
+## board in the middle of its animations.
+func _relayout_on_height(c: Control) -> void:
+	c.minimum_size_changed.connect(func():
+		var h := c.get_combined_minimum_size().y
+		if not is_equal_approx(h, float(c.get_meta("min_h", -1.0))):
+			c.set_meta("min_h", h)
+			_layout.call_deferred())
 
 
 func _layout() -> void:
@@ -1036,7 +1047,7 @@ func _build_coach_bubble() -> void:
 	card.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(card)
-	card.minimum_size_changed.connect(func(): _layout.call_deferred())
+	_relayout_on_height(card)
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 0)
 	card.add_child(vb)
@@ -1315,7 +1326,9 @@ func _place_fx(d: int, p: int) -> void:
 	Sfx.play("place%d" % p, randf_range(0.94, 1.06))
 	UI.particles_burst(board, px(d), BRIGHT[_sk(p)], 10, r * 5.0, "particle-spark.webp", r / 260.0)
 	var ring := _ring(px(d), BRIGHT[_sk(p)])
-	var rt := create_tween().set_parallel()
+	# Bound to the ring: a board rebuild may free it mid-animation, and a
+	# lambda calling a freed node crashes release builds.
+	var rt := ring.create_tween().set_parallel()
 	rt.tween_method(func(v: float): ring.set_meta("rad", v); ring.queue_redraw(), r, r * 2.4, 0.4)
 	rt.tween_property(ring, "modulate:a", 0.0, 0.4)
 	rt.chain().tween_callback(ring.queue_free)
@@ -1350,7 +1363,7 @@ func _add_strike(li: int, p: int, animate: bool) -> void:
 			for l in parts:
 				l.points = PackedVector2Array([ends[0], ends[0].lerp(ends[1], t)])
 		grow.call(0.0)
-		create_tween().tween_method(grow, 0.0, 1.0, 0.22 + 0.03 * b.line_len[li]).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		root.create_tween().tween_method(grow, 0.0, 1.0, 0.22 + 0.03 * b.line_len[li]).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 
 func _score_fx(li: int, p: int, pts: int, claimed: bool) -> void:

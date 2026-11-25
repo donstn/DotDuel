@@ -60,6 +60,7 @@ func _ready() -> void:
 		want = XMAS
 	id = want if offered(want) else FOREST
 	_palette()
+	_sync_page()
 
 
 ## `?theme-preview=<id>` on the site is remembered on this device (`off`
@@ -100,7 +101,14 @@ func set_id(t: String) -> void:
 	Prefs.write("theme", t)
 	Prefs.web_set(WEB_KEY, t)
 	_palette()
+	_sync_page()
 	changed.emit()
+
+
+## Website: the text under the game takes the theme's colours (site/home.ts).
+func _sync_page() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("document.documentElement.dataset.theme = %s" % JSON.stringify(id))
 
 
 func _palette() -> void:

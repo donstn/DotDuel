@@ -19,6 +19,9 @@ const MENU_BTN := ["menu-button.webp", 873, 187, 167, 168]
 const PRIMARY_BTN := ["primary-button.webp", 916, 201, 165, 165]
 const PILL_BTN := ["pill-button.webp", 475, 179, 106, 108]
 const BANNER := ["title-banner.webp", 588, 178, 115, 115]
+## Where the ribbon's flat writing panel is centred, as a share of the art's
+## height (measured; the hanging tails fill the bottom of the picture).
+const BANNER_MID := {"title-banner.webp": 0.40, "desert-sunset/title-banner.webp": 0.486}
 const DANGER := ["danger-pill.webp", 215, 81, 54, 55]
 
 ## Community pages: [i18n key under "social.", url]. Same list as the app's
@@ -357,14 +360,23 @@ static func fit_wreath(n: Control, panel: Control) -> void:
 	n.size = panel.size + Vector2(76, 76)
 
 
+## The title ribbon's background. Text stays on the flat writing panel: never
+## over the curled ends, and centred on the panel, not on the whole picture.
+static func banner_box(h: int) -> StyleBoxTexture:
+	var sb := art_box(BANNER, h)
+	sb.content_margin_left = sb.texture_margin_left
+	sb.content_margin_right = sb.texture_margin_right
+	var mid: float = BANNER_MID.get(Look.art(BANNER[0]).trim_prefix(ART), 0.5)
+	sb.content_margin_top = 0
+	sb.content_margin_bottom = roundf((0.5 - mid) * 2.0 * h)
+	return sb
+
+
 ## The painted title ribbon with `text` on it, at most `max_w` wide.
 static func ribbon(text: String, max_w: float) -> PanelContainer:
 	var h := 92
 	var p := PanelContainer.new()
-	var sb := art_box(BANNER, h)
-	# Text only on the ribbon's flat middle, never over the curled ends.
-	sb.content_margin_left = sb.texture_margin_left
-	sb.content_margin_right = sb.texture_margin_right
+	var sb := banner_box(h)
 	p.add_theme_stylebox_override("panel", sb)
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var l := label(text, 30, TEXT, true, 6)

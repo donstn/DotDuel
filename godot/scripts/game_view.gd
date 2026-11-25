@@ -49,6 +49,9 @@ var busy := true
 var unit := 80.0
 var _board_top := 0.0  # screen y the board (and the lesson arrow) may not cross
 var _cards_row: HBoxContainer
+var _side := false  # score cards beside the board (wide screens)
+var _side_boxes: Array = [null, null, null]  # scaled holders for the side cards
+var _side_k := 1.0  # their scale: the spare width beside the board, up to 1.6×
 var r := 28.0
 var hover_dot := -1
 var aim_dot := -1
@@ -101,6 +104,13 @@ const BOARD_ART := {
 ## active scale). Taller cards (ranked clock, two-line names) push it down:
 ## see _cards_bottom().
 const CARDS_BOTTOM := 322.0
+## Wide screens (landscape phones, desktop): the score cards stand on either
+## side of the board instead of across the top, so the board gets the full
+## height. Card width, and the board area's top (under the ribbon and the
+## "lines waiting" strip).
+const SIDE_W := 420.0
+const SIDE_BOARD_TOP := 160.0
+const RIBBON_BOTTOM := 118.0  # "points left" ribbon: offsets 22..114, plus a gap
 const WREATH_W := 987.0
 const WREATH_CAPS := [207.0, 203.0, 205.0, 207.0]  # left, top, right, bottom
 
@@ -307,6 +317,7 @@ func _make_card(p: int) -> Control:
 	card.add_theme_stylebox_override("panel", sb)
 	card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.minimum_size_changed.connect(func(): _layout.call_deferred())
 	wrap.add_child(card)
 
 	var hb := HBoxContainer.new()
@@ -373,7 +384,7 @@ func _make_card(p: int) -> Control:
 	wrap.add_child(think)
 	wrap.resized.connect(func(): wrap.pivot_offset = wrap.size / 2.0)
 	score_l.text = str(s.scores[p])
-	cards[p] = {"wrap": wrap, "glow": glow, "score": score_l, "think": think, "avatar": av, "clock": clock_l, "sb": sb, "gsb": gsb, "chip": chip}
+	cards[p] = {"wrap": wrap, "card": card, "glow": glow, "score": score_l, "think": think, "avatar": av, "clock": clock_l, "sb": sb, "gsb": gsb, "chip": chip}
 	return wrap
 
 
@@ -451,15 +462,72 @@ func _cards_bottom() -> float:
 	return maxf(CARDS_BOTTOM, _cards_row.offset_top + h * 1.04 + 6.0)
 
 
+## Wide enough for a card on each side and a board at least 3/4 of the
+## screen's height between them. The lesson keeps the cards on top: its coach
+## bubble sits under them.
+func _wants_side() -> bool:
+	return coach == null and size.x - 2.0 * (SIDE_W + 48.0) >= size.y * 0.75
+
+
+## Moves the two score cards between the top row and the two sides.
+func _set_side(on: bool) -> void:
+	if on == _side:
+		return
+	_side = on
+	for p in [1, 2]:
+		var w: Control = cards[p].wrap
+		w.get_parent().remove_child(w)
+		if on:
+			if _side_boxes[p] == null:
+				var box := Control.new()
+				box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				add_child(box)
+				_side_boxes[p] = box
+			_side_boxes[p].visible = true
+			_side_boxes[p].add_child(w)
+		else:
+			_side_boxes[p].visible = false
+			_cards_row.add_child(w)
+	_cards_row.visible = not on
+
+
+## Side layout: each card SIDE_W wide (scaled up into the spare width beside
+## a board as wide as the screen is tall), as tall as its content, centred on
+## the board area's height; P1 on the left, P2 on the right.
+func _place_side_cards(top: float) -> void:
+	_side_k = clampf(((size.x - size.y) / 2.0 - 48.0) / SIDE_W, 1.0, 1.6)
+	var mid := (top + size.y - 40.0) / 2.0
+	for p in [1, 2]:
+		var w: Control = cards[p].wrap
+		var h := maxf(150.0, (cards[p].card as Control).get_combined_minimum_size().y)
+		w.position = Vector2.ZERO
+		w.size = Vector2(SIDE_W, h)
+		var box: Control = _side_boxes[p]
+		box.size = w.size
+		box.scale = Vector2.ONE * _side_k
+		var wk := SIDE_W * _side_k
+		box.position = Vector2(24.0 if p == 1 else size.x - 24.0 - wk, mid - h * _side_k / 2.0)
+
+
+## Width the side cards take from each edge of the screen (card + margins).
+func _side_inset() -> float:
+	return SIDE_W * _side_k + 48.0
+
+
 func _layout() -> void:
 	if b == null or size.x <= 0:
 		return
+	_set_side(_wants_side())
 	# Everything above the board: the score cards, plus the lesson bubble.
 	# Measured, not assumed: the top dot must never sit under them.
-	var cards_bottom := _place_coach_bubble() if coach else _cards_bottom()
+	var cards_bottom := SIDE_BOARD_TOP if _side else (_place_coach_bubble() if coach else _cards_bottom())
 	_board_top = cards_bottom
 	var top := cards_bottom - 72.0 if tree else cards_bottom + 8.0
 	var area := Rect2(24, top, size.x - 48, size.y - top - 40)
+	if _side:
+		_place_side_cards(cards_bottom)
+		var inset := _side_inset()
+		area = Rect2(inset, top, size.x - 2.0 * inset, size.y - top - 40)
 	var bw := b.bounds.size.x + 1.4
 	var bh := b.bounds.size.y + 1.4
 	var shift := 0.0
@@ -503,6 +571,12 @@ func _layout() -> void:
 		if tree_top + reach * unit > screen_floor and screen_floor > cards_bottom:
 			unit = minf(unit, (screen_floor - cards_bottom) / (reach - apex))
 			tree_top = cards_bottom - apex * unit
+		# Side layout: the ribbon sits right over the tree's middle, so the star
+		# must start below it (shrink about the bottom row if needed).
+		if _side and tree_top < RIBBON_BOTTOM:
+			var bottom_y := tree_top + reach * unit
+			unit = minf(unit, (bottom_y - RIBBON_BOTTOM) / reach)
+			tree_top = RIBBON_BOTTOM
 		cy = tree_top + bh / 2.0 * unit
 	r = unit * 0.36
 	board.position = Vector2(area.get_center().x, cy) - Vector2(0, shift * unit)
@@ -552,7 +626,8 @@ func _keep_dots_visible(cards_bottom: float) -> void:
 func _check_board_visible(cards_bottom: float) -> void:
 	for d in b.pos.size():
 		var p := board.position + px(d)
-		if p.y - r < cards_bottom - 0.5 or p.y + r > size.y + 0.5 or p.x < -r or p.x > size.x + r:
+		var under_side := _side and (p.x - r < _side_inset() - 24.0 or p.x + r > size.x - _side_inset() + 24.0)
+		if under_side or p.y - r < cards_bottom - 0.5 or p.y + r > size.y + 0.5 or p.x < -r or p.x > size.x + r:
 			push_error("board: dot %d at %s is hidden (cards end at %.0f, screen %s)" % [d, p, cards_bottom, size])
 			return
 

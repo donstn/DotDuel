@@ -177,9 +177,9 @@ func _wait_desktop_code() -> String:
 		if q.has("code"):
 			return q.code
 		if q.has("error_description"):
-			auth_error = q.error_description
+			auth_error = _fail(q.error_description)
 			return ""
-	auth_error = "Sign-in timed out."
+	auth_error = Lang.a("signIn.errTimeout")
 	return ""
 
 
@@ -189,7 +189,7 @@ func _finish_web_redirect() -> void:
 	var q := _query(search.trim_prefix("?"))
 	var h := _query(hash.trim_prefix("#"))
 	if q.has("error_description") or h.has("error_description"):
-		auth_error = q.get("error_description", h.get("error_description", ""))
+		auth_error = _fail(q.get("error_description", h.get("error_description", "")))
 	if q.has("code"):
 		var verifier := str(JavaScriptBridge.eval("localStorage.getItem('%s')" % VERIFIER_KEY, true))
 		await _exchange(q.code, verifier)
@@ -204,8 +204,15 @@ func _exchange(code: String, verifier: String) -> void:
 		_adopt(res.data)
 		Realtime.set_token(session.access_token)
 	else:
-		auth_error = "Sign-in failed (%s)." % str(res.data.get("msg", res.data.get("error_description", res.code)) if res.data is Dictionary else res.code)
+		auth_error = _fail(str(res.data.get("msg", res.data.get("error_description", res.code)) if res.data is Dictionary else res.code), res.code == 0)
 	auth_changed.emit()
+
+
+## What a player sees when sign-in fails: what to do, in their language. The
+## technical reason goes to the log only.
+func _fail(detail: String, network := false) -> String:
+	push_warning("sign-in failed: " + detail)
+	return Lang.a("signIn.errNetwork" if network else "signIn.errFailed")
 
 
 func _query(s: String) -> Dictionary:

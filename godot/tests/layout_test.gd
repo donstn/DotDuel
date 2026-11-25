@@ -11,6 +11,7 @@ const SIZES := {
 const LONG := "Aleksandras Vyšniauskas-Žemaitis"
 var fails := 0
 var runs := 0
+var sides := 0
 
 
 func _ready() -> void:
@@ -22,7 +23,7 @@ func _ready() -> void:
 			for sz in SIZES:
 				for mode in ["coach", "online", "bot", "online-square"]:
 					await _check(lang, theme, sz, SIZES[sz], mode)
-	print("LAYOUT: %d runs, %d hidden" % [runs, fails])
+	print("LAYOUT: %d runs, %d hidden, %d side" % [runs, fails, sides])
 	get_tree().quit(1 if fails else 0)
 
 
@@ -70,6 +71,14 @@ func _check(lang: String, theme: String, sz: String, s: Vector2, mode: String) -
 		var hud: float = row.get_global_rect().end.y
 		for c in row.get_children():
 			hud = maxf(hud, (c as Control).get_global_rect().end.y)
+		# Side layout (wide screens): nothing above the board but the ribbon;
+		# the cards stand left and right and no dot may sit under them.
+		var side_rects: Array = []
+		if g._side:
+			sides += 1
+			hud = GameView.SIDE_BOARD_TOP
+			for p in [1, 2]:
+				side_rects.append((g.cards[p].wrap as Control).get_global_rect())
 		if mode == "coach":
 			hud = maxf(hud, (g._coach_text.get_meta("card") as Control).get_global_rect().end.y)
 		if OS.has_environment("LAYOUT_VERBOSE") and m == msgs[0]:
@@ -85,6 +94,9 @@ func _check(lang: String, theme: String, sz: String, s: Vector2, mode: String) -
 				bad = "dot %d top %.0f under HUD bottom %.0f" % [d, p.y - g.r, hud]
 			elif p.y + g.r > s.y or p.x - g.r < -g.r * 0.5 or p.x + g.r > s.x + g.r * 0.5:
 				bad = "dot %d at %s off screen" % [d, p]
+			for rc in side_rects:
+				if (rc as Rect2).grow(g.r).has_point(p):
+					bad = "dot %d at %s under a side card %s" % [d, p, rc]
 			if bad != "":
 				break
 		if bad != "":

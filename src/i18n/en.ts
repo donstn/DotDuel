@@ -539,6 +539,9 @@ export const en = {
     errRateLimit: 'Too many attempts. Try again in a minute.',
     errNetwork: 'Network error. Check your connection and try again.',
     errGeneric: 'Something went wrong.',
+    errNoAccount: "No Google account on this phone. Add one in your phone's settings, then try again.",
+    errTimeout: 'Sign-in took too long. Try again.',
+    errFailed: "Sign-in didn't work. Try again.",
   },
 
   // Username claim / rename popover.

@@ -18,6 +18,7 @@ import { es } from '../src/i18n/es';
 import { lt } from '../src/i18n/lt';
 import { pl } from '../src/i18n/pl';
 import { pt } from '../src/i18n/pt';
+import { homeSection } from '../site/home';
 import { LANGS, SITE } from '../site/langs';
 import { ORIGIN, esc, renderPage, type Lang } from '../site/template';
 
@@ -72,6 +73,8 @@ for (const lang of LANGS) {
   urls.push(text.paths.changelog);
 }
 copyFileSync(resolve(root, 'site/pages.css'), resolve(dist, 'pages.css'));
+// Home-page text under the game; scripts/web-layout.mjs puts it into / (web only).
+if (!APP) writeFileSync(resolve(dist, 'home-section.html'), homeSection());
 
 const today = new Date().toISOString().slice(0, 10);
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

@@ -125,6 +125,7 @@ export const pt: Messages = {
     howToPlay: 'Como jogar',
     settings: 'Configurações',
     privacy: 'Privacidade',
+    about: 'Sobre',
     theme: 'Tema',
     brand: 'DotDuel © 2026',
     brandTitle:

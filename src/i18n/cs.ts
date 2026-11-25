@@ -135,6 +135,7 @@ export const cs: Messages = {
     howToPlay: 'Jak hrát',
     settings: 'Nastavení',
     privacy: 'Soukromí',
+    about: 'O hře',
     theme: 'Téma',
     brand: 'DotDuel © 2026',
     brandTitle:

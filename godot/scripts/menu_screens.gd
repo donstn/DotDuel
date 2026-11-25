@@ -222,7 +222,7 @@ func _corner(root: Control) -> void:
 		corner.add_child(theme_btn)
 
 
-## Footer: How to play · Settings · Privacy, then © and the version (changelog).
+## Footer: How to play · Settings · Privacy (· About on the website), then © and the version (changelog).
 func _footer(root: Control) -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 0)
@@ -242,6 +242,11 @@ func _footer(root: Control) -> void:
 	_link(row, Lang.a("footer.settings"), main.show_settings)
 	row.add_child(UI.label("·", 22, UI.TEXT_DIM, false, 0))
 	_link(row, Lang.a("footer.privacy"), main.show_privacy)
+	# Website: the page continues under the game (what DotDuel is, guides in
+	# every language); the game takes every touch, so this link scrolls there.
+	if OS.has_feature("web"):
+		row.add_child(UI.label("·", 22, UI.TEXT_DIM, false, 0))
+		_link(row, Lang.a("footer.about"), func(): JavaScriptBridge.eval("window.ddAbout && window.ddAbout()"))
 	var ver := Button.new()
 	ver.flat = true
 	ver.focus_mode = Control.FOCUS_NONE

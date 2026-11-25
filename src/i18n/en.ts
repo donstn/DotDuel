@@ -151,6 +151,8 @@ export const en = {
     howToPlay: 'How to play',
     settings: 'Settings',
     privacy: 'Privacy',
+    /** Website only (Godot menu footer): scrolls to the text under the game. */
+    about: 'About',
     theme: 'Theme',
     brand: 'DotDuel © 2026',
     brandTitle:

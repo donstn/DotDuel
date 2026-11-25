@@ -48,6 +48,7 @@ var s: GState
 var busy := true
 var unit := 80.0
 var _board_top := 0.0  # screen y the board (and the lesson arrow) may not cross
+var _cards_row: HBoxContainer
 var r := 28.0
 var hover_dot := -1
 var aim_dot := -1
@@ -96,7 +97,9 @@ const BOARD_ART := {
 	"christmas": {"file": "tree-board.webp", "size": Vector2(883, 989), "axis": 441.0, "top": 231.0, "bottom": 806.0, "overhang": 1.18},
 	"sunset-catan": {"file": "pyramid-board.webp", "size": Vector2(981, 733), "axis": 489.0, "top": 94.0, "bottom": 671.0, "overhang": 1.06},
 }
-## Bottom edge of the score cards (row offsets 160..310, +4% active scale).
+## Bottom edge of the score cards as designed (row offsets 160..310, +4%
+## active scale). Taller cards (ranked clock, two-line names) push it down:
+## see _cards_bottom().
 const CARDS_BOTTOM := 322.0
 const WREATH_W := 987.0
 const WREATH_CAPS := [207.0, 203.0, 205.0, 207.0]  # left, top, right, bottom
@@ -228,6 +231,10 @@ func _build_hud() -> void:
 	row.add_theme_constant_override("separation", 16)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(row)
+	_cards_row = row
+	# A clock appearing or a name wrapping makes the cards taller: place the
+	# board again so it never runs under them.
+	row.minimum_size_changed.connect(func(): _layout.call_deferred())
 	for p in [1, 2]:
 		row.add_child(_make_card(p))
 
@@ -437,11 +444,21 @@ func _on_theme() -> void:
 	_layout.call_deferred()
 
 
+## Real bottom edge of the score cards: the row grows past its offsets when
+## its content needs more room (ranked clocks, long names on two lines).
+func _cards_bottom() -> float:
+	if not is_instance_valid(_cards_row):
+		return CARDS_BOTTOM
+	var h := maxf(_cards_row.size.y, _cards_row.get_combined_minimum_size().y)
+	return maxf(CARDS_BOTTOM, _cards_row.offset_top + h * 1.04 + 6.0)
+
+
 func _layout() -> void:
 	if b == null or size.x <= 0:
 		return
 	# Everything above the board: the score cards, plus the lesson bubble.
-	var cards_bottom := _place_coach_bubble() if coach else CARDS_BOTTOM
+	# Measured, not assumed: the top dot must never sit under them.
+	var cards_bottom := _place_coach_bubble() if coach else _cards_bottom()
 	_board_top = cards_bottom
 	var top := cards_bottom - 72.0 if tree else cards_bottom + 8.0
 	var area := Rect2(24, top, size.x - 48, size.y - top - 40)
@@ -481,10 +498,65 @@ func _layout() -> void:
 			# Still too tall: shrink, keeping the bauble just under the cards.
 			unit = maxf(minf(unit, (floor_y - cards_bottom) / (reach - apex)), unit * 0.6)
 			tree_top = cards_bottom - apex * unit
+		# Never past the bottom of the screen either: on a very short screen
+		# the board shrinks further (the fire may then reach the bottom row,
+		# but every dot stays visible and tappable).
+		var screen_floor := size.y - 24.0
+		if tree_top + reach * unit > screen_floor and screen_floor > cards_bottom:
+			unit = minf(unit, (screen_floor - cards_bottom) / (reach - apex))
+			tree_top = cards_bottom - apex * unit
 		cy = tree_top + bh / 2.0 * unit
 	r = unit * 0.36
 	board.position = Vector2(area.get_center().x, cy) - Vector2(0, shift * unit)
+	_keep_dots_visible(cards_bottom)
 	_rebuild_board()
+	if OS.is_debug_build():
+		_check_board_visible(cards_bottom)
+
+
+## Final say over the fits above (they work from the art's numbers): every
+## dot, with room for its hole and the lesson ring, sits below the cards /
+## lesson bubble and above the bottom of the screen. Moves the board down,
+## and shrinks it if it then runs off the bottom.
+func _keep_dots_visible(cards_bottom: float) -> void:
+	const PAD := 1.3  # radii above the top dot: its hole plus most of the lesson ring
+	var floor_y := size.y - 12.0
+	# The campfire keeps its flames off the bottom baubles (same line as _layout).
+	if tree and is_instance_valid(Look.fire):
+		var flame := Look.fire.global_position.y - global_position.y - FLAME_TOP * Look.fire.global_scale.y - 6.0
+		if flame > cards_bottom + (floor_y - cards_bottom) * 0.5:
+			floor_y = minf(floor_y, flame)
+	for i in 3:
+		var lo := INF
+		var hi := -INF
+		for d in b.pos.size():
+			var y := px(d).y
+			lo = minf(lo, y)
+			hi = maxf(hi, y)
+		var top_y := board.position.y + lo - r * PAD
+		if top_y < cards_bottom:
+			board.position.y += cards_bottom - top_y
+		var bottom_y := board.position.y + hi + r * 1.1
+		if bottom_y <= floor_y or floor_y <= cards_bottom:
+			return
+		# Shrink about the top edge (it stays where it is): the bottom row comes
+		# up to the floor.
+		top_y = maxf(top_y, cards_bottom)
+		var k := (floor_y - top_y) / (bottom_y - top_y)
+		unit *= k
+		r = unit * 0.36
+		board.position.y = top_y + r * PAD - lo * k
+
+
+## Test builds only: shout when a dot is under the cards / lesson bubble or
+## off screen (the top bauble hid under the lesson bubble and, on an iPhone,
+## under ranked score cards, 2026-11-24).
+func _check_board_visible(cards_bottom: float) -> void:
+	for d in b.pos.size():
+		var p := board.position + px(d)
+		if p.y - r < cards_bottom - 0.5 or p.y + r > size.y + 0.5 or p.x < -r or p.x > size.x + r:
+			push_error("board: dot %d at %s is hidden (cards end at %.0f, screen %s)" % [d, p, cards_bottom, size])
+			return
 
 
 func _wreath() -> bool:
@@ -871,6 +943,7 @@ func _build_coach_bubble() -> void:
 	card.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(card)
+	card.minimum_size_changed.connect(func(): _layout.call_deferred())
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
 	card.add_child(vb)
@@ -920,7 +993,10 @@ func _place_coach_bubble() -> float:
 		text_h = maxf(text_h, f.get_multiline_string_size(Lang.a("coach." + k, [99]), HORIZONTAL_ALIGNMENT_LEFT, w, 34, -1, flags).y)
 	var head_h := (_coach_text.get_meta("head") as Control).get_combined_minimum_size().y
 	var h := ceilf(sb.get_margin(SIDE_TOP) + sb.get_margin(SIDE_BOTTOM) + head_h + 8.0 + text_h + 8.0)
-	var y := CARDS_BOTTOM + 6.0
+	# The estimate can come out a line short (font fallback, outline): the
+	# bubble is never shorter than what its current text really needs.
+	h = maxf(h, card.get_combined_minimum_size().y)
+	var y := _cards_bottom() + 6.0
 	_offsets(card, 24, y, -24, y + h)
 	return y + h + 18.0
 

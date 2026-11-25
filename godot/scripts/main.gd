@@ -8,7 +8,11 @@ var shape := "triangle"
 var level := 3
 var hot_seat := false
 var _shot_dir := ""
-var where := ""
+var where := "":
+	set(v):
+		where = v
+		if bg:
+			_place_bg()
 var online_ui: OnlineScreens
 var menu_ui: MenuScreens
 var overlay: Control = null
@@ -121,6 +125,9 @@ func _refresh() -> void:
 
 ## Background art for the window's orientation; the campfire follows the
 ## painted fire under the "cover" crop and the slow breathing zoom.
+const GAME_FIRE_Y := 0.91  # portrait game: fire's base, share of the screen height
+const GAME_FLAME := 0.7  # portrait game: a smaller fire in the same stone ring
+
 func _place_bg() -> void:
 	var land := size.x > size.y * 1.15
 	var file := "background-landscape.webp" if land else "background-portrait.webp"
@@ -135,6 +142,14 @@ func _place_bg() -> void:
 		var at := Vector2(0.252, 0.845) if land else Vector2(0.283, 0.835)
 		_fire.position = off + ts * at * k
 		_fire.scale = Vector2.ONE * (ts.y * k / 1024.0) * (1.25 if land else 1.0)
+		# Portrait game: the view tilts up, so the fireplace sits near the
+		# bottom edge and the Christmas tree can reach further down.
+		if where == "game" and not land:
+			bg.pivot_offset = Vector2(bg.size.x / 2.0, 0)
+			bg.scale = Vector2.ONE * clampf(GAME_FIRE_Y * bg.size.y / _fire.position.y, 1.0, 1.25)
+			_fire.scale *= GAME_FLAME
+			return
+	bg.scale = Vector2.ONE
 
 
 func _snow(layer: int) -> void:

@@ -1097,6 +1097,9 @@ export const cs: Messages = {
     errRateLimit: 'Příliš mnoho pokusů. Zkus to znovu za minutu.',
     errNetwork: 'Chyba sítě. Zkontroluj připojení a zkus to znovu.',
     errGeneric: 'Něco se pokazilo.',
+    errNoAccount: 'V tomto telefonu není žádný účet Google. Přidej ho v nastavení telefonu a zkus to znovu.',
+    errTimeout: 'Přihlášení trvalo příliš dlouho. Zkus to znovu.',
+    errFailed: 'Přihlášení se nepovedlo. Zkus to znovu.',
   },
 
   username: {

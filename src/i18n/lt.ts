@@ -1100,6 +1100,9 @@ export const lt: Messages = {
     errRateLimit: 'Per daug bandymų. Pabandykite po minutės.',
     errNetwork: 'Tinklo klaida. Patikrinkite ryšį ir bandykite dar kartą.',
     errGeneric: 'Kažkas nepavyko.',
+    errNoAccount: 'Šiame telefone nėra „Google“ paskyros. Pridėkite ją telefono nustatymuose ir bandykite dar kartą.',
+    errTimeout: 'Prisijungimas užtruko per ilgai. Bandykite dar kartą.',
+    errFailed: 'Nepavyko prisijungti. Bandykite dar kartą.',
   },
 
   username: {

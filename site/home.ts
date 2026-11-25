@@ -3,6 +3,7 @@
 // who scrolls) can read what DotDuel is. Injected into dist/index.html by
 // scripts/web-layout.mjs. English, with links to the guides in every language.
 import { LANGS, LANG_NAMES, SITE } from './langs';
+import { faqs } from './faq';
 
 const PLAY_STORE = 'https://play.google.com/store/apps/details?id=com.dotduel.app';
 const SOCIAL: [string, string][] = [
@@ -30,6 +31,8 @@ html[data-theme="sunset-catan"] #dd-about { background: #2a160c; }
 #dd-about .row { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; padding: 0; list-style: none; }
 #dd-about .row a { display: inline-block; padding: 9px 16px; border-radius: 999px; border: 1px solid rgba(123,219,149,.4); text-decoration: none; }
 #dd-about .gp { display: inline-block; margin-top: 6px; padding: 12px 22px; border-radius: 12px; background: #7bdb95; color: #0c1d14; font-weight: 700; text-decoration: none; }
+#dd-about h3 { font-size: 18px; margin: 20px 0 4px; color: #eaf3e3; }
+#dd-about h3 + p { margin-top: 0; }
 #dd-about footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid rgba(234,243,227,.15); font-size: 15px; display: flex; flex-wrap: wrap; gap: 8px 18px; }
 #dd-top { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 3; padding: 12px 20px; border: 0; border-radius: 999px; background: #7bdb95; color: #0c1d14; font: 700 16px Outfit, system-ui, sans-serif; box-shadow: 0 6px 20px rgba(0,0,0,.45); cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s; }
 #dd-top.on { opacity: 1; pointer-events: auto; }
@@ -39,6 +42,14 @@ export function homeSection(): string {
   const guides = LANGS.map(
     (l) => `<li><a href="${SITE[l].paths.howToPlay}" hreflang="${l}" lang="${l}">${LANG_NAMES[l]}</a></li>`,
   ).join('');
+  // Short FAQ: a few of the /faq/ answers (same reviewed text), by question.
+  const all = faqs('en');
+  const pick = ['free', 'install', 'Dots and Boxes', 'chess', 'friend', 'first player', 'How long'];
+  const qa = pick
+    .map((w) => all.find((f) => f.q.includes(w)))
+    .filter((f): f is (typeof all)[number] => !!f)
+    .map((f) => `<h3>${f.q}</h3><p>${f.a}</p>`)
+    .join('\n  ');
   const social = SOCIAL.map(([n, u]) => `<li><a href="${u}" rel="noopener" target="_blank">${n}</a></li>`).join('');
   return `<style>${CSS}</style>
 <section id="dd-about" aria-labelledby="dd-about-h">
@@ -75,6 +86,10 @@ export function homeSection(): string {
 
   <h2>Get better</h2>
   <p>The <a href="${SITE.en.paths.strategy}">strategy guide</a> covers the ideas that separate a Beginner from an Impossible bot: counting every line through a dot, not leaving one-gap lines, and when to claim instead of placing. Quick answers are in the <a href="${SITE.en.paths.faq}">FAQ</a>, and every update is in the <a href="${SITE.en.paths.changelog}">changelog</a>.</p>
+
+  <h2>Questions</h2>
+  ${qa}
+  <p>More answers in the <a href="${SITE.en.paths.faq}">full FAQ</a>.</p>
 
   <h2>Guide in your language</h2>
   <ul class="row">${guides}</ul>

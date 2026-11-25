@@ -3,6 +3,7 @@
 // search engines and the AdSense crawler without rendering the game.
 
 import { LANGS, LANG_NAMES, SITE, type Lang, type PageName } from './langs';
+import { faqJsonLd } from './faq';
 
 export type { Lang };
 
@@ -59,7 +60,7 @@ ${alternates}
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="preload" href="/fonts/outfit-var.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/pages.css" />
-</head>
+${p.key === 'faq' ? `  ${faqJsonLd(p.lang)}\n` : ''}</head>
 <body>
   <header class="site-head">
     <div class="wrap head-row">

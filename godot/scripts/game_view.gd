@@ -103,7 +103,7 @@ const BOARD_ART := {
 ## Bottom edge of the score cards as designed (row offsets 160..310, +4%
 ## active scale). Taller cards (ranked clock, two-line names) push it down:
 ## see _cards_bottom().
-const CARDS_BOTTOM := 322.0
+const CARDS_BOTTOM := 272.0
 ## Wide screens (landscape phones, desktop): the score cards stand on either
 ## side of the board instead of across the top, so the board gets the full
 ## height. Card width, and the board area's top (under the ribbon and the
@@ -235,7 +235,7 @@ func _build_hud() -> void:
 
 	var row := HBoxContainer.new()
 	row.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	_offsets(row, 20, 160, -20, 310)
+	_offsets(row, 20, 160, -20, 260)
 	row.add_theme_constant_override("separation", 16)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(row)
@@ -384,8 +384,27 @@ func _make_card(p: int) -> Control:
 	wrap.add_child(think)
 	wrap.resized.connect(func(): wrap.pivot_offset = wrap.size / 2.0)
 	score_l.text = str(s.scores[p])
-	cards[p] = {"wrap": wrap, "card": card, "glow": glow, "score": score_l, "think": think, "avatar": av, "clock": clock_l, "sb": sb, "gsb": gsb, "chip": chip}
+	cards[p] = {"wrap": wrap, "card": card, "glow": glow, "score": score_l, "think": think, "avatar": av, "clock": clock_l, "sb": sb, "gsb": gsb, "chip": chip, "name": name_l}
+	_size_card(p, not _side)
 	return wrap
+
+
+## Top row (portrait): a slim strip, so the board gets the height. Beside the
+## board (wide screens) there is room for the full-size card.
+func _size_card(p: int, compact: bool) -> void:
+	var c: Dictionary = cards[p]
+	(c.wrap as Control).custom_minimum_size = Vector2(0, 96 if compact else 150)
+	(c.avatar as Control).custom_minimum_size = Vector2.ONE * (60 if compact else 92)
+	(c.chip as Control).custom_minimum_size = Vector2.ONE * (24 if compact else 30)
+	(c.name as Label).add_theme_font_size_override("font_size", 22 if compact else 26)
+	(c.score as Label).add_theme_font_size_override("font_size", 46 if compact else 64)
+	(c.score as Label).add_theme_constant_override("outline_size", 8 if compact else 10)
+	(c.clock as Label).add_theme_font_size_override("font_size", 22 if compact else 26)
+	var sb: StyleBoxFlat = c.sb
+	sb.content_margin_top = 6 if compact else 10
+	sb.content_margin_bottom = 6 if compact else 10
+	sb.set_corner_radius_all(20 if compact else 26)
+	(c.gsb as StyleBoxFlat).set_corner_radius_all(22 if compact else 28)
 
 
 func _update_hud() -> void:
@@ -475,6 +494,7 @@ func _set_side(on: bool) -> void:
 		return
 	_side = on
 	for p in [1, 2]:
+		_size_card(p, not on)
 		var w: Control = cards[p].wrap
 		w.get_parent().remove_child(w)
 		if on:
@@ -1006,10 +1026,10 @@ func _build_coach_bubble() -> void:
 	var frame := UI.small_frame()
 	# Tighter top/bottom, wider sides: the text clears the corner studs
 	# without a tall empty band above and below it.
-	frame.content_margin_top = 30
-	frame.content_margin_bottom = 34
-	frame.content_margin_left = 40
-	frame.content_margin_right = 40
+	frame.content_margin_top = 20
+	frame.content_margin_bottom = 22
+	frame.content_margin_left = 34
+	frame.content_margin_right = 34
 	card.add_theme_stylebox_override("panel", frame)
 	# Above the board, not below it: at the bottom the player's hands hid it
 	# (tester, 2026-11-22). _layout sizes and places it.
@@ -1018,12 +1038,17 @@ func _build_coach_bubble() -> void:
 	add_child(card)
 	card.minimum_size_changed.connect(func(): _layout.call_deferred())
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 8)
+	vb.add_theme_constant_override("separation", 0)
 	card.add_child(vb)
+	# The header row is indented so its labels clear the frame's corner studs.
+	var head_m := MarginContainer.new()
+	head_m.add_theme_constant_override("margin_left", 14)
+	head_m.add_theme_constant_override("margin_right", 14)
+	vb.add_child(head_m)
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 10)
-	vb.add_child(head)
-	head.add_child(UI.label(Lang.a("coach.name").to_upper(), 24, UI.GOLD, true, 3))
+	head_m.add_child(head)
+	head.add_child(UI.label(Lang.a("coach.name").to_upper(), 20, UI.GOLD, true, 3))
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(gap)
@@ -1034,11 +1059,11 @@ func _build_coach_bubble() -> void:
 	chip.texture = UI.tex("dot-p%d.webp" % _sk(1))
 	chip.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	chip.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	chip.custom_minimum_size = Vector2(30, 30)
+	chip.custom_minimum_size = Vector2(24, 24)
 	you.add_child(chip)
-	you.add_child(UI.label(Lang.a("coach.yourDots"), 24, UI.TEXT, false, 2))
+	you.add_child(UI.label(Lang.a("coach.yourDots"), 20, UI.TEXT, false, 2))
 	head.add_child(you)
-	_coach_text = UI.label("", 34, UI.TEXT, false, 3)
+	_coach_text = UI.label("", COACH_FONT, UI.TEXT, false, 3)
 	_coach_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_coach_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	vb.add_child(_coach_text)
@@ -1047,6 +1072,7 @@ func _build_coach_bubble() -> void:
 	_coach_text.set_meta("head", head)
 
 
+const COACH_FONT := 30
 const COACH_KEYS := ["corner", "finish", "double", "claim", "find", "botTook", "free", "finishMiss",
 	"findHelp", "findMiss", "cornerDone", "finishDone", "doubleDone", "claimDone", "findDone",
 	"claimEnd", "idleHint", "claimHint"]
@@ -1063,15 +1089,17 @@ func _place_coach_bubble() -> float:
 	var flags := TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
 	var text_h := 0.0
 	for k in COACH_KEYS:
-		text_h = maxf(text_h, f.get_multiline_string_size(Lang.a("coach." + k, [99]), HORIZONTAL_ALIGNMENT_LEFT, w, 34, -1, flags).y)
+		text_h = maxf(text_h, f.get_multiline_string_size(Lang.a("coach." + k, [99]), HORIZONTAL_ALIGNMENT_LEFT, w, COACH_FONT, -1, flags).y)
 	var head_h := (_coach_text.get_meta("head") as Control).get_combined_minimum_size().y
-	var h := ceilf(sb.get_margin(SIDE_TOP) + sb.get_margin(SIDE_BOTTOM) + head_h + 8.0 + text_h + 8.0)
+	var h := ceilf(sb.get_margin(SIDE_TOP) + sb.get_margin(SIDE_BOTTOM) + head_h + text_h + 6.0)
 	# The estimate can come out a line short (font fallback, outline): the
 	# bubble is never shorter than what its current text really needs.
 	h = maxf(h, card.get_combined_minimum_size().y)
 	var y := _cards_bottom() + 6.0
-	_offsets(card, 24, y, -24, y + h)
-	return y + h + 18.0
+	# The box hugs the current text; the board stays below the tallest one,
+	# so it never moves between steps.
+	_offsets(card, 24, y, -24, y + card.get_combined_minimum_size().y)
+	return y + h + 12.0
 
 
 func _sync_coach(delta: float) -> void:

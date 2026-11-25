@@ -12,6 +12,10 @@ var where := ""
 var online_ui: OnlineScreens
 var menu_ui: MenuScreens
 var overlay: Control = null
+## Website: true while the home menu shows with nothing on top, so a swipe or
+## the mouse wheel over the game scrolls the page down to the text under it
+## (site/home.ts reads window.ddHome). Anywhere else the game keeps them.
+var _web_home := false
 var _decor: Array[Node] = []
 var _fire: Node2D
 var _guard := false
@@ -252,6 +256,15 @@ func _refresh_daily_card() -> void:
 
 
 # ---------------------------------------------------------------- menu actions
+
+func _process(_delta: float) -> void:
+	if not OS.has_feature("web"):
+		return
+	var home := where == "menu" and overlay == null
+	if home != _web_home:
+		_web_home = home
+		JavaScriptBridge.eval("window.ddHome = %s" % ("true" if home else "false"))
+
 
 func sign_in() -> void:
 	online_ui.show()
